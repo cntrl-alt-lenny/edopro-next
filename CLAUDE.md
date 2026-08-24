@@ -85,7 +85,10 @@ Proportionate to what changed:
 - Touched the client model? Its unit tests must pass.
 - Touched presentation? State explicitly what you verified visually, and what you did not.
 - Touched anything near duel behaviour? Say precisely how you established behaviour is
-  unchanged. "It compiles" is not evidence.
+  unchanged. "It compiles" is not evidence — and **neither is a green replay harness.**
+  That suite parses frozen recordings and never loads `ocgcore`, so it cannot fail because
+  of a C++ change. Do not cite it as proof that duel behaviour is unchanged. See
+  `docs/architecture/replay-regression.md` §0.
 
 The property this project most wants to be able to assert is:
 

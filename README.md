@@ -111,21 +111,25 @@ Nothing here is rounded up.
 | UI stack decision | ✅ **Decided** | Qt 6 / QML — [ADR 0001](docs/adr/0001-ui-runtime-stack.md) |
 | Qt 6 / QML shell | ✅ **Working** | compiles, runs, zero QML errors |
 | Design token system | ✅ **Working** | [`Theme.qml`](ui/qml/Theme.qml) |
-| Replay regression harness | ✅ **Working** | golden traces over real duels — [how](docs/architecture/replay-regression.md) |
+| Recorded-protocol regression baseline | ✅ **Working** | golden traces over real duels — [how](docs/architecture/replay-regression.md) |
 | Linux CI | ✅ **Working** | harness, Qt shell, upstream baseline |
+| Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
 | Semantic client model | ⬜ Not started | next milestone after M1 |
 | Deck builder | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |
 
-## Proving behaviour does not change
+## Making change provable
 
-The property this project most needs to be able to assert:
+The property this project ultimately needs to be able to assert is *"this changed
+presentation, not duel behaviour"*. Reaching it takes two layers. **The first one is
+built.**
 
-> **this changed presentation, not duel behaviour**
+> **M1 establishes a deterministic recorded-protocol regression baseline.**
 
-Real recorded duels are replayed into a deterministic text trace and compared against
-golden files. A behavioural change produces a readable diff naming the exact message:
+Real recorded duels are parsed into a deterministic text trace and compared against golden
+files, so any change in how this project reads the duel protocol produces a readable diff
+naming the exact message:
 
 ```diff
    62 MSG_SPSUMMONING              4
@@ -135,12 +139,25 @@ golden files. A behavioural change produces a readable diff naming the exact mes
    71 MSG_CHAINED                  8
 ```
 
-Two fixtures cover turn progression, normal/special/set summons, **chains**, targeting,
-card movement, battle and damage steps, draws, reveals and a terminal win. They are
-sanitised real duels — no player identity, no card artwork, ~5 KB each. The harness is
-Python standard library only, runs headlessly in under a second, and needs neither
-`ocgcore` nor card data. See [the investigation](docs/architecture/replay-regression.md)
-for why that is possible and where its limits are.
+**What that does prove:** the replay parser, the message-id table and the normalisation
+stay consistent, deterministically and on every supported Python — so the semantic decoding
+work in M2 can be tested against real duels from its first commit.
+
+**What it does not prove:** that a *live* duel still behaves the same. The fixtures are
+frozen recordings and the harness never loads `ocgcore`, so no C++ change can fail this
+suite. Proving live engine equivalence needs **Level 2** — re-simulating the recorded
+inputs through a headless `ocgcore` and comparing against the recorded output. The fixtures
+already carry every input that needs (seed, decks, ordered responses); what is missing is
+an engine host, a pinned card database and pinned CardScripts. That is
+[a milestone of its own](docs/architecture/replay-regression.md#5-the-chosen-mechanism-and-why),
+not a footnote to this one.
+
+The corpus is three sanitised real duels — no player identity, no card artwork, ~5 KB each
+— covering turn progression, normal/special/set summons, **chains**, targeting, card
+movement, battle and damage steps, draws, reveals and a terminal win, in both the recorded
+output format and the input format. The harness is Python standard library only and runs
+headlessly in under a second. [The investigation](docs/architecture/replay-regression.md)
+sets out the full boundary.
 
 ## Architecture
 

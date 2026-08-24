@@ -5,9 +5,47 @@ Answers the open question raised in [`current-edopro.md`](current-edopro.md):
 > Can `.yrp` / `.yrpX` replays be replayed headlessly through `ocgcore` to produce a
 > deterministic duel message stream suitable for regression fixtures?
 
-**Answer: yes, and better than expected — for the common case no engine is needed at all.**
+**Answer: yes — and for the recorded-output format, reading the stream needs no engine at
+all.** That makes a regression baseline cheap to stand up, but it also bounds what the
+baseline can assert. That boundary is the subject of the next section, and it matters more
+than the mechanism.
 
 Traced against upstream commit `54ea755a`.
+
+## 0. What the implemented harness proves, and what it does not
+
+M1 ships **Level 1**: a *deterministic recorded-protocol regression baseline*.
+
+The fixtures are frozen `.yrpX` / `.yrp` files committed to this repository. The harness
+parses them in Python. **It never loads `ocgcore`, never runs a duel, and never executes
+any C++ in this tree.**
+
+**It does prove:**
+
+- Our parser reads the recorded duel protocol consistently — header, LZMA body, packet
+  framing, and the YRP1 setup half — across every supported Python.
+- The message-id table has not drifted from upstream's headers
+  (`tools/generate_messages.py --check` regenerates and compares it).
+- Normalisation is deterministic and environment-independent: same bytes in, same trace
+  out, on any machine.
+- Real recorded duels — chains, battle, targeting, a terminal win — are available as
+  fixtures, so the semantic decoding work in M2 has something truthful to be tested
+  against from the day it starts.
+
+**It does not prove:**
+
+- That a live duel still behaves the same. A change to `ocgcore` or to `gframe/` could
+  alter what a real duel emits while these committed fixtures — and therefore these
+  goldens, and therefore this test — stay perfectly green.
+- Anything about card rulings, script correctness, or engine determinism in general.
+
+Concretely: **this suite cannot fail because of a C++ refactor.** It can only fail because
+*our* reading or rendering of a recording changed. That is a genuinely useful invariant to
+hold before rewriting a client, and it is deliberately not more than that.
+
+The stronger property — *a live engine still emits the same stream* — requires Level 2,
+described in [§5](#5-the-chosen-mechanism-and-why). Everything Level 2 needs is already
+captured in the fixtures; what is missing is the engine host, not the data.
 
 ## 1. There are two replay formats, and they are fundamentally different
 
@@ -107,12 +145,16 @@ timing. There is no wall-clock input to the duel.
 
 The one genuine caveat: determinism holds **for a fixed `ocgcore` and a fixed set of
 CardScripts**. Both are versioned outside this repository and both are authoritative. A
-CardScript change legitimately changes behaviour — the harness would correctly report a
-diff, and that diff would be a true positive, not a flaw.
+CardScript change legitimately changes behaviour.
+
+Note carefully that this section describes the *engine's* determinism — the property that
+makes Level 2 viable at all. It is not a claim about the shipped harness, which does not
+run the engine path described here. See [§0](#0-what-the-implemented-harness-proves-and-what-it-does-not).
 
 ## 5. The chosen mechanism, and why
 
-Two levels are possible. This milestone implements the first.
+Two levels are possible. They assert different things. This milestone implements the
+first, and the difference between them is the whole subject of [§0](#0-what-the-implemented-harness-proves-and-what-it-does-not).
 
 ### Level 1 (implemented) — trace the recorded stream, no engine
 
@@ -130,7 +172,8 @@ Parse the `.yrpX`, normalise its message stream, compare to a golden file.
    golden comparison              tests/test_replay_trace.py
 ```
 
-Chosen first because it is *the most trustworthy step available today*:
+Chosen first because it is the largest amount of real, verifiable ground that can be held
+without standing up an engine host:
 
 - **No `ocgcore`, no CardScripts, no card database, no build.** Runs anywhere Python runs.
 - **No network fetches in CI**, so no flakiness and nothing to cache.
@@ -140,16 +183,36 @@ Chosen first because it is *the most trustworthy step available today*:
 It is implemented in Python (standard library only). `CLAUDE.md` permits Python for
 tooling and tests; it is not in the render or input path.
 
-### Level 2 (future) — re-simulate through `ocgcore`
+### Level 2 (not implemented) — re-simulate through `ocgcore`
 
-Feed the embedded YRP1's seed, decks and responses to a headless `ocgcore` and compare the
-*produced* stream against the *recorded* one. This is strictly stronger: it verifies the
-engine, not just our parsing.
+**This is the level that would prove live engine equivalence, and it is the only one that
+can.** Feed the embedded YRP1's seed, decks, duel flags and ordered responses to a headless
+`ocgcore`, then compare the stream it *produces* against the stream the `.yrpX` *recorded*.
+A divergence means real behaviour changed — which is precisely the assertion Level 1
+cannot make.
 
-It is deliberately not attempted yet because it requires the CardScripts and card database
-at a pinned revision, plus a compiled `ocgcore` — real CI cost and a network dependency,
-for a check that only becomes necessary once we start modifying engine-adjacent code.
-Everything needed is already present in the fixtures, so this is additive when wanted.
+The fixtures already contain every input it needs: `duel-chains-battle.yrpX` carries a
+complete YRP1 with both decks, the 256-bit seed and 135 ordered responses, and the same
+duel's recorded output stream to compare against. The missing piece is a host, not data.
+
+What that host costs, concretely:
+
+| Requirement | Why it is not free |
+|---|---|
+| Compiled `ocgcore` | A separate build product from the client; needs its own CI step. |
+| `OCG_DataReader` | Must answer card queries, so it needs a pinned Project Ignis `.cdb`. |
+| `OCG_ScriptReader` | Must serve Lua, so it needs CardScripts pinned to a matching revision. |
+| Driver | Constructs the duel, pumps `OCG_DuelProcess`, feeds responses in order, captures messages. |
+
+Neither the card database nor the scripts may be committed here (see `CLAUDE.md` on
+licensing), so both become pinned network fetches in CI — and a fixture recorded under one
+CardScripts revision is not guaranteed to reproduce under a later one, which makes fixture
+pinning a maintenance obligation rather than a one-off.
+
+That is a milestone's worth of work, not a hardening pass. It is deferred deliberately, and
+tracked as its own item rather than folded into M1 — because the honest alternative is to
+overstate what Level 1 already does, which is worse than shipping Level 1 accurately
+described.
 
 ## 6. What the trace deliberately excludes
 
@@ -223,3 +286,8 @@ message stream verified byte-identical before and after).
 The harness was proved to *detect* change, not merely to run: perturbing a single golden
 line (`MSG_CHAINING 8` → `7`) produced a failing test with a unified diff naming the exact
 message and count, and restoring it returned the suite to green.
+
+That establishes the mechanism is live rather than vacuous — a real difference in the
+trace does fail the build, legibly. It is not a demonstration that engine changes are
+caught, which, per [§0](#0-what-the-implemented-harness-proves-and-what-it-does-not), this
+level cannot do.

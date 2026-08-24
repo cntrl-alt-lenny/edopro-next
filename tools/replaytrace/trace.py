@@ -7,8 +7,8 @@ This is the golden-file representation. Its contract:
 * **Nothing environmental.** No pointers, no timestamps, no filesystem paths,
   no absolute sizes of anything outside the replay itself, no dict ordering
   dependence, no wall-clock.
-* **Human-readable diffs.** A behavioural change should show up as a small,
-  legible hunk, not a wall of hex.
+* **Human-readable diffs.** A change should show up as a small, legible hunk
+  naming the message responsible, not a wall of hex.
 
 The trace is deliberately *structural* rather than semantic: it records message
 ids and payload digests without interpreting fields. That is the honest first
@@ -147,7 +147,7 @@ def render(replay: Replay, *, source_name: str) -> str:
     add(f"packets: {len(replay.packets)}")
     add("")
 
-    # Distribution first: a behavioural change usually shows here immediately,
+    # Distribution first: a change in the stream usually shows here immediately,
     # before you have to read a thousand individual lines.
     counts: dict[int, int] = {}
     for pkt in replay.packets:
