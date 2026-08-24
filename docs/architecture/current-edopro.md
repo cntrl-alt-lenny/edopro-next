@@ -45,8 +45,11 @@ makes the whole project viable.
 
 ## 3. Where the boundary goes wrong: `duelclient.cpp`
 
-`gframe/duelclient.cpp` is 4,658 lines and contains **97 `case MSG_*:` branches** in its
-duel message dispatch. That single dispatch is simultaneously:
+`gframe/duelclient.cpp` is 4,658 lines and contains **97 `case MSG_*:` branches** across
+two switches: 88 of them in `DuelClient::ClientAnalyze` (lines 1286-4262, a single
+**2,977-line** function that decodes the engine's messages), and 9 more in
+`DuelClient::SendResponse`, which encodes the replies. That decode dispatch is
+simultaneously:
 
 - the protocol decoder (reads the engine's byte stream)
 - the client state mutator (updates card, zone and phase state)

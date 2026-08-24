@@ -16,13 +16,18 @@ qt_standard_project_setup(REQUIRES 6.5)
 
 # Build metadata is injected, never hardcoded in QML, so the shell can always
 # report what it actually is rather than what someone once typed.
-execute_process(
-    COMMAND git rev-parse --short HEAD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_VARIABLE EDOPRO_NEXT_GIT_SHA
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-)
+# Allow the SHA to be supplied (-DEDOPRO_NEXT_GIT_SHA=...) so builds from a
+# tarball, an export, or a CI checkout without history still identify
+# themselves. Only fall back to querying git when nothing was provided.
+if(NOT EDOPRO_NEXT_GIT_SHA)
+    execute_process(
+        COMMAND git rev-parse --short HEAD
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE EDOPRO_NEXT_GIT_SHA
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+endif()
 if(NOT EDOPRO_NEXT_GIT_SHA)
     set(EDOPRO_NEXT_GIT_SHA "unknown")
 endif()

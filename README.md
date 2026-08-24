@@ -1,139 +1,250 @@
-<h1 align="center">edopro-next</h1>
+<div align="center">
 
-<p align="center">
-  A modern client architecture for <a href="https://github.com/edo9300/edopro">EDOPro</a> —
-  preserving Project Ignis's duel engine and card scripts, and replacing the
-  presentation layer it inherited from old YGOPro.
-</p>
+<img src="docs/assets/hero.svg" alt="edopro-next — a modern client architecture for EDOPro" width="100%">
 
-<p align="center">
-  <img src="https://img.shields.io/badge/status-early%20scaffold-C08A3E" alt="Status: early scaffold">
-  <img src="https://img.shields.io/badge/license-AGPL--3.0--or--later-blue" alt="AGPL-3.0-or-later">
-  <img src="https://img.shields.io/badge/UI-Qt%206%20%2F%20QML-41CD52" alt="Qt 6 / QML">
-</p>
+<br>
+
+**Preserve the engine. Expose clean semantics. Modernise the client.**
+
+<br>
+
+[![CI](https://github.com/cntrl-alt-lenny/edopro-next/actions/workflows/edopro-next.yml/badge.svg)](https://github.com/cntrl-alt-lenny/edopro-next/actions/workflows/edopro-next.yml)
+[![Status](https://img.shields.io/badge/status-early%20development-C08A3E)](docs/ROADMAP.md)
+[![Milestone](https://img.shields.io/badge/milestone-M1%20regression%20harness-C9A227)](docs/ROADMAP.md)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C)](docs/adr/0001-ui-runtime-stack.md)
+[![Qt 6](https://img.shields.io/badge/Qt-6.8%20LTS%20%2F%20QML-41CD52)](ui/)
+[![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
+
+</div>
 
 ---
 
-> **This is not a playable client, and is not close to being one.**
-> It is a repository foundation, an architecture, and one compiled UI shell. If you want
-> to play Yu-Gi-Oh today, use [EDOPro](https://github.com/edo9300/edopro). This project
-> would not exist without it.
+> [!IMPORTANT]
+> **Early development. This is not yet a playable replacement for EDOPro.**
+>
+> There is no duel field, no deck builder, and no way to play a game. What exists is an
+> architecture, a verified build baseline, a regression harness, and one compiled UI shell.
+>
+> **If you want to duel today, use [EDOPro](https://github.com/edo9300/edopro).** This
+> project would not exist without it.
 
-## Why
+## What this changes, and what it does not
 
-EDOPro's duel engine is remarkable. It automates one of the most rules-dense card games
-ever made, across the entire card pool, maintained by volunteers over many years. That is
-the hard part, and it already works.
+EDOPro automates one of the most rules-dense card games ever designed, across the entire
+card pool, maintained by volunteers over years. **That part already works, and this project
+does not touch it.**
 
-The client around it is visibly descended from YGOPro: fixed-coordinate widgets on a
-patched Irrlicht 1.8, without a layout system, DPI awareness, an accessibility layer, or
-a declarative focus model. The goal here is a client that feels like it was released
-today, without touching the engine that makes it worth using.
+```mermaid
+flowchart LR
+    CS["Project Ignis<br/>CardScripts (Lua)"]:::keep
+    OC["ocgcore<br/>rules engine"]:::keep
+    SM["semantic<br/>client model"]:::build
+    UI["Qt 6 / QML<br/>presentation"]:::build
 
-The rule the whole project is organised around:
+    CS --> OC --> SM --> UI
 
-> **The rules engine must not become the UI. The UI must not implement game rules.**
+    classDef keep fill:#1E2128,stroke:#3A404C,color:#9AA0AA
+    classDef build fill:#3A3218,stroke:#C9A227,color:#C9A227
+```
 
-## Status
+<div align="center"><sub>Grey is preserved upstream work. Gold is what this project builds.</sub></div>
 
-Honest, and deliberately so. Nothing below is rounded up.
+<br>
 
-| | Status |
-|---|---|
-| Upstream baseline builds and runs | **Working** — `EDOPro version 41.0.2`, see [docs/BASELINE.md](docs/BASELINE.md) |
-| Architecture survey of upstream | **Working** — [docs/architecture/current-edopro.md](docs/architecture/current-edopro.md) |
-| UI stack decision | **Decided** — Qt 6 / QML, [ADR 0001](docs/adr/0001-ui-runtime-stack.md) |
-| Qt 6 / QML shell | **Working** — compiles and runs, zero QML errors |
-| Design token system | **Working** — [ui/qml/Theme.qml](ui/qml/Theme.qml) |
-| Semantic client model | **Not started** |
-| Deck builder | **Not started** |
-| Duel field | **Not started** — deliberately last |
-| Automated tests | **None yet** |
-| CI | **None yet** |
+What has aged is the layer around the engine. The client descends from YGOPro:
+fixed-coordinate widgets on a patched Irrlicht 1.8, sized by manual DPI scaling rather
+than a layout system, with no accessibility layer, no declarative focus model and no
+animation framework. Those are consequences of a toolkit choice made long ago, not
+failures of effort.
 
-The shell renders a navigation rail, a home screen reporting real build metadata from
-C++, and honest "not implemented" states for every screen that does not exist. There are
-no placeholder decks, no fake cards and no mock duel.
+## The shell today
+
+A real screenshot of the compiled application — not a mockup.
+
+<div align="center">
+<img src="docs/assets/shell.png" alt="The edopro-next Qt/QML shell: navigation rail, home screen with honest project status, and live build metadata" width="88%">
+</div>
+
+<div align="center"><sub>Captured from the running binary via <code>--capture</code>. Every status shown is real, and four of five subsystems say <em>planned</em>.</sub></div>
+
+## Why edopro-next?
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### Preserve
+
+`ocgcore` and Project Ignis's Lua CardScripts stay **authoritative and untouched**. The
+engine boundary is already a clean C ABI over a byte protocol, so a new client needs no
+engine changes at all.
+
+</td>
+<td width="33%" valign="top">
+
+### Separate
+
+Upstream fuses protocol decode, state, animation and widgets in one 2,977-line function,
+and stores render transforms in the same struct as a card's attack value. **Semantic state
+gets its own layer.**
+
+</td>
+<td width="33%" valign="top">
+
+### Modernise
+
+Qt 6 / QML: responsive layouts instead of fixed coordinates, a real animation framework,
+declarative and testable focus, native accessibility, and high-DPI handled by the toolkit.
+
+</td>
+</tr>
+</table>
+
+## What exists today
+
+Nothing here is rounded up.
+
+| | Status | |
+|---|---|---|
+| Upstream baseline builds and runs | ✅ **Working** | `EDOPro version 41.0.2` — [record](docs/BASELINE.md) |
+| Architecture survey of upstream | ✅ **Working** | read from source — [survey](docs/architecture/current-edopro.md) |
+| UI stack decision | ✅ **Decided** | Qt 6 / QML — [ADR 0001](docs/adr/0001-ui-runtime-stack.md) |
+| Qt 6 / QML shell | ✅ **Working** | compiles, runs, zero QML errors |
+| Design token system | ✅ **Working** | [`Theme.qml`](ui/qml/Theme.qml) |
+| Recorded-protocol regression baseline | ✅ **Working** | golden traces over real duels — [how](docs/architecture/replay-regression.md) |
+| Linux CI | ✅ **Working** | harness, Qt shell, upstream baseline |
+| Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
+| Semantic client model | ⬜ Not started | next milestone after M1 |
+| Deck builder | ⬜ Not started | first screen to migrate |
+| Duel field | ⬜ Not started | deliberately last |
+| Windows / macOS builds | ⬜ Not attempted | Linux only so far |
+
+## Making change provable
+
+The property this project ultimately needs to be able to assert is *"this changed
+presentation, not duel behaviour"*. Reaching it takes two layers. **The first one is
+built.**
+
+> **M1 establishes a deterministic recorded-protocol regression baseline.**
+
+Real recorded duels are parsed into a deterministic text trace and compared against golden
+files, so any change in how this project reads the duel protocol produces a readable diff
+naming the exact message:
+
+```diff
+   62 MSG_SPSUMMONING              4
+   63 MSG_SPSUMMONED               1
+-  70 MSG_CHAINING                 7
++  70 MSG_CHAINING                 8
+   71 MSG_CHAINED                  8
+```
+
+**What that does prove:** the replay parser, the message-id table and the normalisation
+stay consistent, deterministically and on every supported Python — so the semantic decoding
+work in M2 can be tested against real duels from its first commit.
+
+**What it does not prove:** that a *live* duel still behaves the same. The fixtures are
+frozen recordings and the harness never loads `ocgcore`, so no C++ change can fail this
+suite. Proving live engine equivalence needs **Level 2** — re-simulating the recorded
+inputs through a headless `ocgcore` and comparing against the recorded output. The fixtures
+already carry every input that needs (seed, decks, ordered responses); what is missing is
+an engine host, a pinned card database and pinned CardScripts. That is
+[a milestone of its own](docs/architecture/replay-regression.md#5-the-chosen-mechanism-and-why),
+not a footnote to this one.
+
+The corpus is three sanitised real duels — no player identity, no card artwork, ~5 KB each
+— covering turn progression, normal/special/set summons, **chains**, targeting, card
+movement, battle and damage steps, draws, reveals and a terminal win, in both the recorded
+output format and the input format. The harness is Python standard library only and runs
+headlessly in under a second. [The investigation](docs/architecture/replay-regression.md)
+sets out the full boundary.
 
 ## Architecture
 
 ```
-                      ocgcore  (upstream, authoritative)
-                         |
-                  byte message stream over a C ABI
-                         |
-                  duel state adapter          <-- not built yet
-                         |
-              semantic client model           <-- not built yet
-                         |
-        +----------------+----------------+
-        |                                 |
-     Qt 6 / QML                       tools / AI
-     (this repo's ui/)                (future)
+gframe/          legacy Irrlicht client        upstream — touch minimally
+ocgcore/         rules engine (submodule)      upstream — do not touch
+ui/              Qt 6 / QML presentation       ours
+tools/           Python tooling and harness    ours
+tests/           fixtures and golden traces    ours
+docs/            architecture, ADRs, roadmap   ours
 ```
 
-The load-bearing discovery from the survey is that **the engine boundary is already
-clean**: the client loads `ocgcore` as a shared library and talks to it over a byte
-protocol. A new client needs no engine changes at all.
+New code lives in new directories, specifically so upstream merges stay tractable.
 
-The problem is on our side of that boundary. `gframe/duelclient.cpp` handles 97 `MSG_*`
-cases in one function that simultaneously decodes the protocol, mutates state, schedules
-animation, drives widgets and gates input — and `ClientCard` interleaves Irrlicht
-transforms with card semantics, so game state cannot be reasoned about without a
-renderer. Separating those is the actual work.
+**Read next:** [architecture survey](docs/architecture/current-edopro.md) ·
+[ADR 0001: UI stack](docs/adr/0001-ui-runtime-stack.md) ·
+[replay regression](docs/architecture/replay-regression.md) ·
+[upstream policy](docs/UPSTREAM.md)
 
-Migration order, cheapest and safest first: deck and card data, settings, replay browser,
-lobby, then duel state, then the duel field last. Reasoning in
-[the survey](docs/architecture/current-edopro.md).
+## Design principles
 
-## Building
+> **The cards are the product.**
+> Chrome exists to present artwork and communicate rules state, then get out of the way.
 
-**Upstream client** (verified on Linux; see [docs/BASELINE.md](docs/BASELINE.md) for the
-full record, environment and gotchas):
+> **The rules engine must not become the UI. The UI must not implement game rules.**
+> UI code never decides legality, never computes what is targetable, never infers rules.
+
+> **Motion communicates state change. It is never decoration.**
+> And it must never obscure what is legal.
+
+The full system — colour, spacing, typography, motion, focus — is in
+[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
+
+## Roadmap
+
+| | Milestone | |
+|:--|:--|:--|
+| **M0** | Foundation — architecture, baseline, ADR, shell | ✅ done |
+| **M1** | **Make change provable** — regression harness, CI | 🔶 in progress |
+| **M2** | Semantic client model — presentation-free duel state | ⬜ |
+| **M3** | Deck and card data — the first screen to migrate | ⬜ |
+| **M4** | Low-risk screens — settings, replays, lobby | ⬜ |
+| **M5** | Duel field — last, and highest risk | ⬜ |
+| **M6** | Platform and input — Windows, macOS, controller, Steam Deck | ⬜ |
+
+Sequenced so the repository is always in a usable state. Full detail, including what is
+explicitly out of scope, in [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Build
+
+**Qt shell** — needs Qt 6.5+ (developed against 6.8.3 LTS):
 
 ```bash
-export TRAVIS_OS_NAME=linux TARGET_OS=linux BUILD_CONFIG=release ARCH=x64
-export VCPKG_ROOT="$PWD/vcpkg"
-./travis/install-premake5.sh linux
-./travis/install-local-dependencies.sh linux
-./travis/build.sh          # -> bin/x64/release/ygoprodll
+cmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build ui/build
+./ui/build/edopro_next_shell
 ```
 
-**The Qt shell** (independent of the above):
+**Regression harness** — Python 3.10+, no dependencies:
 
 ```bash
-cd ui
-qt-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-./build/edopro_next_shell
+python -m unittest discover -s tests -v
 ```
 
-Requires Qt 6.5+. Developed against 6.8.3 LTS.
-
-## Relationship to upstream
-
-This is a fork of [edo9300/edopro](https://github.com/edo9300/edopro), currently based on
-`54ea755a`. It tracks upstream and intends to keep doing so — new code is confined to its
-own directories specifically so that merges stay tractable. See
-[docs/UPSTREAM.md](docs/UPSTREAM.md).
-
-We are **not** affiliated with or endorsed by Project Ignis, Konami or Shueisha.
-
-## Licence
-
-EDOPro is free software under the **GNU AGPL v3 or later**, and so is this fork. Upstream
-copyright notices, `LICENSE`, `COPYING` and `notices/` are preserved unchanged. Inherited
-code is not relicensed.
-
-Card scripts, card databases and card artwork are **not** in this repository. They belong
-to Project Ignis and other rights holders, and are fetched at runtime by the client.
+**Upstream client** — see [docs/BASELINE.md](docs/BASELINE.md) for the full record,
+environment and the gotchas that cost real time.
 
 ## Credit
 
 Everything that makes this project worth attempting was built by
-[Project Ignis](https://github.com/ProjectIgnis) and
-[edo9300](https://github.com/edo9300) — the duel engine, the card scripts, the databases,
-and the years of correctness work behind them. This project modernises a presentation
-layer. It does not reinvent the game.
+**[Project Ignis](https://github.com/ProjectIgnis)** and
+**[edo9300](https://github.com/edo9300)** — the duel engine, the card scripts, the
+databases, and the years of correctness work behind them.
 
-Upstream's own README is preserved at [docs/upstream-README.md](docs/upstream-README.md).
+This project modernises a presentation layer. It does not reinvent the game.
+
+Upstream's own README is preserved at [docs/upstream-README.md](docs/upstream-README.md);
+the fork basis and merge policy are in [docs/UPSTREAM.md](docs/UPSTREAM.md).
+
+## Licence
+
+EDOPro is free software under the **GNU AGPL v3 or later**, and so is this fork. Upstream
+copyright notices, [`LICENSE`](LICENSE), [`COPYING`](COPYING) and `notices/` are preserved
+unchanged, and inherited code is not relicensed.
+
+Card scripts, card databases and card artwork are **not** in this repository. They belong
+to Project Ignis and other rights holders, and are fetched at runtime by the client.
+
+**Yu-Gi-Oh! is a trademark of Shueisha and Konami.** This project is not affiliated with or
+endorsed by Project Ignis, Konami or Shueisha.

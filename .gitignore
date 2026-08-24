@@ -45,3 +45,6 @@ premake5.exe
 !/irrlicht/defines.lua
 bundled_font.cpp
 NotoSansJP-Regular.otf
+# --- edopro-next (ours) ---
+__pycache__/
+*.pyc

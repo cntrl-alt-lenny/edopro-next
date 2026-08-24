@@ -77,6 +77,31 @@ When we eventually must modify `gframe/` — and we will, to introduce the seam 
 semantic events — those changes should be as small and as clearly delimited as possible,
 and recorded in the table below.
 
+## Upstream's own CI in this fork
+
+`.github/workflows/edopro.yml` is upstream's build-and-deploy workflow. It is **left
+unmodified on disk** but **disabled at the repository level** (Actions → "Build EDOPro" →
+disabled manually). Re-enable with:
+
+```bash
+gh api -X PUT repos/cntrl-alt-lenny/edopro-next/actions/workflows/edopro.yml/enable
+```
+
+The reason is worth recording, because the failure looks alarming and is not:
+
+> Upstream's workflow **builds successfully** in this fork. Every job then fails at the
+> `Deploy` step, which needs `DEPLOY_REPO` / `DEPLOY_TOKEN` secrets that only Project
+> Ignis holds, followed by a `Log Failure` step that needs a Discord webhook. Verified on
+> run `32776508289`: `Build: success`, `Predeploy: success`, `Deploy: failure` with
+> *"No webhook is given."*
+
+So the red status was purely missing deployment credentials, never a broken build. It was
+disabled because a permanently-failing check on every push destroys the signal value of CI,
+not because anything is wrong with it. Our own `edopro-next` workflow covers the same
+build via its `upstream-baseline` job, without needing secrets.
+
+Disabling is a repository setting, not a file change, so it creates no merge conflict.
+
 ## Intentional local deltas from upstream
 
 Anything we knowingly change in upstream-owned files is recorded here, so a future merge

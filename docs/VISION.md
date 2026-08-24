@@ -14,7 +14,7 @@ card pool, correctly, maintained by volunteers over years. That is the hard, val
 irreplaceable part — and it already works.
 
 What has aged is the layer around it. The client descends from YGOPro: fixed-coordinate
-widgets on a patched Irrlicht 1.8, with no layout system, no DPI awareness, no
+widgets on a patched Irrlicht 1.8, scaled for DPI by hand rather than laid out, with no
 accessibility layer, no declarative focus model and no animation framework. Those are not
 failures of effort; they are the consequences of a toolkit choice made a long time ago.
 

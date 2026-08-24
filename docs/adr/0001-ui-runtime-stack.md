@@ -8,8 +8,13 @@
 
 EDOPro's client is C++ built on a **patched fork of Irrlicht 1.8/1.9**
 (`edo9300/irrlicht1-8-4`, branch `1.9-custom`). Irrlicht is a fixed-function-era 3D
-engine whose GUI layer is immediate, pixel-positioned and not DPI-aware. The presentation
-problems this project exists to fix are largely structural consequences of that choice.
+engine whose GUI layer is immediate and pixel-positioned. Upstream does handle high-DPI,
+but by hand: a `dpi_scale` factor and `Game::Scale()` helpers applied at each call site
+(`gframe/game.h`, used throughout `game.cpp` and `image_manager.cpp`). That works, and it
+is the reason the client is usable on modern displays - but scaling fixed coordinates is
+not the same as a layout system, and it is applied per widget rather than derived. The
+presentation problems this project exists to fix are largely structural consequences of
+that choice.
 
 Any replacement must satisfy constraints established in
 `docs/architecture/current-edopro.md`:
@@ -88,11 +93,12 @@ Option A, plus Rust for a bounded subsystem behind an explicit interface.
 Rework the existing presentation layer in place.
 
 - **Cheapest short term**, and it preserves all current behaviour by definition.
-- But the constraints are inherent to the toolkit: Irrlicht's GUI is pixel-positioned with
-  no layout system, no DPI awareness, no accessibility layer, no declarative focus model
-  and no animation framework. Every goal in the brief — responsive layout, crisp
-  typography, restrained motion, controller navigation, accessibility — would have to be
-  built from scratch inside a fork of an engine that is effectively unmaintained upstream.
+- But the constraints are inherent to the toolkit: Irrlicht's GUI is pixel-positioned,
+  scaled manually for DPI rather than laid out, with no accessibility layer, no
+  declarative focus model and no animation framework. Every goal in the brief —
+  responsive layout, crisp typography, restrained motion, controller navigation,
+  accessibility — would have to be built from scratch inside a fork of an engine that is
+  effectively unmaintained upstream.
 - We would end up maintaining a bespoke GUI toolkit as well as a card game.
 - **Verdict:** rejected as a destination. However, Irrlicht **is** retained as the
   transitional runtime; see the decision below.

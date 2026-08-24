@@ -1,0 +1,183 @@
+name: edopro-next
+
+# Upstream's own workflow (.github/workflows/edopro.yml) is left untouched.
+# This one covers only what this project adds.
+#
+# Cost is deliberately tiered. The regression harness and the Qt shell are
+# cheap and run on every push. The full upstream client build is expensive, so
+# it runs on master, on pull requests, weekly, and on demand - rather than on
+# every commit to a documentation branch.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"   # Monday 04:00 UTC, catches upstream drift
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    name: Regression harness
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is the supported floor; also test current stable.
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Message table is derived, not hand-edited
+        run: python tools/generate_messages.py --check
+
+      - name: Golden trace regression tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Traces reproduce byte-for-byte from a clean tree
+        # Re-render every fixture and require git to see no change. Guards
+        # against a golden that only matches on the machine that produced it.
+        run: |
+          python tests/test_replay_trace.py --update
+          git diff --exit-code -- tests/golden
+
+  qt-shell:
+    name: Qt 6 shell (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Qt GUI build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev \
+            libfontconfig1-dev libfreetype-dev ninja-build
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          cache: true
+
+      - name: Configure
+        run: cmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build ui/build --parallel
+
+      - name: Launch offscreen and require a clean QML load
+        # Two independent assertions, because either alone can pass falsely:
+        #   1. The process must survive to the timeout (exit 124). A crash or
+        #      early exit with empty stderr would otherwise look "clean".
+        #   2. stderr must be empty. Qt reports QML errors there and still
+        #      exits 0, so a silently broken binding would otherwise pass.
+        run: |
+          set -u
+          QT_QPA_PLATFORM=offscreen timeout 20 ./ui/build/edopro_next_shell \
+            > qml-stdout.log 2> qml-stderr.log && status=0 || status=$?
+          if [ "$status" -ne 124 ]; then
+            echo "::error::shell exited early with status $status; expected it to still be running"
+            cat qml-stderr.log
+            exit 1
+          fi
+          if [ -s qml-stderr.log ]; then
+            echo "::error::QML produced diagnostics on startup:"
+            cat qml-stderr.log
+            exit 1
+          fi
+          echo "shell ran for the full timeout with no QML diagnostics"
+
+  upstream-baseline:
+    name: Upstream EDOPro baseline
+    runs-on: ubuntu-latest
+    # Expensive. Skipped on ordinary feature and documentation pushes.
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.ref == 'refs/heads/master' ||
+      github.event_name == 'pull_request'
+    env:
+      TRAVIS_OS_NAME: linux
+      TARGET_OS: linux
+      BUILD_CONFIG: release
+      ARCH: x64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            g++ build-essential curl p7zip-full zip git
+
+      - name: Install premake5
+        run: ./travis/install-premake5.sh linux
+
+      - name: Bundled font and packer
+        run: ./travis/install-local-dependencies.sh linux
+
+      # Upstream publishes its dependency bundle as a dated release (e.g. tag
+      # 20260819) behind a rolling "latest" URL. Resolving the tag gives a key
+      # that is stable across runs but still refreshes automatically when
+      # upstream republishes - which a content hash cannot do, because the URL
+      # we consume is not versioned.
+      #
+      # Trade-off: if this lookup fails we fall back to a literal, which keeps
+      # the cache usable but means that run will not pick up a new upstream
+      # bundle. Bump the v1 schema segment by hand if our extraction layout
+      # changes and old caches must be discarded.
+      - name: Resolve upstream dependency release
+        id: vcpkg-rev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh api repos/edo9300/edopro-vcpkg-cache/releases/latest --jq '.tag_name' 2>/dev/null || true)
+          [ -n "$tag" ] || tag=unresolved
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "upstream vcpkg bundle: $tag"
+
+      - name: Cache upstream vcpkg tree
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: vcpkg
+          # Exact-match key. actions/cache only reports cache-hit == true on an
+          # exact primary-key hit, so this must be stable or the download below
+          # runs every time and a new cache is written on every run.
+          key: vcpkg-v1-x64-linux-${{ steps.vcpkg-rev.outputs.tag }}
+
+      - name: Fetch prebuilt dependencies
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p vcpkg && cd vcpkg
+          curl --retry 5 --connect-timeout 30 -L -o installed.7z https://github.com/edo9300/edopro-vcpkg-cache/releases/latest/download/installed_x64-linux.7z
+          7z x -y installed.7z > /dev/null
+          rm installed.7z
+
+      - name: Build client
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+        run: ./travis/build.sh
+
+      - name: Verify artifact
+        run: |
+          test -f bin/x64/release/ygoprodll || { echo "::error::client binary missing"; exit 1; }
+          file bin/x64/release/ygoprodll
+          ls -lh bin/x64/release/ygoprodll
