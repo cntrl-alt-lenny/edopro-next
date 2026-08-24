@@ -1,14 +1,14 @@
-# edopro-next replay trace v1
+# edopro-next replay trace v2
 source: duel-chains-battle
 format: yrpX
 client_version: 0x000b0029
 flags: COMPRESSED|LUA64|NEWREPLAY|64BIT_DUELFLAG|EXTENDED_HEADER
 header_version: 1
-seed: 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000
 duel_flags: 0x7f80d072c
 players: 2
-embedded_yrp1: yes
 trailing_bytes: 0
+seed: 0x0000000000000000 0x0000000000000000 0x0000000000000000 0x0000000000000000
+embedded_yrp1: yes
 packets: 990
 
 ## message counts
@@ -1037,7 +1037,13 @@ packets: 990
 
 ## embedded yrp1
 duel_flags: 0x7f80d072c
+trailing_bytes: 0
 start_lp: 8000
 start_hand: 5
 draw_count: 1
 seed: 0x6915be3c09b48e7c 0xc2a4080ecf445567 0xeb63645e7696d093 0x84b4e8aa0bbe0f6b
+decks: 2
+  deck 0: main=40 sha256:67968c95de1f819f extra=15 sha256:b1ce9fe99566c296
+  deck 1: main=40 sha256:b88f06280713cfa8 extra=15 sha256:fd2c392c81b5aacf
+rule_cards: 0
+responses: 135 sha256:f9e48d192fc3ede2

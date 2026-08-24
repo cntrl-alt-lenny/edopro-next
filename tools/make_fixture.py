@@ -11,6 +11,12 @@ the duel-message stream, seeds, duel flags and parameters are untouched, so the
 fixture still exercises exactly what the original did.
 
     python tools/make_fixture.py IN.yrpX OUT.yrpX
+    python tools/make_fixture.py --extract-yrp1 IN.yrpX OUT.yrp
+
+The second form lifts the YRP1 that modern EDOPro embeds inside a .yrpX out to
+a standalone file, so plain-format parsing is exercised by a real recording
+rather than a synthesised one. The extracted bytes are the embedded packet's
+payload verbatim; sanitisation has already been applied to it in place.
 
 Note that the trace format deliberately excludes names anyway; this is about
 the committed binary, not the golden file.
@@ -131,11 +137,45 @@ def _payload_start(body: bytes, header: R.ReplayHeader) -> int:
     return cur.pos
 
 
+def _extract_embedded_yrp1(data: bytes) -> bytes:
+    """Return the raw bytes of the YRP1 embedded in a YRPX."""
+    header = R.parse_header(data)
+    if not header.is_yrpx:
+        raise SystemExit("--extract-yrp1 needs a .yrpX source")
+    body = data[header.size:]
+    if header.compressed:
+        body = R._decompress(body, header)
+    cur = R._Cursor(body)
+    R._read_names(cur, header)
+    cur.u64() if header.flag & R.REPLAY_64BIT_DUELFLAG else cur.u32()
+    while cur.remaining >= 5:
+        msg = cur.u8()
+        payload = cur.take(cur.u32())
+        if msg == R.OLD_REPLAY_MODE:
+            return payload
+    raise SystemExit("no embedded YRP1 found in that replay")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--extract-yrp1", action="store_true",
+                    help="write the embedded YRP1 as a standalone .yrp instead")
     ap.add_argument("source", type=pathlib.Path)
     ap.add_argument("dest", type=pathlib.Path)
     args = ap.parse_args()
+
+    if args.extract_yrp1:
+        raw = _extract_embedded_yrp1(args.source.read_bytes())
+        inner = R.parse(raw)
+        if inner.trailing_bytes:
+            return _fail(f"extracted YRP1 not fully parsed ({inner.trailing_bytes} bytes left)")
+        if any(not n.startswith("Player") for n in inner.names):
+            return _fail(f"names not sanitised: {inner.names}")
+        args.dest.parent.mkdir(parents=True, exist_ok=True)
+        args.dest.write_bytes(raw)
+        print(f"{args.dest}: {len(raw)} bytes, {len(inner.decks)} decks, "
+              f"{len(inner.responses)} responses, names={inner.names}")
+        return 0
 
     out = _rebuild(args.source.read_bytes())
 

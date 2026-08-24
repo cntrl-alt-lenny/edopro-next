@@ -10,11 +10,14 @@ This is the golden-file representation. Its contract:
 * **Human-readable diffs.** A behavioural change should show up as a small,
   legible hunk, not a wall of hex.
 
-The trace is deliberately *structural* rather than semantic: it records the
-message id, name and payload for every packet without interpreting fields.
-That is the honest first step, because a semantic decoder does not exist yet
-(M2). When it does, a semantic trace can be added alongside this one and the
-two compared - which is exactly the property M1 exists to enable.
+The trace is deliberately *structural* rather than semantic: it records message
+ids and payload digests without interpreting fields. That is the honest first
+step, because a semantic decoder does not exist yet (M2).
+
+What a diff here does and does not mean is set out in
+`docs/architecture/replay-regression.md`. In short: this detects changes in how
+we *read* a recorded protocol, not changes in what a live engine would *emit* -
+the fixtures are frozen recordings, so nothing here re-runs ocgcore.
 
 Excluded from the trace, with reasons:
 
@@ -31,11 +34,15 @@ import hashlib
 from .messages import name_for
 from .reader import Replay
 
-TRACE_VERSION = 1
+TRACE_VERSION = 2
 
 # Payloads longer than this are summarised by length + digest rather than
 # inlined, so a trace stays readable. UPDATE_DATA payloads can be large.
 _INLINE_LIMIT = 32
+
+
+def _digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()[:16]
 
 
 def _payload_repr(payload: bytes) -> str:
@@ -43,8 +50,7 @@ def _payload_repr(payload: bytes) -> str:
         return "-"
     if len(payload) <= _INLINE_LIMIT:
         return payload.hex()
-    digest = hashlib.sha256(payload).hexdigest()[:16]
-    return f"len={len(payload)} sha256:{digest}"
+    return f"len={len(payload)} sha256:{_digest(payload)}"
 
 
 def _flag_names(flag: int) -> str:
@@ -70,6 +76,42 @@ def _flag_names(flag: int) -> str:
     return "|".join(present) if present else "-"
 
 
+def _yrp1_lines(replay: Replay, indent: str = "") -> list[str]:
+    """Render the input-recording half: parameters, decks, responses.
+
+    Card lists are summarised by size plus a digest rather than enumerated.
+    That keeps the trace readable while staying fully sensitive to any change,
+    and avoids turning a golden file into a card list.
+    """
+    out: list[str] = []
+    add = out.append
+    add(f"{indent}start_lp: {replay.start_lp}")
+    add(f"{indent}start_hand: {replay.start_hand}")
+    add(f"{indent}draw_count: {replay.draw_count}")
+    if replay.script_name is not None:
+        add(f"{indent}script_name: {replay.script_name}")
+    if replay.header.seed is not None:
+        add(f"{indent}seed: " + " ".join(f"0x{s:016x}" for s in replay.header.seed))
+
+    add(f"{indent}decks: {len(replay.decks)}")
+    for index, deck in enumerate(replay.decks):
+        main_bytes = b"".join(c.to_bytes(4, "little") for c in deck.main)
+        extra_bytes = b"".join(c.to_bytes(4, "little") for c in deck.extra)
+        add(f"{indent}  deck {index}: main={len(deck.main)} sha256:{_digest(main_bytes)} "
+            f"extra={len(deck.extra)} sha256:{_digest(extra_bytes)}")
+
+    add(f"{indent}rule_cards: {len(replay.rule_cards)}")
+    if replay.rule_cards:
+        rule_bytes = b"".join(c.to_bytes(4, "little") for c in replay.rule_cards)
+        add(f"{indent}  sha256:{_digest(rule_bytes)}")
+
+    # Responses are the engine's inputs. Their exact bytes decide the duel, so
+    # both the count and the content are covered.
+    response_bytes = b"".join(bytes([len(r.data)]) + r.data for r in replay.responses)
+    add(f"{indent}responses: {len(replay.responses)} sha256:{_digest(response_bytes)}")
+    return out
+
+
 def render(replay: Replay, *, source_name: str) -> str:
     """Render a replay as a deterministic trace.
 
@@ -87,16 +129,21 @@ def render(replay: Replay, *, source_name: str) -> str:
     add(f"flags: {_flag_names(h.flag)}")
     if h.header_version is not None:
         add(f"header_version: {h.header_version}")
+    add(f"duel_flags: 0x{replay.duel_flags:x}")
+    add(f"players: {len(replay.names)}")
+    add(f"trailing_bytes: {replay.trailing_bytes}")
+
+    if h.is_yrp1:
+        # An input recording: no message stream, so the duel is described by
+        # its seed, decks and responses.
+        add("")
+        add("## duel setup")
+        out.extend(_yrp1_lines(replay))
+        return "\n".join(out) + "\n"
+
     if h.seed is not None:
         add("seed: " + " ".join(f"0x{s:016x}" for s in h.seed))
-    add(f"duel_flags: 0x{replay.duel_flags:x}")
-    if replay.start_lp is not None:
-        add(f"start_lp: {replay.start_lp}")
-        add(f"start_hand: {replay.start_hand}")
-        add(f"draw_count: {replay.draw_count}")
-    add(f"players: {len(replay.names)}")
     add(f"embedded_yrp1: {'yes' if replay.embedded_yrp1 else 'no'}")
-    add(f"trailing_bytes: {replay.trailing_bytes}")
     add(f"packets: {len(replay.packets)}")
     add("")
 
@@ -119,10 +166,7 @@ def render(replay: Replay, *, source_name: str) -> str:
         add("")
         add("## embedded yrp1")
         add(f"duel_flags: 0x{inner.duel_flags:x}")
-        add(f"start_lp: {inner.start_lp}")
-        add(f"start_hand: {inner.start_hand}")
-        add(f"draw_count: {inner.draw_count}")
-        if inner.header.seed is not None:
-            add("seed: " + " ".join(f"0x{s:016x}" for s in inner.header.seed))
+        add(f"trailing_bytes: {inner.trailing_bytes}")
+        out.extend(_yrp1_lines(inner))
 
     return "\n".join(out) + "\n"
