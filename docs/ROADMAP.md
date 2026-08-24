@@ -18,21 +18,34 @@ Nothing is described as shipped until it is.
 - [x] Agent working agreement (`CLAUDE.md`)
 - [x] Qt 6 / QML shell that compiles and runs, with a design token system
 
-## M1 — Make change provable  🔜 next
+## M1 — Make change provable  🔶 in progress
 
 The most important milestone in the project, because everything after it depends on being
 able to assert *"this changed presentation, not duel behaviour."*
 
-- [ ] Determine whether `.yrp`/`.yrpX` replays can be driven headlessly through `ocgcore`
-      to produce a deterministic message stream. This is tracked as an open question in
-      the architecture survey and is the key enabler for everything below.
-- [ ] If yes: capture a small corpus of replay fixtures and record their message streams
-      as golden files.
-- [ ] If no: design an alternative deterministic fixture (scripted duel, seeded RNG) and
-      document why the replay route failed.
-- [ ] CI on Linux building both the upstream client and the Qt shell.
+- [x] Determine whether `.yrp`/`.yrpX` replays can support deterministic regression.
+      **Yes** — and better than expected: a `.yrpX` stores the duel message stream itself,
+      so the common case needs no engine at all. Full trace in
+      [replay-regression.md](architecture/replay-regression.md).
+- [x] Capture a small fixture corpus and record golden traces.
+      Two sanitised real duels covering turn progression, summons, chains, targeting,
+      movement, battle, draws, reveals and a terminal win.
+- [x] Deterministic harness with human-readable diffs, running headlessly.
+      Python standard library only; no `ocgcore`, no card data, under a second.
+- [x] CI on Linux covering the harness, the Qt shell and the upstream baseline.
+- [ ] **Level 2 (optional, not started):** re-simulate the embedded YRP1 through `ocgcore`
+      and compare the produced stream against the recorded one. Everything needed is
+      already in the fixtures — seed, decks, duel parameters, responses — but it requires
+      CardScripts and a card database at a pinned revision, so it is deferred until
+      engine-adjacent code is actually being modified.
 
 **Exit criterion:** a regression suite exists that fails if duel message semantics change.
+**Met** for the recorded-stream level; verified by perturbing a golden and observing a
+failing test with a precise diff.
+
+**Known limit:** the trace is structural (message ids and payload digests), not semantic.
+A change altering payload *contents* is caught; one altering *interpretation* of unchanged
+bytes is not. That is the natural extension in M2, once a semantic decoder exists.
 
 ## M2 — Semantic client model
 
