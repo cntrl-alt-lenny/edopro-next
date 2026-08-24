@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="edopro-next — a modern client architecture for EDOPro">
+  <title>edopro-next</title>
+  <desc>Abstract duel-field geometry: engine and card scripts feeding a semantic model, then a modern client.</desc>
+
+  <defs>
+    <!-- Palette lifted directly from ui/qml/Theme.qml so the repository and the
+         application read as the same product. -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16181D"/>
+      <stop offset="1" stop-color="#0E0F12"/>
+    </linearGradient>
+
+    <!-- One card cell: the atom of the field grid. -->
+    <g id="cell">
+      <rect x="0" y="0" width="34" height="48" rx="3"
+            fill="none" stroke="#2A2E37" stroke-width="1"/>
+    </g>
+
+    <!-- The single accented cell, echoing "selection" in the design system. -->
+    <g id="cellActive">
+      <rect x="0" y="0" width="34" height="48" rx="3"
+            fill="#3A3218" stroke="#C9A227" stroke-width="1.25"/>
+    </g>
+
+    <clipPath id="frame">
+      <rect x="0" y="0" width="1200" height="320" rx="10"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="320" fill="url(#bg)"/>
+
+    <!-- ── Left: abstract duel field ─────────────────────────────────────── -->
+    <!-- Two opposing rows of five zones, the shape of a Yu-Gi-Oh field without
+         reproducing any game asset. Perspective is implied by opacity alone. -->
+    <g transform="translate(96 74)" opacity="0.85">
+      <g opacity="0.5">
+        <use href="#cell" x="0"   y="0"/>
+        <use href="#cell" x="44"  y="0"/>
+        <use href="#cell" x="88"  y="0"/>
+        <use href="#cell" x="132" y="0"/>
+        <use href="#cell" x="176" y="0"/>
+      </g>
+      <g>
+        <use href="#cell"       x="0"   y="76"/>
+        <use href="#cell"       x="44"  y="76"/>
+        <use href="#cellActive" x="88"  y="76"/>
+        <use href="#cell"       x="132" y="76"/>
+        <use href="#cell"       x="176" y="76"/>
+      </g>
+
+      <!-- Chain link: state flowing from the selected zone upward. Two short
+           strokes, not an arrow - restraint over literalism. -->
+      <path d="M105 76 L105 58 Q105 50 113 50 L149 50"
+            fill="none" stroke="#C9A227" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="105" cy="76" r="2.5" fill="#C9A227"/>
+      <circle cx="149" cy="50" r="2.5" fill="#C9A227" opacity="0.55"/>
+    </g>
+
+    <!-- Hairline divider, same idiom as the application's surfaces. -->
+    <line x1="360" y1="60" x2="360" y2="260" stroke="#2A2E37" stroke-width="1"/>
+
+    <!-- ── Right: wordmark and layer stack ───────────────────────────────── -->
+    <g transform="translate(424 0)">
+      <!-- Accent rule + wordmark, mirroring the app's nav header exactly. -->
+      <rect x="0" y="96" width="4" height="30" rx="2" fill="#C9A227"/>
+      <text x="20" y="121"
+            font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+            font-size="42" font-weight="600" fill="#E8EAED" letter-spacing="-0.5">edopro-next</text>
+
+      <text x="21" y="152"
+            font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+            font-size="15" font-weight="400" fill="#9AA0AA">
+        A modern client architecture for EDOPro
+      </text>
+
+      <!-- The architecture, as a stack. Preserved layers are neutral; the layer
+           this project actually builds is the accented one. -->
+      <g transform="translate(21 190)"
+         font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+         font-size="11.5">
+        <g>
+          <rect x="0" y="0" width="176" height="26" rx="4" fill="#1E2128" stroke="#2A2E37"/>
+          <text x="14" y="17" fill="#9AA0AA">Project Ignis CardScripts</text>
+        </g>
+        <g transform="translate(190 0)">
+          <rect x="0" y="0" width="110" height="26" rx="4" fill="#1E2128" stroke="#2A2E37"/>
+          <text x="14" y="17" fill="#9AA0AA">ocgcore</text>
+        </g>
+        <g transform="translate(314 0)">
+          <rect x="0" y="0" width="150" height="26" rx="4" fill="#16181D" stroke="#3A404C" stroke-dasharray="3 3"/>
+          <text x="14" y="17" fill="#6B7280">semantic model</text>
+        </g>
+        <g transform="translate(478 0)">
+          <rect x="0" y="0" width="126" height="26" rx="4" fill="#3A3218" stroke="#C9A227"/>
+          <text x="14" y="17" fill="#C9A227">Qt 6 / QML</text>
+        </g>
+
+        <!-- Connectors -->
+        <g stroke="#2A2E37" stroke-width="1">
+          <line x1="176" y1="13" x2="190" y2="13"/>
+          <line x1="300" y1="13" x2="314" y2="13"/>
+          <line x1="464" y1="13" x2="478" y2="13"/>
+        </g>
+      </g>
+
+      <text x="21" y="248"
+            font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+            font-size="11" fill="#6B7280">
+        Preserve the engine.  Expose clean semantics.  Modernise the client.
+      </text>
+    </g>
+
+    <rect x="0.5" y="0.5" width="1199" height="319" rx="10"
+          fill="none" stroke="#2A2E37" stroke-width="1"/>
+  </g>
+</svg>
