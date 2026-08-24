@@ -44,17 +44,6 @@ def _neutral(index: int) -> bytes:
     return raw + b"\x00" * (NAME_SLOT - len(raw))
 
 
-def _name_region(body: bytes, header: R.ReplayHeader) -> tuple[int, int]:
-    """Return (offset, count) of the name slots in a decompressed body."""
-    if header.single_mode:
-        return 0, 2
-    home = struct.unpack_from("<I", body, 0)[0]
-    away_off = 4 + home * NAME_SLOT
-    away = struct.unpack_from("<I", body, away_off)[0]
-    # Two runs separated by the away count; handled by the caller.
-    return home, away
-
-
 def _sanitise_body(body: bytes, header: R.ReplayHeader) -> bytes:
     out = bytearray(body)
     if header.single_mode:
@@ -124,13 +113,7 @@ def _rebuild(data: bytes) -> bytes:
 def _payload_start(body: bytes, header: R.ReplayHeader) -> int:
     """Offset at which the packet stream begins (i.e. end of names + params)."""
     cur = R._Cursor(body)
-    if header.single_mode:
-        cur.name(), cur.name()
-    else:
-        for _ in range(cur.u32()):
-            cur.name()
-        for _ in range(cur.u32()):
-            cur.name()
+    R._read_names(cur, header)
     if header.is_yrp1:
         cur.u32(), cur.u32(), cur.u32()
     cur.u64() if header.flag & R.REPLAY_64BIT_DUELFLAG else cur.u32()

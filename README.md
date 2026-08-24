@@ -84,7 +84,7 @@ engine changes at all.
 
 ### Separate
 
-Upstream fuses protocol decode, state, animation and widgets in one 4,658-line function,
+Upstream fuses protocol decode, state, animation and widgets in one 2,977-line function,
 and stores render transforms in the same struct as a card's attack value. **Semantic state
 gets its own layer.**
 
