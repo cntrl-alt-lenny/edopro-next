@@ -133,23 +133,41 @@ jobs:
       - name: Bundled font and packer
         run: ./travis/install-local-dependencies.sh linux
 
+      # Upstream publishes its dependency bundle as a dated release (e.g. tag
+      # 20260819) behind a rolling "latest" URL. Resolving the tag gives a key
+      # that is stable across runs but still refreshes automatically when
+      # upstream republishes - which a content hash cannot do, because the URL
+      # we consume is not versioned.
+      #
+      # Trade-off: if this lookup fails we fall back to a literal, which keeps
+      # the cache usable but means that run will not pick up a new upstream
+      # bundle. Bump the v1 schema segment by hand if our extraction layout
+      # changes and old caches must be discarded.
+      - name: Resolve upstream dependency release
+        id: vcpkg-rev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh api repos/edo9300/edopro-vcpkg-cache/releases/latest --jq '.tag_name' 2>/dev/null || true)
+          [ -n "$tag" ] || tag=unresolved
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "upstream vcpkg bundle: $tag"
+
       - name: Cache upstream vcpkg tree
         id: vcpkg-cache
         uses: actions/cache@v4
         with:
           path: vcpkg
-          # Upstream publishes a rolling "latest" dependency cache, so this key
-          # is refreshed per run and falls back to the most recent prefix match
-          # rather than being pinned to a hash we do not control.
-          key: vcpkg-x64-linux-${{ github.run_id }}
-          restore-keys: vcpkg-x64-linux-
+          # Exact-match key. actions/cache only reports cache-hit == true on an
+          # exact primary-key hit, so this must be stable or the download below
+          # runs every time and a new cache is written on every run.
+          key: vcpkg-v1-x64-linux-${{ steps.vcpkg-rev.outputs.tag }}
 
       - name: Fetch prebuilt dependencies
         if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p vcpkg && cd vcpkg
-          curl --retry 5 --connect-timeout 30 -L -o installed.7z \
-            https://github.com/edo9300/edopro-vcpkg-cache/releases/latest/download/installed_x64-linux.7z
+          curl --retry 5 --connect-timeout 30 -L -o installed.7z https://github.com/edo9300/edopro-vcpkg-cache/releases/latest/download/installed_x64-linux.7z
           7z x -y installed.7z > /dev/null
           rm installed.7z
 
