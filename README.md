@@ -52,9 +52,10 @@ flowchart LR
 <br>
 
 What has aged is the layer around the engine. The client descends from YGOPro:
-fixed-coordinate widgets on a patched Irrlicht 1.8, with no layout system, no DPI
-awareness, no accessibility layer, no declarative focus model and no animation framework.
-Those are consequences of a toolkit choice made long ago, not failures of effort.
+fixed-coordinate widgets on a patched Irrlicht 1.8, sized by manual DPI scaling rather
+than a layout system, with no accessibility layer, no declarative focus model and no
+animation framework. Those are consequences of a toolkit choice made long ago, not
+failures of effort.
 
 ## The shell today
 
