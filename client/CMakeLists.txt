@@ -57,7 +57,8 @@ if(EDOPRO_NEXT_CLIENT_TESTS)
     target_include_directories(edopro_next_client_test_main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tests)
     target_link_libraries(edopro_next_client_test_main PUBLIC edopro_next_client)
 
-    foreach(suite duel_state protocol_decoder hidden_information semantic_trace)
+    foreach(suite duel_state protocol_decoder hidden_information semantic_trace
+                  transactional_decoding legacy_perspective)
         add_executable(test_${suite} tests/test_${suite}.cpp)
         target_link_libraries(test_${suite} PRIVATE edopro_next_client_test_main)
         if(MSVC)

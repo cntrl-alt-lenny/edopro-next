@@ -75,6 +75,11 @@ struct CardState {
 	bool tracked = true;
 
 	bool identity_known() const noexcept { return is_known(code); }
+
+	// Whole-value equality, used to prove a refused packet left a DuelState
+	// byte-for-byte unchanged. Every member above is itself a value type with
+	// its own `==`, so this is exact, not a spot check of a few fields.
+	friend bool operator==(const CardState&, const CardState&) = default;
 };
 
 } // namespace edopro_next::client

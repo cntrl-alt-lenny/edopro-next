@@ -61,6 +61,8 @@ struct ChainLink {
 	std::uint64_t description = 0;
 	bool resolving = false;
 	bool resolved = false;
+
+	friend bool operator==(const ChainLink&, const ChainLink&) = default;
 };
 
 struct DeckSizes {
@@ -180,6 +182,14 @@ public:
 	// violation. Empty means the model is self-consistent. Used by tests and
 	// by the trace tool; cheap enough to call per duel, not per packet.
 	std::vector<std::string> check_invariants() const;
+
+	// Whole-state structural equality: every private member below is a value
+	// type with its own `==`, so this compares the complete model, not a
+	// hand-picked subset of fields. It is what lets a test assert "this
+	// packet changed nothing" without having to enumerate what "nothing"
+	// means. See ProtocolDecoder::decode(), which relies on DuelState being
+	// cheaply, correctly copyable to give its all-or-nothing guarantee.
+	friend bool operator==(const DuelState&, const DuelState&) = default;
 
 private:
 	std::vector<CardInstanceId>& mutable_zone(PlayerId player, Zone zone);

@@ -75,7 +75,11 @@ public:
 
 	const ProtocolVariant& variant() const noexcept { return variant_; }
 
-	// Decodes one packet. `state` is modified only on success.
+	// Decodes one packet. `state` is left exactly as it was for any result
+	// other than Decoded - Malformed and Inconsistent included, however far a
+	// handler got into mutating before it discovered the packet must be
+	// refused. Enforced by decoding against a private copy and committing it
+	// back only once the packet is fully accepted; see the implementation.
 	DecodeResult decode(const Packet& packet, DuelState& state);
 
 	// Message ids this build decodes, ascending. Used by the coverage report

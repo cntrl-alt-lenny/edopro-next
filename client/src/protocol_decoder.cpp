@@ -370,7 +370,26 @@ void handle_pos_change(Decoding& d) {
 
 	// The message states the position it is changing *from*. If the model
 	// disagrees, the model is wrong somewhere earlier, and saying so is worth
-	// more than quietly overwriting it.
+	// more than quietly overwriting it. This is stricter than upstream, which
+	// applies the new position unconditionally (gframe/duelclient.cpp,
+	// MSG_POS_CHANGE case) - a deliberate choice, not an oversight.
+	//
+	// The obvious worry: MSG_UPDATE_DATA/MSG_UPDATE_CARD are not decoded yet,
+	// and legacy ClientCard::UpdateInfo does write `position` from a bare
+	// QUERY_POSITION independently of MSG_POS_CHANGE (gframe/client_card.cpp).
+	// If that ever let the *legacy* client's position drift ahead of what our
+	// model can see, this check would misfire on a perfectly healthy stream.
+	// Investigated and found not to hold for this slice: every real position
+	// this model can observe arrives already through MSG_MOVE (which always
+	// carries a destination position) or this very message: QUERY_POSITION
+	// mirrors state already announced through one of those two decoded
+	// channels rather than being an independent source of position changes.
+	// Both committed fixtures corroborate this empirically - 773 and 799
+	// MSG_UPDATE_DATA/CARD packets respectively, heavily interleaved with real
+	// MSG_POS_CHANGE events, zero false-positive Inconsistent results in
+	// either (tests/golden/*.semantic). Re-examine this the moment
+	// MSG_UPDATE_DATA/MSG_UPDATE_CARD are actually decoded: this reasoning
+	// covers the *current* 27-message slice, not a hypothetical future one.
 	const auto held = d.state().find(id)->position;
 	if(held != previous_position) {
 		d.inconsistent("position change from " + to_string(previous_position) + " but " +
@@ -757,7 +776,26 @@ DecodeResult ProtocolDecoder::decode(const Packet& packet, DuelState& state) {
 		return result;
 	}
 
-	Decoding decoding(packet, state, variant_);
+	// Decoding runs against a private working copy, never the caller's real
+	// state, and that copy is committed back only once every check below has
+	// passed. This is what makes "state is modified only on success" true
+	// regardless of how far a handler got before it ran into trouble: a
+	// handler is free to apply an identity change, a position, a combat stat
+	// - anything - before discovering two steps later that the packet must be
+	// refused, because whatever it touched lives in `trial` and `trial` is
+	// simply discarded on any non-Decoded outcome. Reordering every handler to
+	// front-load its checks would give the same guarantee far more fragilely
+	// (one handler gets it wrong, one bug reappears); a single copy-and-commit
+	// point gives it once, centrally, and it cannot regress handler by
+	// handler. DuelState is cheap to copy (see its member list) and this path
+	// is not hot, so the cost is a non-issue for a correctness-first
+	// milestone. client/tests/test_transactional_decoding.cpp asserts this
+	// end to end using DuelState::operator==, across MSG_MOVE, MSG_DRAW,
+	// MSG_POS_CHANGE and MSG_BATTLE - the four handlers found to mutate ahead
+	// of a later possible failure - plus the three non-Decoded statuses that
+	// never reach a handler at all.
+	DuelState trial = state;
+	Decoding decoding(packet, trial, variant_);
 	decode_supported(packet.message, decoding);
 
 	auto& reader = decoding.reader();
@@ -783,6 +821,7 @@ DecodeResult ProtocolDecoder::decode(const Packet& packet, DuelState& state) {
 
 	result.status = DecodeStatus::Decoded;
 	result.events = decoding.take_events();
+	state = std::move(trial);
 	return result;
 }
 
