@@ -12,7 +12,9 @@ Sources (all upstream-owned, never edited by us):
 
 Only literal values and simple bitwise-or compositions of already-defined
 names are accepted. Anything else (casts, shifts, arithmetic) is skipped
-rather than guessed at, and reported so the omission is visible.
+rather than guessed at - and --check fails on any such skip, not just the
+plain-write mode, so a relevant constant this generator cannot understand
+cannot go unreported: CI runs --check, not a plain write.
 
 Usage:
     python tools/generate_protocol_constants.py            # write the header
@@ -251,6 +253,23 @@ def main() -> int:
         if OUT.read_text(encoding="utf-8") != text:
             print(f"{OUT} is stale; re-run: python tools/generate_protocol_constants.py",
                   file=sys.stderr)
+            return 1
+        if skipped:
+            # A committed header that matches what collect() currently
+            # produces is not the same as "current": collect() may have
+            # silently dropped a relevant constant it could not evaluate, and
+            # a bare text-equality check against that already-incomplete
+            # output would say "up to date" regardless. Every entry here
+            # already matched a tracked prefix (that is the only way it can
+            # reach `skipped`), so there is nothing to filter - report and
+            # fail on all of it.
+            print(f"{OUT} omits {len(skipped)} constant(s) this generator could not evaluate:",
+                  file=sys.stderr)
+            for entry in skipped:
+                print(f"  {entry}", file=sys.stderr)
+            print("Extend _evaluate() in tools/generate_protocol_constants.py to resolve "
+                  "these, or explain here why they are legitimately excluded, before "
+                  "re-running --check.", file=sys.stderr)
             return 1
         print(f"protocol constants up to date ({total} values)")
         return 0
