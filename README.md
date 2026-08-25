@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/cntrl-alt-lenny/edopro-next/actions/workflows/edopro-next.yml/badge.svg)](https://github.com/cntrl-alt-lenny/edopro-next/actions/workflows/edopro-next.yml)
 [![Status](https://img.shields.io/badge/status-early%20development-C08A3E)](docs/ROADMAP.md)
-[![Milestone](https://img.shields.io/badge/milestone-M1%20regression%20harness-C9A227)](docs/ROADMAP.md)
+[![Milestone](https://img.shields.io/badge/milestone-M2%20semantic%20client%20model-C9A227)](docs/ROADMAP.md)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C)](docs/adr/0001-ui-runtime-stack.md)
 [![Qt 6](https://img.shields.io/badge/Qt-6.8%20LTS%20%2F%20QML-41CD52)](ui/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
@@ -114,7 +114,8 @@ Nothing here is rounded up.
 | Recorded-protocol regression baseline | ✅ **Working** | golden traces over real duels — [how](docs/architecture/replay-regression.md) |
 | Linux CI | ✅ **Working** | harness, Qt shell, upstream baseline |
 | Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
-| Semantic client model | ⬜ Not started | next milestone after M1 |
+| Semantic duel model | 🔶 **In progress** | 27 of ~90 messages decoded, no renderer involved — [design](docs/architecture/semantic-model.md) |
+| Legacy/model equivalence check | ⬜ Not started | `gframe/` is untouched; the model runs only in tests so far |
 | Deck builder | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |
@@ -159,11 +160,31 @@ output format and the input format. The harness is Python standard library only 
 headlessly in under a second. [The investigation](docs/architecture/replay-regression.md)
 sets out the full boundary.
 
+### A second trace, one layer up
+
+M1's trace is *structural*: message ids and payload digests, with no attempt to interpret
+the bytes. M2 adds a *semantic* trace over the same fixtures, produced by the new decoder,
+so a change in what the protocol is understood to **mean** also produces a readable diff:
+
+```diff
+   259 ChainLinkAdded link=1 instance=37 code=504700123 from=SZONE[p0:2]
+-  299 CardMoved instance=37 SZONE[p0:2] -> GRAVE[p0:1] reason=RULE
++  299 CardMoved instance=37 SZONE[p0:2] -> GRAVE[p0:0] reason=RULE
+   301 ChainEnded links=1
+```
+
+Both traces are kept. A container-parsing change moves the first; a decoder change moves
+the second. Alongside the golden comparison, the semantic suite asserts directly that no
+packet in either fixture is malformed, unknown or inconsistent, and that the model's
+integrity invariants hold at the end of the duel — claims a golden file alone could not
+make, because a golden blesses whatever it is shown.
+
 ## Architecture
 
 ```
 gframe/          legacy Irrlicht client        upstream — touch minimally
 ocgcore/         rules engine (submodule)      upstream — do not touch
+client/          semantic duel model           ours — no Qt, no Irrlicht
 ui/              Qt 6 / QML presentation       ours
 tools/           Python tooling and harness    ours
 tests/           fixtures and golden traces    ours
@@ -174,6 +195,8 @@ New code lives in new directories, specifically so upstream merges stay tractabl
 
 **Read next:** [architecture survey](docs/architecture/current-edopro.md) ·
 [ADR 0001: UI stack](docs/adr/0001-ui-runtime-stack.md) ·
+[semantic model](docs/architecture/semantic-model.md) ·
+[ADR 0002: identity and events](docs/adr/0002-semantic-event-model.md) ·
 [replay regression](docs/architecture/replay-regression.md) ·
 [upstream policy](docs/UPSTREAM.md)
 
@@ -197,7 +220,7 @@ The full system — colour, spacing, typography, motion, focus — is in
 |:--|:--|:--|
 | **M0** | Foundation — architecture, baseline, ADR, shell | ✅ done |
 | **M1** | **Make change provable** — regression harness, CI | 🔶 in progress |
-| **M2** | Semantic client model — presentation-free duel state | ⬜ |
+| **M2** | **Semantic client model** — presentation-free duel state | 🔶 in progress |
 | **M3** | Deck and card data — the first screen to migrate | ⬜ |
 | **M4** | Low-risk screens — settings, replays, lobby | ⬜ |
 | **M5** | Duel field — last, and highest risk | ⬜ |
@@ -216,7 +239,16 @@ cmake --build ui/build
 ./ui/build/edopro_next_shell
 ```
 
-**Regression harness** — Python 3.10+, no dependencies:
+**Semantic client model** — C++20 and nothing else. No Qt, no Irrlicht, no `ocgcore`:
+
+```bash
+cmake -S client -B client/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build client/build
+ctest --test-dir client/build --output-on-failure
+```
+
+**Regression harness** — Python 3.10+, no dependencies. The semantic golden tests need the
+command above to have been run; without it they skip:
 
 ```bash
 python -m unittest discover -s tests -v
