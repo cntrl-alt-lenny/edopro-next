@@ -172,6 +172,54 @@ EDOPRO_TEST(material_attaches_and_reindexes) {
 	EDOPRO_CHECK(state.check_invariants().empty());
 }
 
+EDOPRO_TEST(moving_a_host_carries_its_material_along) {
+	// Found by an automated pre-merge reviewer, verified against source
+	// before being fixed: place() updated a host's own `location` on every
+	// call but never refreshed the copy of it each attached material keeps
+	// for at()'s benefit, so a host that moved - or changed controller -
+	// while still carrying material left every material naming the host's
+	// *previous* slot. check_invariants() did not catch it either, since it
+	// only checked overlay_index, not the mirrored controller/zone/sequence.
+	auto state = started_duel(0, 0);
+	const auto host = create(state, loc(0, Zone::MonsterZone, 0), kFaceUpAttack);
+	const auto material = create(state, loc(0, Zone::Hand, 0), kFaceDown);
+	EDOPRO_CHECK(!state.move_card(material, CardLocation{0, Zone::MonsterZone, 0, true, 0},
+								  std::nullopt)
+					  .has_value());
+	EDOPRO_CHECK_EQ(state.find(material)->location.sequence, std::uint32_t{0});
+
+	// Reposition the host within the same player's field.
+	EDOPRO_CHECK(!state.move_card(host, loc(0, Zone::MonsterZone, 3), kFaceUpAttack).has_value());
+	EDOPRO_CHECK_EQ(state.find(material)->location.controller, PlayerId{0});
+	EDOPRO_CHECK_EQ(state.find(material)->location.zone, Zone::MonsterZone);
+	EDOPRO_CHECK_EQ(state.find(material)->location.sequence, std::uint32_t{3});
+	EDOPRO_CHECK(state.find(material)->location.overlay);
+	EDOPRO_CHECK_EQ(state.at(CardLocation{0, Zone::MonsterZone, 3, true, 0}), material);
+	EDOPRO_CHECK(state.check_invariants().empty());
+
+	// A controller change must move the material's recorded controller too.
+	EDOPRO_CHECK(!state.move_card(host, loc(1, Zone::MonsterZone, 2), kFaceUpAttack).has_value());
+	EDOPRO_CHECK_EQ(state.find(material)->location.controller, PlayerId{1});
+	EDOPRO_CHECK_EQ(state.find(material)->location.sequence, std::uint32_t{2});
+	EDOPRO_CHECK_EQ(state.at(CardLocation{1, Zone::MonsterZone, 2, true, 0}), material);
+	EDOPRO_CHECK(state.check_invariants().empty());
+}
+
+EDOPRO_TEST(invariant_check_notices_a_material_naming_a_stale_host_location) {
+	// Guards the guard added alongside the fix above: without it, the
+	// previous test would have passed even on the old, buggy place().
+	auto state = started_duel(0, 0);
+	create(state, loc(0, Zone::MonsterZone, 0), kFaceUpAttack);
+	const auto material = create(state, loc(0, Zone::Hand, 0), kFaceDown);
+	EDOPRO_CHECK(!state.move_card(material, CardLocation{0, Zone::MonsterZone, 0, true, 0},
+								  std::nullopt)
+					  .has_value());
+	EDOPRO_CHECK(state.check_invariants().empty());
+
+	const_cast<CardState*>(state.find(material))->location.sequence = 5;
+	EDOPRO_CHECK(!state.check_invariants().empty());
+}
+
 EDOPRO_TEST(removing_a_host_untracks_its_material) {
 	auto state = started_duel(0, 0);
 	const auto host = create(state, loc(0, Zone::MonsterZone, 0), kFaceUpAttack);

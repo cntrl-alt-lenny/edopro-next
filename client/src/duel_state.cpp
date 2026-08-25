@@ -235,41 +235,57 @@ void DuelState::place(CardState& card, const CardLocation& destination,
 		card.location = destination;
 		card.location.overlay = false;
 		card.location.overlay_index = 0;
-		return;
+	} else {
+		// Piles. The insertion index is not always the sequence the protocol
+		// asked for; ClientField::AddCard recomputes it, and reproducing that
+		// exactly is what keeps our sequences comparable with the legacy ones.
+		std::size_t index = contents.size();
+		if(destination.zone == Zone::Deck) {
+			// Sequence 0 means "on top of the deck", which is the front of
+			// the vector. Any other sequence appends. Faithful to upstream,
+			// oddity included: a card returned to the middle of the deck
+			// lands at the bottom, because the client is not told where it
+			// really went.
+			if(destination.sequence == 0 && !contents.empty())
+				index = 0;
+		} else if(destination.zone == Zone::ExtraDeck) {
+			// Face-up extra-deck cards accumulate at the back; face-down ones
+			// go in front of them.
+			if(!card.position.face_up())
+				index = contents.size() - extra_face_up_[destination.controller];
+		}
+
+		contents.insert(contents.begin() + static_cast<std::ptrdiff_t>(index), card.id);
+		card.location = destination;
+		card.location.overlay = false;
+		card.location.overlay_index = 0;
+		card.location.sequence = static_cast<std::uint32_t>(index);
+
+		// Everything after the insertion point shifted up by one.
+		for(std::size_t i = index + 1; i < contents.size(); ++i) {
+			if(auto* shifted = find(contents[i]); shifted != nullptr)
+				shifted->location.sequence = static_cast<std::uint32_t>(i);
+		}
+
+		if(destination.zone == Zone::ExtraDeck && card.position.face_up())
+			++extra_face_up_[destination.controller];
 	}
 
-	// Piles. The insertion index is not always the sequence the protocol
-	// asked for; ClientField::AddCard recomputes it, and reproducing that
-	// exactly is what keeps our sequences comparable with the legacy ones.
-	std::size_t index = contents.size();
-	if(destination.zone == Zone::Deck) {
-		// Sequence 0 means "on top of the deck", which is the front of the
-		// vector. Any other sequence appends. Faithful to upstream, oddity
-		// included: a card returned to the middle of the deck lands at the
-		// bottom, because the client is not told where it really went.
-		if(destination.sequence == 0 && !contents.empty())
-			index = 0;
-	} else if(destination.zone == Zone::ExtraDeck) {
-		// Face-up extra-deck cards accumulate at the back; face-down ones go
-		// in front of them.
-		if(!card.position.face_up())
-			index = contents.size() - extra_face_up_[destination.controller];
+	// A card's material carries a copy of the host's location (see the
+	// attach branch above), because at() needs to resolve `HOST[..]#N`
+	// without a two-step lookup. That copy goes stale the moment the host
+	// itself is placed anywhere - a repositioning effect, a controller
+	// change - unless it is refreshed here too. Skipped by every other
+	// caller of place() only because they don't have to think about it;
+	// this one does, since it is the only place a host's own location is
+	// finalised.
+	for(const auto material_id : card.materials) {
+		if(auto* material = find(material_id); material != nullptr) {
+			material->location.controller = card.location.controller;
+			material->location.zone = card.location.zone;
+			material->location.sequence = card.location.sequence;
+		}
 	}
-
-	contents.insert(contents.begin() + static_cast<std::ptrdiff_t>(index), card.id);
-	card.location = destination;
-	card.location.overlay = false;
-	card.location.overlay_index = 0;
-	card.location.sequence = static_cast<std::uint32_t>(index);
-
-	// Everything after the insertion point shifted up by one.
-	for(std::size_t i = index + 1; i < contents.size(); ++i) {
-		if(auto* shifted = find(contents[i]); shifted != nullptr)
-			shifted->location.sequence = static_cast<std::uint32_t>(i);
-	}
-
-	if(destination.zone == Zone::ExtraDeck && card.position.face_up())
-		++extra_face_up_[destination.controller];
 }
 
 DuelState::Error DuelState::detach(CardState& card) {
@@ -513,6 +529,15 @@ std::vector<std::string> DuelState::check_invariants() const {
 				problems.push_back(to_string(id) + " has material index " +
 								   std::to_string(material->location.overlay_index) +
 								   ", listed at " + std::to_string(i));
+			if(material->location.controller != card.location.controller ||
+			   material->location.zone != card.location.zone ||
+			   material->location.sequence != card.location.sequence)
+				problems.push_back(to_string(id) + " is material on " + describe(card.location) +
+								   " but names host location " +
+								   describe(CardLocation{material->location.controller,
+														 material->location.zone,
+														 material->location.sequence, false,
+														 0}));
 		}
 	}
 
