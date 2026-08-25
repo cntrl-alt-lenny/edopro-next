@@ -75,14 +75,24 @@ latter — for the 27 message types it decodes, and no further.
 - [x] Semantic golden traces over the same fixtures, alongside the structural M1 traces,
       plus direct assertions that no packet is malformed, unknown or inconsistent and that
       the model's integrity invariants hold.
-- [x] Unit tests for the model, independent of any UI. Four CTest suites covering zone
-      bookkeeping, decoder layouts and refusals, hidden information, and the trace.
+- [x] Unit tests for the model, independent of any UI. Six CTest suites covering zone
+      bookkeeping, decoder layouts and refusals, hidden information, the trace, the
+      all-or-nothing decode guarantee, and the legacy player-perspective formula.
+- [x] Decoding is transactional: a refused packet leaves `DuelState` byte-for-byte
+      unchanged, verified by whole-state equality, not a field-by-field spot check.
+      Pre-merge review found this false for four handlers; fixed centrally rather than
+      handler by handler — [ADR 0002, Decision 6](adr/0002-semantic-event-model.md).
+- [x] Legacy player-perspective normalization documented and pinned by a small, tested,
+      deliberately test-only reference implementation, so the equivalence work below has a
+      verified formula to build on without pulling perspective into the model itself —
+      [ADR 0002, Decision 7](adr/0002-semantic-event-model.md).
 - [ ] **Run the model alongside the legacy handler.** `gframe/` is untouched so far: the
       model runs only in tests. The additive hook in `DuelClient::ClientAnalyze` is the
       recommended next step.
 - [ ] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
       Not started, and dependent on the item above. No equivalence claim is made anywhere
-      in this milestone.
+      in this milestone. The normalization rule it will need is now documented and tested
+      (see the two items above), but not implemented as part of an actual comparison.
 
 **Exit criterion:** game state can be inspected without instantiating a renderer.
 **Met for the implemented slice** — `client/tools/semantic_trace_main.cpp` reads a real

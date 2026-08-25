@@ -7,16 +7,17 @@
 
 ## Context
 
-M2 introduces `client/`: the first representation of a live duel that a renderer can read
-without being a renderer. Every screen after it — most of all the duel field in M5 —
-depends on the shape chosen here, so the decisions worth arguing about are worth writing
-down.
+M2 introduces `client/`: the first presentation-free semantic model of EDOPro's duel
+protocol, designed so a renderer can eventually read it without being a renderer. Every
+screen after it — most of all the duel field in M5 — depends on the shape chosen here, so
+the decisions worth arguing about are worth writing down.
 
-Three of them turned out to be load-bearing:
+Four of them turned out to be load-bearing:
 
 1. how a card instance is identified;
 2. whether persistent state and discrete events are the same thing;
-3. what happens when the decoder cannot understand a packet.
+3. what happens when the decoder cannot understand a packet;
+4. what it means for a refused packet to leave state unchanged, and how that is enforced.
 
 The source research these rest on is in
 [semantic-model.md](../architecture/semantic-model.md).
@@ -128,10 +129,15 @@ as an error, the coverage report would be unreadable; if everything were reporte
 | `Malformed` | a message we claim to read, whose payload does not fit its layout | **us** |
 | `Inconsistent` | parsed cleanly, refers to something impossible in the current state | us, or an earlier packet |
 
-Each handler reads every field, asserts the reader is *exactly* exhausted, and only then
-mutates state. Trailing bytes are as much a failure as missing ones: a payload longer than
-our layout means the layout is wrong, and passing it silently would be the worst outcome
-available.
+Each handler reads every field and asserts the reader is *exactly* exhausted before
+producing anything. Trailing bytes are as much a failure as missing ones: a payload longer
+than our layout means the layout is wrong, and passing it silently would be the worst
+outcome available. (An earlier draft of this decision additionally claimed that handlers
+mutate state only after every check passes, and that this discipline is what keeps a
+refused packet from leaving state half-changed. That was false, and stayed false through
+several handlers for as long as the guarantee depended on getting each one's internal
+ordering right by hand. Decision 6 replaces it with a mechanism that cannot make that
+mistake.)
 
 The golden test asserts zero `Malformed`, zero `UnknownMessage` and zero `Inconsistent`
 across both fixtures, and the blessing path refuses to write a golden that violates that.
@@ -170,6 +176,134 @@ only; anything else it skips and reports, rather than guessing at upstream arith
 Direct `#include` of the upstream header was considered and rejected: it would put a
 `gframe/` path on the include path of a library whose entire premise is not depending on
 `gframe/`.
+
+---
+
+## Decision 6 — Decoding is transactional: a private copy, committed once
+
+**`ProtocolDecoder::decode()` runs every handler against a copy of the caller's state and
+assigns it back only when the result is `Decoded`. A refused packet therefore leaves state
+unchanged regardless of how far the handler got before it found the reason to refuse.**
+
+### The defect
+
+A pre-merge review of this milestone found the claim in Decision 3's original wording — a
+refused packet never leaves state half-changed — to be false, and asked whether it held.
+Verified against source before anything was changed, per this project's own standard for
+that kind of claim: it did not. `Decoding` held a direct reference to the caller's real
+`DuelState`, so every `d.state().set_code(...)`/`move_card(...)`/`set_combat_stats(...)`
+call inside a handler took effect immediately, whether or not that handler went on to
+refuse the packet a few lines later. Four handlers actually did this, not the two the
+review named:
+
+- `MSG_MOVE`, ordinary move — a non-zero code is applied via `apply_code()` before
+  `move_card()` is attempted; `move_card()` can still refuse (destination occupied,
+  out of range, wrong player).
+- `MSG_MOVE`, leaving play — the same `apply_code()` before `remove_card()`, which can
+  refuse independently.
+- `MSG_POS_CHANGE` — found during this audit, not named in the review: a non-zero code is
+  applied before `set_position()`, which refuses a face-up/face-down flip inside the extra
+  deck.
+- `MSG_BATTLE` — the attacker's ATK/DEF is written before the defender is even looked up,
+  and the defender lookup can fail.
+
+### Options considered
+
+**A. Reorder each handler so every check runs before any mutation.** Rejected as the
+primary fix, though each handler above already reads its fields and checks the reader's
+exhaustion first. Reordering is a per-handler discipline: it has to be re-applied
+correctly by whoever writes the 63rd handler in some future slice, and getting it wrong
+once is exactly how the four instances above arose in the first place from a design that
+looked, at a glance, like it already had this property.
+
+**B. Give `DuelState` its own undo log.** Rejected as unwarranted complexity for a model
+this size, and it multiplies the surface a future change has to keep correct — every new
+mutating method would need to also record how to undo itself.
+
+**C. Decode against a private copy of the state; commit it back only on success.**
+*(chosen)* `DuelState` was already fully value-typed and copy-assignable — verified by
+enumerating its private members, none of which is a pointer, a reference, or anything else
+that would make copying unsafe or partial; `DuelState::start()` already relies on
+copy-assignment internally (`*this = DuelState{};`). `ProtocolDecoder::decode()` now reads:
+
+```cpp
+DuelState trial = state;
+Decoding decoding(packet, trial, variant_);
+decode_supported(packet.message, decoding);
+// ... every check against `decoding` ...
+state = std::move(trial);   // only reached once every check has passed
+```
+
+This gives the guarantee once, centrally, independent of what any individual handler does
+internally — a handler is free to mutate as early and as often as is natural to write,
+because nothing it touches is real until the whole packet is accepted. It cannot regress
+handler by handler the way the per-handler-ordering approach already had.
+
+### Cost, and why it is acceptable now
+
+Every packet copies the full `DuelState` — every card, every zone, the chain — whether or
+not it turns out to be refused. For a milestone whose stated purpose is correctness over a
+recorded-fixture and unit-test workload, not throughput over a live socket, this is the
+right trade: CLAUDE.md's validation standard for this layer is "its unit tests must pass,"
+not a performance budget, and no such budget exists yet to violate. Revisit if and when
+`client/` sits in a live per-packet path with a throughput requirement — copy-on-write, or
+narrowing the working copy to the fields a given handler can actually touch, are both
+available without disturbing the public API.
+
+### Verification
+
+`client/tests/test_transactional_decoding.cpp` exercises this end to end using a new
+`DuelState::operator==` (whole-value, derived from every member's own `==` — not a
+spot-check of the fields the review happened to name), against all four handlers above plus
+the three non-`Decoded` statuses that never reach a handler at all. Two of the four
+handlers cannot be driven into their failing branch through any legitimate sequence of
+packets — `move_card()`/`remove_card()` reject a card only via an internal guard
+(`!card->tracked`) that no packet stream can trigger while the card is still reachable from
+a zone — so those tests force it directly on a copy of the state, the same technique
+`test_duel_state.cpp` already uses to test `check_invariants()` itself. The semantic
+goldens over both real fixtures are unaffected: neither fixture ever produced an
+`Inconsistent` packet, so this fix changes no observable output for real duel data, only
+the (previously wrong) guarantee about hypothetical malformed ones.
+
+---
+
+## Decision 7 — Player perspective stays out of the model, on purpose
+
+**`client/` is protocol-absolute (Decision in [semantic-model.md §4](../architecture/semantic-model.md#4-perspective-is-presentation-and-is-excluded)); it must stay
+that way even once a legacy/model equivalence check exists, because the normalization
+belongs to the comparison, not to either side being compared.**
+
+Verified against source: `Game::LocalPlayer` (`gframe/game.cpp`) is exactly
+
+```cpp
+uint8_t Game::LocalPlayer(uint8_t player) {
+    return dInfo.isFirst ? player : 1 - player;
+}
+```
+
+a pure function of one bit. Every `duelclient.cpp` `MSG_*` handler routes the protocol
+player id through it before touching `dInfo.lp[]` or `ClientField`'s zone arrays;
+`ClientField` itself performs no remapping at all. The mapping is self-inverse (flipping
+0/1 twice returns the original), which is what lets the same function also be used in
+reverse — mapping a locally-computed choice back into a protocol-ordered response buffer
+(`MSG_SELECT_PLACE`/`MSG_SELECT_DISFIELD` auto-pick).
+
+A future equivalence checker must therefore normalize at the boundary, in both directions,
+using whichever `isFirst` value was in effect for that session:
+
+```
+legacy.dField.<zone>[local_player(P, isFirst)] == model.<zone>[P]
+legacy.dInfo.lp[local_player(P, isFirst)]       == model.lp[P]
+```
+
+`client/tests/legacy_perspective.h` records this formula as a small, tested, **test-only**
+reference implementation (`client/tests/test_legacy_perspective.cpp` covers `isFirst` true
+and false, and the involution property) — deliberately outside `edopro_next_client` itself.
+It exists so the normalization rule is concrete and verified now, for whoever writes the
+equivalence checker Decision 6 leaves as the next step; it is not, and must not become, part
+of the semantic model. Perspective is a presentation/session-adapter concern, and mixing it
+into `DuelState` is exactly the kind of thing that made the legacy code hard to reason
+about in the first place (semantic-model.md §4).
 
 ---
 

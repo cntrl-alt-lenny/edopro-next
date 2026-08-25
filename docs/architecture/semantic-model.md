@@ -192,6 +192,16 @@ that way; so are `ClientField`'s zone arrays.
 for display is left to whatever draws the field. Mixing the two is what makes the legacy
 code hard to reason about.
 
+Verified precisely, not just described: `Game::LocalPlayer(player)` (`gframe/game.cpp`) is
+exactly `dInfo.isFirst ? player : 1 - player` — a pure function of one bit, read at every
+`duelclient.cpp` `MSG_*` handler before it touches `dInfo.lp[]` or `ClientField`'s zone
+arrays, which themselves do no remapping at all. This is the exact rule a future
+legacy/model equivalence check must apply when comparing the two, in both directions since
+the mapping is self-inverse. See [ADR 0002, Decision 7](../adr/0002-semantic-event-model.md)
+for the full citation and a small, tested, deliberately test-only reference implementation
+of the formula (`client/tests/legacy_perspective.h`) — kept out of `client/` itself, because
+perspective is presentation, not semantics.
+
 The consequence worth stating: **`MSG_START`'s first byte cannot tell us who goes first.**
 It encodes whether *the recipient of this stream* moves first (`dInfo.isFirst = (playertype
 & 0xf) ? false : true`, `gframe/duelclient.cpp:1638`), which is a fact about the recipient.
@@ -277,7 +287,7 @@ Three details worth recording, because they are easy to get wrong:
 | Player indices | screen-relative via `LocalPlayer` | protocol-absolute | Perspective is presentation. See §4. |
 | Bounds checking | none — raw pointer walks | every read checked | The decoder must be able to distinguish malformed from unsupported. See §8. |
 | Cards leaving play | `delete`d | kept, `tracked = false` | Keeps ids meaningful in earlier events, and turns a stale reference into a reported inconsistency instead of a dangling pointer. |
-| Position changes | applied unconditionally | refused if the stated previous position disagrees with the model | A disagreement means the model drifted earlier, and silence would hide it. Both fixtures pass this check. |
+| Position changes | applied unconditionally | refused if the stated previous position disagrees with the model | A disagreement means the model drifted earlier, and silence would hide it. Investigated specifically for the risk that the undecoded query stream (§10) could cause a false positive here; found not to hold for this slice — see the comment at `handle_pos_change` in `protocol_decoder.cpp`. Verified against both fixtures: 773 and 799 `MSG_UPDATE_DATA`/`MSG_UPDATE_CARD` packets respectively, heavily interleaved with real position changes, zero false positives in either. |
 
 ---
 
@@ -295,8 +305,14 @@ apart:
 - **`Inconsistent`** — the payload parsed, but refers to something impossible: a card in an
   empty slot, a chain link out of order, a draw larger than the deck.
 
-A handler reads every field, checks the reader is exactly exhausted, and only then mutates
-state — so a refusal never leaves a half-applied change.
+A handler reads every field and checks the reader is exactly exhausted before producing
+anything. That alone does not stop a handler from mutating state at one point and refusing
+the packet at a later one — several genuinely do, applying an identity change or a combat
+stat before a step that can still fail. What stops a refusal from leaving a half-applied
+change is that `ProtocolDecoder::decode()` runs the whole handler against a private copy of
+the state and assigns it back only once every check has passed; see
+[ADR 0002, Decision 6](../adr/0002-semantic-event-model.md) for the defect this replaced and
+how the fix is verified.
 
 ---
 
