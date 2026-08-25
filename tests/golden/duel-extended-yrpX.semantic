@@ -1,0 +1,549 @@
+# edopro-next semantic trace v1
+source: duel-extended
+protocol: modern
+packets: 1133
+
+## coverage
+decoded: 245
+unsupported: 888
+unknown: 0
+malformed: 0
+inconsistent: 0
+
+### decoded message types
+  4 MSG_START                1
+  5 MSG_WIN                  1
+ 32 MSG_SHUFFLE_DECK         2
+ 33 MSG_SHUFFLE_HAND         11
+ 40 MSG_NEW_TURN             2
+ 41 MSG_NEW_PHASE            7
+ 50 MSG_MOVE                 119
+ 53 MSG_POS_CHANGE           5
+ 54 MSG_SET                  4
+ 60 MSG_SUMMONING            1
+ 61 MSG_SUMMONED             1
+ 62 MSG_SPSUMMONING          8
+ 63 MSG_SPSUMMONED           4
+ 70 MSG_CHAINING             15
+ 71 MSG_CHAINED              15
+ 72 MSG_CHAIN_SOLVING        15
+ 73 MSG_CHAIN_SOLVED         15
+ 74 MSG_CHAIN_END            13
+ 90 MSG_DRAW                 6
+
+### known but not implemented
+  6 MSG_UPDATE_DATA          649
+  7 MSG_UPDATE_CARD          124
+ 30 MSG_CONFIRM_DECKTOP      6
+ 31 MSG_CONFIRM_CARDS        4
+ 83 MSG_BECOME_TARGET        9
+160 MSG_CARD_HINT            96
+
+### unknown message ids
+(none)
+
+### refused packets
+(none)
+
+## semantic events
+count: 378
+    0 DuelStarted player_type=0 lp=[8000,8000] deck=[40,40] extra=[0,15]
+    5 CardIdentityRevealed instance=40 code=88240808
+    5 CardIdentityRevealed instance=39 code=97077563
+    5 CardIdentityRevealed instance=38 code=70828912
+    5 CardIdentityRevealed instance=37 code=7572887
+    5 CardIdentityRevealed instance=36 code=504700055
+    5 CardsDrawn player=p0 cards=[40,39,38,37,36]
+    7 CardIdentityRevealed instance=80 code=3136426
+    7 CardIdentityRevealed instance=79 code=504700188
+    7 CardIdentityRevealed instance=78 code=42703248
+    7 CardIdentityRevealed instance=77 code=504700054
+    7 CardIdentityRevealed instance=76 code=38699854
+    7 CardsDrawn player=p1 cards=[80,79,78,77,76]
+   13 TurnStarted player=p0 turn=1
+   14 PhaseChanged DRAW
+   21 CardIdentityRevealed instance=35 code=4041838
+   21 CardsDrawn player=p0 cards=[35]
+   31 PhaseChanged STANDBY
+   38 PhaseChanged MAIN1
+   51 CardMoved instance=39 HAND[p0:1] -> SZONE[p0:0] reason=RULE|DRAW
+   53 CardSetAnnounced at=SZONE[p0:0] code=97077563
+   68 CardMoved instance=40 HAND[p0:0] -> MZONE[p0:0] reason=RULE|DRAW
+   70 SummonAnnounced kind=NORMAL code=88240808 at=MZONE[p0:0]
+   79 SummonCompleted kind=NORMAL
+  102 PhaseChanged END
+  113 TurnStarted player=p1 turn=2
+  114 PhaseChanged DRAW
+  121 CardIdentityRevealed instance=75 code=22589918
+  121 CardsDrawn player=p1 cards=[75]
+  135 PhaseChanged STANDBY
+  146 PhaseChanged MAIN1
+  159 ChainLinkAdded link=1 instance=77 code=504700054 from=HAND[p1:3] trigger=HAND[p1:3] desc=529216363823104
+  160 CardMoved instance=77 HAND[p1:3] -> GRAVE[p1:0] reason=COST|DISCARD
+  177 ChainLinkResolving link=1
+  178 CardIdentityRevealed instance=52 code=504700054
+  178 CardMoved instance=52 DECK[p1:11] -> HAND[p1:5] reason=EFFECT
+  180 CardIdentityRevealed instance=45 code=504700054
+  180 CardMoved instance=45 DECK[p1:4] -> HAND[p1:6] reason=EFFECT
+  185 HandShuffled player=p1 cards=7
+  185 CardIdentityRevealed instance=80 code=504700054
+  185 CardIdentityRevealed instance=79 code=3136426
+  185 CardIdentityRevealed instance=78 code=504700188
+  185 CardIdentityRevealed instance=76 code=42703248
+  185 CardIdentityRevealed instance=75 code=504700054
+  185 CardIdentityRevealed instance=52 code=22589918
+  185 CardIdentityRevealed instance=45 code=38699854
+  189 DeckShuffled player=p1 cards=32
+  190 ChainLinkResolved link=1
+  191 ChainEnded links=1
+  216 CardMoved instance=76 HAND[p1:3] -> SZONE[p1:2] reason=RULE|DRAW
+  218 ChainLinkAdded link=1 instance=76 code=42703248 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  234 ChainLinkResolving link=1
+  235 CardMoved instance=39 SZONE[p0:0] -> HAND[p0:4] reason=EFFECT
+  238 HandShuffled player=p0 cards=5
+  238 CardIdentityRevealed instance=37 code=97077563
+  238 CardIdentityRevealed instance=36 code=7572887
+  238 CardIdentityRevealed instance=39 code=504700055
+  241 ChainLinkResolved link=1
+  242 CardMoved instance=76 SZONE[p1:2] -> GRAVE[p1:1] reason=RULE
+  244 ChainEnded links=1
+  268 CardMoved instance=78 HAND[p1:2] -> MZONE[p1:2] reason=RULE|DRAW
+  270 CardSetAnnounced at=MZONE[p1:2] code=504700188
+  285 CardMoved instance=45 HAND[p1:4] -> SZONE[p1:2] reason=RULE|DRAW
+  287 ChainLinkAdded link=1 instance=45 code=38699854 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  304 ChainLinkResolving link=1
+  305 PositionChanged instance=78 FACEDOWN_DEFENSE -> FACEUP_ATTACK
+  307 ChainLinkResolved link=1
+  308 CardMoved instance=45 SZONE[p1:2] -> GRAVE[p1:2] reason=RULE
+  310 ChainEnded links=1
+  319 ChainLinkAdded link=1 instance=78 code=504700188 from=MZONE[p1:2] trigger=MZONE[p1:2] desc=0
+  335 ChainLinkResolving link=1
+  336 CardMoved instance=78 MZONE[p1:2] -> GRAVE[p1:3] reason=DESTROY|EFFECT
+  338 CardMoved instance=40 MZONE[p0:0] -> GRAVE[p0:0] reason=DESTROY|EFFECT
+  342 CardIdentityRevealed instance=32 code=33184167
+  342 CardMoved instance=32 DECK[p0:31] -> MZONE[p0:0] reason=SPSUMMON
+  344 SummonAnnounced kind=SPECIAL code=33184167 at=MZONE[p0:0]
+  345 SummonCompleted kind=SPECIAL
+  350 CardIdentityRevealed instance=74 code=29228529
+  350 CardMoved instance=74 DECK[p1:31] -> HAND[p1:4] reason=EFFECT
+  352 CardIdentityRevealed instance=73 code=43434803
+  352 CardMoved instance=73 DECK[p1:30] -> HAND[p1:5] reason=EFFECT
+  354 CardIdentityRevealed instance=72 code=3136426
+  354 CardMoved instance=72 DECK[p1:29] -> HAND[p1:6] reason=EFFECT
+  356 CardIdentityRevealed instance=71 code=43434803
+  356 CardMoved instance=71 DECK[p1:28] -> HAND[p1:7] reason=EFFECT
+  358 CardIdentityRevealed instance=70 code=14087893
+  358 CardMoved instance=70 DECK[p1:27] -> HAND[p1:8] reason=EFFECT
+  360 CardIdentityRevealed instance=34 code=83968380
+  360 CardMoved instance=34 DECK[p0:32] -> HAND[p0:5] reason=EFFECT
+  362 CardIdentityRevealed instance=33 code=504700054
+  362 CardMoved instance=33 DECK[p0:31] -> HAND[p0:6] reason=EFFECT
+  364 CardIdentityRevealed instance=31 code=4178474
+  364 CardMoved instance=31 DECK[p0:30] -> HAND[p0:7] reason=EFFECT
+  366 CardIdentityRevealed instance=30 code=511000824
+  366 CardMoved instance=30 DECK[p0:29] -> HAND[p0:8] reason=EFFECT
+  377 HandShuffled player=p1 cards=9
+  377 CardIdentityRevealed instance=79 code=14087893
+  377 CardIdentityRevealed instance=75 code=22589918
+  377 CardIdentityRevealed instance=52 code=504700054
+  377 CardIdentityRevealed instance=73 code=3136426
+  377 CardIdentityRevealed instance=70 code=43434803
+  384 HandShuffled player=p0 cards=9
+  384 CardIdentityRevealed instance=38 code=97077563
+  384 CardIdentityRevealed instance=37 code=7572887
+  384 CardIdentityRevealed instance=36 code=70828912
+  384 CardIdentityRevealed instance=35 code=83968380
+  384 CardIdentityRevealed instance=34 code=4178474
+  384 CardIdentityRevealed instance=31 code=4041838
+  390 ChainLinkResolved link=1
+  391 ChainEnded links=1
+  423 CardMoved instance=71 HAND[p1:7] -> SZONE[p1:2] reason=EFFECT
+  425 ChainLinkAdded link=1 instance=71 code=43434803 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  443 ChainLinkResolving link=1
+  444 CardMoved instance=78 GRAVE[p1:3] -> MZONE[p1:2] reason=SPSUMMON
+  446 SummonAnnounced kind=SPECIAL code=? at=MZONE[p1:2]
+  447 CardMoved instance=40 GRAVE[p0:0] -> MZONE[p0:1] reason=SPSUMMON
+  449 SummonAnnounced kind=SPECIAL code=? at=MZONE[p0:1]
+  450 SummonCompleted kind=SPECIAL
+  455 ChainLinkResolved link=1
+  456 CardMoved instance=71 SZONE[p1:2] -> GRAVE[p1:3] reason=RULE
+  458 ChainEnded links=1
+  481 CardMoved instance=74 HAND[p1:4] -> SZONE[p1:2] reason=EFFECT
+  483 ChainLinkAdded link=1 instance=74 code=29228529 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  484 CardMoved instance=79 HAND[p1:1] -> GRAVE[p1:4] reason=COST
+  486 CardMoved instance=73 HAND[p1:3] -> GRAVE[p1:5] reason=COST
+  504 ChainLinkResolving link=1
+  505 CardMoved instance=45 GRAVE[p1:2] -> HAND[p1:5] reason=EFFECT
+  509 HandShuffled player=p1 cards=6
+  509 CardIdentityRevealed instance=80 code=38699854
+  509 CardIdentityRevealed instance=75 code=3136426
+  509 CardIdentityRevealed instance=52 code=22589918
+  509 CardIdentityRevealed instance=72 code=504700054
+  509 CardIdentityRevealed instance=70 code=504700054
+  509 CardIdentityRevealed instance=45 code=43434803
+  512 ChainLinkResolved link=1
+  513 CardMoved instance=74 SZONE[p1:2] -> GRAVE[p1:5] reason=RULE
+  515 ChainEnded links=1
+  539 CardMoved instance=80 HAND[p1:0] -> SZONE[p1:2] reason=EFFECT
+  541 CardSetAnnounced at=SZONE[p1:2] code=38699854
+  556 CardMoved instance=45 HAND[p1:4] -> SZONE[p1:1] reason=EFFECT
+  558 CardSetAnnounced at=SZONE[p1:1] code=43434803
+  573 PositionChanged instance=80 FACEDOWN -> FACEUP
+  575 ChainLinkAdded link=1 instance=80 code=38699854 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  592 ChainLinkResolving link=1
+  593 PositionChanged instance=78 FACEDOWN_DEFENSE -> FACEUP_ATTACK
+  595 ChainLinkResolved link=1
+  596 CardMoved instance=80 SZONE[p1:2] -> GRAVE[p1:6] reason=RULE
+  598 ChainEnded links=1
+  607 ChainLinkAdded link=1 instance=78 code=504700188 from=MZONE[p1:2] trigger=MZONE[p1:2] desc=0
+  623 ChainLinkResolving link=1
+  624 CardMoved instance=78 MZONE[p1:2] -> GRAVE[p1:7] reason=DESTROY|EFFECT
+  626 CardMoved instance=32 MZONE[p0:0] -> GRAVE[p0:0] reason=DESTROY|EFFECT
+  628 CardMoved instance=40 MZONE[p0:1] -> GRAVE[p0:1] reason=DESTROY|EFFECT
+  632 CardIdentityRevealed instance=66 code=504700178
+  632 CardMoved instance=66 DECK[p1:23] -> MZONE[p1:2] reason=SPSUMMON
+  634 SummonAnnounced kind=SPECIAL code=504700178 at=MZONE[p1:2]
+  635 CardIdentityRevealed instance=25 code=39507162
+  635 CardMoved instance=25 DECK[p0:24] -> MZONE[p0:0] reason=SPSUMMON
+  637 SummonAnnounced kind=SPECIAL code=39507162 at=MZONE[p0:0]
+  638 CardIdentityRevealed instance=27 code=504700138
+  638 CardMoved instance=27 DECK[p0:25] -> MZONE[p0:1] reason=SPSUMMON
+  640 SummonAnnounced kind=SPECIAL code=504700138 at=MZONE[p0:1]
+  641 SummonCompleted kind=SPECIAL
+  646 CardIdentityRevealed instance=69 code=504700123
+  646 CardMoved instance=69 DECK[p1:25] -> HAND[p1:4] reason=EFFECT
+  648 CardIdentityRevealed instance=68 code=42703248
+  648 CardMoved instance=68 DECK[p1:24] -> HAND[p1:5] reason=EFFECT
+  650 CardIdentityRevealed instance=67 code=29228529
+  650 CardMoved instance=67 DECK[p1:23] -> HAND[p1:6] reason=EFFECT
+  652 CardIdentityRevealed instance=65 code=72892473
+  652 CardMoved instance=65 DECK[p1:22] -> HAND[p1:7] reason=EFFECT
+  654 CardIdentityRevealed instance=29 code=83968380
+  654 CardMoved instance=29 DECK[p0:26] -> HAND[p0:9] reason=EFFECT
+  656 CardIdentityRevealed instance=28 code=45986603
+  656 CardMoved instance=28 DECK[p0:25] -> HAND[p0:10] reason=EFFECT
+  658 CardIdentityRevealed instance=26 code=83968380
+  658 CardMoved instance=26 DECK[p0:24] -> HAND[p0:11] reason=EFFECT
+  667 HandShuffled player=p1 cards=8
+  667 CardIdentityRevealed instance=75 code=504700123
+  667 CardIdentityRevealed instance=52 code=504700054
+  667 CardIdentityRevealed instance=72 code=72892473
+  667 CardIdentityRevealed instance=70 code=22589918
+  667 CardIdentityRevealed instance=69 code=29228529
+  667 CardIdentityRevealed instance=67 code=504700054
+  667 CardIdentityRevealed instance=65 code=3136426
+  673 HandShuffled player=p0 cards=12
+  673 CardIdentityRevealed instance=38 code=4041838
+  673 CardIdentityRevealed instance=37 code=45986603
+  673 CardIdentityRevealed instance=36 code=4178474
+  673 CardIdentityRevealed instance=35 code=70828912
+  673 CardIdentityRevealed instance=39 code=504700054
+  673 CardIdentityRevealed instance=34 code=83968380
+  673 CardIdentityRevealed instance=33 code=504700055
+  673 CardIdentityRevealed instance=31 code=7572887
+  673 CardIdentityRevealed instance=30 code=97077563
+  673 CardIdentityRevealed instance=29 code=511000824
+  673 CardIdentityRevealed instance=28 code=83968380
+  678 ChainLinkResolved link=1
+  679 ChainEnded links=1
+  709 PositionChanged instance=45 FACEDOWN -> FACEUP
+  711 ChainLinkAdded link=1 instance=45 code=43434803 from=SZONE[p1:1] trigger=SZONE[p1:1] desc=0
+  729 ChainLinkResolving link=1
+  730 CardMoved instance=78 GRAVE[p1:7] -> MZONE[p1:1] reason=SPSUMMON
+  732 SummonAnnounced kind=SPECIAL code=? at=MZONE[p1:1]
+  733 CardMoved instance=40 GRAVE[p0:1] -> MZONE[p0:2] reason=SPSUMMON
+  735 SummonAnnounced kind=SPECIAL code=? at=MZONE[p0:2]
+  736 SummonCompleted kind=SPECIAL
+  741 ChainLinkResolved link=1
+  742 CardMoved instance=45 SZONE[p1:1] -> GRAVE[p1:7] reason=RULE
+  744 ChainEnded links=1
+  767 CardMoved instance=69 HAND[p1:4] -> SZONE[p1:2] reason=EFFECT
+  769 ChainLinkAdded link=1 instance=69 code=29228529 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  770 CardMoved instance=75 HAND[p1:0] -> GRAVE[p1:8] reason=COST
+  772 CardMoved instance=68 HAND[p1:3] -> GRAVE[p1:9] reason=COST
+  790 ChainLinkResolving link=1
+  791 CardMoved instance=80 GRAVE[p1:6] -> HAND[p1:5] reason=EFFECT
+  795 HandShuffled player=p1 cards=6
+  795 CardIdentityRevealed instance=52 code=38699854
+  795 CardIdentityRevealed instance=72 code=22589918
+  795 CardIdentityRevealed instance=70 code=72892473
+  795 CardIdentityRevealed instance=80 code=504700054
+  798 ChainLinkResolved link=1
+  799 CardMoved instance=69 SZONE[p1:2] -> GRAVE[p1:9] reason=RULE
+  801 ChainEnded links=1
+  825 CardMoved instance=52 HAND[p1:0] -> SZONE[p1:2] reason=EFFECT
+  827 ChainLinkAdded link=1 instance=52 code=38699854 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  844 ChainLinkResolving link=1
+  845 PositionChanged instance=78 FACEDOWN_DEFENSE -> FACEUP_ATTACK
+  847 ChainLinkResolved link=1
+  848 CardMoved instance=52 SZONE[p1:2] -> GRAVE[p1:10] reason=RULE
+  850 ChainEnded links=1
+  859 ChainLinkAdded link=1 instance=78 code=504700188 from=MZONE[p1:1] trigger=MZONE[p1:1] desc=0
+  875 ChainLinkResolving link=1
+  876 CardMoved instance=78 MZONE[p1:1] -> GRAVE[p1:11] reason=DESTROY|EFFECT
+  878 CardMoved instance=66 MZONE[p1:2] -> GRAVE[p1:12] reason=DESTROY|EFFECT
+  880 CardMoved instance=25 MZONE[p0:0] -> GRAVE[p0:1] reason=DESTROY|EFFECT
+  882 CardMoved instance=27 MZONE[p0:1] -> GRAVE[p0:2] reason=DESTROY|EFFECT
+  884 CardMoved instance=40 MZONE[p0:2] -> GRAVE[p0:3] reason=DESTROY|EFFECT
+  888 CardIdentityRevealed instance=64 code=49398568
+  888 CardMoved instance=64 DECK[p1:21] -> HAND[p1:5] reason=EFFECT
+  890 CardIdentityRevealed instance=63 code=42703248
+  890 CardMoved instance=63 DECK[p1:20] -> HAND[p1:6] reason=EFFECT
+  892 CardIdentityRevealed instance=62 code=22589918
+  892 CardMoved instance=62 DECK[p1:19] -> HAND[p1:7] reason=EFFECT
+  894 CardIdentityRevealed instance=61 code=49140998
+  894 CardMoved instance=61 DECK[p1:18] -> HAND[p1:8] reason=EFFECT
+  896 CardIdentityRevealed instance=60 code=14087893
+  896 CardMoved instance=60 DECK[p1:17] -> HAND[p1:9] reason=EFFECT
+  898 CardIdentityRevealed instance=24 code=504700054
+  898 CardMoved instance=24 DECK[p0:23] -> HAND[p0:12] reason=EFFECT
+  900 CardIdentityRevealed instance=23 code=504700055
+  900 CardMoved instance=23 DECK[p0:22] -> HAND[p0:13] reason=EFFECT
+  902 CardIdentityRevealed instance=22 code=79571449
+  902 CardMoved instance=22 DECK[p0:21] -> HAND[p0:14] reason=EFFECT
+  904 CardIdentityRevealed instance=21 code=44095762
+  904 CardMoved instance=21 DECK[p0:20] -> HAND[p0:15] reason=EFFECT
+  906 CardIdentityRevealed instance=20 code=72892473
+  906 CardMoved instance=20 DECK[p0:19] -> HAND[p0:16] reason=EFFECT
+  918 HandShuffled player=p1 cards=10
+  918 CardIdentityRevealed instance=72 code=49398568
+  918 CardIdentityRevealed instance=70 code=22589918
+  918 CardIdentityRevealed instance=67 code=22589918
+  918 CardIdentityRevealed instance=65 code=49140998
+  918 CardIdentityRevealed instance=64 code=72892473
+  918 CardIdentityRevealed instance=63 code=14087893
+  918 CardIdentityRevealed instance=62 code=42703248
+  918 CardIdentityRevealed instance=61 code=3136426
+  918 CardIdentityRevealed instance=60 code=504700054
+  925 HandShuffled player=p0 cards=17
+  925 CardIdentityRevealed instance=38 code=72892473
+  925 CardIdentityRevealed instance=37 code=79571449
+  925 CardIdentityRevealed instance=35 code=97077563
+  925 CardIdentityRevealed instance=39 code=511000824
+  925 CardIdentityRevealed instance=33 code=4041838
+  925 CardIdentityRevealed instance=31 code=83968380
+  925 CardIdentityRevealed instance=30 code=44095762
+  925 CardIdentityRevealed instance=29 code=504700054
+  925 CardIdentityRevealed instance=28 code=504700055
+  925 CardIdentityRevealed instance=26 code=7572887
+  925 CardIdentityRevealed instance=24 code=70828912
+  925 CardIdentityRevealed instance=23 code=504700054
+  925 CardIdentityRevealed instance=22 code=83968380
+  925 CardIdentityRevealed instance=21 code=45986603
+  925 CardIdentityRevealed instance=20 code=504700055
+  932 ChainLinkResolved link=1
+  933 ChainEnded links=1
+  952 ChainLinkAdded link=1 instance=66 code=504700178 from=GRAVE[p1:12] trigger=GRAVE[p1:12] desc=529216493846528
+  968 ChainLinkResolving link=1
+  969 CardIdentityRevealed instance=59 code=33508719
+  969 CardMoved instance=59 DECK[p1:16] -> HAND[p1:10] reason=EFFECT
+  973 HandShuffled player=p1 cards=11
+  973 CardIdentityRevealed instance=72 code=33508719
+  973 CardIdentityRevealed instance=70 code=504700054
+  973 CardIdentityRevealed instance=67 code=504700054
+  973 CardIdentityRevealed instance=65 code=72892473
+  973 CardIdentityRevealed instance=80 code=14087893
+  973 CardIdentityRevealed instance=64 code=3136426
+  973 CardIdentityRevealed instance=63 code=49140998
+  973 CardIdentityRevealed instance=62 code=22589918
+  973 CardIdentityRevealed instance=61 code=42703248
+  973 CardIdentityRevealed instance=60 code=22589918
+  973 CardIdentityRevealed instance=59 code=49398568
+  976 DeckShuffled player=p1 cards=16
+  977 ChainLinkResolved link=1
+  978 ChainEnded links=1
+ 1002 CardMoved instance=65 HAND[p1:3] -> SZONE[p1:2] reason=EFFECT
+ 1004 ChainLinkAdded link=1 instance=65 code=72892473 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+ 1020 CardMoved instance=59 HAND[p1:9] -> SZONE[p1:1] reason=EFFECT
+ 1022 ChainLinkAdded link=2 instance=59 code=49398568 from=SZONE[p1:1] trigger=SZONE[p1:1] desc=0
+ 1023 CardMoved instance=72 HAND[p1:0] -> GRAVE[p1:13] reason=COST|DISCARD
+ 1025 CardMoved instance=70 HAND[p1:0] -> GRAVE[p1:14] reason=COST|DISCARD
+ 1027 CardMoved instance=67 HAND[p1:0] -> GRAVE[p1:15] reason=COST|DISCARD
+ 1029 CardMoved instance=80 HAND[p1:0] -> GRAVE[p1:16] reason=COST|DISCARD
+ 1031 CardMoved instance=64 HAND[p1:0] -> GRAVE[p1:17] reason=COST|DISCARD
+ 1033 CardMoved instance=63 HAND[p1:0] -> GRAVE[p1:18] reason=COST|DISCARD
+ 1035 CardMoved instance=62 HAND[p1:0] -> GRAVE[p1:19] reason=COST|DISCARD
+ 1037 CardMoved instance=61 HAND[p1:0] -> GRAVE[p1:20] reason=COST|DISCARD
+ 1039 CardMoved instance=60 HAND[p1:0] -> GRAVE[p1:21] reason=COST|DISCARD
+ 1056 ChainLinkResolving link=2
+ 1057 CardMoved instance=38 HAND[p0:0] -> GRAVE[p0:4] reason=EFFECT|DISCARD
+ 1059 CardMoved instance=37 HAND[p0:0] -> GRAVE[p0:5] reason=EFFECT|DISCARD
+ 1061 CardMoved instance=36 HAND[p0:0] -> GRAVE[p0:6] reason=EFFECT|DISCARD
+ 1063 CardMoved instance=35 HAND[p0:0] -> GRAVE[p0:7] reason=EFFECT|DISCARD
+ 1065 CardMoved instance=39 HAND[p0:0] -> GRAVE[p0:8] reason=EFFECT|DISCARD
+ 1067 CardMoved instance=34 HAND[p0:0] -> GRAVE[p0:9] reason=EFFECT|DISCARD
+ 1069 CardMoved instance=33 HAND[p0:0] -> GRAVE[p0:10] reason=EFFECT|DISCARD
+ 1071 CardMoved instance=31 HAND[p0:0] -> GRAVE[p0:11] reason=EFFECT|DISCARD
+ 1073 CardMoved instance=30 HAND[p0:0] -> GRAVE[p0:12] reason=EFFECT|DISCARD
+ 1075 CardMoved instance=29 HAND[p0:0] -> GRAVE[p0:13] reason=EFFECT|DISCARD
+ 1077 CardMoved instance=28 HAND[p0:0] -> GRAVE[p0:14] reason=EFFECT|DISCARD
+ 1079 CardMoved instance=26 HAND[p0:0] -> GRAVE[p0:15] reason=EFFECT|DISCARD
+ 1081 CardMoved instance=24 HAND[p0:0] -> GRAVE[p0:16] reason=EFFECT|DISCARD
+ 1083 CardMoved instance=23 HAND[p0:0] -> GRAVE[p0:17] reason=EFFECT|DISCARD
+ 1085 CardMoved instance=22 HAND[p0:0] -> GRAVE[p0:18] reason=EFFECT|DISCARD
+ 1087 CardMoved instance=21 HAND[p0:0] -> GRAVE[p0:19] reason=EFFECT|DISCARD
+ 1089 CardMoved instance=20 HAND[p0:0] -> GRAVE[p0:20] reason=EFFECT|DISCARD
+ 1091 CardIdentityRevealed instance=19 code=19613556
+ 1091 CardIdentityRevealed instance=18 code=504700054
+ 1091 CardIdentityRevealed instance=17 code=9596126
+ 1091 CardIdentityRevealed instance=16 code=504700118
+ 1091 CardIdentityRevealed instance=15 code=4178474
+ 1091 CardIdentityRevealed instance=14 code=76922029
+ 1091 CardIdentityRevealed instance=13 code=504700178
+ 1091 CardIdentityRevealed instance=12 code=504700116
+ 1091 CardIdentityRevealed instance=11 code=504700116
+ 1091 CardIdentityRevealed instance=10 code=5318639
+ 1091 CardIdentityRevealed instance=9 code=511000818
+ 1091 CardIdentityRevealed instance=8 code=504700152
+ 1091 CardIdentityRevealed instance=7 code=53582587
+ 1091 CardIdentityRevealed instance=6 code=55144522
+ 1091 CardIdentityRevealed instance=5 code=504700077
+ 1091 CardIdentityRevealed instance=4 code=44763025
+ 1091 CardIdentityRevealed instance=3 code=74131780
+ 1091 CardsDrawn player=p0 cards=[19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3]
+ 1093 ChainLinkResolved link=2
+ 1094 ChainLinkResolving link=1
+ 1095 CardMoved instance=19 HAND[p0:0] -> GRAVE[p0:21] reason=EFFECT|DISCARD
+ 1097 CardMoved instance=18 HAND[p0:0] -> GRAVE[p0:22] reason=EFFECT|DISCARD
+ 1099 CardMoved instance=17 HAND[p0:0] -> GRAVE[p0:23] reason=EFFECT|DISCARD
+ 1101 CardMoved instance=16 HAND[p0:0] -> GRAVE[p0:24] reason=EFFECT|DISCARD
+ 1103 CardMoved instance=15 HAND[p0:0] -> GRAVE[p0:25] reason=EFFECT|DISCARD
+ 1105 CardMoved instance=14 HAND[p0:0] -> GRAVE[p0:26] reason=EFFECT|DISCARD
+ 1107 CardMoved instance=13 HAND[p0:0] -> GRAVE[p0:27] reason=EFFECT|DISCARD
+ 1109 CardMoved instance=12 HAND[p0:0] -> GRAVE[p0:28] reason=EFFECT|DISCARD
+ 1111 CardMoved instance=11 HAND[p0:0] -> GRAVE[p0:29] reason=EFFECT|DISCARD
+ 1113 CardMoved instance=10 HAND[p0:0] -> GRAVE[p0:30] reason=EFFECT|DISCARD
+ 1115 CardMoved instance=9 HAND[p0:0] -> GRAVE[p0:31] reason=EFFECT|DISCARD
+ 1117 CardMoved instance=8 HAND[p0:0] -> GRAVE[p0:32] reason=EFFECT|DISCARD
+ 1119 CardMoved instance=7 HAND[p0:0] -> GRAVE[p0:33] reason=EFFECT|DISCARD
+ 1121 CardMoved instance=6 HAND[p0:0] -> GRAVE[p0:34] reason=EFFECT|DISCARD
+ 1123 CardMoved instance=5 HAND[p0:0] -> GRAVE[p0:35] reason=EFFECT|DISCARD
+ 1125 CardMoved instance=4 HAND[p0:0] -> GRAVE[p0:36] reason=EFFECT|DISCARD
+ 1127 CardMoved instance=3 HAND[p0:0] -> GRAVE[p0:37] reason=EFFECT|DISCARD
+ 1129 CardIdentityRevealed instance=2 code=71413901
+ 1129 CardIdentityRevealed instance=1 code=64697231
+ 1129 CardsDrawn player=p0 cards=[2,1]
+ 1131 ChainLinkResolved link=1
+ 1132 DuelEnded winner=p1 reason=2
+
+## final state
+started: yes
+player_type: 0
+turn: 2 player=p1
+phase: MAIN1
+lp: p0=8000 p1=8000
+chain: 2
+finished: winner=p1 reason=2
+instances: 95 untracked=0
+invariants: ok
+
+### zones
+p0 DECK 0
+p0 HAND 2
+  [0] instance=2 code=71413901 pos=FACEDOWN_DEFENSE
+  [1] instance=1 code=64697231 pos=FACEDOWN_DEFENSE
+p0 MZONE 0
+p0 SZONE 0
+p0 GRAVE 38
+  [0] instance=32 code=33184167 pos=FACEUP
+  [1] instance=25 code=39507162 pos=FACEUP
+  [2] instance=27 code=504700138 pos=FACEUP
+  [3] instance=40 code=88240808 pos=FACEUP
+  [4] instance=38 code=72892473 pos=FACEUP
+  [5] instance=37 code=79571449 pos=FACEUP
+  [6] instance=36 code=4178474 pos=FACEUP
+  [7] instance=35 code=97077563 pos=FACEUP
+  [8] instance=39 code=511000824 pos=FACEUP
+  [9] instance=34 code=83968380 pos=FACEUP
+  [10] instance=33 code=4041838 pos=FACEUP
+  [11] instance=31 code=83968380 pos=FACEUP
+  [12] instance=30 code=44095762 pos=FACEUP
+  [13] instance=29 code=504700054 pos=FACEUP
+  [14] instance=28 code=504700055 pos=FACEUP
+  [15] instance=26 code=7572887 pos=FACEUP
+  [16] instance=24 code=70828912 pos=FACEUP
+  [17] instance=23 code=504700054 pos=FACEUP
+  [18] instance=22 code=83968380 pos=FACEUP
+  [19] instance=21 code=45986603 pos=FACEUP
+  [20] instance=20 code=504700055 pos=FACEUP
+  [21] instance=19 code=19613556 pos=FACEUP
+  [22] instance=18 code=504700054 pos=FACEUP
+  [23] instance=17 code=9596126 pos=FACEUP
+  [24] instance=16 code=504700118 pos=FACEUP
+  [25] instance=15 code=4178474 pos=FACEUP
+  [26] instance=14 code=76922029 pos=FACEUP
+  [27] instance=13 code=504700178 pos=FACEUP
+  [28] instance=12 code=504700116 pos=FACEUP
+  [29] instance=11 code=504700116 pos=FACEUP
+  [30] instance=10 code=5318639 pos=FACEUP
+  [31] instance=9 code=511000818 pos=FACEUP
+  [32] instance=8 code=504700152 pos=FACEUP
+  [33] instance=7 code=53582587 pos=FACEUP
+  [34] instance=6 code=55144522 pos=FACEUP
+  [35] instance=5 code=504700077 pos=FACEUP
+  [36] instance=4 code=44763025 pos=FACEUP
+  [37] instance=3 code=74131780 pos=FACEUP
+p0 REMOVED 0
+p0 EXTRA 0
+p1 DECK 16
+  [0] instance=41 code=? pos=FACEDOWN_DEFENSE
+  [1] instance=42 code=? pos=FACEDOWN_DEFENSE
+  [2] instance=43 code=? pos=FACEDOWN_DEFENSE
+  [3] instance=44 code=? pos=FACEDOWN_DEFENSE
+  [4] instance=46 code=? pos=FACEDOWN_DEFENSE
+  [5] instance=47 code=? pos=FACEDOWN_DEFENSE
+  [6] instance=48 code=? pos=FACEDOWN_DEFENSE
+  [7] instance=49 code=? pos=FACEDOWN_DEFENSE
+  [8] instance=50 code=? pos=FACEDOWN_DEFENSE
+  [9] instance=51 code=? pos=FACEDOWN_DEFENSE
+  [10] instance=53 code=? pos=FACEDOWN_DEFENSE
+  [11] instance=54 code=? pos=FACEDOWN_DEFENSE
+  [12] instance=55 code=? pos=FACEDOWN_DEFENSE
+  [13] instance=56 code=? pos=FACEDOWN_DEFENSE
+  [14] instance=57 code=? pos=FACEDOWN_DEFENSE
+  [15] instance=58 code=? pos=FACEDOWN_DEFENSE
+p1 HAND 0
+p1 MZONE 0
+p1 SZONE 2
+  [1] instance=59 code=49398568 pos=FACEUP
+  [2] instance=65 code=72892473 pos=FACEUP
+p1 GRAVE 22
+  [0] instance=77 code=504700054 pos=FACEUP
+  [1] instance=76 code=42703248 pos=FACEUP
+  [2] instance=71 code=43434803 pos=FACEUP
+  [3] instance=79 code=14087893 pos=FACEUP
+  [4] instance=73 code=3136426 pos=FACEUP
+  [5] instance=74 code=29228529 pos=FACEUP
+  [6] instance=45 code=43434803 pos=FACEUP
+  [7] instance=75 code=504700123 pos=FACEUP
+  [8] instance=68 code=42703248 pos=FACEUP
+  [9] instance=69 code=29228529 pos=FACEUP
+  [10] instance=52 code=38699854 pos=FACEUP
+  [11] instance=78 code=504700188 pos=FACEUP
+  [12] instance=66 code=504700178 pos=FACEUP
+  [13] instance=72 code=33508719 pos=FACEUP
+  [14] instance=70 code=504700054 pos=FACEUP
+  [15] instance=67 code=504700054 pos=FACEUP
+  [16] instance=80 code=14087893 pos=FACEUP
+  [17] instance=64 code=3136426 pos=FACEUP
+  [18] instance=63 code=49140998 pos=FACEUP
+  [19] instance=62 code=22589918 pos=FACEUP
+  [20] instance=61 code=42703248 pos=FACEUP
+  [21] instance=60 code=22589918 pos=FACEUP
+p1 REMOVED 0
+p1 EXTRA 15
+  [0] instance=81 code=? pos=FACEDOWN_DEFENSE
+  [1] instance=82 code=? pos=FACEDOWN_DEFENSE
+  [2] instance=83 code=? pos=FACEDOWN_DEFENSE
+  [3] instance=84 code=? pos=FACEDOWN_DEFENSE
+  [4] instance=85 code=? pos=FACEDOWN_DEFENSE
+  [5] instance=86 code=? pos=FACEDOWN_DEFENSE
+  [6] instance=87 code=? pos=FACEDOWN_DEFENSE
+  [7] instance=88 code=? pos=FACEDOWN_DEFENSE
+  [8] instance=89 code=? pos=FACEDOWN_DEFENSE
+  [9] instance=90 code=? pos=FACEDOWN_DEFENSE
+  [10] instance=91 code=? pos=FACEDOWN_DEFENSE
+  [11] instance=92 code=? pos=FACEDOWN_DEFENSE
+  [12] instance=93 code=? pos=FACEDOWN_DEFENSE
+  [13] instance=94 code=? pos=FACEDOWN_DEFENSE
+  [14] instance=95 code=? pos=FACEDOWN_DEFENSE
