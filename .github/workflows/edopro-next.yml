@@ -42,7 +42,12 @@ jobs:
       - name: Message table is derived, not hand-edited
         run: python tools/generate_messages.py --check
 
-      - name: Golden trace regression tests
+      - name: Protocol constants are derived, not hand-edited
+        run: python tools/generate_protocol_constants.py --check
+
+      - name: Structural golden trace regression tests
+        # The semantic suite skips here: it needs a built client/, which the
+        # semantic-client job below provides. This job covers M1 only.
         run: python -m unittest discover -s tests -v
 
       - name: Traces reproduce byte-for-byte from a clean tree
@@ -50,6 +55,46 @@ jobs:
         # against a golden that only matches on the machine that produced it.
         run: |
           python tests/test_replay_trace.py --update
+          git diff --exit-code -- tests/golden
+
+  semantic-client:
+    name: Semantic client model
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ninja
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build
+
+      # No Qt, no Irrlicht, no vcpkg, no ocgcore, no card data. If this step
+      # ever needs any of them, the separation M2 exists to create is broken.
+      - name: Configure
+        run: >
+          cmake -S client -B client/build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON
+
+      - name: Build
+        run: cmake --build client/build --parallel
+
+      - name: Unit tests
+        run: ctest --test-dir client/build --output-on-failure
+
+      # --require turns "the binary is missing" from a skip into a failure, so
+      # this job cannot pass by quietly running nothing.
+      - name: Semantic golden traces
+        env:
+          EDOPRO_NEXT_SEMANTIC_TRACE: ${{ github.workspace }}/client/build/edopro_next_semantic_trace
+        run: python tests/test_semantic_trace.py --require -v
+
+      - name: Semantic traces reproduce byte-for-byte
+        env:
+          EDOPRO_NEXT_SEMANTIC_TRACE: ${{ github.workspace }}/client/build/edopro_next_semantic_trace
+        run: |
+          python tests/test_semantic_trace.py --update
           git diff --exit-code -- tests/golden
 
   qt-shell:

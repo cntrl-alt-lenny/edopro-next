@@ -46,5 +46,9 @@ premake5.exe
 bundled_font.cpp
 NotoSansJP-Regular.otf
 # --- edopro-next (ours) ---
+# Upstream's /[Bb]uild*/ rule is root-anchored, so our out-of-source build
+# directories need naming. The README tells people to create both.
+/client/build/
+/ui/build/
 __pycache__/
 *.pyc
