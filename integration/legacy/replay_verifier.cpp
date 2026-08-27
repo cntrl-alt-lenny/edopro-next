@@ -130,3 +130,17 @@ int verify_replay_cli(const std::string& path, bool inject_fault) {
 }
 
 } // namespace edopro_next::legacy_observer
+
+extern "C" int edopro_next_verify_replay_cli(const char* path) noexcept {
+	if(path == nullptr)
+		return 1;
+	try {
+		return edopro_next::legacy_observer::verify_replay_cli(std::string(path));
+	} catch(const std::exception& e) {
+		std::fprintf(stderr, "error: %s\n", e.what());
+		return 1;
+	} catch(...) {
+		std::fprintf(stderr, "error: unknown exception\n");
+		return 1;
+	}
+}

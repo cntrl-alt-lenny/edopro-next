@@ -103,7 +103,7 @@ int edopro_main(const args_t& args) {
 #if defined(EDOPRO_NEXT_SEMANTIC_OBSERVER)
 	if(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY].enabled) {
 		const auto path = ygo::Utils::ToUTF8IfNeeded(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY].argument);
-		return edopro_next::legacy_observer::verify_replay_cli(path);
+		return edopro_next_verify_replay_cli(path.c_str());
 	}
 #endif
 	std::puts(EDOPRO_VERSION_STRING_DEBUG);
