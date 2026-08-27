@@ -110,15 +110,14 @@ conflict can be resolved with the original intent visible.
 | File | Purpose | Approximate scope | Why unavoidable | Expected upstream-merge risk |
 |---|---|---|---|---|
 | `README.md` | Replaced; upstream's preserved at `docs/upstream-README.md` | Existing repository-level replacement | This repository is a distinct project and must not misrepresent itself as upstream. Attribution retained. | Existing project-level delta |
-| `gframe/duelclient.cpp` | One include and one RAII observer scope at `ClientAnalyze` entry | One include plus one six-line call site | The live observer must see the exact normalized packet and both independent protocol-width flags, then compare after every existing return without rewriting the legacy switch. | Low; the switch and its control flow remain unchanged, but this is the runtime seam to recheck after upstream merges |
-| `gframe/cli_args.h` | `SEMANTIC_VERIFY_REPLAY` launch parameter enum | One additive enum value | Enables CLI-driven replay verification without menu interaction. | Low |
-| `gframe/edopro_main.cpp` | Parse `--semantic-verify-replay` argument | Four localized lines in argument parser | Routes CLI verification invocation. | Low |
-| `gframe/gframe.cpp` | Execute `verify_replay_cli` when flag is set | Ten localized lines at `edopro_main` entry | Invokes headless replay verification. | Low |
-| `gframe/drawing.cpp` | Non-blocking `WaitFrameSignal`, `ShowElement`, `HideElement`, `PopupElement` for `EDT_NULL` | Localized guards in UI lifecycle methods | Allows headless replay execution without UI animations or frame locks. | Low |
-| `gframe/client_field.cpp` | Guard camera/driver dereference and UI element methods | Localized null checks | Allows headless execution without camera or window viewport. | Low |
-| `gframe/event_handler.cpp` | Guard button access in `UpdateChainButtons` and `ShowCancelOrFinishButton` | Localized null checks | Allows headless execution without active button widgets. | Low |
+| `gframe/duelclient.cpp` | Observer seam plus narrowly scoped verification-only presentation suppression and semantic state completion | One include, one RAII call site, and localized active-mode branches | Lets the observer compare the real handler's state without `isCatchingUp`; ordinary runtime behavior remains upstream, including `MSG_SELECT_UNSELECT_CARD`. | Medium; this is the runtime seam to recheck after upstream merges |
+| `gframe/cli_args.h` | `SEMANTIC_VERIFY_REPLAY` and hidden fault-test launch parameters | Two additive enum values | Enables CLI-driven replay verification and CI-only fault injection without menu interaction. | Low |
+| `gframe/edopro_main.cpp` | Parse replay-verifier arguments | Localized argument-parser lines | Routes the opt-in verifier invocation. | Low |
+| `gframe/gframe.cpp` | Execute normal or fault-injected verifier when the observer is enabled | Localized lines at `edopro_main` entry | Invokes the direct headless replay path. | Low |
+| `gframe/drawing.cpp` | Suppress presentation helpers while verification is active | Four localized guards | Avoids UI animation and frame waits without changing ordinary runtime behavior. | Low |
+| `gframe/client_field.cpp` | Suppress presentation-only card-selection/camera helpers while verification is active | Localized active-mode guards | Avoids GUI/camera access without changing ordinary runtime behavior. | Low |
 | `gframe/replay.cpp` | Ensure vector buffer is cleared/resized on 0-length packets in `ReadData` | Single line resize fix | Fixes packet buffer reuse corruption on 0-payload messages. | Low |
-| `gframe/premake5.lua` | Conditional observer define/link on the legacy targets | Four localized lines in the target configuration | gframe must remain C++17 while the optional observer is linked as a separate target. | Low |
+| `gframe/premake5.lua` | Conditional observer define/link on the legacy targets | Four localized lines in the target configuration | gframe remains C++17 while the optional observer is linked as a separate target. | Low |
 | `premake5.lua` | `--semantic-observer` option and conditional `client`/observer project includes | Eight additive lines | Premake needs an explicit, reversible opt-in build path. | Low |
 | `travis/build.sh` | Forwards `EDOPRO_NEXT_SEMANTIC_OBSERVER=1` to Premake | Three environment-gated lines | CI needs to exercise the observer-enabled legacy build without changing the ordinary baseline command. | Low |
 

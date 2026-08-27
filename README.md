@@ -115,7 +115,7 @@ Nothing here is rounded up.
 | Linux CI | ✅ **Working** | harness, Qt shell, upstream baseline |
 | Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
 | Semantic duel model | ✅ **Working** | 34 of ~90 messages decoded, including bounded query-stream patches and fixture message closure; no renderer involved — [design](docs/architecture/semantic-model.md) |
-| Legacy/model equivalence check | ✅ **Working** | verified across committed YRPX fixtures headlessly against real legacy client — [design](docs/architecture/fixture-equivalence.md) |
+| Legacy/model equivalence check | 🔶 **In progress** | opt-in verifier under external review; scoped to LP, turn, and structural card/material topology — [design](docs/architecture/fixture-equivalence.md) |
 | Deck builder | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |

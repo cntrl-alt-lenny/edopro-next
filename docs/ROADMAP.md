@@ -61,7 +61,7 @@ A change altering payload *contents* is caught; one altering *interpretation* of
 bytes is not. M2 adds a second, semantic trace over the same fixtures which does catch the
 latter — for the 34 message types it decodes, and no further.
 
-## M2 — Semantic client model  ✅ done
+## M2 — Semantic client model  🔶 in progress
 
 - [x] Presentation-free duel state types — no Irrlicht, no Qt, no rendering concepts.
       `client/` builds against a C++20 compiler and nothing else. Design and the source
@@ -86,20 +86,27 @@ latter — for the 34 message types it decodes, and no further.
       deliberately test-only reference implementation, so the equivalence work below has a
       verified formula to build on without pulling perspective into the model itself —
       [ADR 0002, Decision 7](adr/0002-semantic-event-model.md).
-- [x] **Run the model alongside the legacy handler.** The opt-in observer now receives the
+- [x] **Run the model alongside the legacy handler.** The opt-in observer receives the
       normalized packet at one RAII seam in `DuelClient::ClientAnalyze`, decodes privately,
-      and projects the real legacy state after the unchanged handler returns. It is
-      observational and reports, rather than propagates, semantic failures.
-- [x] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
-      Verified by executing the committed YRPX fixtures (`duel-chains-battle.yrpX` and
-      `duel-extended.yrpX`) headlessly through the real legacy runtime (`Replay`,
-      `ClientAnalyze`, `ClientField`, `ClientCard`, `DuelInfo`) with the live semantic
-      observer comparing life points, turn, and structural zone topology —
-      [fixture-equivalence.md](architecture/fixture-equivalence.md).
+      and projects the real legacy state after the handler returns. It is observational and
+      reports, rather than propagates, semantic failures.
+- [ ] **Complete external review of the live verifier.** The verifier now drives every
+      committed YRPX packet through the direct `Replay::packets_stream` to
+      `DuelClient::ClientAnalyze` path with `isCatchingUp = false`, while an explicit
+      verification seam suppresses presentation-only work. Its current comparison is
+      deliberately scoped to life points, turn, structural card occupancy/location/
+      sequence, and material topology — [fixture-equivalence.md](architecture/fixture-equivalence.md).
+- [x] Add fail-closed packet/comparison accounting and a deterministic fault-injection
+      CLI path so CI proves that a synthetic legacy mismatch returns non-zero.
 
-**Exit criterion:** game state can be inspected without instantiating a renderer, and
-verified equivalent to real legacy state across all recorded fixture packets.
-**Met** — verified by automated headless replay execution in CI and local harnesses.
+**Exit criterion:** game state can be inspected without instantiating a renderer, and a
+reviewed verifier can compare the declared semantic projection to real legacy state across
+all recorded fixture packets.
+**Pending** — the verifier and CI proof path are implemented, but M2 remains under review.
+
+The current result is a scoped structural equivalence signal, not a claim of complete
+internal legacy-client or duel-engine equivalence. The comparator does not include card
+code or position, and the verifier does not run `ocgcore`.
 
 ## M3 — Deck and card data
 

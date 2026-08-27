@@ -237,3 +237,18 @@ jobs:
         run: |
           ./bin/x64/release/ygoprodll --semantic-verify-replay tests/fixtures/duel-chains-battle.yrpX
           ./bin/x64/release/ygoprodll --semantic-verify-replay tests/fixtures/duel-extended.yrpX
+
+      - name: Fault-injected verifier fails deterministically
+        if: matrix.observer == true
+        run: |
+          set +e
+          ./bin/x64/release/ygoprodll --semantic-verify-replay-fault tests/fixtures/duel-chains-battle.yrpX > fault-a.log 2>&1
+          first_status=$?
+          ./bin/x64/release/ygoprodll --semantic-verify-replay-fault tests/fixtures/duel-chains-battle.yrpX > fault-b.log 2>&1
+          second_status=$?
+          set -e
+          cat fault-a.log
+          test "$first_status" -ne 0
+          test "$second_status" -ne 0
+          grep -F "p0.life" fault-a.log
+          diff -u fault-a.log fault-b.log
