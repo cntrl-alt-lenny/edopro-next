@@ -912,6 +912,20 @@ EDOPRO_TEST(confirm_decktop_truncated_second_entry_is_transactional) {
 	EDOPRO_CHECK(fixture.state == before);
 }
 
+EDOPRO_TEST(zero_confirmation_code_preserves_existing_identity) {
+	auto fixture = started(1, 0);
+	const auto id = fixture.state.zone(0, Zone::Deck).back();
+	EDOPRO_CHECK(!fixture.state.set_code(id, CardCode{1234}));
+	const auto decktop = fixture.run(confirm_decktop_packet(0, {0}));
+	EDOPRO_CHECK_EQ(decktop.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
+
+	const auto cards = fixture.run(confirm_cards_packet(0,
+		{{0, 0, proto::LOCATION_DECK, 0}}));
+	EDOPRO_CHECK_EQ(cards.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
+}
+
 EDOPRO_TEST(confirm_cards_updates_tracked_cards_and_ignores_temporary_location_zero) {
 	auto fixture = started(0, 0);
 	CardInstanceId id = CardInstanceId::None;

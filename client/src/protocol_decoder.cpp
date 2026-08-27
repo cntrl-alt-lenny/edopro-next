@@ -253,8 +253,10 @@ void handle_confirm_decktop(Decoding& d) {
 			" cards in a deck of " + std::to_string(deck.size()));
 		return;
 	}
-	for(std::size_t i = 0; i < codes.size(); ++i)
-		d.apply_code(deck[deck.size() - 1 - i], to_code(codes[i]));
+	for(std::size_t i = 0; i < codes.size(); ++i) {
+		if(codes[i] != 0)
+			d.apply_code(deck[deck.size() - 1 - i], to_code(codes[i]));
+	}
 }
 
 void handle_confirm_cards(Decoding& d) {
@@ -297,8 +299,10 @@ void handle_confirm_cards(Decoding& d) {
 	}
 	std::size_t tracked_index = 0;
 	for(const auto& entry : entries) {
-		if(entry.location.zone != Zone::None)
+		if(entry.location.zone != Zone::None && entry.code != 0)
 			d.apply_code(tracked[tracked_index++], to_code(entry.code));
+		else if(entry.location.zone != Zone::None)
+			++tracked_index;
 	}
 }
 
