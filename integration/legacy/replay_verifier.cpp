@@ -1,4 +1,4 @@
-﻿#include "replay_verifier.h"
+#include "replay_verifier.h"
 
 #include "client_field.h"
 #include "data_manager.h"
@@ -9,10 +9,7 @@
 #include "sound_manager.h"
 #include "utils.h"
 
-#include <IrrlichtDevice.h>
-#include <IGUIEnvironment.h>
-#include <IGUIWindow.h>
-#include <IGUIListBox.h>
+#include <irrlicht.h>
 
 #include <cstdio>
 #include <iostream>
@@ -50,7 +47,7 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::gDataManager = &dataManager;
 	ygo::GameConfig config;
 	ygo::gGameConfig = &config;
-	ygo::SoundManager soundManager;
+	ygo::SoundManager soundManager(0.0, 0.0, false, false, ygo::SoundManager::BACKEND::NONE);
 	ygo::gSoundManager = &soundManager;
 
 	irr::SIrrlichtCreationParameters params{};
@@ -62,45 +59,45 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		game.env = dev->getGUIEnvironment();
 		if(game.env != nullptr) {
 			game.wCmdMenu = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wPhase = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wPhase = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
 			game.lstLog = game.env->addListBox(irr::core::recti(0, 0, 10, 10));
 		}
 	}
 
 	const auto& replay_header = replay.pheader;
-	mainGame->dInfo.isReplay = true;
-	mainGame->dInfo.isFirst = true;
-	mainGame->dInfo.isTeam1 = true;
-	mainGame->dInfo.isRelay = !!(replay.params.duel_flags & DUEL_RELAY);
-	mainGame->dInfo.isSingleMode = !!(replay_header.base.flag & REPLAY_SINGLE_MODE);
-	mainGame->dInfo.isHandTest = !!(replay_header.base.flag & REPLAY_HAND_TEST);
-	mainGame->dInfo.compat_mode = !(replay_header.base.flag & REPLAY_LUA64);
-	mainGame->dInfo.legacy_race_size = GET_CORE_VERSION_MAJOR(replay_header.base.version) < 10;
-	mainGame->dInfo.team1 = replay.GetPlayersCount(0);
-	mainGame->dInfo.team2 = replay.GetPlayersCount(1);
-	mainGame->dInfo.current_player[0] = 0;
-	mainGame->dInfo.current_player[1] = 0;
-	if(!mainGame->dInfo.isRelay)
-		mainGame->dInfo.current_player[1] = mainGame->dInfo.team2 - 1;
+	ygo::mainGame->dInfo.isReplay = true;
+	ygo::mainGame->dInfo.isFirst = true;
+	ygo::mainGame->dInfo.isTeam1 = true;
+	ygo::mainGame->dInfo.isRelay = !!(replay.params.duel_flags & DUEL_RELAY);
+	ygo::mainGame->dInfo.isSingleMode = !!(replay_header.base.flag & REPLAY_SINGLE_MODE);
+	ygo::mainGame->dInfo.isHandTest = !!(replay_header.base.flag & REPLAY_HAND_TEST);
+	ygo::mainGame->dInfo.compat_mode = !(replay_header.base.flag & REPLAY_LUA64);
+	ygo::mainGame->dInfo.legacy_race_size = GET_CORE_VERSION_MAJOR(replay_header.base.version) < 10;
+	ygo::mainGame->dInfo.team1 = replay.GetPlayersCount(0);
+	ygo::mainGame->dInfo.team2 = replay.GetPlayersCount(1);
+	ygo::mainGame->dInfo.current_player[0] = 0;
+	ygo::mainGame->dInfo.current_player[1] = 0;
+	if(!ygo::mainGame->dInfo.isRelay)
+		ygo::mainGame->dInfo.current_player[1] = ygo::mainGame->dInfo.team2 - 1;
 	const auto& names = replay.GetPlayerNames();
-	const auto first_oppo = names.begin() + mainGame->dInfo.team1;
-	mainGame->dInfo.selfnames.assign(names.begin(), first_oppo);
-	mainGame->dInfo.opponames.assign(first_oppo, names.end());
-	mainGame->dInfo.duel_params = replay.params.duel_flags;
-	mainGame->dInfo.duel_field = mainGame->GetMasterRule(mainGame->dInfo.duel_params);
-	mainGame->dInfo.turn = 0;
-	mainGame->dInfo.isCatchingUp = false;
-	mainGame->dInfo.isInDuel = true;
-	mainGame->dInfo.isStarted = true;
+	const auto first_oppo = names.begin() + ygo::mainGame->dInfo.team1;
+	ygo::mainGame->dInfo.selfnames.assign(names.begin(), first_oppo);
+	ygo::mainGame->dInfo.opponames.assign(first_oppo, names.end());
+	ygo::mainGame->dInfo.duel_params = replay.params.duel_flags;
+	ygo::mainGame->dInfo.duel_field = ygo::mainGame->GetMasterRule(ygo::mainGame->dInfo.duel_params);
+	ygo::mainGame->dInfo.turn = 0;
+	ygo::mainGame->dInfo.isCatchingUp = false;
+	ygo::mainGame->dInfo.isInDuel = true;
+	ygo::mainGame->dInfo.isStarted = true;
 
 	set_active_verification_stats(&stats);
 
 	for(std::size_t i = 0; i < replay.packets_stream.size(); ++i) {
 		const auto& packet = replay.packets_stream[i];
-		mainGame->dInfo.curMsg = packet.message;
+		ygo::mainGame->dInfo.curMsg = packet.message;
 		if(inject_fault && i == 50) {
 			// Fault injection: alter legacy LP artificially to prove verifier catches mismatches
-			mainGame->dInfo.lp[0] += 500;
+			ygo::mainGame->dInfo.lp[0] += 500;
 		}
 		ygo::DuelClient::ClientAnalyze(packet);
 	}
