@@ -49,7 +49,7 @@ EDOPRO_TEST(empty_and_occupied_slots_compare_structurally) {
 	EDOPRO_CHECK_EQ(mismatch.mismatches.front().field, "MZONE[p0:3].occupancy");
 }
 
-EDOPRO_TEST(dense_pile_order_and_extra_face_up_split_are_compared) {
+EDOPRO_TEST(dense_pile_slot_topology_and_extra_face_up_split_are_compared) {
 	DuelState semantic;
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(2, 2), ProtocolVariant{}).status,
@@ -63,7 +63,7 @@ EDOPRO_TEST(dense_pile_order_and_extra_face_up_split_are_compared) {
 	EDOPRO_CHECK(mismatch.equivalent());
 }
 
-EDOPRO_TEST(different_pile_slot_or_order_fails_structural_equivalence) {
+EDOPRO_TEST(different_pile_slot_topology_fails_structural_equivalence) {
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(2, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);

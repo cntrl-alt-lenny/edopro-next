@@ -85,9 +85,15 @@ meaning represented by the current 27-message semantic slice:
 - protocol-absolute life points, after normalizing legacy screen-relative
   indices with `isFirst ? player : 1 - player`;
 - turn count;
-- occupancy and order of deck, hand, monster, spell, grave, banished, and
-  extra-deck zones;
-- attached-material count, order, and structural material locations.
+- structural occupancy and slot topology of deck, hand, monster, spell, grave,
+  banished, and extra-deck zones;
+- attached-material count and indexed topology through structural material
+  locations.
+
+This does not compare card identity within an occupied pile or material identity
+within an overlay index. Two cards can be permuted between otherwise occupied
+slots without producing a live identity mismatch; the same applies to attached
+materials at different indices.
 
 It deliberately excludes card code, card position, attached-material code,
 attack/defence/type/attribute/status and other `ClientCard` query data, renderer
@@ -134,5 +140,5 @@ the same choice as `EDOPRO_NEXT_SEMANTIC_OBSERVER=1`). With that option,
 `client/` is built as `edopro_next_client` using C++20 and
 `integration/legacy/` is built as a C++20 static observer library. The only
 header included by gframe is `integration/legacy/semantic_observer.h`, whose
-public surface is a small C-compatible opaque-pointer API and a C++17 RAII
+public surface is a small C-linkage, C++17-compatible opaque API and a C++17 RAII
 wrapper. gframe itself remains C++17.
