@@ -1086,6 +1086,12 @@ void Game::DrawBackImage(irr::video::ITexture* texture, bool resized) {
 		driver->draw2DImage(texture, dest_size, bg_size);
 }
 void Game::ShowElement(irr::gui::IGUIElement * win, int autoframe) {
+	if(!win)
+		return;
+	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL) {
+		win->setVisible(true);
+		return;
+	}
 	FadingUnit fu;
 	fu.fadingSize = win->getRelativePosition();
 	fu.wasEnabled = win->isEnabled();
@@ -1127,6 +1133,12 @@ void Game::ShowElement(irr::gui::IGUIElement * win, int autoframe) {
 	fadingList.push_back(fu);
 }
 void Game::HideElement(irr::gui::IGUIElement * win, bool set_action) {
+	if(!win)
+		return;
+	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL) {
+		win->setVisible(false);
+		return;
+	}
 	FadingUnit fu;
 	fu.fadingSize = win->getRelativePosition();
 	fu.wasEnabled = win->isEnabled();
@@ -1164,6 +1176,12 @@ void Game::HideElement(irr::gui::IGUIElement * win, bool set_action) {
 	fadingList.push_back(fu);
 }
 void Game::PopupElement(irr::gui::IGUIElement * element, int hideframe) {
+	if(!element)
+		return;
+	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL) {
+		element->setVisible(true);
+		return;
+	}
 	element->getParent()->bringToFront(element);
 	if(!is_building)
 		dField.panel = element;
