@@ -1320,6 +1320,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 	}
 	edopro_next::legacy_observer::ObservationScope semantic_observer(
 		curMsg, pbuf, len, mainGame->dInfo.compat_mode,
+		mainGame->dInfo.legacy_race_size,
 		mainGame->dInfo.isReplay && mainGame->dInfo.isCatchingUp, mainGame);
 	mainGame->wCmdMenu->setVisible(false);
 	if(curMsg != MSG_HINT && curMsg != MSG_SELECT_CARD && curMsg != MSG_SELECT_UNSELECT_CARD && curMsg != MSG_SELECT_SUM)

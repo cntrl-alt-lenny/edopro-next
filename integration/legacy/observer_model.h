@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,11 +24,19 @@ using client::Zone;
 
 // A value-only representation extracted from the real ClientField. It is
 // intentionally not a second legacy model: production code constructs this
-// only by walking Game::dField and Game::dInfo. Query-sensitive card values
-// are intentionally absent until the query stream is decoded.
+// only by walking Game::dField and Game::dInfo. Values are optional so
+// hand-built comparator tests can model a deliberately narrower snapshot.
 struct ProjectedCard {
+	ProjectedCard() = default;
+	ProjectedCard(CardLocation where, std::uint32_t count)
+		: location(where), material_count(count) {}
 	CardLocation location{};
 	std::uint32_t material_count = 0;
+	std::optional<CardCode> code;
+	std::optional<CardPosition> position;
+	std::optional<std::int32_t> attack;
+	std::optional<std::int32_t> defense;
+	std::vector<std::optional<CardCode>> material_codes;
 };
 
 struct LegacySnapshot {
@@ -63,11 +72,6 @@ constexpr PlayerId protocol_player_from_local(PlayerId local, bool is_first) noe
 
 EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legacy,
 							 std::uint64_t packet, std::uint8_t message);
-
-constexpr bool is_query_stream_message(std::uint8_t message) noexcept {
-	return message == client::protocol::MSG_UPDATE_DATA ||
-		message == client::protocol::MSG_UPDATE_CARD;
-}
 
 // Implemented in the legacy adapter. The opaque parameter keeps the C++17
 // gframe-facing header free of Game/Irrlicht declarations.
