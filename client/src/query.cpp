@@ -81,8 +81,8 @@ bool known_and_supported(std::uint32_t flags, QueryParseResult& result) {
 bool parse_flag_payload(Reader& reader, std::uint32_t flag, bool compat, bool legacy_race_size,
 						CardQueryPatch& patch, QueryParseResult& result) {
 	const auto scalar32 = [&reader] { return reader.u32(); };
-	if(compat && (flag == protocol::QUERY_OWNER || flag == protocol::QUERY_IS_PUBLIC ||
-					  flag == protocol::QUERY_IS_HIDDEN || flag == protocol::QUERY_COVER)) {
+	if(compat && (flag == protocol::QUERY_IS_PUBLIC || flag == protocol::QUERY_IS_HIDDEN ||
+					  flag == protocol::QUERY_COVER)) {
 		result.unsupported = true;
 		result.detail = "compat query field " + std::to_string(flag) +
 						" has no legacy wire representation";
@@ -138,7 +138,7 @@ bool parse_flag_payload(Reader& reader, std::uint32_t flag, bool compat, bool le
 		patch.counters = std::move(values);
 		break;
 	}
-	case protocol::QUERY_OWNER: patch.owner = reader.u8(); break;
+	case protocol::QUERY_OWNER: patch.owner = scalar32(); break;
 	case protocol::QUERY_STATUS: patch.status = scalar32(); break;
 	case protocol::QUERY_IS_PUBLIC: patch.is_public = reader.u8() != 0; break;
 	case protocol::QUERY_LSCALE: patch.lscale = scalar32(); break;

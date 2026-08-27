@@ -126,6 +126,9 @@ EDOPRO_TEST(query_fields_compare_when_both_projections_have_them) {
 	legacy.cards[0].position = CardPosition{proto::POS_FACEUP_ATTACK};
 	legacy.cards[0].material_codes.push_back(CardCode{99});
 	EDOPRO_CHECK(compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD).equivalent());
+	legacy.cards[0].material_codes[0] = CardCode{100};
+	const auto material_mismatch = compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD);
+	EDOPRO_CHECK(!material_mismatch.equivalent());
 	legacy.cards[0].code = CardCode{123};
 	EDOPRO_CHECK(!compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD).equivalent());
 }

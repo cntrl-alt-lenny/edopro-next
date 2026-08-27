@@ -52,7 +52,7 @@ struct CardQueryPatch {
 	std::optional<std::vector<QueryLocation>> target_cards;
 	std::optional<std::vector<CardCode>> overlay_cards;
 	std::optional<std::vector<QueryCounter>> counters;
-	std::optional<std::uint8_t> owner;
+	std::optional<std::uint32_t> owner;
 	std::optional<std::uint32_t> status;
 	std::optional<bool> is_public;
 	std::optional<std::uint32_t> lscale;

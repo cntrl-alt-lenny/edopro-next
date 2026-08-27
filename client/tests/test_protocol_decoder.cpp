@@ -597,6 +597,12 @@ EDOPRO_TEST(compat_query_uses_independent_legacy_race_width) {
 	const auto legacy_race = parse_query_record(record.take(), true, false);
 	EDOPRO_CHECK(legacy_race.valid);
 	EDOPRO_CHECK_EQ(legacy_race.entries.front().patch.race.value(), 0x12345678u);
+
+	PayloadBuilder owner_record;
+	owner_record.u32(4 + 4 + 4).u32(proto::QUERY_OWNER).u32(0x12345678u);
+	const auto owner = parse_query_record(owner_record.take(), true, false);
+	EDOPRO_CHECK(owner.valid);
+	EDOPRO_CHECK_EQ(owner.entries.front().patch.owner.value(), 0x12345678u);
 }
 
 EDOPRO_TEST(win_names_a_winner_or_says_there_is_none) {

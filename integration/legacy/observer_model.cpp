@@ -81,8 +81,8 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 		projected.defense = card.defense;
 		for(const auto material_id : card.materials) {
 			const auto* material = semantic.find(material_id);
-			projected.material_codes.push_back(material ? std::optional<CardCode>{material->code}
-															 : std::nullopt);
+			projected.material_codes.push_back(
+				material ? std::optional<CardCode>{material->code} : std::nullopt);
 		}
 		semantic_cards.push_back(std::move(projected));
 		for(std::size_t index = 0; index < card.materials.size(); ++index) {
