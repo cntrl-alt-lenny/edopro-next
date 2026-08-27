@@ -1772,16 +1772,20 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		}
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			mainGame->btnM2->setVisible(true);
-			mainGame->btnM2->setSubElement(true);
-			mainGame->btnM2->setEnabled(true);
-			mainGame->btnM2->setPressed(false);
+			if(mainGame->btnM2) {
+				mainGame->btnM2->setVisible(true);
+				mainGame->btnM2->setSubElement(true);
+				mainGame->btnM2->setEnabled(true);
+				mainGame->btnM2->setPressed(false);
+			}
 		}
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			mainGame->btnEP->setVisible(true);
-			mainGame->btnEP->setSubElement(true);
-			mainGame->btnEP->setEnabled(true);
-			mainGame->btnEP->setPressed(false);
+			if(mainGame->btnEP) {
+				mainGame->btnEP->setVisible(true);
+				mainGame->btnEP->setSubElement(true);
+				mainGame->btnEP->setEnabled(true);
+				mainGame->btnEP->setPressed(false);
+			}
 		}
 		return false;
 	}
@@ -1916,21 +1920,27 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		}
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			mainGame->btnBP->setVisible(true);
-			mainGame->btnBP->setSubElement(true);
-			mainGame->btnBP->setEnabled(true);
-			mainGame->btnBP->setPressed(false);
+			if(mainGame->btnBP) {
+				mainGame->btnBP->setVisible(true);
+				mainGame->btnBP->setSubElement(true);
+				mainGame->btnBP->setEnabled(true);
+				mainGame->btnBP->setPressed(false);
+			}
 		}
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			mainGame->btnEP->setVisible(true);
-			mainGame->btnEP->setSubElement(true);
-			mainGame->btnEP->setEnabled(true);
-			mainGame->btnEP->setPressed(false);
+			if(mainGame->btnEP) {
+				mainGame->btnEP->setVisible(true);
+				mainGame->btnEP->setSubElement(true);
+				mainGame->btnEP->setEnabled(true);
+				mainGame->btnEP->setPressed(false);
+			}
 		}
 		if (BufferIO::Read<uint8_t>(pbuf)) {
-			mainGame->btnShuffle->setVisible(true);
+			if(mainGame->btnShuffle)
+				mainGame->btnShuffle->setVisible(true);
 		} else {
-			mainGame->btnShuffle->setVisible(false);
+			if(mainGame->btnShuffle)
+				mainGame->btnShuffle->setVisible(false);
 		}
 		return false;
 	}
@@ -2190,9 +2200,9 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 					panelmode = true;
 			}
 		}
-		const auto ignore_chain = mainGame->btnChainIgnore->isPressed();
-		const auto always_chain = mainGame->btnChainAlways->isPressed();
-		const auto chain_when_avail = mainGame->btnChainWhenAvail->isPressed();
+		const auto ignore_chain = mainGame->btnChainIgnore ? mainGame->btnChainIgnore->isPressed() : false;
+		const auto always_chain = mainGame->btnChainAlways ? mainGame->btnChainAlways->isPressed() : false;
+		const auto chain_when_avail = mainGame->btnChainWhenAvail ? mainGame->btnChainWhenAvail->isPressed() : false;
 		if(!select_trigger && !mainGame->dField.chain_forced && (ignore_chain || ((count == 0 || specount == 0) && !always_chain)) && (count == 0 || !chain_when_avail)) {
 			SetResponseI(-1);
 			mainGame->dField.ClearChainSelect();
@@ -2972,19 +2982,31 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		Play(SoundManager::SFX::PHASE);
 		const auto phase = BufferIO::Read<uint16_t>(pbuf);
 		auto lock = LockIf();
-		mainGame->btnDP->setVisible(false);
-		mainGame->btnDP->setSubElement(false);
-		mainGame->btnSP->setVisible(false);
-		mainGame->btnSP->setSubElement(false);
-		mainGame->btnM1->setVisible(false);
-		mainGame->btnM1->setSubElement(false);
-		mainGame->btnBP->setVisible(false);
-		mainGame->btnBP->setSubElement(false);
-		mainGame->btnM2->setVisible(false);
-		mainGame->btnM2->setSubElement(false);
-		mainGame->btnEP->setVisible(false);
-		mainGame->btnEP->setSubElement(false);
-		if(gGameConfig->alternative_phase_layout) {
+		if(mainGame->btnDP) {
+			mainGame->btnDP->setVisible(false);
+			mainGame->btnDP->setSubElement(false);
+		}
+		if(mainGame->btnSP) {
+			mainGame->btnSP->setVisible(false);
+			mainGame->btnSP->setSubElement(false);
+		}
+		if(mainGame->btnM1) {
+			mainGame->btnM1->setVisible(false);
+			mainGame->btnM1->setSubElement(false);
+		}
+		if(mainGame->btnBP) {
+			mainGame->btnBP->setVisible(false);
+			mainGame->btnBP->setSubElement(false);
+		}
+		if(mainGame->btnM2) {
+			mainGame->btnM2->setVisible(false);
+			mainGame->btnM2->setSubElement(false);
+		}
+		if(mainGame->btnEP) {
+			mainGame->btnEP->setVisible(false);
+			mainGame->btnEP->setSubElement(false);
+		}
+		if(gGameConfig->alternative_phase_layout && mainGame->btnDP) {
 			mainGame->btnDP->setVisible(true);
 			mainGame->btnSP->setVisible(true);
 			mainGame->btnM1->setVisible(true);
@@ -2998,50 +3020,63 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			mainGame->btnEP->setPressed(false);
 			mainGame->btnEP->setEnabled(false);
 		}
-		mainGame->btnShuffle->setVisible(false);
+		if(mainGame->btnShuffle)
+			mainGame->btnShuffle->setVisible(false);
 		mainGame->showcarddif = 30;
 		mainGame->showcardp = 0;
 		switch (phase) {
 		case PHASE_DRAW:
 			event_string = gDataManager->GetSysString(20).data();
-			mainGame->btnDP->setVisible(true);
-			mainGame->btnDP->setSubElement(true);
+			if(mainGame->btnDP) {
+				mainGame->btnDP->setVisible(true);
+				mainGame->btnDP->setSubElement(true);
+			}
 			mainGame->showcardcode = 4;
 			break;
 		case PHASE_STANDBY:
 			event_string = gDataManager->GetSysString(21).data();
-			mainGame->btnSP->setVisible(true);
-			mainGame->btnSP->setSubElement(true);
+			if(mainGame->btnSP) {
+				mainGame->btnSP->setVisible(true);
+				mainGame->btnSP->setSubElement(true);
+			}
 			mainGame->showcardcode = 5;
 			break;
 		case PHASE_MAIN1:
 			event_string = gDataManager->GetSysString(22).data();
-			mainGame->btnM1->setVisible(true);
-			mainGame->btnM1->setSubElement(true);
+			if(mainGame->btnM1) {
+				mainGame->btnM1->setVisible(true);
+				mainGame->btnM1->setSubElement(true);
+			}
 			mainGame->showcardcode = 6;
 			break;
 		case PHASE_BATTLE_START:
 			event_string = gDataManager->GetSysString(24).data();
-			mainGame->btnBP->setVisible(true);
-			mainGame->btnBP->setSubElement(true);
-			mainGame->btnBP->setPressed(true);
-			mainGame->btnBP->setEnabled(false);
+			if(mainGame->btnBP) {
+				mainGame->btnBP->setVisible(true);
+				mainGame->btnBP->setSubElement(true);
+				mainGame->btnBP->setPressed(true);
+				mainGame->btnBP->setEnabled(false);
+			}
 			mainGame->showcardcode = 7;
 			break;
 		case PHASE_MAIN2:
 			event_string = gDataManager->GetSysString(22).data();
-			mainGame->btnM2->setVisible(true);
-			mainGame->btnM2->setSubElement(true);
-			mainGame->btnM2->setPressed(true);
-			mainGame->btnM2->setEnabled(false);
+			if(mainGame->btnM2) {
+				mainGame->btnM2->setVisible(true);
+				mainGame->btnM2->setSubElement(true);
+				mainGame->btnM2->setPressed(true);
+				mainGame->btnM2->setEnabled(false);
+			}
 			mainGame->showcardcode = 8;
 			break;
 		case PHASE_END:
 			event_string = gDataManager->GetSysString(26).data();
-			mainGame->btnEP->setVisible(true);
-			mainGame->btnEP->setSubElement(true);
-			mainGame->btnEP->setPressed(true);
-			mainGame->btnEP->setEnabled(false);
+			if(mainGame->btnEP) {
+				mainGame->btnEP->setVisible(true);
+				mainGame->btnEP->setSubElement(true);
+				mainGame->btnEP->setPressed(true);
+				mainGame->btnEP->setEnabled(false);
+			}
 			mainGame->showcardcode = 9;
 			break;
 		}
@@ -4294,18 +4329,19 @@ void DuelClient::SendResponse() {
 		mainGame->dField.limbo_temp.clear();
 		mainGame->dField.ClearCommandFlag();
 		if(gGameConfig->alternative_phase_layout) {
-			mainGame->btnBP->setEnabled(false);
-			mainGame->btnM2->setEnabled(false);
-			mainGame->btnEP->setEnabled(false);
+			if(mainGame->btnBP) mainGame->btnBP->setEnabled(false);
+			if(mainGame->btnM2) mainGame->btnM2->setEnabled(false);
+			if(mainGame->btnEP) mainGame->btnEP->setEnabled(false);
 		} else {
 			if(msg == MSG_SELECT_BATTLECMD) {
-				mainGame->btnM2->setVisible(false);
+				if(mainGame->btnM2) mainGame->btnM2->setVisible(false);
 			} else {
-				mainGame->btnBP->setVisible(false);
+				if(mainGame->btnBP) mainGame->btnBP->setVisible(false);
 			}
-			mainGame->btnEP->setVisible(false);
+			if(mainGame->btnEP) mainGame->btnEP->setVisible(false);
 		}
-		mainGame->btnShuffle->setVisible(false);
+		if(mainGame->btnShuffle)
+			mainGame->btnShuffle->setVisible(false);
 		break;
 	}
 	case MSG_SELECT_CARD:
