@@ -32,8 +32,6 @@ ReplayVerificationStats* get_active_verification_stats() noexcept {
 }
 
 ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault) {
-	std::fprintf(stderr, "[debug] Starting verify_replay: %s\n", path.c_str());
-	std::fflush(stderr);
 	ReplayVerificationStats stats;
 	stats.fixture_name = path;
 
@@ -44,8 +42,6 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		std::fflush(stderr);
 		return stats;
 	}
-	std::fprintf(stderr, "[debug] OpenReplay succeeded: %zu packets\n", replay.packets_stream.size());
-	std::fflush(stderr);
 
 	auto config = std::make_unique<ygo::GameConfig>();
 	config->imageLoadThreads = 0;
@@ -76,12 +72,8 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::mainGame->dInfo.current_player[1] = 0;
 	if(!ygo::mainGame->dInfo.isRelay)
 		ygo::mainGame->dInfo.current_player[1] = ygo::mainGame->dInfo.team2 - 1;
-	std::fprintf(stderr, "[debug 7] Team sizes: %u vs %u\n", static_cast<unsigned>(ygo::mainGame->dInfo.team1), static_cast<unsigned>(ygo::mainGame->dInfo.team2));
-	std::fflush(stderr);
 
 	const auto& names = replay.GetPlayerNames();
-	std::fprintf(stderr, "[debug 8] Player names size: %zu\n", names.size());
-	std::fflush(stderr);
 	if(names.size() >= static_cast<std::size_t>(ygo::mainGame->dInfo.team1)) {
 		const auto first_oppo = names.begin() + ygo::mainGame->dInfo.team1;
 		ygo::mainGame->dInfo.selfnames.assign(names.begin(), first_oppo);
@@ -89,8 +81,6 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	}
 	ygo::mainGame->dInfo.duel_params = replay.params.duel_flags;
 	ygo::mainGame->dInfo.duel_field = ygo::mainGame->GetMasterRule(ygo::mainGame->dInfo.duel_params);
-	std::fprintf(stderr, "[debug 9] SetActiveVertices\n");
-	std::fflush(stderr);
 	ygo::matManager.SetActiveVertices(ygo::mainGame->dInfo.HasFieldFlag(DUEL_3_COLUMNS_FIELD),
 	                                  !ygo::mainGame->dInfo.HasFieldFlag(DUEL_SEPARATE_PZONE));
 	ygo::mainGame->dInfo.turn = 0;
@@ -98,15 +88,10 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::mainGame->dInfo.isInDuel = true;
 	ygo::mainGame->dInfo.isStarted = true;
 
-	std::fprintf(stderr, "[debug 10] Setup complete, starting packet loop...\n");
-	std::fflush(stderr);
-
 	set_active_verification_stats(&stats);
 
 	for(std::size_t i = 0; i < replay.packets_stream.size(); ++i) {
 		const auto& packet = replay.packets_stream[i];
-		std::fprintf(stderr, "[debug] packet %zu: msg=%u len=%zu\n", i, static_cast<unsigned>(packet.message), packet.buff_size());
-		std::fflush(stderr);
 		ygo::mainGame->dInfo.curMsg = packet.message;
 		if(inject_fault && i == 50) {
 			// Fault injection: alter legacy LP artificially to prove verifier catches mismatches
@@ -114,8 +99,6 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		}
 		ygo::DuelClient::ClientAnalyze(packet);
 	}
-	std::fprintf(stderr, "[debug] Packet loop finished successfully!\n");
-	std::fflush(stderr);
 
 	set_active_verification_stats(nullptr);
 	ygo::mainGame = nullptr;
