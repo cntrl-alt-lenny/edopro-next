@@ -31,9 +31,20 @@ struct ObserverRuntime {
 	std::mutex mutex;
 
 	void report_decode(std::uint64_t packet, std::uint8_t message,
-						 const DecodeResult& result) {
+						 const DecodeResult& result, bool newly_tainted) {
 		if(result.status == edopro_next::client::DecodeStatus::Decoded)
 			return;
+		if(result.status == edopro_next::client::DecodeStatus::UnsupportedMessage) {
+			if(edopro_next::legacy_observer::is_query_stream_message(message) || !newly_tainted)
+				return;
+			std::fprintf(stderr,
+				"edopro-next semantic observer: packet %llu message 0x%02x %s "
+				"is not semantically modelled; "
+				"equivalence checks suspended for this session\n",
+				static_cast<unsigned long long>(packet), static_cast<unsigned>(message),
+				edopro_next::legacy_observer::message_name(message).c_str());
+			return;
+		}
 		std::fprintf(stderr, "edopro-next semantic observer: packet %llu message 0x%02x %s: %s\n",
 					 static_cast<unsigned long long>(packet), static_cast<unsigned>(message),
 					 std::string(edopro_next::client::decode_status_name(result.status)).c_str(),
@@ -63,8 +74,11 @@ extern "C" void* edopro_next_semantic_observer_begin(
 		packet.message = message;
 		if(payload != nullptr)
 			packet.payload.assign(payload, payload + payload_length);
+		const bool comparison_was_available = instance.session.comparison_available();
 		const auto result = instance.session.observe(packet, ProtocolVariant{compat});
-		instance.report_decode(instance.session.packet_number(), message, result);
+		const bool newly_tainted = comparison_was_available &&
+			!instance.session.comparison_available();
+		instance.report_decode(instance.session.packet_number(), message, result, newly_tainted);
 		// The game pointer is read only at scope exit, after ClientAnalyze's
 		// legacy switch has run. Store it immediately after the safe decode.
 		auto token = std::make_unique<PendingObservation>();

@@ -53,12 +53,18 @@ diagnostic-only; it cannot change the legacy return value or state. The
 comparison is performed only for `DecodeStatus::Decoded`, and comparison
 diagnostics are deterministic and contain no pointer addresses.
 
-An unsupported structural message taints equivalence for the remainder of the
-session: later decoded packets are still observed, but are not compared against
-a potentially stale semantic state. The query-only `MSG_UPDATE_DATA` and
-`MSG_UPDATE_CARD` messages are excluded from this taint because their fields
-are outside the projection scope. `MSG_START` clears the taint with the new
-session.
+An unsupported non-query message conservatively taints equivalence for the
+remainder of the session: later decoded packets are still observed, but are not
+compared against a potentially stale semantic state. The query-only
+`MSG_UPDATE_DATA` and `MSG_UPDATE_CARD` messages are excluded from this taint,
+but their code, position, and attached-material-code changes are also excluded
+from the live projection. `MSG_START` clears the taint with the new session.
+
+The observer is synchronous opt-in instrumentation. It cannot alter legacy
+packet bytes, return values, state transitions, legality, rendering decisions,
+or input decisions, but it does add diagnostic/runtime overhead and is not
+performance-transparent. The observer-disabled build has only the compiled-out
+hook.
 
 Projection takes the existing duel mutex before reading live field vectors.
 The one replay catch-up path where `ReplayThread` already holds that mutex is
@@ -81,17 +87,15 @@ meaning represented by the current 27-message semantic slice:
 - turn count;
 - occupancy and order of deck, hand, monster, spell, grave, banished, and
   extra-deck zones;
-- known card code when the semantic model knows it (a legacy code learned only
-  through the unsupported query stream is not treated as a semantic mismatch);
-- card position when the semantic model has a stated position;
-- attached-material order and the structural locations/codes of materials.
+- attached-material count, order, and structural material locations.
 
-It deliberately excludes attack/defence/type/attribute/status and other
-`ClientCard` query data, renderer and animation fields, selection/UI state,
-and chain/battle fields whose legacy representation has transient staging
-differences or is not currently modelled with equivalent semantics. In
-particular, `MSG_UPDATE_DATA` and `MSG_UPDATE_CARD` remain unsupported and are
-never treated as evidence that the 27-message decoder is wrong.
+It deliberately excludes card code, card position, attached-material code,
+attack/defence/type/attribute/status and other `ClientCard` query data, renderer
+and animation fields, selection/UI state, and chain/battle fields whose legacy
+representation has transient staging differences or is not currently modelled
+with equivalent semantics. In particular, `MSG_UPDATE_DATA` and
+`MSG_UPDATE_CARD` remain unsupported and are never treated as evidence that the
+27-message decoder is wrong.
 
 Card identity is structural: a semantic `CardInstanceId` is never compared to
 a `ClientCard*`. Diagnostics name a protocol player, zone, sequence, and

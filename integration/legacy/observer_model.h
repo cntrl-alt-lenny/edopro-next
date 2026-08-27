@@ -23,12 +23,11 @@ using client::Zone;
 
 // A value-only representation extracted from the real ClientField. It is
 // intentionally not a second legacy model: production code constructs this
-// only by walking Game::dField and Game::dInfo.
+// only by walking Game::dField and Game::dInfo. Query-sensitive card values
+// are intentionally absent until the query stream is decoded.
 struct ProjectedCard {
 	CardLocation location{};
-	CardCode code = CardCode::None;
-	CardPosition position{};
-	std::vector<CardCode> materials;
+	std::uint32_t material_count = 0;
 };
 
 struct LegacySnapshot {
@@ -53,6 +52,8 @@ struct EquivalenceResult {
 	bool equivalent() const noexcept { return mismatches.empty(); }
 };
 
+std::string message_name(std::uint8_t message);
+
 // Game::LocalPlayer is the only perspective conversion needed here. Keeping
 // this in the adapter, rather than in client/, preserves protocol-absolute
 // semantic player ids.
@@ -61,7 +62,12 @@ constexpr PlayerId protocol_player_from_local(PlayerId local, bool is_first) noe
 }
 
 EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legacy,
-						 std::uint64_t packet, std::uint8_t message);
+							 std::uint64_t packet, std::uint8_t message);
+
+constexpr bool is_query_stream_message(std::uint8_t message) noexcept {
+	return message == client::protocol::MSG_UPDATE_DATA ||
+		message == client::protocol::MSG_UPDATE_CARD;
+}
 
 // Implemented in the legacy adapter. The opaque parameter keeps the C++17
 // gframe-facing header free of Game/Irrlicht declarations.

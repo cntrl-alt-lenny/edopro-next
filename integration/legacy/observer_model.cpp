@@ -3,53 +3,22 @@
 #include <algorithm>
 #include <sstream>
 
-#include "edopro_next/client/protocol_constants.h"
-
 namespace edopro_next::legacy_observer {
 namespace {
 
-using client::to_number;
-
-std::string message_name(std::uint8_t message) {
-	using namespace client::protocol;
-	switch(message) {
-	case MSG_START: return "MSG_START";
-	case MSG_WIN: return "MSG_WIN";
-	case MSG_NEW_TURN: return "MSG_NEW_TURN";
-	case MSG_NEW_PHASE: return "MSG_NEW_PHASE";
-	case MSG_MOVE: return "MSG_MOVE";
-	case MSG_POS_CHANGE: return "MSG_POS_CHANGE";
-	case MSG_CHAINING: return "MSG_CHAINING";
-	case MSG_CHAINED: return "MSG_CHAINED";
-	case MSG_CHAIN_SOLVING: return "MSG_CHAIN_SOLVING";
-	case MSG_CHAIN_SOLVED: return "MSG_CHAIN_SOLVED";
-	case MSG_CHAIN_END: return "MSG_CHAIN_END";
-	case MSG_DRAW: return "MSG_DRAW";
-	case MSG_DAMAGE: return "MSG_DAMAGE";
-	case MSG_RECOVER: return "MSG_RECOVER";
-	case MSG_LPUPDATE: return "MSG_LPUPDATE";
-	case MSG_PAY_LPCOST: return "MSG_PAY_LPCOST";
-	case MSG_ATTACK: return "MSG_ATTACK";
-	case MSG_BATTLE: return "MSG_BATTLE";
-	default: break;
-	}
-	return "MSG_0x" + [&] {
+std::string canonical_message_name(std::uint8_t message) {
+	const auto canonical = client::protocol::message_name(message);
+	if(!canonical.empty())
+		return std::string(canonical);
+	return [&] {
 		std::ostringstream out;
-		out << std::hex << static_cast<unsigned>(message);
+		out << "MSG_0x" << std::hex << static_cast<unsigned>(message);
 		return out.str();
 	}();
 }
 
 std::string location_name(const CardLocation& location) {
 	return client::to_string(location);
-}
-
-std::string code_name(CardCode code) {
-	return client::is_known(code) ? std::to_string(to_number(code)) : "unknown";
-}
-
-std::string position_name(CardPosition position) {
-	return position.known() ? std::to_string(position.bits()) : "unknown";
 }
 
 bool location_less(const CardLocation& left, const CardLocation& right) {
@@ -62,11 +31,6 @@ bool location_less(const CardLocation& left, const CardLocation& right) {
 	if(left.overlay != right.overlay)
 		return left.overlay < right.overlay;
 	return left.overlay_index < right.overlay_index;
-}
-
-bool is_query_stream_message(std::uint8_t message) {
-	return message == client::protocol::MSG_UPDATE_DATA ||
-		message == client::protocol::MSG_UPDATE_CARD;
 }
 
 const ProjectedCard* find_card(const std::vector<ProjectedCard>& cards,
@@ -83,6 +47,10 @@ void add_mismatch(EquivalenceResult& result, std::uint64_t packet, std::uint8_t 
 }
 
 } // namespace
+
+std::string message_name(std::uint8_t message) {
+	return canonical_message_name(message);
+}
 
 std::string Mismatch::format() const {
 	return "packet " + std::to_string(packet) + " " + message_name(message) + " " + field
@@ -106,12 +74,16 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 	for(const auto& card : semantic.cards()) {
 		if(!card.tracked)
 			continue;
-		ProjectedCard projected{card.location, card.code, card.position};
-		for(const auto material_id : card.materials) {
-			if(const auto* material = semantic.find(material_id); material != nullptr)
-				projected.materials.push_back(material->code);
-		}
+		ProjectedCard projected{card.location,
+			static_cast<std::uint32_t>(card.materials.size())};
 		semantic_cards.push_back(std::move(projected));
+		for(std::size_t index = 0; index < card.materials.size(); ++index) {
+			ProjectedCard material_projection;
+			material_projection.location = CardLocation{
+				card.location.controller, card.location.zone, card.location.sequence, true,
+				static_cast<std::uint32_t>(index)};
+			semantic_cards.push_back(std::move(material_projection));
+		}
 	}
 
 	auto sort_cards = [](auto& cards) {
@@ -147,28 +119,10 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 						  "empty");
 			continue;
 		}
-		// An unknown semantic code is an intentional scope exclusion: query
-		// packets can teach legacy a code before this slice can know it. The
-		// reverse direction remains useful evidence of a real divergence.
-		if(client::is_known(semantic_card->code) && semantic_card->code != legacy_card->code)
-			add_mismatch(result, packet, message, location_name(location) + ".code",
-						  code_name(semantic_card->code), code_name(legacy_card->code));
-		if(semantic_card->position.known() && semantic_card->position != legacy_card->position)
-			add_mismatch(result, packet, message, location_name(location) + ".position",
-						  position_name(semantic_card->position), position_name(legacy_card->position));
-		if(semantic_card->materials.size() != legacy_card->materials.size())
+		if(semantic_card->material_count != legacy_card->material_count)
 			add_mismatch(result, packet, message, location_name(location) + ".materials.count",
-						  std::to_string(semantic_card->materials.size()),
-						  std::to_string(legacy_card->materials.size()));
-		const auto material_count = std::min(semantic_card->materials.size(), legacy_card->materials.size());
-		for(std::size_t i = 0; i < material_count; ++i) {
-			if(client::is_known(semantic_card->materials[i]) &&
-				semantic_card->materials[i] != legacy_card->materials[i])
-				add_mismatch(result, packet, message,
-							  location_name(location) + ".material[" + std::to_string(i) + "].code",
-							  code_name(semantic_card->materials[i]),
-							  code_name(legacy_card->materials[i]));
-		}
+						  std::to_string(semantic_card->material_count),
+						  std::to_string(legacy_card->material_count));
 	}
 	return result;
 }
@@ -187,7 +141,7 @@ client::DecodeResult ObserverSession::observe(const client::Packet& packet,
 		reset(variant);
 	++packet_number_;
 	const auto result = decoder_.decode(packet, state_);
-	// An unsupported structural message may have changed the real legacy
+	// An unsupported non-query message may have changed the real legacy
 	// field without changing the semantic trial state. Do not compare a later
 	// decoded packet against that stale semantic snapshot. Query-stream
 	// messages are the deliberate exception: this projection excludes the

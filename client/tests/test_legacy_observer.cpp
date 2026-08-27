@@ -20,11 +20,9 @@ LegacySnapshot snapshot_for_start(std::uint16_t main = 2, std::uint16_t extra = 
 	snapshot.life = {8000, 8000};
 	for(PlayerId player = 0; player < kPlayerCount; ++player) {
 		for(std::uint32_t sequence = 0; sequence < main; ++sequence)
-			snapshot.cards.push_back({{player, Zone::Deck, sequence, false, 0},
-				CardCode::None, CardPosition{proto::POS_FACEDOWN_DEFENSE}, {}});
+			snapshot.cards.push_back({{player, Zone::Deck, sequence, false, 0}, 0});
 		for(std::uint32_t sequence = 0; sequence < extra; ++sequence)
-			snapshot.cards.push_back({{player, Zone::ExtraDeck, sequence, false, 0},
-				CardCode::None, CardPosition{proto::POS_FACEDOWN_DEFENSE}, {}});
+			snapshot.cards.push_back({{player, Zone::ExtraDeck, sequence, false, 0}, 0});
 	}
 	return snapshot;
 }
@@ -45,8 +43,7 @@ EDOPRO_TEST(empty_and_occupied_slots_compare_structurally) {
 					DecodeStatus::Decoded);
 	semantic = session.state();
 	auto legacy = snapshot_for_start(1, 0);
-	legacy.cards.push_back({{0, Zone::MonsterZone, 3, false, 0}, CardCode{123},
-									CardPosition{proto::POS_FACEUP_ATTACK}, {}});
+	legacy.cards.push_back({{0, Zone::MonsterZone, 3, false, 0}, 0});
 	const auto mismatch = compare(semantic, legacy, 12, proto::MSG_MOVE);
 	EDOPRO_CHECK(!mismatch.equivalent());
 	EDOPRO_CHECK_EQ(mismatch.mismatches.front().field, "MZONE[p0:3].occupancy");
@@ -61,33 +58,77 @@ EDOPRO_TEST(dense_pile_order_and_extra_face_up_split_are_compared) {
 	EDOPRO_CHECK(!semantic.create_card({0, Zone::ExtraDeck, 0, false, 0}, CardCode{73915052},
 									 CardPosition{proto::POS_FACEUP_ATTACK}, nullptr));
 	auto legacy = snapshot_for_start(2, 2);
-	legacy.cards.push_back({{0, Zone::ExtraDeck, 2, false, 0}, CardCode{73915052},
-									CardPosition{proto::POS_FACEUP_ATTACK}, {}});
+	legacy.cards.push_back({{0, Zone::ExtraDeck, 2, false, 0}, 0});
 	const auto mismatch = compare(semantic, legacy, 27, proto::MSG_MOVE);
 	EDOPRO_CHECK(mismatch.equivalent());
 }
 
-EDOPRO_TEST(unknown_semantic_code_is_query_scope_not_a_false_mismatch) {
+EDOPRO_TEST(different_pile_slot_or_order_fails_structural_equivalence) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(2, 0), ProtocolVariant{}).status,
+					DecodeStatus::Decoded);
+	const auto semantic = session.state();
+	auto legacy = snapshot_for_start(2, 0);
+	legacy.cards[1].location.sequence = 2;
+	const auto mismatch = compare(semantic, legacy, 31, proto::MSG_MOVE);
+	EDOPRO_CHECK(!mismatch.equivalent());
+}
+
+EDOPRO_TEST(different_material_count_or_topology_fails_structural_equivalence) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
+					DecodeStatus::Decoded);
+	DuelState semantic = session.state();
+	CardInstanceId material = CardInstanceId::None;
+	EDOPRO_CHECK(!semantic.create_card({0, Zone::MonsterZone, 1, false, 0}, CardCode::None,
+									 CardPosition{proto::POS_FACEUP_ATTACK}, nullptr));
+	EDOPRO_CHECK(!semantic.create_card({0, Zone::Hand, 0, false, 0}, CardCode{99},
+									 CardPosition{proto::POS_FACEDOWN}, &material));
+	EDOPRO_CHECK(!semantic.move_card(material, {0, Zone::MonsterZone, 1, true, 0},
+									 CardPosition{proto::POS_FACEUP_ATTACK}));
+	auto legacy = snapshot_for_start(0, 0);
+	legacy.cards.push_back({{0, Zone::MonsterZone, 1, false, 0}, 0});
+	const auto mismatch = compare(semantic, legacy, 32, proto::MSG_MOVE);
+	EDOPRO_CHECK(!mismatch.equivalent());
+}
+
+EDOPRO_TEST(life_points_and_turn_are_live_equivalence_fields) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
+					DecodeStatus::Decoded);
+	const auto semantic = session.state();
+	auto legacy = snapshot_for_start(0, 0);
+	legacy.life[1] = 7000;
+	legacy.turn = 1;
+	const auto mismatch = compare(semantic, legacy, 33, proto::MSG_NEW_TURN);
+	EDOPRO_CHECK(!mismatch.equivalent());
+	EDOPRO_CHECK_EQ(mismatch.mismatches.size(), 2u);
+}
+
+EDOPRO_TEST(query_mutated_code_position_and_material_code_are_outside_live_scope) {
 	DuelState semantic;
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
 	semantic = session.state();
-	LegacySnapshot legacy{{8000, 8000}, 0,
-		{{{0, Zone::MonsterZone, 0, false, 0}, CardCode{123},
-			CardPosition{proto::POS_FACEUP_ATTACK}, {}}}};
-	// A query packet may teach legacy a code that this slice has not decoded.
-	// It must not be reported until the semantic side knows a conflicting code.
-	EDOPRO_CHECK(compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD).equivalent() == false);
-	// The occupied slot is still a real mismatch; isolate code scope by using
-	// the actual semantic occupant for the second assertion.
-	CardInstanceId id = CardInstanceId::None;
-	EDOPRO_CHECK(!semantic.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
-									 CardPosition{proto::POS_FACEUP_ATTACK}, &id));
-	EDOPRO_CHECK(compare(semantic, legacy, 87, proto::MSG_UPDATE_CARD).equivalent());
+	CardInstanceId host = CardInstanceId::None;
+	CardInstanceId material = CardInstanceId::None;
+	EDOPRO_CHECK(!semantic.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{73915052},
+									 CardPosition{proto::POS_FACEUP_ATTACK}, &host));
+	EDOPRO_CHECK(!semantic.create_card({0, Zone::Hand, 0, false, 0}, CardCode{99},
+									 CardPosition{proto::POS_FACEDOWN}, &material));
+	EDOPRO_CHECK(!semantic.move_card(material, {0, Zone::MonsterZone, 0, true, 0},
+									 CardPosition{proto::POS_FACEUP_ATTACK}));
+	LegacySnapshot legacy = snapshot_for_start(0, 0);
+	legacy.cards.push_back({{0, Zone::MonsterZone, 0, false, 0}, 1});
+	legacy.cards.push_back({{0, Zone::MonsterZone, 0, true, 0}, 0});
+	// ClientCard::UpdateInfo may change legacy code, position, and material
+	// codes through the unsupported query stream. ProjectedCard deliberately
+	// cannot carry those values, so these differences remain equivalent here.
+	EDOPRO_CHECK(compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD).equivalent());
 }
 
-EDOPRO_TEST(known_code_and_material_structure_produce_deterministic_diagnostics) {
+EDOPRO_TEST(structural_mismatch_diagnostics_are_deterministic) {
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
@@ -101,17 +142,15 @@ EDOPRO_TEST(known_code_and_material_structure_produce_deterministic_diagnostics)
 	EDOPRO_CHECK(!semantic.move_card(material, {0, Zone::MonsterZone, 2, true, 0},
 										CardPosition{proto::POS_FACEUP_ATTACK}));
 	LegacySnapshot legacy{{8000, 8000}, 0,
-		{{{0, Zone::MonsterZone, 2, false, 0}, CardCode{41},
-			CardPosition{proto::POS_FACEUP_ATTACK}, {CardCode{99}}},
-		 {{0, Zone::MonsterZone, 2, true, 0}, CardCode{99},
-			CardPosition{proto::POS_FACEUP_ATTACK}, {}}}};
+		{{{0, Zone::MonsterZone, 2, false, 0}, 0},
+		 {{0, Zone::MonsterZone, 2, true, 0}, 0}}};
 	const auto first = compare(semantic, legacy, 377, proto::MSG_MOVE);
 	const auto second = compare(semantic, legacy, 377, proto::MSG_MOVE);
 	EDOPRO_CHECK(!first.equivalent());
 	EDOPRO_CHECK_EQ(first.mismatches.size(), second.mismatches.size());
 	EDOPRO_CHECK_EQ(first.mismatches.front().format(), second.mismatches.front().format());
 	EDOPRO_CHECK(first.mismatches.front().format().find("packet 377 MSG_MOVE") != std::string::npos);
-	EDOPRO_CHECK(first.mismatches.front().format().find("MZONE[p0:2].code") != std::string::npos);
+	EDOPRO_CHECK(first.mismatches.front().format().find("MZONE[p0:2]") != std::string::npos);
 }
 
 EDOPRO_TEST(observer_session_resets_and_ignores_unsupported_messages) {
@@ -123,6 +162,10 @@ EDOPRO_TEST(observer_session_resets_and_ignores_unsupported_messages) {
 		Packet{proto::MSG_UPDATE_DATA, {0, 1, 2, 3}}, ProtocolVariant{});
 	EDOPRO_CHECK_EQ(unsupported.status, DecodeStatus::UnsupportedMessage);
 	EDOPRO_CHECK(session.comparison_available());
+	const auto unsupported_card = session.observe(
+		Packet{proto::MSG_UPDATE_CARD, {0, 1, 2, 3}}, ProtocolVariant{});
+	EDOPRO_CHECK_EQ(unsupported_card.status, DecodeStatus::UnsupportedMessage);
+	EDOPRO_CHECK(session.comparison_available());
 	EDOPRO_CHECK_EQ(session.session_number(), first_session);
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
@@ -130,7 +173,7 @@ EDOPRO_TEST(observer_session_resets_and_ignores_unsupported_messages) {
 	EDOPRO_CHECK_EQ(session.state().cards().size(), 0u);
 }
 
-EDOPRO_TEST(structural_unsupported_packet_taints_comparison_until_start) {
+EDOPRO_TEST(unsupported_non_query_packet_conservatively_taints_until_start) {
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
