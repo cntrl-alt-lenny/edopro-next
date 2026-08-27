@@ -39,7 +39,7 @@ struct ObserverRuntime {
 				return;
 			std::fprintf(stderr,
 				"edopro-next semantic observer: packet %llu message 0x%02x %s "
-				"is an unsupported non-query packet; "
+				"is an unsupported packet; "
 				"equivalence checks suspended for this session\n",
 				static_cast<unsigned long long>(packet), static_cast<unsigned>(message),
 				edopro_next::legacy_observer::message_name(message).c_str());
