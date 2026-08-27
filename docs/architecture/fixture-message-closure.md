@@ -58,7 +58,9 @@ Every handler reads the complete entry list before applying it. A bad later
 reference therefore leaves the caller's state unchanged under the decoder's
 central transactional guarantee.
 
-The five messages are now classified as understood state/event messages. This
-should reduce both fixture streams from 23 and 115 unsupported packets to zero;
-the real `ClientField` equivalence claim remains a separate, unimplemented
+The five messages are now classified as understood state/event messages. The
+resulting semantic fixture acceptance is 990 decoded / 0 unsupported for
+`duel-chains-battle` and 1133 decoded / 0 unsupported for `duel-extended`, with
+zero unknown, malformed, or inconsistent packets and clean final invariants.
+The real `ClientField` equivalence claim remains a separate, unimplemented
 replay-host task.
