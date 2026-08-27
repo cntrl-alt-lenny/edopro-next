@@ -5,6 +5,7 @@
 #include "duelclient.h"
 #include "game.h"
 #include "game_config.h"
+#include "materials.h"
 #include "replay.h"
 #include "sound_manager.h"
 #include "utils.h"
@@ -61,6 +62,33 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 			game.wCmdMenu = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
 			game.wPhase = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
 			game.lstLog = game.env->addListBox(irr::core::recti(0, 0, 10, 10));
+			game.stHintMsg = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
+			game.stACMessage = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
+			game.stMessage = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
+			game.stQMessage = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
+			game.wACMessage = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wMessage = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wHand = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wPosSelect = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wCardSelect = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wOptions = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wFTSelect = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wQuery = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wANCard = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wANNumber = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wANRace = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.wANAttribute = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
+			game.btnDP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnSP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnM1 = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnBP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnM2 = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnEP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnCancelOrFinish = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnChainAlways = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnChainIgnore = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnChainWhenAvail = game.env->addButton(irr::core::recti(0, 0, 10, 10));
+			game.btnShuffle = game.env->addButton(irr::core::recti(0, 0, 10, 10));
 		}
 	}
 
@@ -85,6 +113,8 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::mainGame->dInfo.opponames.assign(first_oppo, names.end());
 	ygo::mainGame->dInfo.duel_params = replay.params.duel_flags;
 	ygo::mainGame->dInfo.duel_field = ygo::mainGame->GetMasterRule(ygo::mainGame->dInfo.duel_params);
+	ygo::matManager.SetActiveVertices(ygo::mainGame->dInfo.HasFieldFlag(DUEL_3_COLUMNS_FIELD),
+	                                  !ygo::mainGame->dInfo.HasFieldFlag(DUEL_SEPARATE_PZONE));
 	ygo::mainGame->dInfo.turn = 0;
 	ygo::mainGame->dInfo.isCatchingUp = false;
 	ygo::mainGame->dInfo.isInDuel = true;
