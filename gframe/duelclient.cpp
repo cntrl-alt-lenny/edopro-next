@@ -30,6 +30,7 @@
 #include "porting.h"
 #include "fmt.h"
 #include "localtime.h"
+#include "../integration/legacy/semantic_observer.h"
 
 #define DEFAULT_DUEL_RULE 5
 namespace ygo {
@@ -1317,6 +1318,9 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			replay_stream.emplace_back(curMsg, pbuf, len);
 		}
 	}
+	edopro_next::legacy_observer::ObservationScope semantic_observer(
+		curMsg, pbuf, len, mainGame->dInfo.compat_mode,
+		mainGame->dInfo.isReplay && mainGame->dInfo.isCatchingUp, mainGame);
 	mainGame->wCmdMenu->setVisible(false);
 	if(curMsg != MSG_HINT && curMsg != MSG_SELECT_CARD && curMsg != MSG_SELECT_UNSELECT_CARD && curMsg != MSG_SELECT_SUM)
 		PerformQueuedPanelConfirm();
