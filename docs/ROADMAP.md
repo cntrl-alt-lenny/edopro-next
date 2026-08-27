@@ -91,9 +91,10 @@ latter — for the 27 message types it decodes, and no further.
       and projects the real legacy state after the unchanged handler returns. It is
       observational and reports, rather than propagates, semantic failures.
 - [ ] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
-      Not started, and dependent on the item above. No equivalence claim is made anywhere
-      in this milestone. The normalization rule it will need is now documented and tested
-      (see the two items above), but not implemented as part of an actual comparison.
+      Not started: the current client has no small headless replay host that can drive the
+      real `ClientField` from those fixtures. No fixture-level equivalence claim is made
+      anywhere in this milestone. The normalization rule it will need is documented and
+      tested, but not implemented as part of an actual fixture comparison.
 
 **Exit criterion:** game state can be inspected without instantiating a renderer.
 **Met for the implemented slice** — `client/tools/semantic_trace_main.cpp` reads a real
