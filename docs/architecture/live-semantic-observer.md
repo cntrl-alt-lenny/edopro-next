@@ -53,12 +53,11 @@ diagnostic-only; it cannot change the legacy return value or state. The
 comparison is performed only for `DecodeStatus::Decoded`, and comparison
 diagnostics are deterministic and contain no pointer addresses.
 
-An unsupported non-query message conservatively taints equivalence for the
-remainder of the session: later decoded packets are still observed, but are not
-compared against a potentially stale semantic state. The query-only
-`MSG_UPDATE_DATA` and `MSG_UPDATE_CARD` messages are excluded from this taint,
-but their code, position, and attached-material-code changes are also excluded
-from the live projection. `MSG_START` clears the taint with the new session.
+Any unsupported, malformed, or inconsistent message conservatively taints
+equivalence for the remainder of the session: later decoded packets are still
+observed, but are not compared against a potentially stale semantic state.
+Fully decoded query packets do not taint the session; a query parser refusal
+does. `MSG_START` clears the taint with the new session.
 
 The observer is synchronous opt-in instrumentation. It cannot alter legacy
 packet bytes, return values, state transitions, legality, rendering decisions,
@@ -80,7 +79,7 @@ completion; an aborted duel is still safely replaced by the next `MSG_START`.
 
 The projection is built from the real `Game::dInfo`, `ClientField`, and
 `ClientCard` objects. It is not a second legacy simulation. It compares only
-meaning represented by the current 27-message semantic slice:
+meaning represented by the current semantic slice, including query patches:
 
 - protocol-absolute life points, after normalizing legacy screen-relative
   indices with `isFirst ? player : 1 - player`;
@@ -88,20 +87,25 @@ meaning represented by the current 27-message semantic slice:
 - structural occupancy and slot topology of deck, hand, monster, spell, grave,
   banished, and extra-deck zones;
 - attached-material count and indexed topology through structural material
-  locations.
+  locations;
+- card code and position when present in both projections;
+- attack and defence values when the semantic query/battle state has stated
+  them; and
+- attached-material codes when both projections provide the value.
 
-This does not compare card identity within an occupied pile or material identity
-within an overlay index. Two cards can be permuted between otherwise occupied
-slots without producing a live identity mismatch; the same applies to attached
-materials at different indices.
+This does not compare cross-model card identity within an occupied pile or
+material identity as an object identity within an overlay index. Structural
+slot topology is always compared; query-provided code is compared only as a
+value when present on both sides, so permutations of cards with indistinguishable
+projected values remain intentionally outside the claim.
 
-It deliberately excludes card code, card position, attached-material code,
-attack/defence/type/attribute/status and other `ClientCard` query data, renderer
-and animation fields, selection/UI state, and chain/battle fields whose legacy
-representation has transient staging differences or is not currently modelled
-with equivalent semantics. In particular, `MSG_UPDATE_DATA` and
-`MSG_UPDATE_CARD` remain unsupported and are never treated as evidence that the
-27-message decoder is wrong.
+It deliberately excludes query fields whose legacy provenance is not yet
+represented by an equivalent semantic value (alias/type/level/rank/
+attribute/race/base stats/reason/owner/status/scales/link/cover/visibility),
+renderer and animation fields, selection/UI state, and chain/battle fields whose
+legacy representation has transient staging differences. Query parsing itself
+is now supported; an unknown or malformed query remains a diagnostic refusal
+and conservatively suspends later comparisons.
 
 Card identity is structural: a semantic `CardInstanceId` is never compared to
 a `ClientCard*`. Diagnostics name a protocol player, zone, sequence, and
