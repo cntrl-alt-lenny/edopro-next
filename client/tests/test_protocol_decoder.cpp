@@ -38,6 +38,26 @@ Packet draw_packet(std::uint8_t player, const std::vector<std::uint32_t>& codes)
 	return builder.packet(proto::MSG_DRAW);
 }
 
+std::vector<std::uint8_t> query_field(std::uint32_t flag, const std::vector<std::uint8_t>& payload) {
+	PayloadBuilder b;
+	b.u16(static_cast<std::uint16_t>(4 + payload.size())).u32(flag);
+	for(const auto byte : payload) b.u8(byte);
+	return b.take();
+}
+
+std::vector<std::uint8_t> modern_query(const std::vector<std::vector<std::uint8_t>>& fields) {
+	std::vector<std::uint8_t> body;
+	for(const auto& field : fields) body.insert(body.end(), field.begin(), field.end());
+	PayloadBuilder b;
+	b.u32(static_cast<std::uint32_t>(body.size()));
+	for(const auto byte : body) b.u8(byte);
+	return b.take();
+}
+
+std::vector<std::uint8_t> query_u32(std::uint32_t value) {
+	return PayloadBuilder().u32(value).take();
+}
+
 Packet move_packet(std::uint32_t code, std::uint8_t from_location, std::uint32_t from_sequence,
 				   std::uint8_t to_location, std::uint32_t to_sequence,
 				   std::uint32_t to_position, std::uint32_t reason = 0,
@@ -80,14 +100,11 @@ EDOPRO_TEST(undefined_ids_are_unknown_not_malformed) {
 	EDOPRO_CHECK(result.events.empty());
 }
 
-EDOPRO_TEST(known_but_undecoded_ids_are_unsupported_not_malformed) {
-	// The distinction matters: MSG_UPDATE_DATA payloads are perfectly well
-	// formed, we simply do not read them yet, and a coverage report that
-	// called them malformed would be a lie.
+EDOPRO_TEST(query_messages_are_supported_and_bad_framing_is_malformed) {
 	Fixture fixture;
 	const auto result = fixture.run(Packet{proto::MSG_UPDATE_DATA, {0, 1, 2, 3}});
-	EDOPRO_CHECK_EQ(result.status, DecodeStatus::UnsupportedMessage);
-	EDOPRO_CHECK(!ProtocolDecoder::supports(proto::MSG_UPDATE_DATA));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Malformed);
+	EDOPRO_CHECK(ProtocolDecoder::supports(proto::MSG_UPDATE_DATA));
 }
 
 EDOPRO_TEST(short_payload_of_a_supported_message_is_malformed) {
@@ -473,6 +490,113 @@ EDOPRO_TEST(compat_streams_use_narrow_location_fields) {
 	ProtocolDecoder modern;
 	DuelState fresh;
 	EDOPRO_CHECK_EQ(modern.decode(start, fresh).status, DecodeStatus::Malformed);
+}
+
+EDOPRO_TEST(modern_update_data_consumes_skips_and_applies_query_patch) {
+	auto fixture = started(1, 0);
+	std::vector<std::vector<std::uint8_t>> fields;
+	fields.push_back(query_field(proto::QUERY_CODE, query_u32(73915052)));
+	fields.push_back(query_field(proto::QUERY_POSITION, query_u32(proto::POS_FACEUP_ATTACK)));
+	fields.push_back(query_field(proto::QUERY_ATTACK, query_u32(1900)));
+	fields.push_back(query_field(proto::QUERY_END, {}));
+	PayloadBuilder payload;
+	payload.u8(0).u8(proto::LOCATION_DECK);
+	for(const auto byte : modern_query(fields)) payload.u8(byte);
+	const auto result = fixture.run(payload.packet(proto::MSG_UPDATE_DATA));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK(result.query_coverage.has_value());
+	const auto id = fixture.state.zone(0, Zone::Deck).front();
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(73915052u));
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->position, CardPosition{proto::POS_FACEUP_ATTACK});
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->attack.value(), 1900);
+}
+
+EDOPRO_TEST(modern_update_card_is_direct_field_stream_and_zero_is_concealment) {
+	auto fixture = started(0, 0);
+	CardInstanceId id = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 2, false, 0}, CardCode{77},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+	const auto query_fields = std::vector<std::vector<std::uint8_t>>{
+		query_field(proto::QUERY_CODE, query_u32(0)), query_field(proto::QUERY_END, {})};
+	PayloadBuilder payload;
+	payload.u8(0).u8(proto::LOCATION_MZONE).u8(2);
+	for(const auto& field : query_fields)
+		for(const auto byte : field) payload.u8(byte);
+	EDOPRO_CHECK_EQ(fixture.run(payload.packet(proto::MSG_UPDATE_CARD)).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, CardCode::None);
+}
+
+EDOPRO_TEST(query_patch_preserves_omitted_fields_and_applies_relationships_safely) {
+	auto fixture = started(0, 0);
+	CardInstanceId host = CardInstanceId::None;
+	CardInstanceId target = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{77},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &host));
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 1, false, 0}, CardCode{88},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &target));
+	const auto initial = std::vector<std::vector<std::uint8_t>>{
+		query_field(proto::QUERY_CODE, query_u32(1234)),
+		query_field(proto::QUERY_END, {})};
+	PayloadBuilder first;
+	first.u8(0).u8(proto::LOCATION_MZONE).u8(0);
+	for(const auto& field : initial) for(const auto byte : field) first.u8(byte);
+	EDOPRO_CHECK_EQ(fixture.run(first.packet(proto::MSG_UPDATE_CARD)).status, DecodeStatus::Decoded);
+
+	const auto target_payload = PayloadBuilder().u32(1).loc(0, proto::LOCATION_MZONE, 1, 0).take();
+	const auto equip_payload = PayloadBuilder().loc(0, proto::LOCATION_MZONE, 1, 0).take();
+	const auto overlay_payload = PayloadBuilder().u32(1).u32(4321).take();
+	const auto counters_payload = PayloadBuilder().u32(1).u32((3u << 16) | 5u).take();
+	const auto fields = std::vector<std::vector<std::uint8_t>>{
+		query_field(proto::QUERY_POSITION, query_u32(proto::POS_FACEUP_DEFENSE)),
+		query_field(proto::QUERY_TARGET_CARD, target_payload),
+		query_field(proto::QUERY_EQUIP_CARD, equip_payload),
+		query_field(proto::QUERY_COUNTERS, counters_payload),
+		query_field(proto::QUERY_END, {})};
+	PayloadBuilder second;
+	second.u8(0).u8(proto::LOCATION_MZONE).u8(0);
+	for(const auto& field : fields) for(const auto byte : field) second.u8(byte);
+	EDOPRO_CHECK_EQ(fixture.run(second.packet(proto::MSG_UPDATE_CARD)).status, DecodeStatus::Decoded);
+	const auto* card = fixture.state.find(host);
+	EDOPRO_CHECK_EQ(card->code, static_cast<CardCode>(1234u));
+	EDOPRO_CHECK_EQ(card->position, CardPosition{proto::POS_FACEUP_DEFENSE});
+	EDOPRO_CHECK_EQ(card->targets.size(), std::size_t{1});
+	EDOPRO_CHECK_EQ(card->targets.front(), (CardLocation{0, Zone::MonsterZone, 1, false, 0}));
+	EDOPRO_CHECK_EQ(card->equip_target.value(), (CardLocation{0, Zone::MonsterZone, 1, false, 0}));
+	EDOPRO_CHECK_EQ(card->counters.at(5), std::uint16_t{3});
+
+	CardInstanceId material = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::Hand, 0, false, 0}, CardCode{99},
+		CardPosition{proto::POS_FACEDOWN}, &material));
+	EDOPRO_CHECK(!fixture.state.move_card(material, {0, Zone::MonsterZone, 0, true, 0},
+		CardPosition{proto::POS_FACEUP_ATTACK}));
+	const auto material_query = std::vector<std::vector<std::uint8_t>>{
+		query_field(proto::QUERY_OVERLAY_CARD, overlay_payload), query_field(proto::QUERY_END, {})};
+	PayloadBuilder third;
+	third.u8(0).u8(proto::LOCATION_MZONE).u8(0);
+	for(const auto& field : material_query) for(const auto byte : field) third.u8(byte);
+	EDOPRO_CHECK_EQ(fixture.run(third.packet(proto::MSG_UPDATE_CARD)).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(material)->code, static_cast<CardCode>(4321u));
+	EDOPRO_CHECK(fixture.state.check_invariants().empty());
+}
+
+EDOPRO_TEST(query_parser_rejects_truncated_and_unknown_modern_fields) {
+	const auto truncated = modern_query({query_field(proto::QUERY_CODE, {1, 2})});
+	const auto bad = parse_query_stream(truncated, false);
+	EDOPRO_CHECK(!bad.valid);
+	const auto unknown = modern_query({query_field(0x40000000u, {}), query_field(proto::QUERY_END, {})});
+	const auto unsupported = parse_query_stream(unknown, false);
+	EDOPRO_CHECK(!unsupported.valid);
+	EDOPRO_CHECK(unsupported.unsupported);
+	EDOPRO_CHECK(!unsupported.coverage.unknown_fields.empty());
+}
+
+EDOPRO_TEST(compat_query_uses_independent_legacy_race_width) {
+	PayloadBuilder record;
+	record.u32(4 + 4 + 4).u32(proto::QUERY_RACE).u32(0x12345678u);
+	const auto legacy_race = parse_query_record(record.take(), true, false);
+	EDOPRO_CHECK(legacy_race.valid);
+	EDOPRO_CHECK_EQ(legacy_race.entries.front().patch.race.value(), 0x12345678u);
 }
 
 EDOPRO_TEST(win_names_a_winner_or_says_there_is_none) {

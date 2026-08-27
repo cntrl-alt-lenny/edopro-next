@@ -174,6 +174,35 @@ inline constexpr std::uint32_t REASON_LINK              = 0x10000000;
 inline constexpr std::uint8_t PLAYER_NONE              = 0x2;
 inline constexpr std::uint8_t PLAYER_ALL               = 0x3;
 
+// --- card query fields ---
+inline constexpr std::uint32_t QUERY_CODE               = 0x1;
+inline constexpr std::uint32_t QUERY_POSITION           = 0x2;
+inline constexpr std::uint32_t QUERY_ALIAS              = 0x4;
+inline constexpr std::uint32_t QUERY_TYPE               = 0x8;
+inline constexpr std::uint32_t QUERY_LEVEL              = 0x10;
+inline constexpr std::uint32_t QUERY_RANK               = 0x20;
+inline constexpr std::uint32_t QUERY_ATTRIBUTE          = 0x40;
+inline constexpr std::uint32_t QUERY_RACE               = 0x80;
+inline constexpr std::uint32_t QUERY_ATTACK             = 0x100;
+inline constexpr std::uint32_t QUERY_DEFENSE            = 0x200;
+inline constexpr std::uint32_t QUERY_BASE_ATTACK        = 0x400;
+inline constexpr std::uint32_t QUERY_BASE_DEFENSE       = 0x800;
+inline constexpr std::uint32_t QUERY_REASON             = 0x1000;
+inline constexpr std::uint32_t QUERY_REASON_CARD        = 0x2000;
+inline constexpr std::uint32_t QUERY_EQUIP_CARD         = 0x4000;
+inline constexpr std::uint32_t QUERY_TARGET_CARD        = 0x8000;
+inline constexpr std::uint32_t QUERY_OVERLAY_CARD       = 0x10000;
+inline constexpr std::uint32_t QUERY_COUNTERS           = 0x20000;
+inline constexpr std::uint32_t QUERY_OWNER              = 0x40000;
+inline constexpr std::uint32_t QUERY_STATUS             = 0x80000;
+inline constexpr std::uint32_t QUERY_IS_PUBLIC          = 0x100000;
+inline constexpr std::uint32_t QUERY_LSCALE             = 0x200000;
+inline constexpr std::uint32_t QUERY_RSCALE             = 0x400000;
+inline constexpr std::uint32_t QUERY_LINK               = 0x800000;
+inline constexpr std::uint32_t QUERY_IS_HIDDEN          = 0x1000000;
+inline constexpr std::uint32_t QUERY_COVER              = 0x2000000;
+inline constexpr std::uint32_t QUERY_END                = 0x80000000;
+
 // Canonical name for a duel message id, or an empty view when the id is
 // not one upstream defines. Callers distinguish "unknown to the protocol"
 // from "known but not decoded here" on the emptiness of this result.

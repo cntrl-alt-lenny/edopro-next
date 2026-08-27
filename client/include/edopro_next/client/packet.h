@@ -36,6 +36,10 @@ public:
 	std::size_t remaining() const noexcept { return failed_ ? 0 : data_.size() - offset_; }
 	std::size_t consumed() const noexcept { return offset_; }
 	bool exhausted() const noexcept { return !failed_ && offset_ == data_.size(); }
+	std::span<const std::uint8_t> remaining_span() const noexcept {
+		return failed_ ? std::span<const std::uint8_t>{} : data_.subspan(offset_);
+	}
+	void consume_remaining() noexcept { if(!failed_) offset_ = data_.size(); }
 
 	std::uint8_t u8() noexcept { return read<std::uint8_t>(); }
 	std::uint16_t u16() noexcept { return read<std::uint16_t>(); }

@@ -21,6 +21,7 @@
 #include "edopro_next/client/duel_event.h"
 #include "edopro_next/client/duel_state.h"
 #include "edopro_next/client/packet.h"
+#include "edopro_next/client/query.h"
 
 namespace edopro_next::client {
 
@@ -51,6 +52,9 @@ struct DecodeResult {
 	// Empty when Decoded. Otherwise a short, deterministic explanation.
 	std::string detail;
 	std::vector<DuelEvent> events;
+	// Present for MSG_UPDATE_DATA/CARD, including a safely skipped or refused
+	// query packet, so trace tools can report what the wire carried.
+	std::optional<QueryCoverage> query_coverage;
 
 	bool ok() const noexcept { return status == DecodeStatus::Decoded; }
 };
@@ -64,6 +68,10 @@ struct ProtocolVariant {
 	// (gframe/duelclient.cpp), never from the message stream - so it must be
 	// supplied by whoever opened the stream.
 	bool compat = false;
+	// The race field's width is independent of compat. Modern replay framing
+	// can carry a legacy core race width, and the legacy client passes both
+	// decisions separately to CoreUtils::Query.
+	bool legacy_race_size = false;
 
 	friend bool operator==(const ProtocolVariant&, const ProtocolVariant&) = default;
 };

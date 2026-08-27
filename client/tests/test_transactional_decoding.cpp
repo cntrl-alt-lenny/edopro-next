@@ -110,19 +110,17 @@ EDOPRO_TEST(unknown_message_leaves_state_untouched) {
 	EDOPRO_CHECK(state == snapshot);
 }
 
-EDOPRO_TEST(unsupported_message_leaves_state_untouched) {
-	// Directly answers the question the MSG_POS_CHANGE strictness review
-	// raised: does the undecoded query stream touch our model at all today?
-	// No - decode() returns before a Decoding is even constructed for an
-	// unsupported id, so there is no path through which it could.
+EDOPRO_TEST(malformed_query_message_leaves_state_untouched) {
+	// A query packet is now decoded by the model, so this intentionally short
+	// stream exercises the same transactional refusal guarantee for its parser.
 	auto state = started();
 	const auto snapshot = state;
 
 	ProtocolDecoder decoder;
 	const auto result =
-		decoder.decode(Packet{proto::MSG_UPDATE_DATA, {0, 1, 2, 3, 4, 5, 6, 7}}, state);
+		decoder.decode(Packet{proto::MSG_UPDATE_DATA, {0, 1, 2, 3}}, state);
 
-	EDOPRO_CHECK_EQ(result.status, DecodeStatus::UnsupportedMessage);
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Malformed);
 	EDOPRO_CHECK(state == snapshot);
 }
 

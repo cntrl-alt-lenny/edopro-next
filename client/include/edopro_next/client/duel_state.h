@@ -26,6 +26,8 @@
 
 namespace edopro_next::client {
 
+struct CardQueryPatch;
+
 enum class Phase : std::uint8_t {
 	Unknown = 0,
 	Draw,
@@ -151,6 +153,9 @@ public:
 	Error set_position(CardInstanceId id, CardPosition position);
 	Error set_code(CardInstanceId id, CardCode code);
 	Error set_combat_stats(CardInstanceId id, std::int32_t attack, std::int32_t defense);
+	// Applies a query as a state patch. It emits no gameplay event: query
+	// packets synchronize client knowledge and are not actions in the duel.
+	Error apply_query_patch(CardInstanceId id, const CardQueryPatch& patch);
 
 	// --- chain ---
 
