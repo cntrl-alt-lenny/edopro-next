@@ -32,6 +32,8 @@ ReplayVerificationStats* get_active_verification_stats() noexcept {
 }
 
 ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault) {
+	std::fprintf(stderr, "[debug] Starting verify_replay: %s\n", path.c_str());
+	std::fflush(stderr);
 	ReplayVerificationStats stats;
 	stats.fixture_name = path;
 
@@ -39,8 +41,11 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	const auto replay_path = ygo::Utils::ToPathString(path);
 	if(!replay.OpenReplay(replay_path)) {
 		std::fprintf(stderr, "error: failed to open replay fixture '%s'\n", path.c_str());
+		std::fflush(stderr);
 		return stats;
 	}
+	std::fprintf(stderr, "[debug] OpenReplay succeeded: %zu packets\n", replay.packets_stream.size());
+	std::fflush(stderr);
 
 	ygo::Game game{};
 	ygo::mainGame = &game;
@@ -55,8 +60,12 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	params.DriverType = irr::video::EDT_NULL;
 	params.WindowSize = {1024, 640};
 	auto* dev = irr::createDeviceEx(params);
+	std::fprintf(stderr, "[debug] createDeviceEx returned: %p\n", static_cast<void*>(dev));
+	std::fflush(stderr);
 	if(dev != nullptr) {
+		ygo::Utils::irrTimer = dev->getTimer();
 		game.device = std::shared_ptr<irr::IrrlichtDevice>(dev, [](irr::IrrlichtDevice* d) { d->drop(); });
+		game.driver = dev->getVideoDriver();
 		game.env = dev->getGUIEnvironment();
 		if(game.env != nullptr) {
 			game.wCmdMenu = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
@@ -120,10 +129,15 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::mainGame->dInfo.isInDuel = true;
 	ygo::mainGame->dInfo.isStarted = true;
 
+	std::fprintf(stderr, "[debug] Setup complete, starting packet loop...\n");
+	std::fflush(stderr);
+
 	set_active_verification_stats(&stats);
 
 	for(std::size_t i = 0; i < replay.packets_stream.size(); ++i) {
 		const auto& packet = replay.packets_stream[i];
+		std::fprintf(stderr, "[debug] packet %zu: msg=%u len=%zu\n", i, static_cast<unsigned>(packet.message), packet.buff_size());
+		std::fflush(stderr);
 		ygo::mainGame->dInfo.curMsg = packet.message;
 		if(inject_fault && i == 50) {
 			// Fault injection: alter legacy LP artificially to prove verifier catches mismatches
@@ -131,6 +145,8 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		}
 		ygo::DuelClient::ClientAnalyze(packet);
 	}
+	std::fprintf(stderr, "[debug] Packet loop finished successfully!\n");
+	std::fflush(stderr);
 
 	set_active_verification_stats(nullptr);
 	ygo::mainGame = nullptr;
