@@ -32,7 +32,8 @@ its `loc_info` values use narrow controller/location/sequence/position fields.
 
 | Field | Modern wire shape | Compat wire shape | Semantic value | Synthetic coverage |
 |---|---|---|---|---|
-| `QUERY_CODE`, `POSITION`, `ALIAS`, `TYPE`, `LEVEL`, `RANK`, `ATTRIBUTE`, `REASON`, `STATUS`, `LSCALE`, `RSCALE`, `COVER` | one `u32` | one `u32`; `POSITION` uses the high byte | `CardCode`, `CardPosition`, or `optional<u32>` | query patch and parser tests |
+| `QUERY_CODE`, `POSITION`, `ALIAS`, `TYPE`, `LEVEL`, `RANK`, `ATTRIBUTE`, `REASON`, `STATUS`, `LSCALE`, `RSCALE` | one `u32` | one `u32`; `POSITION` uses the high byte | `CardCode`, `CardPosition`, or `optional<u32>` | query patch and parser tests |
+| `QUERY_COVER` | one `u32` | no compat representation | `optional<u32>` | modern query field parser coverage; compat rejection |
 | `QUERY_OWNER` | one `u8` | one `u32`, assigned/truncated to the upstream `u8` member | `optional<u8>` | `query_owner_uses_modern_u8_and_compat_u32_wire_widths` |
 | `QUERY_RACE` | one `u64` | one `u32` | `optional<u64>` | `modern_and_compat_query_race_widths_are_independent` |
 | `QUERY_ATTACK`, `DEFENSE`, `BASE_ATTACK`, `BASE_DEFENSE` | one signed `i32` | one signed `i32` carried as four bytes | `optional<i32>` | query patch parser tests |
