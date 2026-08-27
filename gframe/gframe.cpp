@@ -96,7 +96,7 @@ using Game = ygo::Game;
 #endif
 
 #if defined(EDOPRO_NEXT_SEMANTIC_OBSERVER)
-#include "replay_verifier.h"
+#include "../integration/legacy/replay_verifier.h"
 #endif
 
 int edopro_main(const args_t& args) {
