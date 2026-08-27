@@ -94,7 +94,7 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::matManager.SetActiveVertices(ygo::mainGame->dInfo.HasFieldFlag(DUEL_3_COLUMNS_FIELD),
 	                                  !ygo::mainGame->dInfo.HasFieldFlag(DUEL_SEPARATE_PZONE));
 	ygo::mainGame->dInfo.turn = 0;
-	ygo::mainGame->dInfo.isCatchingUp = false;
+	ygo::mainGame->dInfo.isCatchingUp = true;
 	ygo::mainGame->dInfo.isInDuel = true;
 	ygo::mainGame->dInfo.isStarted = true;
 
