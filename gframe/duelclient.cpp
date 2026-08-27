@@ -2077,14 +2077,16 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				panelmode = true;
 			} else
 				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
-			if (code != 0 && pcard->code != code)
-				pcard->SetCode(code);
-			pcard->select_seq = i;
-			mainGame->dField.selectable_cards.push_back(pcard);
-			pcard->is_selectable = true;
-			pcard->is_selected = false;
-			if (info.location & 0xf1)
-				panelmode = true;
+			if (pcard) {
+				if (code != 0 && pcard->code != code)
+					pcard->SetCode(code);
+				pcard->select_seq = i;
+				mainGame->dField.selectable_cards.push_back(pcard);
+				pcard->is_selectable = true;
+				pcard->is_selected = false;
+				if (info.location & 0xf1)
+					panelmode = true;
+			}
 		}
 		uint32_t count2 = CompatRead<uint8_t, uint32_t>(pbuf);
 		for(uint32_t i = count1; i < count1 + count2; ++i) {
@@ -2097,53 +2099,19 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				pcard = new ClientCard{};
 				pcard->sequence = static_cast<uint32_t>(mainGame->dField.limbo_temp.size());
 				mainGame->dField.limbo_temp.push_back(pcard);
-		mainGame->dField.select_cancelable = BufferIO::Read<uint8_t>(pbuf) != 0;
-		mainGame->dField.select_min = CompatRead<uint8_t, uint32_t>(pbuf);
-		mainGame->dField.select_max = CompatRead<uint8_t, uint32_t>(pbuf);
-		auto count1 = CompatRead<uint8_t, uint32_t>(pbuf);
-		mainGame->dField.selectable_cards.clear();
-		mainGame->dField.selected_cards.clear();
-		for(auto i = 0u; i < count1; ++i) {
-			auto code = BufferIO::Read<uint32_t>(pbuf);
-			auto info = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
-			info.controler = mainGame->LocalPlayer(info.controler);
-			ClientCard* pcard;
-			if(info.location & LOCATION_OVERLAY)
-				pcard = mainGame->dField.GetCard(info.controler, info.location & (~LOCATION_OVERLAY) & 0xff, info.sequence)->overlayed[info.position];
-			else
+				panelmode = true;
+			} else
 				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
-			if(pcard) {
-				if(code != 0 && pcard->code != code)
+			if (pcard) {
+				if (code != 0 && pcard->code != code)
 					pcard->SetCode(code);
-				mainGame->dField.selectable_cards.push_back(pcard);
 				pcard->select_seq = i;
-			}
-		}
-		auto count2 = CompatRead<uint8_t, uint32_t>(pbuf);
-		for(auto i = 0u; i < count2; ++i) {
-			auto code = BufferIO::Read<uint32_t>(pbuf);
-			auto info = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
-			info.controler = mainGame->LocalPlayer(info.controler);
-			ClientCard* pcard;
-			if(info.location & LOCATION_OVERLAY)
-				pcard = mainGame->dField.GetCard(info.controler, info.location & (~LOCATION_OVERLAY) & 0xff, info.sequence)->overlayed[info.position];
-			else
-				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
-			if(pcard) {
-				if(code != 0 && pcard->code != code)
-					pcard->SetCode(code);
 				mainGame->dField.selected_cards.push_back(pcard);
-				pcard->select_seq = count1 + i;
+				pcard->is_selectable = false;
+				pcard->is_selected = true;
+				if (info.location & 0xf1)
+					panelmode = true;
 			}
-		}
-		bool panelmode = false;
-		for(auto& pcard : mainGame->dField.selectable_cards) {
-			if(pcard->location & 0xf1)
-				panelmode = true;
-		}
-		for(auto& pcard : mainGame->dField.selected_cards) {
-			if(pcard->location & 0xf1)
-				panelmode = true;
 		}
 		std::sort(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end(), ClientCard::client_card_sort);
 		PerformQueuedPanelConfirmIfDifferent(mainGame->dField.selectable_cards);
@@ -2164,8 +2132,10 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if (mainGame->dField.select_cancelable) {
 			if (count2 == 0)
 				mainGame->dField.ShowCancelOrFinishButton(1);
-			else
+			else if (count2 >= mainGame->dField.select_min)
 				mainGame->dField.ShowCancelOrFinishButton(2);
+			else
+				mainGame->dField.ShowCancelOrFinishButton(0);
 		}
 		else
 			mainGame->dField.ShowCancelOrFinishButton(0);
