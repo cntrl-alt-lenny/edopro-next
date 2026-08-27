@@ -70,7 +70,8 @@ extern "C" void* edopro_next_semantic_observer_begin(
 		auto token = std::make_unique<PendingObservation>();
 		token->message = message;
 		token->packet = instance.session.packet_number();
-		token->compare = result.status == edopro_next::client::DecodeStatus::Decoded;
+		token->compare = result.status == edopro_next::client::DecodeStatus::Decoded &&
+			instance.session.comparison_available();
 		token->legacy_state_lock_held = legacy_state_lock_held;
 		token->game = legacy_game;
 		return token.release();

@@ -78,6 +78,7 @@ public:
 	client::DecodeResult observe(const client::Packet& packet,
 								client::ProtocolVariant variant);
 	const DuelState& state() const noexcept { return state_; }
+	bool comparison_available() const noexcept { return comparison_available_; }
 	std::uint64_t packet_number() const noexcept { return packet_number_; }
 	std::uint64_t session_number() const noexcept { return session_number_; }
 	void reset(client::ProtocolVariant variant);
@@ -85,6 +86,7 @@ public:
 private:
 	client::ProtocolDecoder decoder_{};
 	DuelState state_{};
+	bool comparison_available_ = true;
 	std::uint64_t packet_number_ = 0;
 	std::uint64_t session_number_ = 0;
 };

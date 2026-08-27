@@ -53,6 +53,13 @@ diagnostic-only; it cannot change the legacy return value or state. The
 comparison is performed only for `DecodeStatus::Decoded`, and comparison
 diagnostics are deterministic and contain no pointer addresses.
 
+An unsupported structural message taints equivalence for the remainder of the
+session: later decoded packets are still observed, but are not compared against
+a potentially stale semantic state. The query-only `MSG_UPDATE_DATA` and
+`MSG_UPDATE_CARD` messages are excluded from this taint because their fields
+are outside the projection scope. `MSG_START` clears the taint with the new
+session.
+
 Projection takes the existing duel mutex before reading live field vectors.
 The one replay catch-up path where `ReplayThread` already holds that mutex is
 marked at scope creation and does not lock it recursively.

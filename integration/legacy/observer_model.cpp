@@ -64,6 +64,11 @@ bool location_less(const CardLocation& left, const CardLocation& right) {
 	return left.overlay_index < right.overlay_index;
 }
 
+bool is_query_stream_message(std::uint8_t message) {
+	return message == client::protocol::MSG_UPDATE_DATA ||
+		message == client::protocol::MSG_UPDATE_CARD;
+}
+
 const ProjectedCard* find_card(const std::vector<ProjectedCard>& cards,
 								 const CardLocation& location) {
 		const auto it = std::find_if(cards.begin(), cards.end(), [&](const auto& card) {
@@ -171,6 +176,7 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 void ObserverSession::reset(client::ProtocolVariant variant) {
 	decoder_ = client::ProtocolDecoder{variant};
 	state_ = DuelState{};
+	comparison_available_ = true;
 	packet_number_ = 0;
 	++session_number_;
 }
@@ -180,7 +186,18 @@ client::DecodeResult ObserverSession::observe(const client::Packet& packet,
 	if(packet.message == client::protocol::MSG_START)
 		reset(variant);
 	++packet_number_;
-	return decoder_.decode(packet, state_);
+	const auto result = decoder_.decode(packet, state_);
+	// An unsupported structural message may have changed the real legacy
+	// field without changing the semantic trial state. Do not compare a later
+	// decoded packet against that stale semantic snapshot. Query-stream
+	// messages are the deliberate exception: this projection excludes the
+	// query-only fields they populate, so they do not invalidate structural
+	// comparison on their own.
+	if(result.status != client::DecodeStatus::Decoded &&
+		!(result.status == client::DecodeStatus::UnsupportedMessage &&
+			is_query_stream_message(packet.message)))
+		comparison_available_ = false;
+	return result;
 }
 
 } // namespace edopro_next::legacy_observer

@@ -122,9 +122,26 @@ EDOPRO_TEST(observer_session_resets_and_ignores_unsupported_messages) {
 	const auto unsupported = session.observe(
 		Packet{proto::MSG_UPDATE_DATA, {0, 1, 2, 3}}, ProtocolVariant{});
 	EDOPRO_CHECK_EQ(unsupported.status, DecodeStatus::UnsupportedMessage);
+	EDOPRO_CHECK(session.comparison_available());
 	EDOPRO_CHECK_EQ(session.session_number(), first_session);
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
 	EDOPRO_CHECK_EQ(session.session_number(), first_session + 1);
 	EDOPRO_CHECK_EQ(session.state().cards().size(), 0u);
+}
+
+EDOPRO_TEST(structural_unsupported_packet_taints_comparison_until_start) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
+					DecodeStatus::Decoded);
+	EDOPRO_CHECK(session.comparison_available());
+	const auto unsupported = session.observe(Packet{proto::MSG_SWAP, {}}, ProtocolVariant{});
+	EDOPRO_CHECK_EQ(unsupported.status, DecodeStatus::UnsupportedMessage);
+	EDOPRO_CHECK(!session.comparison_available());
+	EDOPRO_CHECK_EQ(session.observe(Packet{proto::MSG_NEW_TURN, {0}}, ProtocolVariant{}).status,
+					DecodeStatus::Decoded);
+	EDOPRO_CHECK(!session.comparison_available());
+	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
+					DecodeStatus::Decoded);
+	EDOPRO_CHECK(session.comparison_available());
 }
