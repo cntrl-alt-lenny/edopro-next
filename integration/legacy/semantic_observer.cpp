@@ -35,7 +35,8 @@ struct ObserverRuntime {
 		if(result.status == edopro_next::client::DecodeStatus::Decoded)
 			return;
 		if(result.status == edopro_next::client::DecodeStatus::UnsupportedMessage) {
-			if(!newly_tainted)
+			if(edopro_next::legacy_observer::ObserverSession::is_query_message(message) ||
+				!newly_tainted)
 				return;
 			std::fprintf(stderr,
 				"edopro-next semantic observer: packet %llu message 0x%02x %s "

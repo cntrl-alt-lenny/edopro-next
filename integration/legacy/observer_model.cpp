@@ -75,27 +75,12 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 		if(!card.tracked)
 			continue;
 		ProjectedCard projected{card.location, static_cast<std::uint32_t>(card.materials.size())};
-		projected.code = card.code;
-		projected.position = card.position;
-		projected.attack = card.attack;
-		projected.defense = card.defense;
-		for(const auto material_id : card.materials) {
-			const auto* material = semantic.find(material_id);
-			projected.material_codes.push_back(
-				material ? std::optional<CardCode>{material->code} : std::nullopt);
-		}
 		semantic_cards.push_back(std::move(projected));
 		for(std::size_t index = 0; index < card.materials.size(); ++index) {
 			ProjectedCard material_projection;
 			material_projection.location = CardLocation{
 				card.location.controller, card.location.zone, card.location.sequence, true,
 				static_cast<std::uint32_t>(index)};
-			if(const auto* material = semantic.find(card.materials[index]); material != nullptr) {
-				material_projection.code = material->code;
-				material_projection.position = material->position;
-				material_projection.attack = material->attack;
-				material_projection.defense = material->defense;
-			}
 			semantic_cards.push_back(std::move(material_projection));
 		}
 	}
@@ -136,30 +121,7 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 		if(semantic_card->material_count != legacy_card->material_count)
 			add_mismatch(result, packet, message, location_name(location) + ".materials.count",
 						  std::to_string(semantic_card->material_count),
-											 std::to_string(legacy_card->material_count));
-		if(semantic_card->code && legacy_card->code && *semantic_card->code != *legacy_card->code)
-			add_mismatch(result, packet, message, location_name(location) + ".code",
-								 std::to_string(to_number(*semantic_card->code)),
-								 std::to_string(to_number(*legacy_card->code)));
-		if(semantic_card->position && legacy_card->position && *semantic_card->position != *legacy_card->position)
-			add_mismatch(result, packet, message, location_name(location) + ".position",
-								 to_string(*semantic_card->position), to_string(*legacy_card->position));
-		if(semantic_card->attack && legacy_card->attack && *semantic_card->attack != *legacy_card->attack)
-			add_mismatch(result, packet, message, location_name(location) + ".attack",
-								 std::to_string(*semantic_card->attack), std::to_string(*legacy_card->attack));
-		if(semantic_card->defense && legacy_card->defense && *semantic_card->defense != *legacy_card->defense)
-			add_mismatch(result, packet, message, location_name(location) + ".defense",
-								 std::to_string(*semantic_card->defense), std::to_string(*legacy_card->defense));
-		if(semantic_card->material_codes.size() == legacy_card->material_codes.size()) {
-			for(std::size_t index = 0; index < semantic_card->material_codes.size(); ++index) {
-				if(semantic_card->material_codes[index] && legacy_card->material_codes[index] &&
-					*semantic_card->material_codes[index] != *legacy_card->material_codes[index])
-					add_mismatch(result, packet, message,
-						location_name(location) + ".materials[" + std::to_string(index) + "].code",
-						std::to_string(to_number(*semantic_card->material_codes[index])),
-						std::to_string(to_number(*legacy_card->material_codes[index])));
-			}
-		}
+												 std::to_string(legacy_card->material_count));
 	}
 	return result;
 }
@@ -172,15 +134,24 @@ void ObserverSession::reset(client::ProtocolVariant variant) {
 	++session_number_;
 }
 
+bool ObserverSession::is_query_message(std::uint8_t message) noexcept {
+	return message == client::protocol::MSG_UPDATE_DATA ||
+		message == client::protocol::MSG_UPDATE_CARD;
+}
+
 client::DecodeResult ObserverSession::observe(const client::Packet& packet,
 														 client::ProtocolVariant variant) {
 	if(packet.message == client::protocol::MSG_START)
 		reset(variant);
 	++packet_number_;
 	const auto result = decoder_.decode(packet, state_);
-	// Any refusal can mean legacy state advanced while the semantic trial did
-	// not. Conservatively suspend comparisons until the explicit next session.
-	if(result.status != client::DecodeStatus::Decoded)
+	// Query packets only carry fields outside the live projection when they are
+	// unsupported. They are therefore safe to ignore for comparison purposes;
+	// an unsupported non-query packet is conservatively treated as a possible
+	// structural state transition until the next explicit session boundary.
+	if(result.status != client::DecodeStatus::Decoded &&
+		(result.status != client::DecodeStatus::UnsupportedMessage ||
+		 !is_query_message(packet.message)))
 		comparison_available_ = false;
 	return result;
 }

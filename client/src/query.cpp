@@ -138,7 +138,12 @@ bool parse_flag_payload(Reader& reader, std::uint32_t flag, bool compat, bool le
 		patch.counters = std::move(values);
 		break;
 	}
-	case protocol::QUERY_OWNER: patch.owner = scalar32(); break;
+	case protocol::QUERY_OWNER:
+		// Query::owner is uint8_t upstream. Modern Query::Parse therefore
+		// consumes one byte, while ParseCompat uses PARSE_SINGLE and reads a
+		// uint32_t before assigning (and truncating) into that member.
+		patch.owner = compat ? static_cast<std::uint8_t>(scalar32()) : reader.u8();
+		break;
 	case protocol::QUERY_STATUS: patch.status = scalar32(); break;
 	case protocol::QUERY_IS_PUBLIC: patch.is_public = reader.u8() != 0; break;
 	case protocol::QUERY_LSCALE: patch.lscale = scalar32(); break;

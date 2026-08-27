@@ -53,11 +53,14 @@ diagnostic-only; it cannot change the legacy return value or state. The
 comparison is performed only for `DecodeStatus::Decoded`, and comparison
 diagnostics are deterministic and contain no pointer addresses.
 
-Any unsupported, malformed, or inconsistent message conservatively taints
-equivalence for the remainder of the session: later decoded packets are still
-observed, but are not compared against a potentially stale semantic state.
-Fully decoded query packets do not taint the session; a query parser refusal
-does. `MSG_START` clears the taint with the new session.
+An unsupported non-query packet conservatively taints equivalence for the
+remainder of the session: later decoded packets are still observed, but are
+not compared against a potentially stale semantic state. Unsupported
+`MSG_UPDATE_DATA` / `MSG_UPDATE_CARD` query packets are expected while query
+coverage is incomplete and are silent; they do not taint the structural
+comparison because query-sensitive values are outside its scope. Malformed or
+inconsistent packets are always reported and taint the session. `MSG_START`
+clears the taint with the new session.
 
 The observer is synchronous opt-in instrumentation. It cannot alter legacy
 packet bytes, return values, state transitions, legality, rendering decisions,
@@ -87,25 +90,24 @@ meaning represented by the current semantic slice, including query patches:
 - structural occupancy and slot topology of deck, hand, monster, spell, grave,
   banished, and extra-deck zones;
 - attached-material count and indexed topology through structural material
-  locations;
-- card code and position when present in both projections;
-- attack and defence values when the semantic query/battle state has stated
-  them; and
-- attached-material codes when both projections provide the value.
+  locations.
 
-This does not compare cross-model card identity within an occupied pile or
-material identity as an object identity within an overlay index. Structural
-slot topology is always compared; query-provided code is compared only as a
-value when present on both sides, so permutations of cards with indistinguishable
-projected values remain intentionally outside the claim.
+This does not compare card identity or permutation within an occupied pile, or
+material identity within an overlay index. Structural occupancy and slot
+topology are compared; attached-material count and indexed topology are
+compared, but not which card code occupies an index.
 
-It deliberately excludes query fields whose legacy provenance is not yet
-represented by an equivalent semantic value (alias/type/level/rank/
-attribute/race/base stats/reason/owner/status/scales/link/cover/visibility),
-renderer and animation fields, selection/UI state, and chain/battle fields whose
-legacy representation has transient staging differences. Query parsing itself
-is now supported; an unknown or malformed query remains a diagnostic refusal
-and conservatively suspends later comparisons.
+It deliberately excludes card code, position, attack, defence, and attached
+material codes from live assertions: `ClientCard::UpdateInfo` can refresh those
+values from query packets whose freshness is not yet equivalent on both sides.
+It also excludes query fields
+whose legacy provenance is not yet represented by an equivalent semantic value
+(alias/type/level/rank/attribute/race/base stats/reason/owner/status/scales/
+link/cover/visibility), renderer and animation fields, selection/UI state, and
+chain/battle fields whose legacy representation has transient staging
+differences. Query parsing itself is now supported; an unknown or malformed
+query remains a diagnostic refusal, while an unsupported query field is
+ignored for live comparison until its provenance is classified.
 
 Card identity is structural: a semantic `CardInstanceId` is never compared to
 a `ClientCard*`. Diagnostics name a protocol player, zone, sequence, and

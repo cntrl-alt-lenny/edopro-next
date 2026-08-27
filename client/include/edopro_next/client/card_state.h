@@ -59,8 +59,8 @@ struct CardState {
 	CardLocation location{};
 	CardPosition position{};
 
-	// Set only when the protocol has stated them (currently MSG_BATTLE).
-	// Absent means unknown, not zero.
+	// Set when the protocol has stated them through MSG_BATTLE or a query
+	// patch. Absent means unknown, not zero.
 	std::optional<std::int32_t> attack;
 	std::optional<std::int32_t> defense;
 	std::optional<std::int32_t> base_attack;
@@ -72,7 +72,7 @@ struct CardState {
 	std::optional<std::uint32_t> attribute;
 	std::optional<std::uint64_t> race;
 	std::optional<std::uint32_t> reason;
-	std::optional<std::uint32_t> owner;
+	std::optional<std::uint8_t> owner;
 	std::optional<std::uint32_t> status;
 	std::optional<bool> is_public;
 	std::optional<bool> is_hidden;

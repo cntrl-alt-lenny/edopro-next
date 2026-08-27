@@ -15,9 +15,7 @@
 
 namespace edopro_next::legacy_observer {
 
-using client::CardCode;
 using client::CardLocation;
-using client::CardPosition;
 using client::DuelState;
 using client::PlayerId;
 using client::Zone;
@@ -32,11 +30,6 @@ struct ProjectedCard {
 		: location(where), material_count(count) {}
 	CardLocation location{};
 	std::uint32_t material_count = 0;
-	std::optional<CardCode> code;
-	std::optional<CardPosition> position;
-	std::optional<std::int32_t> attack;
-	std::optional<std::int32_t> defense;
-	std::vector<std::optional<CardCode>> material_codes;
 };
 
 struct LegacySnapshot {
@@ -92,6 +85,8 @@ public:
 	std::uint64_t packet_number() const noexcept { return packet_number_; }
 	std::uint64_t session_number() const noexcept { return session_number_; }
 	void reset(client::ProtocolVariant variant);
+
+	static bool is_query_message(std::uint8_t message) noexcept;
 
 private:
 	client::ProtocolDecoder decoder_{};

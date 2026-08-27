@@ -580,6 +580,116 @@ EDOPRO_TEST(query_patch_preserves_omitted_fields_and_applies_relationships_safel
 	EDOPRO_CHECK(fixture.state.check_invariants().empty());
 }
 
+EDOPRO_TEST(query_position_uses_extra_deck_invariant_and_remains_transactional) {
+	auto fixture = started(0, 2);
+	const auto id = fixture.state.zone(0, Zone::ExtraDeck).front();
+	const auto unchanged = fixture.state;
+
+	PayloadBuilder ordinary;
+	ordinary.u8(0).u8(proto::LOCATION_EXTRA).u8(0);
+	for(const auto& field : std::vector<std::vector<std::uint8_t>>{
+			query_field(proto::QUERY_POSITION, query_u32(proto::POS_FACEDOWN_DEFENSE)),
+			query_field(proto::QUERY_END, {})})
+		for(const auto byte : field) ordinary.u8(byte);
+	EDOPRO_CHECK_EQ(fixture.run(ordinary.packet(proto::MSG_UPDATE_CARD)).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK(fixture.state.check_invariants().empty());
+
+	PayloadBuilder transition;
+	transition.u8(0).u8(proto::LOCATION_EXTRA).u8(0);
+	for(const auto& field : std::vector<std::vector<std::uint8_t>>{
+			query_field(proto::QUERY_POSITION, query_u32(proto::POS_FACEUP_ATTACK)),
+			query_field(proto::QUERY_END, {})})
+		for(const auto byte : field) transition.u8(byte);
+	const auto result = fixture.run(transition.packet(proto::MSG_UPDATE_CARD));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Inconsistent);
+	EDOPRO_CHECK(fixture.state == unchanged);
+	EDOPRO_CHECK(fixture.state.check_invariants().empty());
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->position,
+		CardPosition{proto::POS_FACEDOWN_DEFENSE});
+}
+
+EDOPRO_TEST(repeated_query_collections_match_legacy_incremental_update_semantics) {
+	auto fixture = started(0, 0);
+	CardInstanceId host = CardInstanceId::None;
+	CardInstanceId target_a = CardInstanceId::None;
+	CardInstanceId target_b = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &host));
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 1, false, 0}, CardCode{2},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &target_a));
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 2, false, 0}, CardCode{3},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &target_b));
+
+	auto update = [&](std::vector<std::vector<std::uint8_t>> fields) {
+		PayloadBuilder packet;
+		packet.u8(0).u8(proto::LOCATION_MZONE).u8(0);
+		for(const auto& field : fields)
+			for(const auto byte : field) packet.u8(byte);
+		return fixture.run(packet.packet(proto::MSG_UPDATE_CARD));
+	};
+	const auto target = [](std::uint32_t sequence) {
+		return PayloadBuilder().u32(1).loc(0, proto::LOCATION_MZONE, sequence,
+			proto::POS_FACEUP_ATTACK).take();
+	};
+	EDOPRO_CHECK_EQ(update({query_field(proto::QUERY_TARGET_CARD, target(1)),
+		query_field(proto::QUERY_END, {})}).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(update({query_field(proto::QUERY_TARGET_CARD, target(2)),
+		query_field(proto::QUERY_END, {})}).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->targets.size(), std::size_t{2});
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->target_instances[0], target_a);
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->target_instances[1], target_b);
+
+	const auto counter = [](std::uint16_t type, std::uint16_t count) {
+		return PayloadBuilder().u32(1).u32((static_cast<std::uint32_t>(count) << 16) | type).take();
+	};
+	EDOPRO_CHECK_EQ(update({query_field(proto::QUERY_COUNTERS, counter(5, 3)),
+		query_field(proto::QUERY_END, {})}).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(update({query_field(proto::QUERY_COUNTERS, counter(6, 4)),
+		query_field(proto::QUERY_END, {})}).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->counters.size(), std::size_t{2});
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->counters.at(5), std::uint16_t{3});
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->counters.at(6), std::uint16_t{4});
+
+	EDOPRO_CHECK_EQ(update({query_field(proto::QUERY_EQUIP_CARD,
+		PayloadBuilder().loc(0, proto::LOCATION_MZONE, 1, proto::POS_FACEUP_ATTACK).take()),
+		query_field(proto::QUERY_END, {})}).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(update({query_field(proto::QUERY_EQUIP_CARD,
+		PayloadBuilder().loc(0, proto::LOCATION_MZONE, 1, proto::POS_FACEUP_ATTACK).take()),
+		query_field(proto::QUERY_END, {})}).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->equip_target_instance, target_a);
+	EDOPRO_CHECK(fixture.state.check_invariants().empty());
+}
+
+EDOPRO_TEST(overlay_query_updates_prefix_without_changing_material_topology) {
+	auto fixture = started(0, 0);
+	CardInstanceId host = CardInstanceId::None;
+	CardInstanceId first = CardInstanceId::None;
+	CardInstanceId second = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &host));
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::Hand, 0, false, 0}, CardCode{2},
+		CardPosition{proto::POS_FACEDOWN}, &first));
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::Hand, 0, false, 0}, CardCode{3},
+		CardPosition{proto::POS_FACEDOWN}, &second));
+	EDOPRO_CHECK(!fixture.state.move_card(first, {0, Zone::MonsterZone, 0, true, 0},
+		CardPosition{proto::POS_FACEUP_ATTACK}));
+	EDOPRO_CHECK(!fixture.state.move_card(second, {0, Zone::MonsterZone, 0, true, 1},
+		CardPosition{proto::POS_FACEUP_ATTACK}));
+	PayloadBuilder packet;
+	packet.u8(0).u8(proto::LOCATION_MZONE).u8(0);
+	for(const auto& field : std::vector<std::vector<std::uint8_t>>{
+			query_field(proto::QUERY_OVERLAY_CARD, PayloadBuilder().u32(1).u32(99).take()),
+			query_field(proto::QUERY_END, {})})
+		for(const auto byte : field) packet.u8(byte);
+	EDOPRO_CHECK_EQ(fixture.run(packet.packet(proto::MSG_UPDATE_CARD)).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(first)->code, CardCode{99});
+	EDOPRO_CHECK_EQ(fixture.state.find(second)->code, CardCode{3});
+	EDOPRO_CHECK_EQ(fixture.state.find(host)->materials.size(), std::size_t{2});
+	EDOPRO_CHECK(fixture.state.check_invariants().empty());
+}
+
 EDOPRO_TEST(query_parser_rejects_truncated_and_unknown_modern_fields) {
 	const auto truncated = modern_query({query_field(proto::QUERY_CODE, {1, 2})});
 	const auto bad = parse_query_stream(truncated, false);
@@ -591,18 +701,83 @@ EDOPRO_TEST(query_parser_rejects_truncated_and_unknown_modern_fields) {
 	EDOPRO_CHECK(!unsupported.coverage.unknown_fields.empty());
 }
 
-EDOPRO_TEST(compat_query_uses_independent_legacy_race_width) {
-	PayloadBuilder record;
-	record.u32(4 + 4 + 4).u32(proto::QUERY_RACE).u32(0x12345678u);
-	const auto legacy_race = parse_query_record(record.take(), true, false);
-	EDOPRO_CHECK(legacy_race.valid);
-	EDOPRO_CHECK_EQ(legacy_race.entries.front().patch.race.value(), 0x12345678u);
+EDOPRO_TEST(query_owner_uses_modern_u8_and_compat_u32_wire_widths) {
+	const auto modern_record = [](std::vector<std::vector<std::uint8_t>> fields) {
+		std::vector<std::uint8_t> record;
+		for(const auto& field : fields)
+			record.insert(record.end(), field.begin(), field.end());
+		return record;
+	};
+	const auto modern = parse_query_record(
+		modern_record({query_field(proto::QUERY_OWNER, {0}), query_field(proto::QUERY_END, {})}),
+		false);
+	EDOPRO_CHECK(modern.valid);
+	EDOPRO_CHECK(modern.entries.front().patch.owner.has_value());
+	EDOPRO_CHECK_EQ(modern.entries.front().patch.owner.value(), std::uint8_t{0});
 
-	PayloadBuilder owner_record;
-	owner_record.u32(4 + 4 + 4).u32(proto::QUERY_OWNER).u32(0x12345678u);
-	const auto owner = parse_query_record(owner_record.take(), true, false);
-	EDOPRO_CHECK(owner.valid);
-	EDOPRO_CHECK_EQ(owner.entries.front().patch.owner.value(), 0x12345678u);
+	const auto modern_four_bytes = parse_query_record(
+		modern_record({query_field(proto::QUERY_OWNER, query_u32(0x12345678u)),
+			query_field(proto::QUERY_END, {})}), false);
+	EDOPRO_CHECK(!modern_four_bytes.valid);
+
+	PayloadBuilder compat_record;
+	compat_record.u32(4 + 4 + 4).u32(proto::QUERY_OWNER).u32(0x12345678u);
+	const auto compat = parse_query_record(compat_record.take(), true);
+	EDOPRO_CHECK(compat.valid);
+	EDOPRO_CHECK(compat.entries.front().patch.owner.has_value());
+	EDOPRO_CHECK_EQ(compat.entries.front().patch.owner.value(), std::uint8_t{0x78});
+}
+
+EDOPRO_TEST(modern_and_compat_query_race_widths_are_independent) {
+	const auto modern_record = [](std::vector<std::vector<std::uint8_t>> fields) {
+		std::vector<std::uint8_t> record;
+		for(const auto& field : fields)
+			record.insert(record.end(), field.begin(), field.end());
+		return record;
+	};
+	const auto modern_u64 = parse_query_record(
+		modern_record({query_field(proto::QUERY_RACE, PayloadBuilder().u64(0x1122334455667788ull).take()),
+			query_field(proto::QUERY_END, {})}), false, false);
+	EDOPRO_CHECK(modern_u64.valid);
+	EDOPRO_CHECK_EQ(modern_u64.entries.front().patch.race.value(), 0x1122334455667788ull);
+
+	const auto modern_u32 = parse_query_record(
+		modern_record({query_field(proto::QUERY_RACE, query_u32(0xa1b2c3d4u)),
+			query_field(proto::QUERY_END, {})}), false, true);
+	EDOPRO_CHECK(modern_u32.valid);
+	EDOPRO_CHECK_EQ(modern_u32.entries.front().patch.race.value(), 0xa1b2c3d4ull);
+
+	const auto modern_u64_with_legacy_flag = parse_query_record(
+		modern_record({query_field(proto::QUERY_RACE, PayloadBuilder().u64(0x1122334455667788ull).take()),
+			query_field(proto::QUERY_END, {})}), false, true);
+	EDOPRO_CHECK(!modern_u64_with_legacy_flag.valid);
+
+	for(const bool legacy_race_size : {false, true}) {
+		PayloadBuilder record;
+		record.u32(4 + 4 + 4).u32(proto::QUERY_RACE).u32(0xa1b2c3d4u);
+		const auto compat = parse_query_record(record.take(), true, legacy_race_size);
+		EDOPRO_CHECK(compat.valid);
+		EDOPRO_CHECK_EQ(compat.entries.front().patch.race.value(), 0xa1b2c3d4ull);
+	}
+	EDOPRO_CHECK(!(ProtocolVariant{false, false} == ProtocolVariant{false, true}));
+
+	// Exercise the same independently supplied variant bit through the live
+	// decoder construction, not only through the parser helper.
+	DuelState state;
+	CardInstanceId id = CardInstanceId::None;
+	EDOPRO_CHECK(!state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+	PayloadBuilder packet;
+	packet.u8(0).u8(proto::LOCATION_MZONE).u8(0);
+	for(const auto& field : modern_record({
+			query_field(proto::QUERY_RACE, query_u32(0xa1b2c3d4u)),
+			query_field(proto::QUERY_END, {})}))
+		packet.u8(field);
+	ProtocolDecoder decoder{ProtocolVariant{false, true}};
+	EDOPRO_CHECK(decoder.variant().legacy_race_size);
+	EDOPRO_CHECK_EQ(decoder.decode(packet.packet(proto::MSG_UPDATE_CARD), state).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(state.find(id)->race.value(), 0xa1b2c3d4ull);
 }
 
 EDOPRO_TEST(win_names_a_winner_or_says_there_is_none) {

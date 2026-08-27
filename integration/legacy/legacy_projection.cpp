@@ -24,21 +24,15 @@ void append_card(const ygo::ClientCard* card, bool is_first, std::vector<Project
 	projected.location = CardLocation{
 		protocol_player_from_local(card->controler, is_first), zone, card->sequence, false, 0};
 	projected.material_count = static_cast<std::uint32_t>(card->overlayed.size());
-	projected.code = static_cast<client::CardCode>(card->code);
-	projected.position = client::CardPosition{card->position};
-	projected.attack = card->attack;
-	projected.defense = card->defense;
 
 	for(std::size_t index = 0; index < card->overlayed.size(); ++index) {
 		const auto* material = card->overlayed[index];
 		if(material == nullptr)
 			continue;
-		projected.material_codes.push_back(static_cast<client::CardCode>(material->code));
 		ProjectedCard material_projection;
 		material_projection.location = CardLocation{
 			protocol_player_from_local(card->controler, is_first), zone, card->sequence, true,
 			static_cast<std::uint32_t>(index)};
-		material_projection.code = static_cast<client::CardCode>(material->code);
 		output.push_back(std::move(material_projection));
 	}
 	output.push_back(std::move(projected));

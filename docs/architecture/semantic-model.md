@@ -343,8 +343,12 @@ Named so the gaps are visible:
   relationship, counter, visibility, and overlay-code patches; the observer
   compares only fields with an equivalent legacy provenance. See
   [query-stream.md](query-stream.md).
-- **Counters, equips and targets** — `MSG_ADD_COUNTER`, `MSG_EQUIP`, `MSG_CARD_TARGET`,
-  `MSG_BECOME_TARGET`. `ClientCard` models all of these; `CardState` does not yet.
+- **Independent relationship/counter messages** — `MSG_ADD_COUNTER`, `MSG_REMOVE_COUNTER`,
+  `MSG_EQUIP`, `MSG_UNEQUIP`, `MSG_CARD_TARGET`, `MSG_CANCEL_TARGET`, and
+  `MSG_BECOME_TARGET` remain unsupported. `CardState` already retains counters,
+  equip-target state, and target state when those values arrive through a decoded
+  `MSG_UPDATE_DATA` / `MSG_UPDATE_CARD` query patch; it does not yet apply these
+  independent `MSG_*` relationship/counter messages.
 - **Every prompt message** — `MSG_SELECT_*`. These need a response channel, which is a
   larger design question than M2.
 - **`MSG_TAG_SWAP` and `MSG_RELOAD_FIELD`** — wholesale field replacement, needed for tag

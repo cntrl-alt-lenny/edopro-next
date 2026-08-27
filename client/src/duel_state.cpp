@@ -434,7 +434,10 @@ DuelState::Error DuelState::apply_query_patch(CardInstanceId id, const CardQuery
 	if(card == nullptr)
 		return "no such card instance " + to_string(id);
 	if(patch.code) card->code = *patch.code;
-	if(patch.position) card->position = *patch.position;
+	if(patch.position) {
+		if(auto error = set_position(id, *patch.position))
+			return error;
+	}
 	if(patch.alias) card->alias = *patch.alias;
 	if(patch.type) card->type = *patch.type;
 	if(patch.level) card->level = *patch.level;
@@ -460,19 +463,26 @@ DuelState::Error DuelState::apply_query_patch(CardInstanceId id, const CardQuery
 		card->reason_card_instance = at(patch.reason_card->location);
 	}
 	if(patch.equip_card) {
+		// ClientCard::UpdateInfo replaces equipTarget when a later query names
+		// another card. The inverse legacy set is not represented in CardState,
+		// so retain the latest queried relationship only.
 		card->equip_target = patch.equip_card->location;
 		card->equip_target_instance = at(patch.equip_card->location);
 	}
 	if(patch.target_cards) {
-		card->targets.clear();
-		card->target_instances.clear();
+		// UpdateInfo inserts into std::set cardTarget without clearing it.
+		// Keep the same incremental, duplicate-free meaning in the value model.
 		for(const auto& target : *patch.target_cards) {
-			card->targets.push_back(target.location);
-			card->target_instances.push_back(at(target.location));
+			if(std::find(card->targets.begin(), card->targets.end(), target.location) ==
+				card->targets.end()) {
+				card->targets.push_back(target.location);
+				card->target_instances.push_back(at(target.location));
+			}
 		}
 	}
 	if(patch.counters) {
-		card->counters.clear();
+		// UpdateInfo assigns only the entries carried by the query; it does not
+		// clear counters absent from a later query.
 		for(const auto& counter : *patch.counters)
 			card->counters[counter.type] = counter.count;
 	}
