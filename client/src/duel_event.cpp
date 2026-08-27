@@ -151,6 +151,12 @@ std::string_view event_name(const DuelEvent& event) {
 				return "ChainLinkResolving";
 			else if constexpr(std::is_same_v<T, ChainLinkResolved>)
 				return "ChainLinkResolved";
+			else if constexpr(std::is_same_v<T, CardsBecameTargets>)
+				return "CardsBecameTargets";
+			else if constexpr(std::is_same_v<T, CardHintChanged>)
+				return "CardHintChanged";
+			else if constexpr(std::is_same_v<T, PlayerHintChanged>)
+				return "PlayerHintChanged";
 			else if constexpr(std::is_same_v<T, ChainEnded>)
 				return "ChainEnded";
 			else if constexpr(std::is_same_v<T, AttackDeclared>)
@@ -245,6 +251,16 @@ std::string to_string(const DuelEvent& event) {
 				out += "link=" + std::to_string(value.link);
 			} else if constexpr(std::is_same_v<T, ChainLinkResolved>) {
 				out += "link=" + std::to_string(value.link);
+			} else if constexpr(std::is_same_v<T, CardsBecameTargets>) {
+				out += "cards=" + id_list(value.cards);
+			} else if constexpr(std::is_same_v<T, CardHintChanged>) {
+				out += "instance=" + to_string(value.card);
+				out += " type=" + std::to_string(static_cast<unsigned>(value.type));
+				out += " value=" + std::to_string(value.value);
+			} else if constexpr(std::is_same_v<T, PlayerHintChanged>) {
+				out += "player=" + player_name(value.player);
+				out += " type=" + std::to_string(static_cast<unsigned>(value.type));
+				out += " value=" + std::to_string(value.value);
 			} else if constexpr(std::is_same_v<T, ChainEnded>) {
 				out += "links=" + std::to_string(value.links);
 			} else if constexpr(std::is_same_v<T, AttackDeclared>) {

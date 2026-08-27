@@ -133,6 +133,22 @@ struct ChainLinkResolved {
 	std::uint32_t link = 0;
 };
 
+struct CardsBecameTargets {
+	std::vector<CardInstanceId> cards;
+};
+
+struct CardHintChanged {
+	CardInstanceId card = CardInstanceId::None;
+	std::uint8_t type = 0;
+	std::uint64_t value = 0;
+};
+
+struct PlayerHintChanged {
+	PlayerId player = 0;
+	std::uint8_t type = 0;
+	std::uint64_t value = 0;
+};
+
 struct ChainEnded {
 	// How many links the chain had when it ended.
 	std::uint32_t links = 0;
@@ -145,9 +161,8 @@ struct AttackDeclared {
 	bool direct = false;
 };
 
-// MSG_BATTLE restates both combatants' current ATK and DEF. It is the only
-// message in this slice that carries them, so it is also the only way a card
-// in this model acquires combat stats.
+// MSG_BATTLE restates both combatants' current ATK and DEF. Query patches may
+// also populate the same fields; this event remains specific to MSG_BATTLE.
 struct CombatStatsRevealed {
 	CardInstanceId card = CardInstanceId::None;
 	std::int32_t attack = 0;
@@ -191,6 +206,9 @@ using DuelEvent = std::variant<
 	ChainLinkAdded,
 	ChainLinkResolving,
 	ChainLinkResolved,
+	CardsBecameTargets,
+	CardHintChanged,
+	PlayerHintChanged,
 	ChainEnded,
 	AttackDeclared,
 	CombatStatsRevealed,

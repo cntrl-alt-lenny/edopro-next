@@ -19,6 +19,13 @@
 
 namespace edopro_next::client {
 
+struct CardHint {
+	std::uint8_t type = 0;
+	std::uint64_t value = 0;
+
+	friend bool operator==(const CardHint&, const CardHint&) = default;
+};
+
 // The protocol's position bits (POS_FACEUP_ATTACK and friends). Kept as bits
 // rather than collapsed to an enum because the protocol legitimately sends
 // combinations: a card in hand is reported as POS_FACEDOWN, which is both
@@ -88,6 +95,10 @@ struct CardState {
 	std::vector<CardLocation> targets;
 	std::vector<CardInstanceId> target_instances;
 	std::map<std::uint16_t, std::uint16_t> counters;
+	// Raw CARD_HINT metadata. The client does not localize or interpret the
+	// value; it records exactly what the protocol supplied.
+	std::optional<CardHint> hint;
+	std::map<std::uint64_t, std::uint32_t> description_hints;
 
 	// Material attached to this card, in protocol order.
 	std::vector<CardInstanceId> materials;
