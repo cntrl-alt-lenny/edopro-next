@@ -1008,22 +1008,22 @@ EDOPRO_TEST(card_hint_replaces_latest_and_tracks_description_deltas_in_both_widt
 			0x5678, compat), state).status, DecodeStatus::Decoded);
 		EDOPRO_CHECK_EQ(state.find(id)->hint->value, std::uint64_t{0x5678});
 		for(int i = 0; i < 2; ++i)
-			EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0}, 6,
-				225, compat), state).status, DecodeStatus::Decoded);
+			EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0},
+				proto::CHINT_DESC_ADD, 225, compat), state).status, DecodeStatus::Decoded);
 		EDOPRO_CHECK_EQ(state.find(id)->description_hints.at(225), std::uint32_t{2});
-		EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0}, 7,
-			225, compat), state).status, DecodeStatus::Decoded);
+		EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0},
+			proto::CHINT_DESC_REMOVE, 225, compat), state).status, DecodeStatus::Decoded);
 		EDOPRO_CHECK_EQ(state.find(id)->description_hints.at(225), std::uint32_t{1});
 	}
 }
 
 EDOPRO_TEST(player_hints_are_protocol_absolute_and_reset_by_start) {
 	auto fixture = started(0, 0);
-	EDOPRO_CHECK_EQ(fixture.run(player_hint_packet(1, 6, 0x123456789ull)).status,
+	EDOPRO_CHECK_EQ(fixture.run(player_hint_packet(1, proto::PHINT_DESC_ADD, 0x123456789ull)).status,
 		DecodeStatus::Decoded);
 	EDOPRO_CHECK_EQ(fixture.state.player_description_hints(1).at(0x123456789ull),
 		std::uint32_t{1});
-	EDOPRO_CHECK_EQ(fixture.run(player_hint_packet(1, 7, 0x123456789ull)).status,
+	EDOPRO_CHECK_EQ(fixture.run(player_hint_packet(1, proto::PHINT_DESC_REMOVE, 0x123456789ull)).status,
 		DecodeStatus::Decoded);
 	fixture.expect_decoded(start_packet(0, 0));
 	EDOPRO_CHECK(fixture.state.player_description_hints(1).empty());
@@ -1032,8 +1032,8 @@ EDOPRO_TEST(player_hints_are_protocol_absolute_and_reset_by_start) {
 	DuelState compat_state;
 	EDOPRO_CHECK_EQ(compat.decode(variant_start_packet(true, 0, 0), compat_state).status,
 		DecodeStatus::Decoded);
-	EDOPRO_CHECK_EQ(compat.decode(player_hint_packet(0, 6, 0x12345678u, true), compat_state).status,
-		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(compat.decode(player_hint_packet(0, proto::PHINT_DESC_ADD, 0x12345678u, true),
+		compat_state).status, DecodeStatus::Decoded);
 	EDOPRO_CHECK_EQ(compat_state.player_description_hints(0).at(0x12345678u),
 		std::uint32_t{1});
 }

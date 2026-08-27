@@ -203,6 +203,19 @@ inline constexpr std::uint32_t QUERY_IS_HIDDEN          = 0x1000000;
 inline constexpr std::uint32_t QUERY_COVER              = 0x2000000;
 inline constexpr std::uint32_t QUERY_END                = 0x80000000;
 
+// --- card hint types ---
+inline constexpr std::uint8_t CHINT_TURN               = 0x1;
+inline constexpr std::uint8_t CHINT_CARD               = 0x2;
+inline constexpr std::uint8_t CHINT_RACE               = 0x3;
+inline constexpr std::uint8_t CHINT_ATTRIBUTE          = 0x4;
+inline constexpr std::uint8_t CHINT_NUMBER             = 0x5;
+inline constexpr std::uint8_t CHINT_DESC_ADD           = 0x6;
+inline constexpr std::uint8_t CHINT_DESC_REMOVE        = 0x7;
+
+// --- player hint types ---
+inline constexpr std::uint8_t PHINT_DESC_ADD           = 0x6;
+inline constexpr std::uint8_t PHINT_DESC_REMOVE        = 0x7;
+
 // Canonical name for a duel message id, or an empty view when the id is
 // not one upstream defines. Callers distinguish "unknown to the protocol"
 // from "known but not decoded here" on the emptiness of this result.

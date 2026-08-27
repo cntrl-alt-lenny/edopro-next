@@ -437,9 +437,9 @@ DuelState::Error DuelState::apply_card_hint(CardInstanceId id, std::uint8_t type
 	auto* card = find(id);
 	if(card == nullptr)
 		return "no such card instance " + to_string(id);
-	if(type == 6) {
+	if(type == protocol::CHINT_DESC_ADD) {
 		++card->description_hints[value];
-	} else if(type == 7) {
+	} else if(type == protocol::CHINT_DESC_REMOVE) {
 		const auto it = card->description_hints.find(value);
 		if(it != card->description_hints.end()) {
 			if(it->second <= 1)
@@ -562,9 +562,9 @@ DuelState::Error DuelState::apply_player_hint(PlayerId player, std::uint8_t type
 	if(!is_duelist(player))
 		return "hint names player " + player_name(player);
 	auto& hints = player_desc_hints_[player];
-	if(type == 6) {
+	if(type == protocol::PHINT_DESC_ADD) {
 		++hints[value];
-	} else if(type == 7) {
+	} else if(type == protocol::PHINT_DESC_REMOVE) {
 		const auto it = hints.find(value);
 		if(it != hints.end()) {
 			if(it->second <= 1)

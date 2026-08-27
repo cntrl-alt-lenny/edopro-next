@@ -43,6 +43,8 @@ GROUPS = [
     ("REASON_", OCGAPI, "std::uint32_t"),
     ("PLAYER_", OCGAPI, "std::uint8_t"),
     ("QUERY_", OCGAPI, "std::uint32_t"),
+    ("CHINT_", OCGAPI, "std::uint8_t"),
+    ("PHINT_", OCGAPI, "std::uint8_t"),
 ]
 
 # Client-side pseudo-messages that share the MSG_ id space but are not
@@ -209,6 +211,8 @@ def render(groups: dict[str, list[tuple[str, int]]]) -> str:
             "REASON_": "event reasons",
             "PLAYER_": "player constants",
             "QUERY_": "card query fields",
+            "CHINT_": "card hint types",
+            "PHINT_": "player hint types",
         }[prefix]
         emit(title, sorted(groups[prefix], key=lambda kv: (kv[1], kv[0])), ctype)
 
