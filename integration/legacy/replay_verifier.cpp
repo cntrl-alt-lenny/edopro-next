@@ -56,6 +56,10 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::gSoundManager = soundManager.get();
 	auto game = std::make_unique<ygo::Game>();
 	ygo::mainGame = game.get();
+	ygo::mainGame->replaySignal.SetNoWait(true);
+	ygo::mainGame->actionSignal.SetNoWait(true);
+	ygo::mainGame->closeDoneSignal.SetNoWait(true);
+	ygo::mainGame->frameSignal.SetNoWait(true);
 
 	const auto& replay_header = replay.pheader;
 	ygo::mainGame->dInfo.isReplay = true;

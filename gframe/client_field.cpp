@@ -361,6 +361,8 @@ void ClientField::ClearChainSelect() {
 }
 // needs to be synchronized with EGET_SCROLL_BAR_CHANGED
 void ClientField::ShowSelectCard(bool buttonok, bool chain) {
+	if(!mainGame->wCardSelect)
+		return;
 	size_t startpos;
 	size_t ct;
 	if(selectable_cards.size() <= 5) {
@@ -452,6 +454,8 @@ void ClientField::ShowSelectCard(bool buttonok, bool chain) {
 	mainGame->PopupElement(mainGame->wCardSelect);
 }
 void ClientField::ShowChainCard() {
+	if(!mainGame->wCardSelect)
+		return;
 	sort_list.clear();
 	size_t startpos;
 	size_t ct;
@@ -509,6 +513,8 @@ void ClientField::ShowChainCard() {
 	mainGame->PopupElement(mainGame->wCardSelect);
 }
 void ClientField::ShowLocationCard() {
+	if(!mainGame->wCardDisplay)
+		return;
 	size_t startpos;
 	size_t ct;
 	if(display_cards.size() <= 5) {
@@ -578,6 +584,8 @@ void ClientField::ShowLocationCard() {
 	mainGame->PopupElement(mainGame->wCardDisplay);
 }
 void ClientField::ShowSelectOption(uint64_t select_hint, bool should_lock) {
+	if(!mainGame->wOptions)
+		return;
 	std::unique_lock<epro::mutex> lock = (should_lock ? std::unique_lock<epro::mutex>(mainGame->gMutex) : std::unique_lock<epro::mutex>());
 	selected_option = 0;
 	auto count = select_options.size();
@@ -1006,12 +1014,12 @@ bool ClientField::ShowSelectSum() {
 			break;
 		}
 	}
-	mainGame->wCardSelect->setVisible(false);
-	mainGame->stCardListTip->setVisible(false);
+	if(mainGame->wCardSelect) mainGame->wCardSelect->setVisible(false);
+	if(mainGame->stCardListTip) mainGame->stCardListTip->setVisible(false);
 	if(panelmode) {
 		mainGame->dField.ShowSelectCard(select_ready);
 	}
-	mainGame->stHintMsg->setVisible(!panelmode);
+	if(mainGame->stHintMsg) mainGame->stHintMsg->setVisible(!panelmode);
 	if (select_ready) {
 		ShowCancelOrFinishButton(2);
 	} else {
@@ -1151,6 +1159,8 @@ bool ClientField::CheckSelectSum() {
 	}
 }
 void ClientField::ShowSelectRace(uint64_t race) {
+	if(!mainGame->wANRace)
+		return;
 	uint64_t filter = 0x1;
 	auto selected = 0;
 	for(auto i = 0u; i < sizeofarr(mainGame->chkRace); ++i, filter <<= 1) {
