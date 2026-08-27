@@ -86,9 +86,10 @@ latter — for the 27 message types it decodes, and no further.
       deliberately test-only reference implementation, so the equivalence work below has a
       verified formula to build on without pulling perspective into the model itself —
       [ADR 0002, Decision 7](adr/0002-semantic-event-model.md).
-- [ ] **Run the model alongside the legacy handler.** `gframe/` is untouched so far: the
-      model runs only in tests. The additive hook in `DuelClient::ClientAnalyze` is the
-      recommended next step.
+- [x] **Run the model alongside the legacy handler.** The opt-in observer now receives the
+      normalized packet at one RAII seam in `DuelClient::ClientAnalyze`, decodes privately,
+      and projects the real legacy state after the unchanged handler returns. It is
+      observational and reports, rather than propagates, semantic failures.
 - [ ] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
       Not started, and dependent on the item above. No equivalence claim is made anywhere
       in this milestone. The normalization rule it will need is now documented and tested
