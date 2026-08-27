@@ -111,6 +111,10 @@ conflict can be resolved with the original intent visible.
 |---|---|---|---|---|
 | `README.md` | Replaced; upstream's preserved at `docs/upstream-README.md` | Existing repository-level replacement | This repository is a distinct project and must not misrepresent itself as upstream. Attribution retained. | Existing project-level delta |
 | `gframe/duelclient.cpp` | One include and one RAII observer scope at `ClientAnalyze` entry | One include plus one six-line call site | The live observer must see the exact normalized packet and both independent protocol-width flags, then compare after every existing return without rewriting the legacy switch. | Low; the switch and its control flow remain unchanged, but this is the runtime seam to recheck after upstream merges |
+| `gframe/cli_args.h` | `SEMANTIC_VERIFY_REPLAY` launch parameter enum | One additive enum value | Enables CLI-driven replay verification without menu interaction. | Low |
+| `gframe/edopro_main.cpp` | Parse `--semantic-verify-replay` argument | Four localized lines in argument parser | Routes CLI verification invocation. | Low |
+| `gframe/gframe.cpp` | Execute `verify_replay_cli` when flag is set | Ten localized lines at `edopro_main` entry | Invokes headless replay verification. | Low |
+| `gframe/drawing.cpp` | Non-blocking `WaitFrameSignal` for `EDT_NULL` | Two lines in `WaitFrameSignal` | Allows headless replay execution without blocking on frame signals. | Low |
 | `gframe/premake5.lua` | Conditional observer define/link on the legacy targets | Four localized lines in the target configuration | gframe must remain C++17 while the optional observer is linked as a separate target. | Low |
 | `premake5.lua` | `--semantic-observer` option and conditional `client`/observer project includes | Eight additive lines | Premake needs an explicit, reversible opt-in build path. | Low |
 | `travis/build.sh` | Forwards `EDOPRO_NEXT_SEMANTIC_OBSERVER=1` to Premake | Three environment-gated lines | CI needs to exercise the observer-enabled legacy build without changing the ordinary baseline command. | Low |

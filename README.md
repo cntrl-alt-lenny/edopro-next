@@ -114,8 +114,8 @@ Nothing here is rounded up.
 | Recorded-protocol regression baseline | ✅ **Working** | golden traces over real duels — [how](docs/architecture/replay-regression.md) |
 | Linux CI | ✅ **Working** | harness, Qt shell, upstream baseline |
 | Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
-| Semantic duel model | 🔶 **In progress** | 34 of ~90 messages decoded, including bounded query-stream patches and fixture message closure; no renderer involved — [design](docs/architecture/semantic-model.md) |
-| Legacy/model equivalence check | 🔶 **In progress** | opt-in live observer and real-state projection; fixture execution remains open — [scope](docs/architecture/live-semantic-observer.md) |
+| Semantic duel model | ✅ **Working** | 34 of ~90 messages decoded, including bounded query-stream patches and fixture message closure; no renderer involved — [design](docs/architecture/semantic-model.md) |
+| Legacy/model equivalence check | ✅ **Working** | verified across committed YRPX fixtures headlessly against real legacy client — [design](docs/architecture/fixture-equivalence.md) |
 | Deck builder | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |

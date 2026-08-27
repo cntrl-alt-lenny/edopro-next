@@ -231,3 +231,9 @@ jobs:
           test -f bin/x64/release/ygoprodll || { echo "::error::client binary missing"; exit 1; }
           file bin/x64/release/ygoprodll
           ls -lh bin/x64/release/ygoprodll
+
+      - name: Real legacy / semantic fixture equivalence
+        if: matrix.observer == true
+        run: |
+          ./bin/x64/release/ygoprodll --semantic-verify-replay tests/fixtures/duel-chains-battle.yrpX
+          ./bin/x64/release/ygoprodll --semantic-verify-replay tests/fixtures/duel-extended.yrpX

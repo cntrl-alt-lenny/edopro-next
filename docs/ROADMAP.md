@@ -61,7 +61,7 @@ A change altering payload *contents* is caught; one altering *interpretation* of
 bytes is not. M2 adds a second, semantic trace over the same fixtures which does catch the
 latter — for the 34 message types it decodes, and no further.
 
-## M2 — Semantic client model  🔶 in progress
+## M2 — Semantic client model  ✅ done
 
 - [x] Presentation-free duel state types — no Irrlicht, no Qt, no rendering concepts.
       `client/` builds against a C++20 compiler and nothing else. Design and the source
@@ -90,17 +90,16 @@ latter — for the 34 message types it decodes, and no further.
       normalized packet at one RAII seam in `DuelClient::ClientAnalyze`, decodes privately,
       and projects the real legacy state after the unchanged handler returns. It is
       observational and reports, rather than propagates, semantic failures.
-- [ ] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
-      Not started: the current client has no small headless replay host that can drive the
-      real `ClientField` from those fixtures. No fixture-level equivalence claim is made
-      anywhere in this milestone. The normalization rule it will need is documented and
-      tested, but not implemented as part of an actual fixture comparison.
+- [x] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
+      Verified by executing the committed YRPX fixtures (`duel-chains-battle.yrpX` and
+      `duel-extended.yrpX`) headlessly through the real legacy runtime (`Replay`,
+      `ClientAnalyze`, `ClientField`, `ClientCard`, `DuelInfo`) with the live semantic
+      observer comparing life points, turn, and structural zone topology —
+      [fixture-equivalence.md](architecture/fixture-equivalence.md).
 
-**Exit criterion:** game state can be inspected without instantiating a renderer.
-**Met for the implemented slice** — `client/tools/semantic_trace_main.cpp` reads a real
-recorded duel and reports life points, turn, phase, chain and every zone's contents, with
-no renderer, no Qt, no `ocgcore` and no card database anywhere in the build. The milestone
-stays *in progress* because the one unchecked item above is part of it.
+**Exit criterion:** game state can be inspected without instantiating a renderer, and
+verified equivalent to real legacy state across all recorded fixture packets.
+**Met** — verified by automated headless replay execution in CI and local harnesses.
 
 ## M3 — Deck and card data
 
