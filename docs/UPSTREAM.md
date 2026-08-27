@@ -115,6 +115,7 @@ conflict can be resolved with the original intent visible.
 | `gframe/edopro_main.cpp` | Parse `--semantic-verify-replay` argument | Four localized lines in argument parser | Routes CLI verification invocation. | Low |
 | `gframe/gframe.cpp` | Execute `verify_replay_cli` when flag is set | Ten localized lines at `edopro_main` entry | Invokes headless replay verification. | Low |
 | `gframe/drawing.cpp` | Non-blocking `WaitFrameSignal`, `ShowElement`, `HideElement`, `PopupElement` for `EDT_NULL` | Localized guards in UI lifecycle methods | Allows headless replay execution without UI animations or frame locks. | Low |
+| `gframe/client_field.cpp` | Guard camera/driver dereference in `getCardScreenCoordinates` | Two-line null guard in `getCardScreenCoordinates` | Allows headless execution without camera or window viewport. | Low |
 | `gframe/premake5.lua` | Conditional observer define/link on the legacy targets | Four localized lines in the target configuration | gframe must remain C++17 while the optional observer is linked as a separate target. | Low |
 | `premake5.lua` | `--semantic-observer` option and conditional `client`/observer project includes | Eight additive lines | Premake needs an explicit, reversible opt-in build path. | Low |
 | `travis/build.sh` | Forwards `EDOPRO_NEXT_SEMANTIC_OBSERVER=1` to Premake | Three environment-gated lines | CI needs to exercise the observer-enabled legacy build without changing the ordinary baseline command. | Low |

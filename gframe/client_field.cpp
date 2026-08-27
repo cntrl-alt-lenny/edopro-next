@@ -751,6 +751,8 @@ void ClientField::GetChainDrawCoordinates(uint8_t controler, uint8_t location, u
 	t->Y = (loc[0].Pos.Y + loc[2].Pos.Y) / 2;
 }
 static void getCardScreenCoordinates(ClientCard* pcard) {
+	if(!mainGame->camera || !mainGame->driver)
+		return;
 	irr::core::matrix4 trans = mainGame->camera->getProjectionMatrix();
 	trans *= mainGame->camera->getViewMatrix();
 	trans *= pcard->mTransform;
