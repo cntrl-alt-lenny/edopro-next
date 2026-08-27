@@ -42,11 +42,11 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		return stats;
 	}
 
-	ygo::Game game;
+	ygo::Game game{};
 	ygo::mainGame = &game;
-	ygo::DataManager dataManager;
+	ygo::DataManager dataManager{};
 	ygo::gDataManager = &dataManager;
-	ygo::GameConfig config;
+	ygo::GameConfig config{};
 	ygo::gGameConfig = &config;
 	ygo::SoundManager soundManager(0.0, 0.0, false, false, ygo::SoundManager::BACKEND::NONE);
 	ygo::gSoundManager = &soundManager;
