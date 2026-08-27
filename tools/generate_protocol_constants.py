@@ -42,6 +42,7 @@ GROUPS = [
     ("PHASE_", OCGAPI, "std::uint32_t"),
     ("REASON_", OCGAPI, "std::uint32_t"),
     ("PLAYER_", OCGAPI, "std::uint8_t"),
+    ("QUERY_", OCGAPI, "std::uint32_t"),
 ]
 
 # Client-side pseudo-messages that share the MSG_ id space but are not
@@ -207,6 +208,7 @@ def render(groups: dict[str, list[tuple[str, int]]]) -> str:
             "PHASE_": "duel phases",
             "REASON_": "event reasons",
             "PLAYER_": "player constants",
+            "QUERY_": "card query fields",
         }[prefix]
         emit(title, sorted(groups[prefix], key=lambda kv: (kv[1], kv[0])), ctype)
 
@@ -275,7 +277,11 @@ def main() -> int:
         return 0
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(text, encoding="utf-8", newline="\n")
+    # pathlib.Path.write_text gained the newline keyword only in newer Python
+    # releases; use an explicit open so the generator remains runnable on the
+    # supported CI interpreters as well.
+    with OUT.open("w", encoding="utf-8", newline="\n") as generated:
+        generated.write(text)
     print(f"wrote {OUT.relative_to(REPO)} ({total} values)")
     for entry in skipped:
         print(f"  skipped (not a literal or simple or-composition): {entry}")

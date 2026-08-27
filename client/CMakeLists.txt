@@ -23,6 +23,7 @@ add_library(edopro_next_client STATIC
     src/duel_state.cpp
     src/packet.cpp
     src/protocol_decoder.cpp
+    src/query.cpp
     src/semantic_trace.cpp
 )
 

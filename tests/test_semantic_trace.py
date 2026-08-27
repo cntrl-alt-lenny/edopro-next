@@ -205,6 +205,22 @@ class TestSemanticQuality(unittest.TestCase):
                 text = trace_for(BINARY, fixture)
                 self.assertGreater(scalar(text, "decoded"), 100)
 
+    def test_query_stream_coverage_is_real_and_clean(self) -> None:
+        expected_packets = {
+            "duel-chains-battle.yrpX": 829,
+            "duel-extended.yrpX": 773,
+        }
+        for fixture in fixture_paths():
+            with self.subTest(fixture=fixture.name):
+                text = trace_for(BINARY, fixture)
+                self.assertEqual(scalar(text, "query_packets"), expected_packets[fixture.name])
+                self.assertEqual(scalar(text, "query_decoded"), scalar(text, "query_packets"))
+                for key in ("query_unsupported", "query_malformed", "query_inconsistent",
+                            "unknown_query_fields"):
+                    self.assertEqual(scalar(text, key), 0)
+                self.assertGreater(scalar(text, "query_entries"), 0)
+                self.assertGreater(scalar(text, "query_skipped"), 0)
+
     def test_no_environmental_leakage(self) -> None:
         banned = (str(REPO), "/home/", "C:\\", "/mnt/", "stream.pkts")
         for fixture in fixture_paths():
@@ -237,7 +253,8 @@ def update_goldens(binary: pathlib.Path) -> int:
         if failed:
             continue
         target = golden_for(fixture)
-        target.write_text(text, encoding="utf-8", newline="\n")
+        with target.open("w", encoding="utf-8", newline="\n") as golden:
+            golden.write(text)
         print(f"wrote {target.relative_to(REPO)}")
     return 1 if failed else 0
 

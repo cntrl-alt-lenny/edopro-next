@@ -74,8 +74,7 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 	for(const auto& card : semantic.cards()) {
 		if(!card.tracked)
 			continue;
-		ProjectedCard projected{card.location,
-			static_cast<std::uint32_t>(card.materials.size())};
+		ProjectedCard projected{card.location, static_cast<std::uint32_t>(card.materials.size())};
 		semantic_cards.push_back(std::move(projected));
 		for(std::size_t index = 0; index < card.materials.size(); ++index) {
 			ProjectedCard material_projection;
@@ -122,7 +121,7 @@ EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legac
 		if(semantic_card->material_count != legacy_card->material_count)
 			add_mismatch(result, packet, message, location_name(location) + ".materials.count",
 						  std::to_string(semantic_card->material_count),
-						  std::to_string(legacy_card->material_count));
+												 std::to_string(legacy_card->material_count));
 	}
 	return result;
 }
@@ -135,21 +134,24 @@ void ObserverSession::reset(client::ProtocolVariant variant) {
 	++session_number_;
 }
 
+bool ObserverSession::is_query_message(std::uint8_t message) noexcept {
+	return message == client::protocol::MSG_UPDATE_DATA ||
+		message == client::protocol::MSG_UPDATE_CARD;
+}
+
 client::DecodeResult ObserverSession::observe(const client::Packet& packet,
 														 client::ProtocolVariant variant) {
 	if(packet.message == client::protocol::MSG_START)
 		reset(variant);
 	++packet_number_;
 	const auto result = decoder_.decode(packet, state_);
-	// An unsupported non-query message may have changed the real legacy
-	// field without changing the semantic trial state. Do not compare a later
-	// decoded packet against that stale semantic snapshot. Query-stream
-	// messages are the deliberate exception: this projection excludes the
-	// query-only fields they populate, so they do not invalidate structural
-	// comparison on their own.
+	// Query packets only carry fields outside the live projection when they are
+	// unsupported. They are therefore safe to ignore for comparison purposes;
+	// an unsupported non-query packet is conservatively treated as a possible
+	// structural state transition until the next explicit session boundary.
 	if(result.status != client::DecodeStatus::Decoded &&
-		!(result.status == client::DecodeStatus::UnsupportedMessage &&
-			is_query_stream_message(packet.message)))
+		(result.status != client::DecodeStatus::UnsupportedMessage ||
+		 !is_query_message(packet.message)))
 		comparison_available_ = false;
 	return result;
 }

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -14,18 +15,19 @@
 
 namespace edopro_next::legacy_observer {
 
-using client::CardCode;
 using client::CardLocation;
-using client::CardPosition;
 using client::DuelState;
 using client::PlayerId;
 using client::Zone;
 
 // A value-only representation extracted from the real ClientField. It is
 // intentionally not a second legacy model: production code constructs this
-// only by walking Game::dField and Game::dInfo. Query-sensitive card values
-// are intentionally absent until the query stream is decoded.
+// only by walking Game::dField and Game::dInfo. Values are optional so
+// hand-built comparator tests can model a deliberately narrower snapshot.
 struct ProjectedCard {
+	ProjectedCard() = default;
+	ProjectedCard(CardLocation where, std::uint32_t count)
+		: location(where), material_count(count) {}
 	CardLocation location{};
 	std::uint32_t material_count = 0;
 };
@@ -64,11 +66,6 @@ constexpr PlayerId protocol_player_from_local(PlayerId local, bool is_first) noe
 EquivalenceResult compare(const DuelState& semantic, const LegacySnapshot& legacy,
 							 std::uint64_t packet, std::uint8_t message);
 
-constexpr bool is_query_stream_message(std::uint8_t message) noexcept {
-	return message == client::protocol::MSG_UPDATE_DATA ||
-		message == client::protocol::MSG_UPDATE_CARD;
-}
-
 // Implemented in the legacy adapter. The opaque parameter keeps the C++17
 // gframe-facing header free of Game/Irrlicht declarations.
 LegacySnapshot project_legacy_state(const void* legacy_game);
@@ -88,6 +85,8 @@ public:
 	std::uint64_t packet_number() const noexcept { return packet_number_; }
 	std::uint64_t session_number() const noexcept { return session_number_; }
 	void reset(client::ProtocolVariant variant);
+
+	static bool is_query_message(std::uint8_t message) noexcept;
 
 private:
 	client::ProtocolDecoder decoder_{};

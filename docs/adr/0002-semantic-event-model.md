@@ -118,7 +118,8 @@ Two related choices follow from it:
 **`UnknownMessage`, `UnsupportedMessage`, `Malformed` and `Inconsistent` are different
 things and are reported as such.**
 
-M2 decodes 27 of upstream's ~90 messages. If everything the decoder declined were reported
+The initial M2 slice decoded 27 of upstream's ~90 messages. The query-stream slice adds
+two state-synchronization messages. If everything the decoder declined were reported
 as an error, the coverage report would be unreadable; if everything were reported as
 "unsupported", a genuine layout bug would hide inside the noise. So:
 

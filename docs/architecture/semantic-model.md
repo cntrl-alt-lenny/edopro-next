@@ -287,7 +287,7 @@ Three details worth recording, because they are easy to get wrong:
 | Player indices | screen-relative via `LocalPlayer` | protocol-absolute | Perspective is presentation. See §4. |
 | Bounds checking | none — raw pointer walks | every read checked | The decoder must be able to distinguish malformed from unsupported. See §8. |
 | Cards leaving play | `delete`d | kept, `tracked = false` | Keeps ids meaningful in earlier events, and turns a stale reference into a reported inconsistency instead of a dangling pointer. |
-| Position changes | applied unconditionally | refused if the stated previous position disagrees with the model | A disagreement means the model drifted earlier, and silence would hide it. Investigated specifically for the risk that the undecoded query stream (§10) could cause a false positive here; found not to hold for this slice — see the comment at `handle_pos_change` in `protocol_decoder.cpp`. Verified against both fixtures: 773 and 799 `MSG_UPDATE_DATA`/`MSG_UPDATE_CARD` packets respectively, heavily interleaved with real position changes, zero false positives in either. |
+| Position changes | applied unconditionally | refused if the stated previous position disagrees with the model | A disagreement means the model drifted earlier, and silence would hide it. Query-position patches are applied transactionally by the query stream; both committed fixtures still have zero malformed or inconsistent packets. |
 
 ---
 
@@ -337,11 +337,18 @@ deliberately corrupts a model to prove the check can fail.
 
 Named so the gaps are visible:
 
-- **`MSG_UPDATE_DATA` / `MSG_UPDATE_CARD`** — the query stream (`CoreUtils::QueryStream`).
-  Between them these are ~75% of the packets in both fixtures, and they are how ATK/DEF,
-  level, type and much else become known. This is the obvious next slice.
-- **Counters, equips and targets** — `MSG_ADD_COUNTER`, `MSG_EQUIP`, `MSG_CARD_TARGET`,
-  `MSG_BECOME_TARGET`. `ClientCard` models all of these; `CardState` does not yet.
+- **Query-derived fields outside the live comparison scope** —
+  `MSG_UPDATE_DATA` / `MSG_UPDATE_CARD` are now decoded by the bounded
+  `CoreUtils::Query`-compatible parser. The model retains their scalar,
+  relationship, counter, visibility, and overlay-code patches; the observer
+  compares only fields with an equivalent legacy provenance. See
+  [query-stream.md](query-stream.md).
+- **Independent relationship/counter messages** — `MSG_ADD_COUNTER`, `MSG_REMOVE_COUNTER`,
+  `MSG_EQUIP`, `MSG_UNEQUIP`, `MSG_CARD_TARGET`, `MSG_CANCEL_TARGET`, and
+  `MSG_BECOME_TARGET` remain unsupported. `CardState` already retains counters,
+  equip-target state, and target state when those values arrive through a decoded
+  `MSG_UPDATE_DATA` / `MSG_UPDATE_CARD` query patch; it does not yet apply these
+  independent `MSG_*` relationship/counter messages.
 - **Every prompt message** — `MSG_SELECT_*`. These need a response channel, which is a
   larger design question than M2.
 - **`MSG_TAG_SWAP` and `MSG_RELOAD_FIELD`** — wholesale field replacement, needed for tag

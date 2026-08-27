@@ -44,6 +44,15 @@ struct Coverage {
 	std::size_t unknown = 0;
 	std::size_t malformed = 0;
 	std::size_t inconsistent = 0;
+	std::size_t query_packets = 0;
+	std::size_t query_decoded = 0;
+	std::size_t query_unsupported = 0;
+	std::size_t query_malformed = 0;
+	std::size_t query_inconsistent = 0;
+	std::size_t query_entries = 0;
+	std::size_t query_skipped = 0;
+	std::map<std::uint32_t, std::size_t> query_fields;
+	std::vector<std::uint32_t> unknown_query_fields;
 	// Per message id, how many packets landed in each status.
 	std::map<std::uint8_t, std::map<DecodeStatus, std::size_t>> by_message;
 };

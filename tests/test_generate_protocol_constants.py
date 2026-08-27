@@ -72,7 +72,8 @@ class _ScratchGenerator(unittest.TestCase):
         would, so --check's own staleness comparison is not what fails the
         test - only the skipped-constants check should be able to."""
         groups, _ = gpc.collect()
-        self.out.write_text(gpc.render(groups), encoding="utf-8", newline="\n")
+        with self.out.open("w", encoding="utf-8", newline="\n") as generated:
+            generated.write(gpc.render(groups))
 
     def _run_check(self) -> tuple[int, str, str]:
         # main() parses sys.argv itself; drive it the same way a real

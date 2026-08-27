@@ -11,6 +11,7 @@ void* edopro_next_semantic_observer_begin(std::uint8_t message,
 										const std::uint8_t* payload,
 										std::uint32_t payload_length,
 										bool compat,
+										bool legacy_race_size,
 										bool legacy_state_lock_held,
 										void* legacy_game) noexcept;
 void edopro_next_semantic_observer_end(void* token) noexcept;
@@ -23,10 +24,12 @@ namespace edopro_next::legacy_observer {
 class ObservationScope final {
 public:
 	ObservationScope(std::uint8_t message, const std::uint8_t* payload,
-					 std::uint32_t payload_length, bool compat, bool legacy_state_lock_held,
+						 std::uint32_t payload_length, bool compat, bool legacy_race_size,
+						 bool legacy_state_lock_held,
 					 void* legacy_game) noexcept
 		: token_(edopro_next_semantic_observer_begin(message, payload, payload_length,
-													 compat, legacy_state_lock_held, legacy_game)) {}
+																										 compat, legacy_race_size,
+																										 legacy_state_lock_held, legacy_game)) {}
 	ObservationScope(const ObservationScope&) = delete;
 	ObservationScope& operator=(const ObservationScope&) = delete;
 	~ObservationScope() { edopro_next_semantic_observer_end(token_); }
@@ -41,7 +44,7 @@ namespace edopro_next::legacy_observer {
 
 class ObservationScope final {
 public:
-	ObservationScope(std::uint8_t, const std::uint8_t*, std::uint32_t, bool, bool, void*) noexcept {}
+	ObservationScope(std::uint8_t, const std::uint8_t*, std::uint32_t, bool, bool, bool, void*) noexcept {}
 };
 
 } // namespace edopro_next::legacy_observer

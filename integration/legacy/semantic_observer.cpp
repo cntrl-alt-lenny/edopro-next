@@ -35,11 +35,12 @@ struct ObserverRuntime {
 		if(result.status == edopro_next::client::DecodeStatus::Decoded)
 			return;
 		if(result.status == edopro_next::client::DecodeStatus::UnsupportedMessage) {
-			if(edopro_next::legacy_observer::is_query_stream_message(message) || !newly_tainted)
+			if(edopro_next::legacy_observer::ObserverSession::is_query_message(message) ||
+				!newly_tainted)
 				return;
 			std::fprintf(stderr,
 				"edopro-next semantic observer: packet %llu message 0x%02x %s "
-				"is not semantically modelled; "
+				"is an unsupported packet; "
 				"equivalence checks suspended for this session\n",
 				static_cast<unsigned long long>(packet), static_cast<unsigned>(message),
 				edopro_next::legacy_observer::message_name(message).c_str());
@@ -66,7 +67,7 @@ ObserverRuntime& runtime() {
 
 extern "C" void* edopro_next_semantic_observer_begin(
 		std::uint8_t message, const std::uint8_t* payload, std::uint32_t payload_length,
-		bool compat, bool legacy_state_lock_held, void* legacy_game) noexcept {
+		bool compat, bool legacy_race_size, bool legacy_state_lock_held, void* legacy_game) noexcept {
 	try {
 		auto& instance = runtime();
 		std::lock_guard<std::mutex> lock(instance.mutex);
@@ -75,7 +76,7 @@ extern "C" void* edopro_next_semantic_observer_begin(
 		if(payload != nullptr)
 			packet.payload.assign(payload, payload + payload_length);
 		const bool comparison_was_available = instance.session.comparison_available();
-		const auto result = instance.session.observe(packet, ProtocolVariant{compat});
+		const auto result = instance.session.observe(packet, ProtocolVariant{compat, legacy_race_size});
 		const bool newly_tainted = comparison_was_available &&
 			!instance.session.comparison_available();
 		instance.report_decode(instance.session.packet_number(), message, result, newly_tainted);

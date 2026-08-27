@@ -1,6 +1,7 @@
 // CLI: render a semantic trace for a framed duel-message stream.
 //
-//     semantic_trace <stream.pkts> [--name NAME] [--compat] [-o OUT]
+//     semantic_trace <stream.pkts> [--name NAME] [--compat]
+//                     [--legacy-race-size] [-o OUT]
 //
 // The input is a packet stream, not a replay file. Reading .yrpX containers -
 // header, LZMA body, player names, embedded YRP1 - is M1's job and lives in
@@ -24,7 +25,8 @@
 namespace {
 
 int usage() {
-	std::cerr << "usage: semantic_trace <stream.pkts> [--name NAME] [--compat] [-o OUT]\n";
+	std::cerr << "usage: semantic_trace <stream.pkts> [--name NAME] [--compat] "
+				 "[--legacy-race-size] [-o OUT]\n";
 	return 2;
 }
 
@@ -40,6 +42,8 @@ int main(int argc, char** argv) {
 		const std::string arg = argv[i];
 		if(arg == "--compat") {
 			options.variant.compat = true;
+		} else if(arg == "--legacy-race-size") {
+			options.variant.legacy_race_size = true;
 		} else if(arg == "--name" && i + 1 < argc) {
 			options.source_name = argv[++i];
 			name_given = true;

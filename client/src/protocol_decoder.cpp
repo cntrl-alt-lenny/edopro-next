@@ -13,7 +13,7 @@ namespace msg = protocol;
 // Message ids this build decodes. The switch in decode_supported() must handle
 // exactly these; a test asserts it, so the coverage report can never claim
 // support this file does not actually provide.
-constexpr std::array<std::uint8_t, 27> kSupported = {
+constexpr std::array<std::uint8_t, 29> kSupported = {
 	msg::MSG_START,
 	msg::MSG_WIN,
 	msg::MSG_SHUFFLE_DECK,
@@ -41,6 +41,8 @@ constexpr std::array<std::uint8_t, 27> kSupported = {
 	msg::MSG_BATTLE,
 	msg::MSG_DAMAGE_STEP_START,
 	msg::MSG_DAMAGE_STEP_END,
+	msg::MSG_UPDATE_DATA,
+	msg::MSG_UPDATE_CARD,
 };
 
 // The protocol's loc_info, read verbatim. Its four fields do not mean the same
@@ -106,11 +108,22 @@ bool count_fits(PacketReader& reader, std::uint32_t count, std::size_t entry_siz
 class Decoding {
 public:
 	Decoding(const Packet& packet, DuelState& state, ProtocolVariant variant)
-		: reader_(packet.payload), state_(state), compat_(variant.compat) {}
+		: reader_(packet.payload), state_(state), compat_(variant.compat),
+		  legacy_race_size_(variant.legacy_race_size) {}
 
 	PacketReader& reader() { return reader_; }
 	DuelState& state() { return state_; }
 	bool compat() const { return compat_; }
+	bool legacy_race_size() const { return legacy_race_size_; }
+
+	void set_query_coverage(QueryCoverage coverage) { query_coverage_ = std::move(coverage); }
+	const std::optional<QueryCoverage>& query_coverage() const { return query_coverage_; }
+	void unsupported(std::string reason) {
+		unsupported_ = true;
+		if(unsupported_detail_.empty()) unsupported_detail_ = std::move(reason);
+	}
+	bool is_unsupported() const { return unsupported_; }
+	const std::string& unsupported_detail() const { return unsupported_detail_; }
 
 	void emit(DuelEvent event) { events_.push_back(std::move(event)); }
 	std::vector<DuelEvent> take_events() { return std::move(events_); }
@@ -156,8 +169,12 @@ private:
 	PacketReader reader_;
 	DuelState& state_;
 	bool compat_;
+	bool legacy_race_size_;
 	std::vector<DuelEvent> events_;
 	std::string inconsistency_;
+	bool unsupported_ = false;
+	std::string unsupported_detail_;
+	std::optional<QueryCoverage> query_coverage_;
 };
 
 // --- individual messages ------------------------------------------------
@@ -374,22 +391,9 @@ void handle_pos_change(Decoding& d) {
 	// applies the new position unconditionally (gframe/duelclient.cpp,
 	// MSG_POS_CHANGE case) - a deliberate choice, not an oversight.
 	//
-	// The obvious worry: MSG_UPDATE_DATA/MSG_UPDATE_CARD are not decoded yet,
-	// and legacy ClientCard::UpdateInfo does write `position` from a bare
-	// QUERY_POSITION independently of MSG_POS_CHANGE (gframe/client_card.cpp).
-	// If that ever let the *legacy* client's position drift ahead of what our
-	// model can see, this check would misfire on a perfectly healthy stream.
-	// Investigated and found not to hold for this slice: every real position
-	// this model can observe arrives already through MSG_MOVE (which always
-	// carries a destination position) or this very message: QUERY_POSITION
-	// mirrors state already announced through one of those two decoded
-	// channels rather than being an independent source of position changes.
-	// Both committed fixtures corroborate this empirically - 773 and 799
-	// MSG_UPDATE_DATA/CARD packets respectively, heavily interleaved with real
-	// MSG_POS_CHANGE events, zero false-positive Inconsistent results in
-	// either (tests/golden/*.semantic). Re-examine this the moment
-	// MSG_UPDATE_DATA/MSG_UPDATE_CARD are actually decoded: this reasoning
-	// covers the *current* 27-message slice, not a hypothetical future one.
+	// QUERY_POSITION is now applied transactionally by the query-stream
+	// handlers, so this consistency check covers both wire sources without
+	// allowing a query packet to partially advance the model.
 	const auto held = d.state().find(id)->position;
 	if(held != previous_position) {
 		d.inconsistent("position change from " + to_string(previous_position) + " but " +
@@ -652,6 +656,74 @@ void handle_battle(Decoding& d) {
 		apply(target_info, target_atk, target_def);
 }
 
+void handle_update_data(Decoding& d) {
+	auto& r = d.reader();
+	const auto player = r.u8();
+	const auto raw_zone = r.u8();
+	const auto parsed = parse_query_stream(r.remaining_span(), d.compat(), d.legacy_race_size());
+	r.consume_remaining();
+	d.set_query_coverage(parsed.coverage);
+	if(!parsed.valid) {
+		if(parsed.unsupported) d.unsupported(parsed.detail);
+		else r.fail();
+		return;
+	}
+	if(!is_duelist(player)) {
+		d.inconsistent("query update names player " + player_name(player));
+		return;
+	}
+	const auto zone = zone_from_protocol(raw_zone);
+	const auto& slots = d.state().zone(player, zone);
+	if(!is_trackable(zone)) {
+		d.inconsistent("query update names untracked zone " + std::to_string(raw_zone));
+		return;
+	}
+	for(std::size_t index = 0; index < parsed.entries.size(); ++index) {
+		if(index >= slots.size()) {
+			d.inconsistent("query update has more entries than " + std::string(zone_name(zone)));
+			return;
+		}
+		const auto& entry = parsed.entries[index];
+		if(entry.skipped || slots[index] == CardInstanceId::None)
+			continue;
+		if(auto error = d.state().apply_query_patch(slots[index], entry.patch)) {
+			d.inconsistent(*error);
+			return;
+		}
+	}
+}
+
+void handle_update_card(Decoding& d) {
+	auto& r = d.reader();
+	const auto player = r.u8();
+	const auto raw_zone = r.u8();
+	const auto sequence = r.u8();
+	if(!is_duelist(player)) {
+		d.inconsistent("query update names player " + player_name(player));
+		return;
+	}
+	const CardLocation location{player, zone_from_protocol(raw_zone), sequence, false, 0};
+	const auto id = d.state().at(location);
+	// ClientField::UpdateCard returns immediately for an empty slot. Preserve
+	// that legacy no-op even if a stale/irrelevant query payload follows it.
+	if(id == CardInstanceId::None) {
+		r.consume_remaining();
+		return;
+	}
+	const auto parsed = parse_query_record(r.remaining_span(), d.compat(), d.legacy_race_size());
+	r.consume_remaining();
+	d.set_query_coverage(parsed.coverage);
+	if(!parsed.valid) {
+		if(parsed.unsupported) d.unsupported(parsed.detail);
+		else r.fail();
+		return;
+	}
+	if(parsed.entries.empty() || parsed.entries.front().skipped)
+		return;
+	if(auto error = d.state().apply_query_patch(id, parsed.entries.front().patch))
+		d.inconsistent(*error);
+}
+
 void handle_empty(Decoding& d, DuelEvent event) {
 	if(!fully_read(d.reader()))
 		return;
@@ -715,6 +787,10 @@ void decode_supported(std::uint8_t message, Decoding& d) {
 		return handle_empty(d, DamageStepStarted{});
 	case msg::MSG_DAMAGE_STEP_END:
 		return handle_empty(d, DamageStepEnded{});
+	case msg::MSG_UPDATE_DATA:
+		return handle_update_data(d);
+	case msg::MSG_UPDATE_CARD:
+		return handle_update_card(d);
 	default:
 		// Unreachable: supports() gates this switch, and a unit test asserts
 		// the two agree.
@@ -797,6 +873,7 @@ DecodeResult ProtocolDecoder::decode(const Packet& packet, DuelState& state) {
 	DuelState trial = state;
 	Decoding decoding(packet, trial, variant_);
 	decode_supported(packet.message, decoding);
+	result.query_coverage = decoding.query_coverage();
 
 	auto& reader = decoding.reader();
 	if(reader.failed()) {
@@ -811,6 +888,11 @@ DecodeResult ProtocolDecoder::decode(const Packet& packet, DuelState& state) {
 		result.detail = std::string(protocol::message_name(packet.message)) + " left " +
 						std::to_string(reader.remaining()) + " of " +
 						std::to_string(packet.payload.size()) + " bytes unread";
+		return result;
+	}
+	if(decoding.is_unsupported()) {
+		result.status = DecodeStatus::UnsupportedMessage;
+		result.detail = decoding.unsupported_detail();
 		return result;
 	}
 	if(decoding.is_inconsistent()) {

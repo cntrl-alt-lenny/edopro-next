@@ -59,7 +59,7 @@ this repository can make automatically.
 **Known limit:** the trace is structural (message ids and payload digests), not semantic.
 A change altering payload *contents* is caught; one altering *interpretation* of unchanged
 bytes is not. M2 adds a second, semantic trace over the same fixtures which does catch the
-latter — for the 27 message types it decodes, and no further.
+latter — for the 29 message types it decodes, and no further.
 
 ## M2 — Semantic client model  🔶 in progress
 
@@ -67,11 +67,11 @@ latter — for the 27 message types it decodes, and no further.
       `client/` builds against a C++20 compiler and nothing else. Design and the source
       research behind it: [semantic-model.md](architecture/semantic-model.md),
       [ADR 0002](adr/0002-semantic-event-model.md).
-- [x] Decode the duel message stream into semantic events. **27 of upstream's ~90
-      messages**, chosen for clear semantics and real coverage in the fixtures rather than
-      for headline count. `MSG_UPDATE_DATA` and `MSG_UPDATE_CARD` — the query stream, and
-      roughly three quarters of the packets in both fixtures — are deliberately not among
-      them; they are the next slice.
+- [x] Decode the duel message stream into semantic events and state patches. **29 of
+      upstream's ~90 messages**, chosen for clear semantics and real coverage in the
+      fixtures rather than for headline count. `MSG_UPDATE_DATA` and
+      `MSG_UPDATE_CARD` use the bounded modern/compat query parsers documented in
+      [query-stream.md](architecture/query-stream.md).
 - [x] Semantic golden traces over the same fixtures, alongside the structural M1 traces,
       plus direct assertions that no packet is malformed, unknown or inconsistent and that
       the model's integrity invariants hold.

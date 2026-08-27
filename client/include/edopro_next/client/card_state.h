@@ -9,6 +9,7 @@
 #define EDOPRO_NEXT_CLIENT_CARD_STATE_H
 
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -58,10 +59,35 @@ struct CardState {
 	CardLocation location{};
 	CardPosition position{};
 
-	// Set only when the protocol has stated them (currently MSG_BATTLE).
-	// Absent means unknown, not zero.
+	// Set when the protocol has stated them through MSG_BATTLE or a query
+	// patch. Absent means unknown, not zero.
 	std::optional<std::int32_t> attack;
 	std::optional<std::int32_t> defense;
+	std::optional<std::int32_t> base_attack;
+	std::optional<std::int32_t> base_defense;
+	std::optional<std::uint32_t> alias;
+	std::optional<std::uint32_t> type;
+	std::optional<std::uint32_t> level;
+	std::optional<std::uint32_t> rank;
+	std::optional<std::uint32_t> attribute;
+	std::optional<std::uint64_t> race;
+	std::optional<std::uint32_t> reason;
+	std::optional<std::uint8_t> owner;
+	std::optional<std::uint32_t> status;
+	std::optional<bool> is_public;
+	std::optional<bool> is_hidden;
+	std::optional<std::uint32_t> lscale;
+	std::optional<std::uint32_t> rscale;
+	std::optional<std::uint32_t> link;
+	std::optional<std::uint32_t> link_marker;
+	std::optional<std::uint32_t> cover;
+	std::optional<CardLocation> reason_card;
+	std::optional<CardInstanceId> reason_card_instance;
+	std::optional<CardLocation> equip_target;
+	std::optional<CardInstanceId> equip_target_instance;
+	std::vector<CardLocation> targets;
+	std::vector<CardInstanceId> target_instances;
+	std::map<std::uint16_t, std::uint16_t> counters;
 
 	// Material attached to this card, in protocol order.
 	std::vector<CardInstanceId> materials;

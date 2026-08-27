@@ -30,7 +30,9 @@ std::vector<Packet> sample_stream() {
 						  .u16(3)
 						  .u16(0)
 						  .packet(proto::MSG_START));
-	packets.push_back(Packet{proto::MSG_UPDATE_DATA, {0, 1, 2}});
+	// One valid modern skipped query slot (player, zone, stream length, zero
+	// sized query record). Query packets are now decoded, not unsupported.
+	packets.push_back(Packet{proto::MSG_UPDATE_DATA, {0, proto::LOCATION_DECK, 2, 0, 0, 0, 0, 0}});
 	packets.push_back(PayloadBuilder().u8(0).packet(proto::MSG_NEW_TURN));
 	packets.push_back(PayloadBuilder().u16(proto::PHASE_DRAW).packet(proto::MSG_NEW_PHASE));
 	packets.push_back(PayloadBuilder()
@@ -127,7 +129,7 @@ EDOPRO_TEST(coverage_accounts_for_every_packet) {
 					packets.size());
 
 	// The three refusals are counted apart, and the trace says so in words.
-	EDOPRO_CHECK_EQ(coverage.unsupported, std::size_t{1});
+	EDOPRO_CHECK_EQ(coverage.unsupported, std::size_t{0});
 	EDOPRO_CHECK_EQ(coverage.unknown, std::size_t{1});
 	EDOPRO_CHECK_EQ(coverage.malformed, std::size_t{1});
 	EDOPRO_CHECK_EQ(coverage.inconsistent, std::size_t{0});

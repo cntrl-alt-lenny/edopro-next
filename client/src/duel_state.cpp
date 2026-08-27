@@ -1,6 +1,7 @@
 #include "edopro_next/client/duel_state.h"
 
 #include "edopro_next/client/protocol_constants.h"
+#include "edopro_next/client/query.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -425,6 +426,77 @@ DuelState::Error DuelState::set_combat_stats(CardInstanceId id, std::int32_t att
 		return "no such card instance " + to_string(id);
 	card->attack = attack;
 	card->defense = defense;
+	return std::nullopt;
+}
+
+DuelState::Error DuelState::apply_query_patch(CardInstanceId id, const CardQueryPatch& patch) {
+	auto* card = find(id);
+	if(card == nullptr)
+		return "no such card instance " + to_string(id);
+	if(patch.code) card->code = *patch.code;
+	if(patch.position) {
+		if(auto error = set_position(id, *patch.position))
+			return error;
+	}
+	if(patch.alias) card->alias = *patch.alias;
+	if(patch.type) card->type = *patch.type;
+	if(patch.level) card->level = *patch.level;
+	if(patch.rank) card->rank = *patch.rank;
+	if(patch.attribute) card->attribute = *patch.attribute;
+	if(patch.race) card->race = *patch.race;
+	if(patch.attack) card->attack = *patch.attack;
+	if(patch.defense) card->defense = *patch.defense;
+	if(patch.base_attack) card->base_attack = *patch.base_attack;
+	if(patch.base_defense) card->base_defense = *patch.base_defense;
+	if(patch.reason) card->reason = *patch.reason;
+	if(patch.owner) card->owner = *patch.owner;
+	if(patch.status) card->status = *patch.status;
+	if(patch.is_public) card->is_public = *patch.is_public;
+	if(patch.is_hidden) card->is_hidden = *patch.is_hidden;
+	if(patch.lscale) card->lscale = *patch.lscale;
+	if(patch.rscale) card->rscale = *patch.rscale;
+	if(patch.link) card->link = *patch.link;
+	if(patch.link_marker) card->link_marker = *patch.link_marker;
+	if(patch.cover) card->cover = *patch.cover;
+	if(patch.reason_card) {
+		card->reason_card = patch.reason_card->location;
+		card->reason_card_instance = at(patch.reason_card->location);
+	}
+	if(patch.equip_card) {
+		// ClientCard::UpdateInfo replaces equipTarget when a later query names
+		// another card. The inverse legacy set is not represented in CardState,
+		// so retain the latest queried relationship only.
+		card->equip_target = patch.equip_card->location;
+		card->equip_target_instance = at(patch.equip_card->location);
+	}
+	if(patch.target_cards) {
+		// UpdateInfo inserts into std::set cardTarget without clearing it.
+		// Keep the same incremental, duplicate-free meaning in the value model.
+		for(const auto& target : *patch.target_cards) {
+			if(std::find(card->targets.begin(), card->targets.end(), target.location) ==
+				card->targets.end()) {
+				card->targets.push_back(target.location);
+				card->target_instances.push_back(at(target.location));
+			}
+		}
+	}
+	if(patch.counters) {
+		// UpdateInfo assigns only the entries carried by the query; it does not
+		// clear counters absent from a later query.
+		for(const auto& counter : *patch.counters)
+			card->counters[counter.type] = counter.count;
+	}
+	if(patch.overlay_cards) {
+		if(patch.overlay_cards->size() > card->materials.size())
+			return "query names " + std::to_string(patch.overlay_cards->size()) +
+				" overlay cards but host has " + std::to_string(card->materials.size());
+		for(std::size_t i = 0; i < patch.overlay_cards->size(); ++i) {
+			auto* material = find(card->materials[i]);
+			if(material == nullptr)
+				return "query names missing material at index " + std::to_string(i);
+			material->code = (*patch.overlay_cards)[i];
+		}
+	}
 	return std::nullopt;
 }
 

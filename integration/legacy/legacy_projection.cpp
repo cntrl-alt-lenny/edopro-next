@@ -24,7 +24,6 @@ void append_card(const ygo::ClientCard* card, bool is_first, std::vector<Project
 	projected.location = CardLocation{
 		protocol_player_from_local(card->controler, is_first), zone, card->sequence, false, 0};
 	projected.material_count = static_cast<std::uint32_t>(card->overlayed.size());
-	output.push_back(std::move(projected));
 
 	for(std::size_t index = 0; index < card->overlayed.size(); ++index) {
 		const auto* material = card->overlayed[index];
@@ -36,6 +35,7 @@ void append_card(const ygo::ClientCard* card, bool is_first, std::vector<Project
 			static_cast<std::uint32_t>(index)};
 		output.push_back(std::move(material_projection));
 	}
+	output.push_back(std::move(projected));
 }
 
 template <typename CardVector>
