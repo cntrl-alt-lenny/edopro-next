@@ -47,22 +47,15 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	std::fprintf(stderr, "[debug] OpenReplay succeeded: %zu packets\n", replay.packets_stream.size());
 	std::fflush(stderr);
 
-	auto game = std::make_unique<ygo::Game>();
-	std::fprintf(stderr, "[debug 3] Game allocated\n");
-	std::fflush(stderr);
-	ygo::mainGame = game.get();
-	auto dataManager = std::make_unique<ygo::DataManager>();
-	std::fprintf(stderr, "[debug 4] DataManager allocated\n");
-	std::fflush(stderr);
-	ygo::gDataManager = dataManager.get();
 	auto config = std::make_unique<ygo::GameConfig>();
-	std::fprintf(stderr, "[debug 5] GameConfig allocated\n");
-	std::fflush(stderr);
+	config->imageLoadThreads = 0;
 	ygo::gGameConfig = config.get();
+	auto dataManager = std::make_unique<ygo::DataManager>();
+	ygo::gDataManager = dataManager.get();
 	auto soundManager = std::make_unique<ygo::SoundManager>(0.0, 0.0, false, false, ygo::SoundManager::BACKEND::NONE);
-	std::fprintf(stderr, "[debug 6] SoundManager allocated\n");
-	std::fflush(stderr);
 	ygo::gSoundManager = soundManager.get();
+	auto game = std::make_unique<ygo::Game>();
+	ygo::mainGame = game.get();
 
 	const auto& replay_header = replay.pheader;
 	ygo::mainGame->dInfo.isReplay = true;
