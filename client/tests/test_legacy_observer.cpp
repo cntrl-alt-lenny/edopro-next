@@ -105,7 +105,7 @@ EDOPRO_TEST(life_points_and_turn_are_live_equivalence_fields) {
 	EDOPRO_CHECK_EQ(mismatch.mismatches.size(), 2u);
 }
 
-EDOPRO_TEST(query_mutated_code_position_and_material_code_are_outside_live_scope) {
+EDOPRO_TEST(query_fields_compare_when_both_projections_have_them) {
 	DuelState semantic;
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
@@ -122,10 +122,12 @@ EDOPRO_TEST(query_mutated_code_position_and_material_code_are_outside_live_scope
 	LegacySnapshot legacy = snapshot_for_start(0, 0);
 	legacy.cards.push_back({{0, Zone::MonsterZone, 0, false, 0}, 1});
 	legacy.cards.push_back({{0, Zone::MonsterZone, 0, true, 0}, 0});
-	// ClientCard::UpdateInfo may change legacy code, position, and material
-	// codes through the unsupported query stream. ProjectedCard deliberately
-	// cannot carry those values, so these differences remain equivalent here.
+	legacy.cards[0].code = CardCode{73915052};
+	legacy.cards[0].position = CardPosition{proto::POS_FACEUP_ATTACK};
+	legacy.cards[0].material_codes.push_back(CardCode{99});
 	EDOPRO_CHECK(compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD).equivalent());
+	legacy.cards[0].code = CardCode{123};
+	EDOPRO_CHECK(!compare(semantic, legacy, 86, proto::MSG_UPDATE_CARD).equivalent());
 }
 
 EDOPRO_TEST(structural_mismatch_diagnostics_are_deterministic) {
@@ -153,18 +155,18 @@ EDOPRO_TEST(structural_mismatch_diagnostics_are_deterministic) {
 	EDOPRO_CHECK(first.mismatches.front().format().find("MZONE[p0:2]") != std::string::npos);
 }
 
-EDOPRO_TEST(observer_session_resets_and_ignores_unsupported_messages) {
+EDOPRO_TEST(observer_session_resets_and_accepts_skipped_query_records) {
 	ObserverSession session;
 	EDOPRO_CHECK_EQ(session.observe(start_packet(1, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
 	const auto first_session = session.session_number();
-	const auto unsupported = session.observe(
-		Packet{proto::MSG_UPDATE_DATA, {0, 1, 2, 3}}, ProtocolVariant{});
-	EDOPRO_CHECK_EQ(unsupported.status, DecodeStatus::UnsupportedMessage);
+	const auto skipped = session.observe(
+		Packet{proto::MSG_UPDATE_DATA, {0, proto::LOCATION_DECK, 2, 0, 0, 0, 0, 0}}, ProtocolVariant{});
+	EDOPRO_CHECK_EQ(skipped.status, DecodeStatus::Decoded);
 	EDOPRO_CHECK(session.comparison_available());
-	const auto unsupported_card = session.observe(
-		Packet{proto::MSG_UPDATE_CARD, {0, 1, 2, 3}}, ProtocolVariant{});
-	EDOPRO_CHECK_EQ(unsupported_card.status, DecodeStatus::UnsupportedMessage);
+	const auto skipped_card = session.observe(
+		Packet{proto::MSG_UPDATE_CARD, {0, proto::LOCATION_MZONE, 0, 0, 0}}, ProtocolVariant{});
+	EDOPRO_CHECK_EQ(skipped_card.status, DecodeStatus::Decoded);
 	EDOPRO_CHECK(session.comparison_available());
 	EDOPRO_CHECK_EQ(session.session_number(), first_session);
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
@@ -187,4 +189,18 @@ EDOPRO_TEST(unsupported_non_query_packet_conservatively_taints_until_start) {
 	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
 					DecodeStatus::Decoded);
 	EDOPRO_CHECK(session.comparison_available());
+}
+
+EDOPRO_TEST(partially_understood_query_taints_once_but_decoding_stays_observational) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
+		DecodeStatus::Decoded);
+	// Modern unknown query fields are refused, but the state before the packet
+	// remains unchanged and the live observer only disables later comparison.
+	const auto packet = Packet{proto::MSG_UPDATE_DATA,
+		{0, proto::LOCATION_DECK, 6, 0, 0, 0, 4, 0, 0, 0, 0, 0x40}};
+	const auto result = session.observe(packet, ProtocolVariant{});
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::UnsupportedMessage);
+	EDOPRO_CHECK(!session.comparison_available());
+	EDOPRO_CHECK_EQ(session.state().cards().size(), 0u);
 }

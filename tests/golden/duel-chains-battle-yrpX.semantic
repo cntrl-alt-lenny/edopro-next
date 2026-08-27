@@ -4,15 +4,47 @@ protocol: modern
 packets: 990
 
 ## coverage
-decoded: 138
-unsupported: 852
+decoded: 967
+unsupported: 23
 unknown: 0
 malformed: 0
 inconsistent: 0
+query_packets: 829
+query_decoded: 829
+query_unsupported: 0
+query_malformed: 0
+query_inconsistent: 0
+query_entries: 6153
+query_skipped: 4566
+query_fields:
+  QUERY_CODE 1587
+  QUERY_POSITION 1587
+  QUERY_ALIAS 1587
+  QUERY_TYPE 1587
+  QUERY_LEVEL 1587
+  QUERY_RANK 1587
+  QUERY_ATTRIBUTE 1587
+  QUERY_RACE 1587
+  QUERY_ATTACK 1587
+  QUERY_DEFENSE 1587
+  QUERY_BASE_ATTACK 1587
+  QUERY_BASE_DEFENSE 1587
+  QUERY_REASON 1587
+  QUERY_STATUS 1587
+  QUERY_IS_PUBLIC 1587
+  QUERY_LSCALE 828
+  QUERY_RSCALE 798
+  QUERY_LINK 410
+  QUERY_IS_HIDDEN 1557
+  QUERY_COVER 1087
+  QUERY_END 1587
+unknown_query_fields: 0
 
 ### decoded message types
   4 MSG_START                1
   5 MSG_WIN                  1
+  6 MSG_UPDATE_DATA          799
+  7 MSG_UPDATE_CARD          30
  32 MSG_SHUFFLE_DECK         3
  33 MSG_SHUFFLE_HAND         3
  40 MSG_NEW_TURN             5
@@ -37,8 +69,6 @@ inconsistent: 0
 114 MSG_DAMAGE_STEP_END      2
 
 ### known but not implemented
-  6 MSG_UPDATE_DATA          799
-  7 MSG_UPDATE_CARD          30
  31 MSG_CONFIRM_CARDS        2
  83 MSG_BECOME_TARGET        2
 160 MSG_CARD_HINT            17
@@ -51,30 +81,18 @@ inconsistent: 0
 (none)
 
 ## semantic events
-count: 172
+count: 251
     0 DuelStarted player_type=0 lp=[8000,8000] deck=[40,40] extra=[15,15]
-    5 CardIdentityRevealed instance=40 code=49140998
-    5 CardIdentityRevealed instance=39 code=504700123
-    5 CardIdentityRevealed instance=38 code=504700054
-    5 CardIdentityRevealed instance=37 code=14087893
-    5 CardIdentityRevealed instance=36 code=504700054
     5 CardsDrawn player=p0 cards=[40,39,38,37,36]
-    7 CardIdentityRevealed instance=95 code=89111398
-    7 CardIdentityRevealed instance=94 code=504700123
-    7 CardIdentityRevealed instance=93 code=46411259
-    7 CardIdentityRevealed instance=92 code=504700087
-    7 CardIdentityRevealed instance=91 code=504700178
     7 CardsDrawn player=p1 cards=[95,94,93,92,91]
    13 TurnStarted player=p0 turn=1
    14 PhaseChanged DRAW
-   21 CardIdentityRevealed instance=35 code=70828912
    21 CardsDrawn player=p0 cards=[35]
    35 PhaseChanged STANDBY
    46 PhaseChanged MAIN1
    59 ChainLinkAdded link=1 instance=38 code=504700054 from=HAND[p0:2] trigger=HAND[p0:2] desc=529216363823104
    60 CardMoved instance=38 HAND[p0:2] -> GRAVE[p0:0] reason=COST|DISCARD
    77 ChainLinkResolving link=1
-   78 CardIdentityRevealed instance=15 code=504700054
    78 CardMoved instance=15 DECK[p0:14] -> HAND[p0:5] reason=EFFECT
    82 HandShuffled player=p0 cards=6
    82 CardIdentityRevealed instance=40 code=70828912
@@ -82,6 +100,39 @@ count: 172
    82 CardIdentityRevealed instance=37 code=504700123
    82 CardIdentityRevealed instance=35 code=14087893
    85 DeckShuffled player=p0 cards=33
+   85 CardIdentityConcealed instance=1
+   85 CardIdentityConcealed instance=2
+   85 CardIdentityConcealed instance=3
+   85 CardIdentityConcealed instance=4
+   85 CardIdentityConcealed instance=5
+   85 CardIdentityConcealed instance=6
+   85 CardIdentityConcealed instance=7
+   85 CardIdentityConcealed instance=8
+   85 CardIdentityConcealed instance=9
+   85 CardIdentityConcealed instance=10
+   85 CardIdentityConcealed instance=11
+   85 CardIdentityConcealed instance=12
+   85 CardIdentityConcealed instance=13
+   85 CardIdentityConcealed instance=14
+   85 CardIdentityConcealed instance=16
+   85 CardIdentityConcealed instance=17
+   85 CardIdentityConcealed instance=18
+   85 CardIdentityConcealed instance=19
+   85 CardIdentityConcealed instance=20
+   85 CardIdentityConcealed instance=21
+   85 CardIdentityConcealed instance=22
+   85 CardIdentityConcealed instance=23
+   85 CardIdentityConcealed instance=24
+   85 CardIdentityConcealed instance=25
+   85 CardIdentityConcealed instance=26
+   85 CardIdentityConcealed instance=27
+   85 CardIdentityConcealed instance=28
+   85 CardIdentityConcealed instance=29
+   85 CardIdentityConcealed instance=30
+   85 CardIdentityConcealed instance=31
+   85 CardIdentityConcealed instance=32
+   85 CardIdentityConcealed instance=33
+   85 CardIdentityConcealed instance=34
    86 ChainLinkResolved link=1
    87 ChainEnded links=1
   111 CardMoved instance=37 HAND[p0:2] -> SZONE[p0:2] reason=RULE|DRAW
@@ -89,7 +140,6 @@ count: 172
   132 PhaseChanged END
   143 TurnStarted player=p1 turn=2
   144 PhaseChanged DRAW
-  151 CardIdentityRevealed instance=90 code=45986603
   151 CardsDrawn player=p1 cards=[90]
   169 PhaseChanged STANDBY
   184 PhaseChanged MAIN1
@@ -123,14 +173,12 @@ count: 172
   417 PhaseChanged END
   429 TurnStarted player=p0 turn=3
   430 PhaseChanged DRAW
-  437 CardIdentityRevealed instance=34 code=38699854
   437 CardsDrawn player=p0 cards=[34]
   451 PhaseChanged STANDBY
   462 PhaseChanged MAIN1
   479 PhaseChanged END
   494 TurnStarted player=p1 turn=4
   495 PhaseChanged DRAW
-  502 CardIdentityRevealed instance=89 code=5318639
   502 CardsDrawn player=p1 cards=[89]
   516 PhaseChanged STANDBY
   527 PhaseChanged MAIN1
@@ -146,7 +194,6 @@ count: 172
   587 CardRemoved instance=113 from=MZONE[p0:2] reason=DESTROY|EFFECT
   589 ChainLinkResolved link=2
   590 ChainLinkResolving link=1
-  591 CardIdentityRevealed instance=58 code=511000818
   591 CardMoved instance=58 DECK[p1:2] -> HAND[p1:5] reason=EFFECT
   595 HandShuffled player=p1 cards=6
   595 CardIdentityRevealed instance=94 code=504700087
@@ -154,6 +201,38 @@ count: 172
   595 CardIdentityRevealed instance=89 code=511000818
   595 CardIdentityRevealed instance=58 code=504700123
   598 DeckShuffled player=p1 cards=32
+  598 CardIdentityConcealed instance=56
+  598 CardIdentityConcealed instance=57
+  598 CardIdentityConcealed instance=59
+  598 CardIdentityConcealed instance=60
+  598 CardIdentityConcealed instance=61
+  598 CardIdentityConcealed instance=62
+  598 CardIdentityConcealed instance=63
+  598 CardIdentityConcealed instance=64
+  598 CardIdentityConcealed instance=65
+  598 CardIdentityConcealed instance=66
+  598 CardIdentityConcealed instance=67
+  598 CardIdentityConcealed instance=68
+  598 CardIdentityConcealed instance=69
+  598 CardIdentityConcealed instance=70
+  598 CardIdentityConcealed instance=71
+  598 CardIdentityConcealed instance=72
+  598 CardIdentityConcealed instance=73
+  598 CardIdentityConcealed instance=74
+  598 CardIdentityConcealed instance=75
+  598 CardIdentityConcealed instance=76
+  598 CardIdentityConcealed instance=77
+  598 CardIdentityConcealed instance=78
+  598 CardIdentityConcealed instance=79
+  598 CardIdentityConcealed instance=80
+  598 CardIdentityConcealed instance=81
+  598 CardIdentityConcealed instance=82
+  598 CardIdentityConcealed instance=83
+  598 CardIdentityConcealed instance=84
+  598 CardIdentityConcealed instance=85
+  598 CardIdentityConcealed instance=86
+  598 CardIdentityConcealed instance=87
+  598 CardIdentityConcealed instance=88
   599 ChainLinkResolved link=1
   600 ChainEnded links=2
   628 PhaseChanged BATTLE_START
@@ -180,7 +259,6 @@ count: 172
   785 ChainEnded links=1
   807 TurnStarted player=p0 turn=5
   808 PhaseChanged DRAW
-  815 CardIdentityRevealed instance=33 code=22589918
   815 CardsDrawn player=p0 cards=[33]
   829 PhaseChanged STANDBY
   840 PhaseChanged MAIN1
@@ -195,6 +273,37 @@ count: 172
   895 CardMoved instance=35 HAND[p0:0] -> DECK[p0:34] reason=EFFECT
   897 CardMoved instance=15 HAND[p0:0] -> DECK[p0:35] reason=EFFECT
   899 DeckShuffled player=p0 cards=36
+  899 CardIdentityConcealed instance=1
+  899 CardIdentityConcealed instance=2
+  899 CardIdentityConcealed instance=3
+  899 CardIdentityConcealed instance=4
+  899 CardIdentityConcealed instance=5
+  899 CardIdentityConcealed instance=6
+  899 CardIdentityConcealed instance=7
+  899 CardIdentityConcealed instance=8
+  899 CardIdentityConcealed instance=9
+  899 CardIdentityConcealed instance=10
+  899 CardIdentityConcealed instance=11
+  899 CardIdentityConcealed instance=12
+  899 CardIdentityConcealed instance=13
+  899 CardIdentityConcealed instance=14
+  899 CardIdentityConcealed instance=16
+  899 CardIdentityConcealed instance=17
+  899 CardIdentityConcealed instance=18
+  899 CardIdentityConcealed instance=19
+  899 CardIdentityConcealed instance=20
+  899 CardIdentityConcealed instance=21
+  899 CardIdentityConcealed instance=22
+  899 CardIdentityConcealed instance=23
+  899 CardIdentityConcealed instance=24
+  899 CardIdentityConcealed instance=25
+  899 CardIdentityConcealed instance=26
+  899 CardIdentityConcealed instance=27
+  899 CardIdentityConcealed instance=28
+  899 CardIdentityConcealed instance=29
+  899 CardIdentityConcealed instance=30
+  899 CardIdentityConcealed instance=31
+  899 CardIdentityConcealed instance=32
   899 CardIdentityConcealed instance=40
   899 CardIdentityConcealed instance=39
   899 CardIdentityConcealed instance=36
@@ -238,126 +347,126 @@ invariants: ok
 
 ### zones
 p0 DECK 32
-  [0] instance=1 code=? pos=FACEDOWN_DEFENSE
-  [1] instance=2 code=? pos=FACEDOWN_DEFENSE
-  [2] instance=3 code=? pos=FACEDOWN_DEFENSE
-  [3] instance=4 code=? pos=FACEDOWN_DEFENSE
-  [4] instance=5 code=? pos=FACEDOWN_DEFENSE
-  [5] instance=6 code=? pos=FACEDOWN_DEFENSE
-  [6] instance=7 code=? pos=FACEDOWN_DEFENSE
-  [7] instance=8 code=? pos=FACEDOWN_DEFENSE
-  [8] instance=9 code=? pos=FACEDOWN_DEFENSE
-  [9] instance=10 code=? pos=FACEDOWN_DEFENSE
-  [10] instance=11 code=? pos=FACEDOWN_DEFENSE
-  [11] instance=12 code=? pos=FACEDOWN_DEFENSE
-  [12] instance=13 code=? pos=FACEDOWN_DEFENSE
-  [13] instance=14 code=? pos=FACEDOWN_DEFENSE
-  [14] instance=16 code=? pos=FACEDOWN_DEFENSE
-  [15] instance=17 code=? pos=FACEDOWN_DEFENSE
-  [16] instance=18 code=? pos=FACEDOWN_DEFENSE
-  [17] instance=19 code=? pos=FACEDOWN_DEFENSE
-  [18] instance=20 code=? pos=FACEDOWN_DEFENSE
-  [19] instance=21 code=? pos=FACEDOWN_DEFENSE
-  [20] instance=22 code=? pos=FACEDOWN_DEFENSE
-  [21] instance=23 code=? pos=FACEDOWN_DEFENSE
-  [22] instance=24 code=? pos=FACEDOWN_DEFENSE
-  [23] instance=25 code=? pos=FACEDOWN_DEFENSE
-  [24] instance=26 code=? pos=FACEDOWN_DEFENSE
-  [25] instance=27 code=? pos=FACEDOWN_DEFENSE
-  [26] instance=28 code=? pos=FACEDOWN_DEFENSE
-  [27] instance=29 code=? pos=FACEDOWN_DEFENSE
-  [28] instance=30 code=? pos=FACEDOWN_DEFENSE
-  [29] instance=31 code=? pos=FACEDOWN_DEFENSE
-  [30] instance=32 code=? pos=FACEDOWN_DEFENSE
-  [31] instance=37 code=504700123 pos=FACEDOWN
+  [0] instance=1 code=70368879 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [1] instance=2 code=504700054 pos=FACEDOWN atk=1600 def=1500
+  [2] instance=3 code=43434803 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [3] instance=4 code=14087893 pos=FACEDOWN atk=0 def=0
+  [4] instance=5 code=504700188 pos=FACEDOWN_DEFENSE atk=900 def=900
+  [5] instance=6 code=3136426 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [6] instance=7 code=19613556 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [7] instance=8 code=504700123 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [8] instance=9 code=70828912 pos=FACEDOWN atk=0 def=0
+  [9] instance=10 code=33508719 pos=FACEDOWN_DEFENSE atk=700 def=600
+  [10] instance=11 code=22589918 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [11] instance=12 code=72302403 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [12] instance=13 code=14087893 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [13] instance=14 code=14087893 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [14] instance=16 code=504700054 pos=FACEDOWN atk=1600 def=1500
+  [15] instance=17 code=29228529 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [16] instance=18 code=49398568 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [17] instance=19 code=38699854 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [18] instance=20 code=38699854 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [19] instance=21 code=70368879 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [20] instance=22 code=31036355 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [21] instance=23 code=504700178 pos=FACEDOWN_DEFENSE atk=1000 def=600
+  [22] instance=24 code=55144522 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [23] instance=25 code=43434803 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [24] instance=26 code=22589918 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [25] instance=27 code=3136426 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [26] instance=28 code=504700123 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [27] instance=29 code=42703248 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [28] instance=30 code=49140998 pos=FACEDOWN atk=0 def=0
+  [29] instance=31 code=72892473 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [30] instance=32 code=42703248 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [31] instance=37 code=504700123 pos=FACEDOWN atk=0 def=0
 p0 HAND 3
-  [0] instance=15 code=43434803 pos=FACEDOWN
-  [1] instance=36 code=29228529 pos=FACEDOWN
-  [2] instance=39 code=29228529 pos=FACEDOWN
+  [0] instance=15 code=43434803 pos=FACEDOWN atk=0 def=0
+  [1] instance=36 code=29228529 pos=FACEDOWN atk=0 def=0
+  [2] instance=39 code=29228529 pos=FACEDOWN atk=0 def=0
 p0 MZONE 0
 p0 SZONE 0
 p0 GRAVE 5
-  [0] instance=38 code=504700054 pos=FACEUP
-  [1] instance=33 code=22589918 pos=FACEUP
-  [2] instance=35 code=42703248 pos=FACEUP
-  [3] instance=34 code=38699854 pos=FACEUP
-  [4] instance=40 code=49140998 pos=FACEUP
+  [0] instance=38 code=504700054 pos=FACEUP atk=1600 def=1500
+  [1] instance=33 code=22589918 pos=FACEUP atk=0 def=0
+  [2] instance=35 code=42703248 pos=FACEUP atk=0 def=0
+  [3] instance=34 code=38699854 pos=FACEUP atk=0 def=0
+  [4] instance=40 code=49140998 pos=FACEUP atk=0 def=0
 p0 REMOVED 0
 p0 EXTRA 15
-  [0] instance=41 code=? pos=FACEDOWN_DEFENSE
-  [1] instance=42 code=? pos=FACEDOWN_DEFENSE
-  [2] instance=43 code=? pos=FACEDOWN_DEFENSE
-  [3] instance=44 code=? pos=FACEDOWN_DEFENSE
-  [4] instance=45 code=? pos=FACEDOWN_DEFENSE
-  [5] instance=46 code=? pos=FACEDOWN_DEFENSE
-  [6] instance=47 code=? pos=FACEDOWN_DEFENSE
-  [7] instance=48 code=? pos=FACEDOWN_DEFENSE
-  [8] instance=49 code=? pos=FACEDOWN_DEFENSE
-  [9] instance=50 code=? pos=FACEDOWN_DEFENSE
-  [10] instance=51 code=? pos=FACEDOWN_DEFENSE
-  [11] instance=52 code=? pos=FACEDOWN_DEFENSE
-  [12] instance=53 code=? pos=FACEDOWN_DEFENSE
-  [13] instance=54 code=? pos=FACEDOWN_DEFENSE
-  [14] instance=55 code=? pos=FACEDOWN_DEFENSE
+  [0] instance=41 code=27134689 pos=FACEDOWN_DEFENSE atk=4200 def=3700
+  [1] instance=42 code=11901678 pos=FACEDOWN_DEFENSE atk=3200 def=2500
+  [2] instance=43 code=66889139 pos=FACEDOWN_DEFENSE atk=2600 def=2100
+  [3] instance=44 code=66889139 pos=FACEDOWN_DEFENSE atk=2600 def=2100
+  [4] instance=45 code=66889139 pos=FACEDOWN_DEFENSE atk=2600 def=2100
+  [5] instance=46 code=66235877 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [6] instance=47 code=80071763 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [7] instance=48 code=28593363 pos=FACEDOWN_DEFENSE atk=1900 def=1600
+  [8] instance=49 code=51828629 pos=FACEDOWN_DEFENSE atk=1850 def=1500
+  [9] instance=50 code=85684223 pos=FACEDOWN_DEFENSE atk=800 def=600
+  [10] instance=51 code=17881964 pos=FACEDOWN_DEFENSE atk=1500 def=1250
+  [11] instance=52 code=54541900 pos=FACEDOWN_DEFENSE atk=1500 def=1200
+  [12] instance=53 code=70681994 pos=FACEDOWN_DEFENSE atk=1200 def=900
+  [13] instance=54 code=58528964 pos=FACEDOWN_DEFENSE atk=1000 def=800
+  [14] instance=55 code=504700102 pos=FACEDOWN_DEFENSE atk=0 def=0
 p1 DECK 32
-  [0] instance=56 code=? pos=FACEDOWN_DEFENSE
-  [1] instance=57 code=? pos=FACEDOWN_DEFENSE
-  [2] instance=59 code=? pos=FACEDOWN_DEFENSE
-  [3] instance=60 code=? pos=FACEDOWN_DEFENSE
-  [4] instance=61 code=? pos=FACEDOWN_DEFENSE
-  [5] instance=62 code=? pos=FACEDOWN_DEFENSE
-  [6] instance=63 code=? pos=FACEDOWN_DEFENSE
-  [7] instance=64 code=? pos=FACEDOWN_DEFENSE
-  [8] instance=65 code=? pos=FACEDOWN_DEFENSE
-  [9] instance=66 code=? pos=FACEDOWN_DEFENSE
-  [10] instance=67 code=? pos=FACEDOWN_DEFENSE
-  [11] instance=68 code=? pos=FACEDOWN_DEFENSE
-  [12] instance=69 code=? pos=FACEDOWN_DEFENSE
-  [13] instance=70 code=? pos=FACEDOWN_DEFENSE
-  [14] instance=71 code=? pos=FACEDOWN_DEFENSE
-  [15] instance=72 code=? pos=FACEDOWN_DEFENSE
-  [16] instance=73 code=? pos=FACEDOWN_DEFENSE
-  [17] instance=74 code=? pos=FACEDOWN_DEFENSE
-  [18] instance=75 code=? pos=FACEDOWN_DEFENSE
-  [19] instance=76 code=? pos=FACEDOWN_DEFENSE
-  [20] instance=77 code=? pos=FACEDOWN_DEFENSE
-  [21] instance=78 code=? pos=FACEDOWN_DEFENSE
-  [22] instance=79 code=? pos=FACEDOWN_DEFENSE
-  [23] instance=80 code=? pos=FACEDOWN_DEFENSE
-  [24] instance=81 code=? pos=FACEDOWN_DEFENSE
-  [25] instance=82 code=? pos=FACEDOWN_DEFENSE
-  [26] instance=83 code=? pos=FACEDOWN_DEFENSE
-  [27] instance=84 code=? pos=FACEDOWN_DEFENSE
-  [28] instance=85 code=? pos=FACEDOWN_DEFENSE
-  [29] instance=86 code=? pos=FACEDOWN_DEFENSE
-  [30] instance=87 code=? pos=FACEDOWN_DEFENSE
-  [31] instance=88 code=? pos=FACEDOWN_DEFENSE
+  [0] instance=56 code=44763025 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [1] instance=57 code=504700123 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [2] instance=59 code=31036355 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [3] instance=60 code=511002995 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [4] instance=61 code=71413901 pos=FACEDOWN_DEFENSE atk=1600 def=1000
+  [5] instance=62 code=504700135 pos=FACEDOWN_DEFENSE atk=1200 def=1400
+  [6] instance=63 code=19613556 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [7] instance=64 code=2204140 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [8] instance=65 code=511002995 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [9] instance=66 code=53582587 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [10] instance=67 code=46411259 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [11] instance=68 code=504700077 pos=FACEDOWN_DEFENSE atk=900 def=0
+  [12] instance=69 code=74131780 pos=FACEDOWN_DEFENSE atk=1000 def=1000
+  [13] instance=70 code=504700135 pos=FACEDOWN_DEFENSE atk=1200 def=1400
+  [14] instance=71 code=57281778 pos=FACEDOWN_DEFENSE atk=2400 def=2000
+  [15] instance=72 code=504700116 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [16] instance=73 code=36361633 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [17] instance=74 code=44095762 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [18] instance=75 code=511000824 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [19] instance=76 code=504700116 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [20] instance=77 code=31036355 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [21] instance=78 code=504700038 pos=FACEDOWN_DEFENSE atk=300 def=200
+  [22] instance=79 code=33184167 pos=FACEDOWN_DEFENSE atk=1600 def=1000
+  [23] instance=80 code=79571449 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [24] instance=81 code=504700087 pos=FACEDOWN_DEFENSE atk=2000 def=1500
+  [25] instance=82 code=7572887 pos=FACEDOWN_DEFENSE atk=1500 def=1600
+  [26] instance=83 code=36361633 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [27] instance=84 code=36361633 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [28] instance=85 code=70828912 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [29] instance=86 code=504700135 pos=FACEDOWN_DEFENSE atk=1200 def=1400
+  [30] instance=87 code=55144522 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [31] instance=88 code=504700172 pos=FACEDOWN_DEFENSE atk=1400 def=1450
 p1 HAND 6
-  [0] instance=94 code=89111398 pos=FACEDOWN_DEFENSE
-  [1] instance=93 code=504700123 pos=FACEDOWN_DEFENSE
-  [2] instance=90 code=511000818 pos=FACEDOWN_DEFENSE
-  [3] instance=89 code=46411259 pos=FACEDOWN_DEFENSE
-  [4] instance=58 code=45986603 pos=FACEDOWN
-  [5] instance=95 code=504700087 pos=FACEDOWN atk=2200 def=1800
+  [0] instance=94 code=89111398 pos=FACEDOWN atk=2200 def=1800
+  [1] instance=93 code=504700123 pos=FACEDOWN atk=0 def=0
+  [2] instance=90 code=511000818 pos=FACEDOWN atk=300 def=250
+  [3] instance=89 code=46411259 pos=FACEDOWN atk=0 def=0
+  [4] instance=58 code=45986603 pos=FACEDOWN atk=0 def=0
+  [5] instance=95 code=504700087 pos=FACEDOWN atk=2000 def=1500
 p1 MZONE 0
 p1 SZONE 0
 p1 GRAVE 2
   [0] instance=91 code=504700178 pos=FACEUP atk=1000 def=600
-  [1] instance=92 code=5318639 pos=FACEUP
+  [1] instance=92 code=5318639 pos=FACEUP atk=0 def=0
 p1 REMOVED 0
 p1 EXTRA 15
-  [0] instance=96 code=? pos=FACEDOWN_DEFENSE
-  [1] instance=97 code=? pos=FACEDOWN_DEFENSE
-  [2] instance=98 code=? pos=FACEDOWN_DEFENSE
-  [3] instance=99 code=? pos=FACEDOWN_DEFENSE
-  [4] instance=100 code=? pos=FACEDOWN_DEFENSE
-  [5] instance=101 code=? pos=FACEDOWN_DEFENSE
-  [6] instance=102 code=? pos=FACEDOWN_DEFENSE
-  [7] instance=103 code=? pos=FACEDOWN_DEFENSE
-  [8] instance=104 code=? pos=FACEDOWN_DEFENSE
-  [9] instance=105 code=? pos=FACEDOWN_DEFENSE
-  [10] instance=106 code=? pos=FACEDOWN_DEFENSE
-  [11] instance=107 code=? pos=FACEDOWN_DEFENSE
-  [12] instance=108 code=? pos=FACEDOWN_DEFENSE
-  [13] instance=109 code=? pos=FACEDOWN_DEFENSE
-  [14] instance=110 code=? pos=FACEDOWN_DEFENSE
+  [0] instance=96 code=87751584 pos=FACEDOWN_DEFENSE atk=2600 def=1200
+  [1] instance=97 code=86099788 pos=FACEDOWN_DEFENSE atk=2350 def=2300
+  [2] instance=98 code=86805855 pos=FACEDOWN_DEFENSE atk=2200 def=1500
+  [3] instance=99 code=86805855 pos=FACEDOWN_DEFENSE atk=2200 def=1500
+  [4] instance=100 code=49868263 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [5] instance=101 code=49868263 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [6] instance=102 code=66235877 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [7] instance=103 code=66235877 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [8] instance=104 code=80071763 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [9] instance=105 code=80071763 pos=FACEDOWN_DEFENSE atk=2000 def=1200
+  [10] instance=106 code=85684223 pos=FACEDOWN_DEFENSE atk=800 def=600
+  [11] instance=107 code=17881964 pos=FACEDOWN_DEFENSE atk=1500 def=1250
+  [12] instance=108 code=70681994 pos=FACEDOWN_DEFENSE atk=1200 def=900
+  [13] instance=109 code=504700102 pos=FACEDOWN_DEFENSE atk=0 def=0
+  [14] instance=110 code=504700102 pos=FACEDOWN_DEFENSE atk=0 def=0

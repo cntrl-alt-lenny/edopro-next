@@ -30,6 +30,40 @@ std::string message_label(std::uint8_t id) {
 	return std::string(name);
 }
 
+std::string query_field_label(std::uint32_t id) {
+	using namespace protocol;
+	switch(id) {
+	case QUERY_CODE: return "QUERY_CODE";
+	case QUERY_POSITION: return "QUERY_POSITION";
+	case QUERY_ALIAS: return "QUERY_ALIAS";
+	case QUERY_TYPE: return "QUERY_TYPE";
+	case QUERY_LEVEL: return "QUERY_LEVEL";
+	case QUERY_RANK: return "QUERY_RANK";
+	case QUERY_ATTRIBUTE: return "QUERY_ATTRIBUTE";
+	case QUERY_RACE: return "QUERY_RACE";
+	case QUERY_ATTACK: return "QUERY_ATTACK";
+	case QUERY_DEFENSE: return "QUERY_DEFENSE";
+	case QUERY_BASE_ATTACK: return "QUERY_BASE_ATTACK";
+	case QUERY_BASE_DEFENSE: return "QUERY_BASE_DEFENSE";
+	case QUERY_REASON: return "QUERY_REASON";
+	case QUERY_REASON_CARD: return "QUERY_REASON_CARD";
+	case QUERY_EQUIP_CARD: return "QUERY_EQUIP_CARD";
+	case QUERY_TARGET_CARD: return "QUERY_TARGET_CARD";
+	case QUERY_OVERLAY_CARD: return "QUERY_OVERLAY_CARD";
+	case QUERY_COUNTERS: return "QUERY_COUNTERS";
+	case QUERY_OWNER: return "QUERY_OWNER";
+	case QUERY_STATUS: return "QUERY_STATUS";
+	case QUERY_IS_PUBLIC: return "QUERY_IS_PUBLIC";
+	case QUERY_LSCALE: return "QUERY_LSCALE";
+	case QUERY_RSCALE: return "QUERY_RSCALE";
+	case QUERY_LINK: return "QUERY_LINK";
+	case QUERY_IS_HIDDEN: return "QUERY_IS_HIDDEN";
+	case QUERY_COVER: return "QUERY_COVER";
+	case QUERY_END: return "QUERY_END";
+	default: return "QUERY_0x" + std::to_string(id);
+	}
+}
+
 // One "<id> <name> <count>" line per message type, ascending by id.
 void write_message_table(std::vector<std::string>& out,
 						 const std::map<std::uint8_t, std::size_t>& counts) {
@@ -103,6 +137,26 @@ TraceResult render_semantic_trace(const std::vector<Packet>& packets,
 
 	for(std::size_t index = 0; index < packets.size(); ++index) {
 		const auto outcome = decoder.decode(packets[index], result.state);
+		const bool is_query = packets[index].message == protocol::MSG_UPDATE_DATA ||
+			packets[index].message == protocol::MSG_UPDATE_CARD;
+		if(is_query) {
+			++result.coverage.query_packets;
+			switch(outcome.status) {
+			case DecodeStatus::Decoded: ++result.coverage.query_decoded; break;
+			case DecodeStatus::UnsupportedMessage: ++result.coverage.query_unsupported; break;
+			case DecodeStatus::Malformed: ++result.coverage.query_malformed; break;
+			case DecodeStatus::Inconsistent: ++result.coverage.query_inconsistent; break;
+			default: break;
+			}
+		}
+		if(outcome.query_coverage) {
+			result.coverage.query_entries += outcome.query_coverage->entries;
+			result.coverage.query_skipped += outcome.query_coverage->skipped;
+			for(const auto& [field, count] : outcome.query_coverage->fields)
+				result.coverage.query_fields[field] += count;
+			result.coverage.unknown_query_fields.insert(result.coverage.unknown_query_fields.end(),
+				outcome.query_coverage->unknown_fields.begin(), outcome.query_coverage->unknown_fields.end());
+		}
 		++result.coverage.by_message[packets[index].message][outcome.status];
 		switch(outcome.status) {
 		case DecodeStatus::Decoded:
@@ -149,6 +203,17 @@ TraceResult render_semantic_trace(const std::vector<Packet>& packets,
 	add("unknown: " + std::to_string(result.coverage.unknown));
 	add("malformed: " + std::to_string(result.coverage.malformed));
 	add("inconsistent: " + std::to_string(result.coverage.inconsistent));
+	add("query_packets: " + std::to_string(result.coverage.query_packets));
+	add("query_decoded: " + std::to_string(result.coverage.query_decoded));
+	add("query_unsupported: " + std::to_string(result.coverage.query_unsupported));
+	add("query_malformed: " + std::to_string(result.coverage.query_malformed));
+	add("query_inconsistent: " + std::to_string(result.coverage.query_inconsistent));
+	add("query_entries: " + std::to_string(result.coverage.query_entries));
+	add("query_skipped: " + std::to_string(result.coverage.query_skipped));
+	add("query_fields:");
+	for(const auto& [field, count] : result.coverage.query_fields)
+		add("  " + query_field_label(field) + " " + std::to_string(count));
+	add("unknown_query_fields: " + std::to_string(result.coverage.unknown_query_fields.size()));
 	add("");
 	add("### decoded message types");
 	write_message_table(out, counts_for(result.coverage, DecodeStatus::Decoded));
