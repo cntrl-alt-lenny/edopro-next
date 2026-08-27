@@ -21,7 +21,21 @@ namespace {
 
 ReplayVerificationStats* g_active_stats = nullptr;
 
+class ActiveVerification final {
+public:
+	explicit ActiveVerification(ReplayVerificationStats& stats) noexcept {
+		set_active_verification_stats(&stats);
+	}
+	ActiveVerification(const ActiveVerification&) = delete;
+	ActiveVerification& operator=(const ActiveVerification&) = delete;
+	~ActiveVerification() { set_active_verification_stats(nullptr); }
+};
+
 } // namespace
+
+extern "C" bool edopro_next_replay_verification_active() noexcept {
+	return g_active_stats != nullptr;
+}
 
 void set_active_verification_stats(ReplayVerificationStats* stats) noexcept {
 	g_active_stats = stats;
@@ -42,6 +56,7 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		std::fflush(stderr);
 		return stats;
 	}
+	stats.expected_packets = replay.packets_stream.size();
 
 	auto config = std::make_unique<ygo::GameConfig>();
 	config->imageLoadThreads = 0;
@@ -84,11 +99,14 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::matManager.SetActiveVertices(ygo::mainGame->dInfo.HasFieldFlag(DUEL_3_COLUMNS_FIELD),
 	                                  !ygo::mainGame->dInfo.HasFieldFlag(DUEL_SEPARATE_PZONE));
 	ygo::mainGame->dInfo.turn = 0;
-	ygo::mainGame->dInfo.isCatchingUp = true;
+	// Catch-up is deliberately not used here. It changes legacy semantics by
+	// returning before handlers such as MSG_CONFIRM_CARDS, MSG_BECOME_TARGET,
+	// and MSG_ATTACK have completed.
+	ygo::mainGame->dInfo.isCatchingUp = false;
 	ygo::mainGame->dInfo.isInDuel = true;
 	ygo::mainGame->dInfo.isStarted = true;
 
-	set_active_verification_stats(&stats);
+	ActiveVerification active_verification(stats);
 
 	for(std::size_t i = 0; i < replay.packets_stream.size(); ++i) {
 		const auto& packet = replay.packets_stream[i];
@@ -100,7 +118,6 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 		ygo::DuelClient::ClientAnalyze(packet);
 	}
 
-	set_active_verification_stats(nullptr);
 	ygo::mainGame = nullptr;
 	ygo::gDataManager = nullptr;
 	ygo::gGameConfig = nullptr;
@@ -112,9 +129,14 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 int verify_replay_cli(const std::string& path, bool inject_fault) {
 	const auto stats = verify_replay(path, inject_fault);
 	std::cout << "fixture: " << path << "\n";
+	std::cout << "expected packets: " << stats.expected_packets << "\n";
 	std::cout << "packets processed: " << stats.packets_processed << "\n";
 	std::cout << "semantic decode failures: " << stats.decode_failures << "\n";
+	std::cout << "observer failures: " << stats.observer_failures << "\n";
+	std::cout << "comparison failures: " << stats.comparison_failures << "\n";
+	std::cout << "comparisons performed: " << stats.comparisons_performed << "\n";
 	std::cout << "legacy/semantic mismatches: " << stats.mismatches.size() << "\n";
+	std::cout << "completed: " << (stats.completed ? "true" : "false") << "\n";
 	if(stats.equivalent()) {
 		std::cout << "result: equivalent\n";
 		return 0;
@@ -134,6 +156,20 @@ extern "C" int edopro_next_verify_replay_cli(const char* path) noexcept {
 		return 1;
 	try {
 		return edopro_next::legacy_observer::verify_replay_cli(std::string(path));
+	} catch(const std::exception& e) {
+		std::fprintf(stderr, "error: %s\n", e.what());
+		return 1;
+	} catch(...) {
+		std::fprintf(stderr, "error: unknown exception\n");
+		return 1;
+	}
+}
+
+extern "C" int edopro_next_verify_replay_fault_cli(const char* path) noexcept {
+	if(path == nullptr)
+		return 1;
+	try {
+		return edopro_next::legacy_observer::verify_replay_cli(std::string(path), true);
 	} catch(const std::exception& e) {
 		std::fprintf(stderr, "error: %s\n", e.what());
 		return 1;

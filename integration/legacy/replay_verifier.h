@@ -5,6 +5,7 @@
 
 extern "C" {
 int edopro_next_verify_replay_cli(const char* path) noexcept;
+int edopro_next_verify_replay_fault_cli(const char* path) noexcept;
 }
 
 #if defined(__cplusplus) && __cplusplus >= 202002L
@@ -16,13 +17,19 @@ namespace edopro_next::legacy_observer {
 
 struct ReplayVerificationStats {
 	std::string fixture_name;
+	std::uint64_t expected_packets = 0;
 	std::uint64_t packets_processed = 0;
 	std::uint64_t decode_failures = 0;
+	std::uint64_t observer_failures = 0;
+	std::uint64_t comparison_failures = 0;
+	std::uint64_t comparisons_performed = 0;
 	std::vector<Mismatch> mismatches;
 	bool completed = false;
 
 	bool equivalent() const noexcept {
-		return completed && decode_failures == 0 && mismatches.empty();
+		return completed && packets_processed == expected_packets &&
+			decode_failures == 0 && observer_failures == 0 && comparison_failures == 0 &&
+			comparisons_performed == expected_packets && mismatches.empty();
 	}
 };
 

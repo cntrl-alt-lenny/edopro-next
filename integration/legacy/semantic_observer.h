@@ -7,6 +7,8 @@
 
 extern "C" {
 
+bool edopro_next_replay_verification_active() noexcept;
+
 void* edopro_next_semantic_observer_begin(std::uint8_t message,
 										const std::uint8_t* payload,
 										std::uint32_t payload_length,
@@ -20,6 +22,10 @@ void edopro_next_semantic_observer_end(void* token) noexcept;
 
 #if defined(EDOPRO_NEXT_SEMANTIC_OBSERVER)
 namespace edopro_next::legacy_observer {
+
+inline bool replay_verification_active() noexcept {
+	return edopro_next_replay_verification_active();
+}
 
 class ObservationScope final {
 public:
@@ -41,6 +47,8 @@ private:
 } // namespace edopro_next::legacy_observer
 #else
 namespace edopro_next::legacy_observer {
+
+inline bool replay_verification_active() noexcept { return false; }
 
 class ObservationScope final {
 public:

@@ -10,6 +10,7 @@
 #include <ICameraSceneNode.h>
 #include "game.h"
 #include "client_field.h"
+#include "../integration/legacy/semantic_observer.h"
 #include "client_card.h"
 #include "duelclient.h"
 #include "data_manager.h"
@@ -361,7 +362,7 @@ void ClientField::ClearChainSelect() {
 }
 // needs to be synchronized with EGET_SCROLL_BAR_CHANGED
 void ClientField::ShowSelectCard(bool buttonok, bool chain) {
-	if(!mainGame->wCardSelect)
+	if(edopro_next::legacy_observer::replay_verification_active())
 		return;
 	size_t startpos;
 	size_t ct;
@@ -454,7 +455,7 @@ void ClientField::ShowSelectCard(bool buttonok, bool chain) {
 	mainGame->PopupElement(mainGame->wCardSelect);
 }
 void ClientField::ShowChainCard() {
-	if(!mainGame->wCardSelect)
+	if(edopro_next::legacy_observer::replay_verification_active())
 		return;
 	sort_list.clear();
 	size_t startpos;
@@ -513,7 +514,7 @@ void ClientField::ShowChainCard() {
 	mainGame->PopupElement(mainGame->wCardSelect);
 }
 void ClientField::ShowLocationCard() {
-	if(!mainGame->wCardDisplay)
+	if(edopro_next::legacy_observer::replay_verification_active())
 		return;
 	size_t startpos;
 	size_t ct;
@@ -584,7 +585,7 @@ void ClientField::ShowLocationCard() {
 	mainGame->PopupElement(mainGame->wCardDisplay);
 }
 void ClientField::ShowSelectOption(uint64_t select_hint, bool should_lock) {
-	if(!mainGame->wOptions)
+	if(edopro_next::legacy_observer::replay_verification_active())
 		return;
 	std::unique_lock<epro::mutex> lock = (should_lock ? std::unique_lock<epro::mutex>(mainGame->gMutex) : std::unique_lock<epro::mutex>());
 	selected_option = 0;
@@ -759,7 +760,7 @@ void ClientField::GetChainDrawCoordinates(uint8_t controler, uint8_t location, u
 	t->Y = (loc[0].Pos.Y + loc[2].Pos.Y) / 2;
 }
 static void getCardScreenCoordinates(ClientCard* pcard) {
-	if(!mainGame->camera || !mainGame->driver)
+	if(edopro_next::legacy_observer::replay_verification_active())
 		return;
 	irr::core::matrix4 trans = mainGame->camera->getProjectionMatrix();
 	trans *= mainGame->camera->getViewMatrix();
@@ -1014,12 +1015,14 @@ bool ClientField::ShowSelectSum() {
 			break;
 		}
 	}
-	if(mainGame->wCardSelect) mainGame->wCardSelect->setVisible(false);
-	if(mainGame->stCardListTip) mainGame->stCardListTip->setVisible(false);
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return false;
+	mainGame->wCardSelect->setVisible(false);
+	mainGame->stCardListTip->setVisible(false);
 	if(panelmode) {
 		mainGame->dField.ShowSelectCard(select_ready);
 	}
-	if(mainGame->stHintMsg) mainGame->stHintMsg->setVisible(!panelmode);
+	mainGame->stHintMsg->setVisible(!panelmode);
 	if (select_ready) {
 		ShowCancelOrFinishButton(2);
 	} else {
@@ -1159,7 +1162,7 @@ bool ClientField::CheckSelectSum() {
 	}
 }
 void ClientField::ShowSelectRace(uint64_t race) {
-	if(!mainGame->wANRace)
+	if(edopro_next::legacy_observer::replay_verification_active())
 		return;
 	uint64_t filter = 0x1;
 	auto selected = 0;

@@ -1322,15 +1322,14 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		curMsg, pbuf, len, mainGame->dInfo.compat_mode,
 		mainGame->dInfo.legacy_race_size,
 		mainGame->dInfo.isReplay && mainGame->dInfo.isCatchingUp, mainGame);
-	if(mainGame->wCmdMenu)
+	if(!edopro_next::legacy_observer::replay_verification_active() && mainGame->wCmdMenu)
 		mainGame->wCmdMenu->setVisible(false);
 	if(curMsg != MSG_HINT && curMsg != MSG_SELECT_CARD && curMsg != MSG_SELECT_UNSELECT_CARD && curMsg != MSG_SELECT_SUM)
 		PerformQueuedPanelConfirm();
 	if(!mainGame->dInfo.isReplay && curMsg != MSG_WAITING) {
 		std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 		mainGame->waitFrame = -1;
-		if(mainGame->stHintMsg)
-			mainGame->stHintMsg->setVisible(false);
+		mainGame->stHintMsg->setVisible(false);
 		if(mainGame->wCardSelect->isVisible()) {
 			mainGame->HideElement(mainGame->wCardSelect);
 			mainGame->WaitFrameSignal(11, lock);
@@ -1638,10 +1637,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 	case MSG_WAITING: {
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		mainGame->waitFrame = 0;
-		if(mainGame->stHintMsg) {
-			mainGame->stHintMsg->setText(gDataManager->GetSysString(1390).data());
-			mainGame->stHintMsg->setVisible(true);
-		}
+		mainGame->stHintMsg->setText(gDataManager->GetSysString(1390).data());
+		mainGame->stHintMsg->setVisible(true);
 		return true;
 	}
 	case MSG_START: {
@@ -1649,7 +1646,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if(mainGame->dInfo.compat_mode)
 			/*duel_rule = */BufferIO::Read<uint8_t>(pbuf);
 		auto lock = LockIf();
-		if(mainGame->wPhase)
+		if(!edopro_next::legacy_observer::replay_verification_active() && mainGame->wPhase)
 			mainGame->wPhase->setVisible(true);
 		if(!mainGame->dInfo.isCatchingUp) {
 			mainGame->showcardcode = 11;
@@ -1772,20 +1769,16 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		}
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			if(mainGame->btnM2) {
-				mainGame->btnM2->setVisible(true);
-				mainGame->btnM2->setSubElement(true);
-				mainGame->btnM2->setEnabled(true);
-				mainGame->btnM2->setPressed(false);
-			}
+			mainGame->btnM2->setVisible(true);
+			mainGame->btnM2->setSubElement(true);
+			mainGame->btnM2->setEnabled(true);
+			mainGame->btnM2->setPressed(false);
 		}
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			if(mainGame->btnEP) {
-				mainGame->btnEP->setVisible(true);
-				mainGame->btnEP->setSubElement(true);
-				mainGame->btnEP->setEnabled(true);
-				mainGame->btnEP->setPressed(false);
-			}
+			mainGame->btnEP->setVisible(true);
+			mainGame->btnEP->setSubElement(true);
+			mainGame->btnEP->setEnabled(true);
+			mainGame->btnEP->setPressed(false);
 		}
 		return false;
 	}
@@ -1920,27 +1913,21 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		}
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			if(mainGame->btnBP) {
-				mainGame->btnBP->setVisible(true);
-				mainGame->btnBP->setSubElement(true);
-				mainGame->btnBP->setEnabled(true);
-				mainGame->btnBP->setPressed(false);
-			}
+			mainGame->btnBP->setVisible(true);
+			mainGame->btnBP->setSubElement(true);
+			mainGame->btnBP->setEnabled(true);
+			mainGame->btnBP->setPressed(false);
 		}
 		if(BufferIO::Read<uint8_t>(pbuf)) {
-			if(mainGame->btnEP) {
-				mainGame->btnEP->setVisible(true);
-				mainGame->btnEP->setSubElement(true);
-				mainGame->btnEP->setEnabled(true);
-				mainGame->btnEP->setPressed(false);
-			}
+			mainGame->btnEP->setVisible(true);
+			mainGame->btnEP->setSubElement(true);
+			mainGame->btnEP->setEnabled(true);
+			mainGame->btnEP->setPressed(false);
 		}
 		if (BufferIO::Read<uint8_t>(pbuf)) {
-			if(mainGame->btnShuffle)
-				mainGame->btnShuffle->setVisible(true);
+			mainGame->btnShuffle->setVisible(true);
 		} else {
-			if(mainGame->btnShuffle)
-				mainGame->btnShuffle->setVisible(false);
+			mainGame->btnShuffle->setVisible(false);
 		}
 		return false;
 	}
@@ -2077,16 +2064,14 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				panelmode = true;
 			} else
 				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
-			if (pcard) {
-				if (code != 0 && pcard->code != code)
-					pcard->SetCode(code);
-				pcard->select_seq = i;
-				mainGame->dField.selectable_cards.push_back(pcard);
-				pcard->is_selectable = true;
-				pcard->is_selected = false;
-				if (info.location & 0xf1)
-					panelmode = true;
-			}
+			if (code != 0 && pcard->code != code)
+				pcard->SetCode(code);
+			pcard->select_seq = i;
+			mainGame->dField.selectable_cards.push_back(pcard);
+			pcard->is_selectable = true;
+			pcard->is_selected = false;
+			if (info.location & 0xf1)
+				panelmode = true;
 		}
 		uint32_t count2 = CompatRead<uint8_t, uint32_t>(pbuf);
 		for(uint32_t i = count1; i < count1 + count2; ++i) {
@@ -2102,16 +2087,14 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				panelmode = true;
 			} else
 				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
-			if (pcard) {
-				if (code != 0 && pcard->code != code)
-					pcard->SetCode(code);
-				pcard->select_seq = i;
-				mainGame->dField.selected_cards.push_back(pcard);
-				pcard->is_selectable = false;
-				pcard->is_selected = true;
-				if (info.location & 0xf1)
-					panelmode = true;
-			}
+			if (code != 0 && pcard->code != code)
+				pcard->SetCode(code);
+			pcard->select_seq = i;
+			mainGame->dField.selectable_cards.push_back(pcard);
+			pcard->is_selectable = true;
+			pcard->is_selected = true;
+			if (info.location & 0xf1)
+				panelmode = true;
 		}
 		std::sort(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end(), ClientCard::client_card_sort);
 		PerformQueuedPanelConfirmIfDifferent(mainGame->dField.selectable_cards);
@@ -2120,22 +2103,17 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		select_hint = 0;
 		if (panelmode) {
-			if(mainGame->wCardSelect)
-				mainGame->wCardSelect->setText(text.data());
+			mainGame->wCardSelect->setText(text.data());
 			mainGame->dField.ShowSelectCard(mainGame->dField.select_cancelable);
 		} else {
-			if(mainGame->stHintMsg) {
-				mainGame->stHintMsg->setText(text.data());
-				mainGame->stHintMsg->setVisible(true);
-			}
+			mainGame->stHintMsg->setText(text.data());
+			mainGame->stHintMsg->setVisible(true);
 		}
 		if (mainGame->dField.select_cancelable) {
 			if (count2 == 0)
 				mainGame->dField.ShowCancelOrFinishButton(1);
-			else if (count2 >= mainGame->dField.select_min)
-				mainGame->dField.ShowCancelOrFinishButton(2);
 			else
-				mainGame->dField.ShowCancelOrFinishButton(0);
+				mainGame->dField.ShowCancelOrFinishButton(2);
 		}
 		else
 			mainGame->dField.ShowCancelOrFinishButton(0);
@@ -2209,47 +2187,49 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 					panelmode = true;
 			}
 		}
-		const auto ignore_chain = mainGame->btnChainIgnore ? mainGame->btnChainIgnore->isPressed() : false;
-		const auto always_chain = mainGame->btnChainAlways ? mainGame->btnChainAlways->isPressed() : false;
-		const auto chain_when_avail = mainGame->btnChainWhenAvail ? mainGame->btnChainWhenAvail->isPressed() : false;
-		if(!select_trigger && !mainGame->dField.chain_forced && (ignore_chain || ((count == 0 || specount == 0) && !always_chain)) && (count == 0 || !chain_when_avail)) {
-			SetResponseI(-1);
-			mainGame->dField.ClearChainSelect();
-			if(mainGame->tabSettings.chkNoChainDelay->isChecked() && !ignore_chain) {
-				std::unique_lock<epro::mutex> tmp(mainGame->gMutex);
-				mainGame->WaitFrameSignal(20, tmp);
+		if(!edopro_next::legacy_observer::replay_verification_active()) {
+			const auto ignore_chain = mainGame->btnChainIgnore->isPressed();
+			const auto always_chain = mainGame->btnChainAlways->isPressed();
+			const auto chain_when_avail = mainGame->btnChainWhenAvail->isPressed();
+			if(!select_trigger && !mainGame->dField.chain_forced && (ignore_chain || ((count == 0 || specount == 0) && !always_chain)) && (count == 0 || !chain_when_avail)) {
+				SetResponseI(-1);
+				mainGame->dField.ClearChainSelect();
+				if(mainGame->tabSettings.chkNoChainDelay->isChecked() && !ignore_chain) {
+					std::unique_lock<epro::mutex> tmp(mainGame->gMutex);
+					mainGame->WaitFrameSignal(20, tmp);
+				}
+				DuelClient::SendResponse();
+				return true;
 			}
-			DuelClient::SendResponse();
-			return true;
-		}
-		if(mainGame->tabSettings.chkAutoChainOrder->isChecked() && mainGame->dField.chain_forced && !(always_chain || chain_when_avail)) {
-			SetResponseI(0);
-			mainGame->dField.ClearChainSelect();
-			DuelClient::SendResponse();
-			return true;
-		}
-		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
-		if(!conti_exist)
-			mainGame->stHintMsg->setText(gDataManager->GetSysString(550).data());
-		else
-			mainGame->stHintMsg->setText(gDataManager->GetSysString(556).data());
-		mainGame->stHintMsg->setVisible(true);
-		if(panelmode) {
-			mainGame->dField.list_command = COMMAND_ACTIVATE;
-			mainGame->dField.selectable_cards = mainGame->dField.activatable_cards;
-			std::sort(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end());
-			auto eit = std::unique(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end());
-			mainGame->dField.selectable_cards.erase(eit, mainGame->dField.selectable_cards.end());
-			mainGame->dField.ShowChainCard();
-		} else {
-			if(!mainGame->dField.chain_forced) {
-				if(count == 0)
-					mainGame->stQMessage->setText(epro::format(L"{}\n{}", gDataManager->GetSysString(201), gDataManager->GetSysString(202)).data());
-				else if(select_trigger)
-					mainGame->stQMessage->setText(epro::format(L"{}\n{}\n{}", event_string, gDataManager->GetSysString(222), gDataManager->GetSysString(223)).data());
-				else
-					mainGame->stQMessage->setText(epro::format(L"{}\n{}", event_string, gDataManager->GetSysString(203)).data());
-				mainGame->PopupElement(mainGame->wQuery);
+			if(mainGame->tabSettings.chkAutoChainOrder->isChecked() && mainGame->dField.chain_forced && !(always_chain || chain_when_avail)) {
+				SetResponseI(0);
+				mainGame->dField.ClearChainSelect();
+				DuelClient::SendResponse();
+				return true;
+			}
+			std::lock_guard<epro::mutex> lock(mainGame->gMutex);
+			if(!conti_exist)
+				mainGame->stHintMsg->setText(gDataManager->GetSysString(550).data());
+			else
+				mainGame->stHintMsg->setText(gDataManager->GetSysString(556).data());
+			mainGame->stHintMsg->setVisible(true);
+			if(panelmode) {
+				mainGame->dField.list_command = COMMAND_ACTIVATE;
+				mainGame->dField.selectable_cards = mainGame->dField.activatable_cards;
+				std::sort(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end());
+				auto eit = std::unique(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end());
+				mainGame->dField.selectable_cards.erase(eit, mainGame->dField.selectable_cards.end());
+				mainGame->dField.ShowChainCard();
+			} else {
+				if(!mainGame->dField.chain_forced) {
+					if(count == 0)
+						mainGame->stQMessage->setText(epro::format(L"{}\n{}", gDataManager->GetSysString(201), gDataManager->GetSysString(202)).data());
+					else if(select_trigger)
+						mainGame->stQMessage->setText(epro::format(L"{}\n{}\n{}", event_string, gDataManager->GetSysString(222), gDataManager->GetSysString(223)).data());
+					else
+						mainGame->stQMessage->setText(epro::format(L"{}\n{}", event_string, gDataManager->GetSysString(203)).data());
+					mainGame->PopupElement(mainGame->wQuery);
+				}
 			}
 		}
 		return false;
@@ -2552,7 +2532,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			if (code != 0)
 				pcard->SetCode(code);
 		}
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		mainGame->AddLog(epro::sprintf(gDataManager->GetSysString(207), count));
 		constexpr float milliseconds = 5.0f * 1000.0f / 60.0f;
@@ -2588,7 +2568,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			if (code != 0)
 				pcard->SetCode(code);
 		}
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		mainGame->AddLog(epro::sprintf(gDataManager->GetSysString(207), count));
 		for(auto it = backit, end = it + count; it != end; ++it) {
@@ -2616,9 +2596,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		const auto count = CompatRead<uint8_t, uint32_t>(pbuf);
 		std::vector<ClientCard*> field_confirm;
 		std::vector<ClientCard*> panel_confirm;
-		if(mainGame->dInfo.isCatchingUp)
-			return true;
-		mainGame->AddLog(epro::sprintf(gDataManager->GetSysString(208), count));
+		if(!edopro_next::legacy_observer::replay_verification_active())
+			mainGame->AddLog(epro::sprintf(gDataManager->GetSysString(208), count));
 		for(uint32_t i = 0; i < count; ++i) {
 			auto code = BufferIO::Read<uint32_t>(pbuf);
 			auto controller = mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));
@@ -2632,34 +2611,36 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				mainGame->dField.limbo_temp.push_back(pcard);
 			} else
 				pcard = mainGame->dField.GetCard(controller, location, sequence);
-			if (pcard && code != 0)
+			if (code != 0)
 				pcard->SetCode(code);
+			if(edopro_next::legacy_observer::replay_verification_active())
+				continue;
 			mainGame->AddLog(epro::format(L"*[{}]", gDataManager->GetName(code)), code);
-			if (pcard) {
-				if (location & (LOCATION_EXTRA | LOCATION_DECK) || location == 0) {
-					if(count == 1 && location != 0) {
-						constexpr float milliseconds = 5.0f * 1000.0f / 60.0f;
-						float shift = -0.75f / milliseconds;
-						if (controller == 0 && location == LOCATION_EXTRA) shift *= -1.0f;
-						pcard->dPos.set(shift, 0, 0);
-						if(((location == LOCATION_DECK) && mainGame->dField.deck_reversed) || pcard->is_reversed || (pcard->position & POS_FACEUP))
-							pcard->dRot.set(0, 0, 0);
-						else pcard->dRot.set(0, irr::core::PI / milliseconds, 0);
-						pcard->is_moving = true;
-						pcard->aniFrame = milliseconds;
-						mainGame->WaitFrameSignal(45, lock);
-						mainGame->dField.MoveCard(pcard, 5);
-						mainGame->WaitFrameSignal(5, lock);
-					} else {
-						if(!mainGame->dInfo.isReplay)
-							panel_confirm.push_back(pcard);
-					}
+			if (location & (LOCATION_EXTRA | LOCATION_DECK) || location == 0) {
+				if(count == 1 && location != 0) {
+					constexpr float milliseconds = 5.0f * 1000.0f / 60.0f;
+					float shift = -0.75f / milliseconds;
+					if (controller == 0 && location == LOCATION_EXTRA) shift *= -1.0f;
+					pcard->dPos.set(shift, 0, 0);
+					if(((location == LOCATION_DECK) && mainGame->dField.deck_reversed) || pcard->is_reversed || (pcard->position & POS_FACEUP))
+						pcard->dRot.set(0, 0, 0);
+					else pcard->dRot.set(0, irr::core::PI / milliseconds, 0);
+					pcard->is_moving = true;
+					pcard->aniFrame = milliseconds;
+					mainGame->WaitFrameSignal(45, lock);
+					mainGame->dField.MoveCard(pcard, 5);
+					mainGame->WaitFrameSignal(5, lock);
 				} else {
-					if(!mainGame->dInfo.isReplay || (location & LOCATION_ONFIELD) || (location & LOCATION_HAND && gGameConfig->hideHandsInReplays))
-						field_confirm.push_back(pcard);
+					if(!mainGame->dInfo.isReplay)
+						panel_confirm.push_back(pcard);
 				}
+			} else {
+				if(!mainGame->dInfo.isReplay || (location & LOCATION_ONFIELD) || (location & LOCATION_HAND && gGameConfig->hideHandsInReplays))
+					field_confirm.push_back(pcard);
 			}
 		}
+		if(edopro_next::legacy_observer::replay_verification_active())
+			return true;
 		if (field_confirm.size() > 0) {
 			std::map<ClientCard*, bool> public_status;
 			std::unique_lock<epro::mutex> lock(mainGame->gMutex);
@@ -2714,8 +2695,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			}
 			std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 			std::swap(mainGame->dField.selectable_cards, panel_confirm);
-			if(mainGame->wCardSelect)
-				mainGame->wCardSelect->setText(epro::sprintf(gDataManager->GetSysString(208), mainGame->dField.selectable_cards.size()).data());
+			mainGame->wCardSelect->setText(epro::sprintf(gDataManager->GetSysString(208), mainGame->dField.selectable_cards.size()).data());
 			mainGame->dField.ShowSelectCard(true);
 			mainGame->actionSignal.Wait(lock);
 		}
@@ -2994,31 +2974,21 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		Play(SoundManager::SFX::PHASE);
 		const auto phase = BufferIO::Read<uint16_t>(pbuf);
 		auto lock = LockIf();
-		if(mainGame->btnDP) {
-			mainGame->btnDP->setVisible(false);
-			mainGame->btnDP->setSubElement(false);
-		}
-		if(mainGame->btnSP) {
-			mainGame->btnSP->setVisible(false);
-			mainGame->btnSP->setSubElement(false);
-		}
-		if(mainGame->btnM1) {
-			mainGame->btnM1->setVisible(false);
-			mainGame->btnM1->setSubElement(false);
-		}
-		if(mainGame->btnBP) {
-			mainGame->btnBP->setVisible(false);
-			mainGame->btnBP->setSubElement(false);
-		}
-		if(mainGame->btnM2) {
-			mainGame->btnM2->setVisible(false);
-			mainGame->btnM2->setSubElement(false);
-		}
-		if(mainGame->btnEP) {
-			mainGame->btnEP->setVisible(false);
-			mainGame->btnEP->setSubElement(false);
-		}
-		if(gGameConfig->alternative_phase_layout && mainGame->btnDP) {
+		if(edopro_next::legacy_observer::replay_verification_active())
+			return true;
+		mainGame->btnDP->setVisible(false);
+		mainGame->btnDP->setSubElement(false);
+		mainGame->btnSP->setVisible(false);
+		mainGame->btnSP->setSubElement(false);
+		mainGame->btnM1->setVisible(false);
+		mainGame->btnM1->setSubElement(false);
+		mainGame->btnBP->setVisible(false);
+		mainGame->btnBP->setSubElement(false);
+		mainGame->btnM2->setVisible(false);
+		mainGame->btnM2->setSubElement(false);
+		mainGame->btnEP->setVisible(false);
+		mainGame->btnEP->setSubElement(false);
+		if(gGameConfig->alternative_phase_layout) {
 			mainGame->btnDP->setVisible(true);
 			mainGame->btnSP->setVisible(true);
 			mainGame->btnM1->setVisible(true);
@@ -3032,63 +3002,50 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			mainGame->btnEP->setPressed(false);
 			mainGame->btnEP->setEnabled(false);
 		}
-		if(mainGame->btnShuffle)
-			mainGame->btnShuffle->setVisible(false);
+		mainGame->btnShuffle->setVisible(false);
 		mainGame->showcarddif = 30;
 		mainGame->showcardp = 0;
 		switch (phase) {
 		case PHASE_DRAW:
 			event_string = gDataManager->GetSysString(20).data();
-			if(mainGame->btnDP) {
-				mainGame->btnDP->setVisible(true);
-				mainGame->btnDP->setSubElement(true);
-			}
+			mainGame->btnDP->setVisible(true);
+			mainGame->btnDP->setSubElement(true);
 			mainGame->showcardcode = 4;
 			break;
 		case PHASE_STANDBY:
 			event_string = gDataManager->GetSysString(21).data();
-			if(mainGame->btnSP) {
-				mainGame->btnSP->setVisible(true);
-				mainGame->btnSP->setSubElement(true);
-			}
+			mainGame->btnSP->setVisible(true);
+			mainGame->btnSP->setSubElement(true);
 			mainGame->showcardcode = 5;
 			break;
 		case PHASE_MAIN1:
 			event_string = gDataManager->GetSysString(22).data();
-			if(mainGame->btnM1) {
-				mainGame->btnM1->setVisible(true);
-				mainGame->btnM1->setSubElement(true);
-			}
+			mainGame->btnM1->setVisible(true);
+			mainGame->btnM1->setSubElement(true);
 			mainGame->showcardcode = 6;
 			break;
 		case PHASE_BATTLE_START:
 			event_string = gDataManager->GetSysString(24).data();
-			if(mainGame->btnBP) {
-				mainGame->btnBP->setVisible(true);
-				mainGame->btnBP->setSubElement(true);
-				mainGame->btnBP->setPressed(true);
-				mainGame->btnBP->setEnabled(false);
-			}
+			mainGame->btnBP->setVisible(true);
+			mainGame->btnBP->setSubElement(true);
+			mainGame->btnBP->setPressed(true);
+			mainGame->btnBP->setEnabled(false);
 			mainGame->showcardcode = 7;
 			break;
 		case PHASE_MAIN2:
 			event_string = gDataManager->GetSysString(22).data();
-			if(mainGame->btnM2) {
-				mainGame->btnM2->setVisible(true);
-				mainGame->btnM2->setSubElement(true);
-				mainGame->btnM2->setPressed(true);
-				mainGame->btnM2->setEnabled(false);
-			}
+			mainGame->btnM2->setVisible(true);
+			mainGame->btnM2->setSubElement(true);
+			mainGame->btnM2->setPressed(true);
+			mainGame->btnM2->setEnabled(false);
 			mainGame->showcardcode = 8;
 			break;
 		case PHASE_END:
 			event_string = gDataManager->GetSysString(26).data();
-			if(mainGame->btnEP) {
-				mainGame->btnEP->setVisible(true);
-				mainGame->btnEP->setSubElement(true);
-				mainGame->btnEP->setPressed(true);
-				mainGame->btnEP->setEnabled(false);
-			}
+			mainGame->btnEP->setVisible(true);
+			mainGame->btnEP->setSubElement(true);
+			mainGame->btnEP->setPressed(true);
+			mainGame->btnEP->setEnabled(false);
 			mainGame->showcardcode = 9;
 			break;
 		}
@@ -3528,7 +3485,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 	case MSG_RANDOM_SELECTED: {
 		/*const auto player = */BufferIO::Read<uint8_t>(pbuf);
 		const auto count = CompatRead<uint8_t, uint32_t>(pbuf);
-		if(mainGame->dInfo.isCatchingUp) {
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active()) {
 			return true;
 		}
 		std::vector<ClientCard*> pcards;
@@ -3550,16 +3507,16 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 	}
 	case MSG_CARD_SELECTED:
 	case MSG_BECOME_TARGET: {
-		if(mainGame->dInfo.isCatchingUp)
-			return true;
 		const auto count = CompatRead<uint8_t, uint32_t>(pbuf);
 		for(uint32_t i = 0; i < count; ++i) {
 			CoreUtils::loc_info info = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
 			ClientCard* pcard = mainGame->dField.GetCard(mainGame->LocalPlayer(info.controler), info.location, info.sequence);
 			std::unique_lock<epro::mutex> lock(mainGame->gMutex);
-			pcard->is_highlighting = true;
 			if(mainGame->dInfo.curMsg == MSG_BECOME_TARGET)
 				mainGame->dField.current_chain.target.insert(pcard);
+			if(edopro_next::legacy_observer::replay_verification_active())
+				continue;
+			pcard->is_highlighting = true;
 			if(pcard->location & LOCATION_ONFIELD) {
 				for (int j = 0; j < 3; ++j) {
 					mainGame->dField.FadeCard(pcard, 5, 5);
@@ -3777,7 +3734,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		if (pc->counters.count(type))
 			pc->counters[type] += count;
 		else pc->counters[type] = count;
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 		pc->is_highlighting = true;
@@ -3799,7 +3756,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		pc->counters[type] -= count;
 		if (pc->counters[type] <= 0)
 			pc->counters.erase(type);
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		pc->is_highlighting = true;
 		mainGame->stACMessage->setText(epro::format(gDataManager->GetSysString(1618), gDataManager->GetName(pc->code), gDataManager->GetCounterName(type), count).data());
@@ -3814,11 +3771,14 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		mainGame->dField.attacker = mainGame->dField.GetCard(info1.controler, info1.location, info1.sequence);
 		if(!PlayChant(SoundManager::CHANT::ATTACK, mainGame->dField.attacker->code))
 			Play(SoundManager::SFX::ATTACK);
-		if(mainGame->dInfo.isCatchingUp)
-			return true;
 		CoreUtils::loc_info info2 = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
 		const bool is_direct = info2.location == 0;
 		info2.controler = mainGame->LocalPlayer(info2.controler);
+		if(edopro_next::legacy_observer::replay_verification_active()) {
+			if(!is_direct)
+				mainGame->dField.attack_target = mainGame->dField.GetCard(info2.controler, info2.location, info2.sequence);
+			return true;
+		}
 		std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 		float sy;
 		float xa = mainGame->dField.attacker->curPos.X;
@@ -3848,8 +3808,6 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		return true;
 	}
 	case MSG_BATTLE: {
-		if(mainGame->dInfo.isCatchingUp)
-			return true;
 		CoreUtils::loc_info info1 = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
 		info1.controler = mainGame->LocalPlayer(info1.controler);
 		const auto aatk = static_cast<int32_t>(BufferIO::Read<uint32_t>(pbuf));
@@ -3903,7 +3861,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		return true;
 	}
 	case MSG_TOSS_COIN: {
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		Play(SoundManager::SFX::COIN);
 		/*const auto player = */mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));
@@ -3921,7 +3879,7 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		return true;
 	}
 	case MSG_TOSS_DICE: {
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		Play(SoundManager::SFX::DICE);
 		/*const auto player = */mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));
@@ -3939,21 +3897,19 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		return true;
 	}
 	case MSG_ROCK_PAPER_SCISSORS: {
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		/*const auto player = mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));*/
 		std::unique_lock<epro::mutex> lock(mainGame->gMutex);
-		if(mainGame->wHand)
-			mainGame->wHand->setVisible(true);
+		mainGame->wHand->setVisible(true);
 		return false;
 	}
 	case MSG_HAND_RES: {
-		if(mainGame->dInfo.isCatchingUp)
+		if(mainGame->dInfo.isCatchingUp || edopro_next::legacy_observer::replay_verification_active())
 			return true;
 		const auto res = BufferIO::Read<uint8_t>(pbuf);
 		std::unique_lock<epro::mutex> lock(mainGame->gMutex);
-		if(mainGame->stHintMsg)
-			mainGame->stHintMsg->setVisible(false);
+		mainGame->stHintMsg->setVisible(false);
 		uint8_t res1 = (res & 0x3) - 1;
 		uint8_t res2 = ((res >> 2) & 0x3) - 1;
 		if(mainGame->dInfo.isFirst)
@@ -4341,19 +4297,18 @@ void DuelClient::SendResponse() {
 		mainGame->dField.limbo_temp.clear();
 		mainGame->dField.ClearCommandFlag();
 		if(gGameConfig->alternative_phase_layout) {
-			if(mainGame->btnBP) mainGame->btnBP->setEnabled(false);
-			if(mainGame->btnM2) mainGame->btnM2->setEnabled(false);
-			if(mainGame->btnEP) mainGame->btnEP->setEnabled(false);
+			mainGame->btnBP->setEnabled(false);
+			mainGame->btnM2->setEnabled(false);
+			mainGame->btnEP->setEnabled(false);
 		} else {
 			if(msg == MSG_SELECT_BATTLECMD) {
-				if(mainGame->btnM2) mainGame->btnM2->setVisible(false);
+				mainGame->btnM2->setVisible(false);
 			} else {
-				if(mainGame->btnBP) mainGame->btnBP->setVisible(false);
+				mainGame->btnBP->setVisible(false);
 			}
-			if(mainGame->btnEP) mainGame->btnEP->setVisible(false);
+			mainGame->btnEP->setVisible(false);
 		}
-		if(mainGame->btnShuffle)
-			mainGame->btnShuffle->setVisible(false);
+		mainGame->btnShuffle->setVisible(false);
 		break;
 	}
 	case MSG_SELECT_CARD:
@@ -4699,18 +4654,13 @@ void DuelClient::ReplayPrompt(bool local_stream) {
 	}
 	replay_stream.clear();
 	std::unique_lock<epro::mutex> lock(mainGame->gMutex);
-	if(mainGame->wPhase)
-		mainGame->wPhase->setVisible(false);
-	if(mainGame->dInfo.player_type < 7 && mainGame->btnLeaveGame)
+	mainGame->wPhase->setVisible(false);
+	if(mainGame->dInfo.player_type < 7)
 		mainGame->btnLeaveGame->setVisible(false);
-	if(mainGame->btnChainIgnore)
-		mainGame->btnChainIgnore->setVisible(false);
-	if(mainGame->btnChainAlways)
-		mainGame->btnChainAlways->setVisible(false);
-	if(mainGame->btnChainWhenAvail)
-		mainGame->btnChainWhenAvail->setVisible(false);
-	if(mainGame->btnCancelOrFinish)
-		mainGame->btnCancelOrFinish->setVisible(false);
+	mainGame->btnChainIgnore->setVisible(false);
+	mainGame->btnChainAlways->setVisible(false);
+	mainGame->btnChainWhenAvail->setVisible(false);
+	mainGame->btnCancelOrFinish->setVisible(false);
 	auto now = std::time(nullptr);
 	mainGame->PopupSaveWindow(gDataManager->GetSysString(1340), epro::format(L"{:%Y-%m-%d %H-%M-%S}", epro::localtime(now)), gDataManager->GetSysString(1342));
 	mainGame->replaySignal.Wait(lock);

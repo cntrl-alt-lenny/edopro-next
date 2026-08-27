@@ -49,6 +49,8 @@ auto GetOption(epro::path_stringview option) {
 		return LAUNCH_PARAM::WANTS_TO_RUN_AS_ADMIN;
 	if(option == EPRO_TEXT("semantic-verify-replay"sv) || option == EPRO_TEXT("-semantic-verify-replay"sv))
 		return LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY;
+	if(option == EPRO_TEXT("semantic-verify-replay-fault"sv) || option == EPRO_TEXT("-semantic-verify-replay-fault"sv))
+		return LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY_FAULT;
 	return LAUNCH_PARAM::COUNT;
 }
 
