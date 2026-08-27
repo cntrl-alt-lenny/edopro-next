@@ -197,6 +197,19 @@ class TestSemanticQuality(unittest.TestCase):
                             ("decoded", "unsupported", "unknown", "malformed", "inconsistent"))
                 self.assertEqual(total, parts)
 
+    def test_committed_fixtures_are_semantically_complete(self) -> None:
+        expected = {
+            "duel-chains-battle.yrpX": (990, 990),
+            "duel-extended.yrpX": (1133, 1133),
+        }
+        for fixture in fixture_paths():
+            with self.subTest(fixture=fixture.name):
+                text = trace_for(BINARY, fixture)
+                packets, decoded = expected[fixture.name]
+                self.assertEqual(scalar(text, "packets"), packets)
+                self.assertEqual(scalar(text, "decoded"), decoded)
+                self.assertEqual(scalar(text, "unsupported"), 0)
+
     def test_something_is_actually_decoded(self) -> None:
         # Guards against a regression that turns every packet into
         # "unsupported" and still matches a re-blessed golden.

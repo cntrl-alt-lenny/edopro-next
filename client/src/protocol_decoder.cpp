@@ -13,9 +13,11 @@ namespace msg = protocol;
 // Message ids this build decodes. The switch in decode_supported() must handle
 // exactly these; a test asserts it, so the coverage report can never claim
 // support this file does not actually provide.
-constexpr std::array<std::uint8_t, 29> kSupported = {
+constexpr std::array<std::uint8_t, 34> kSupported = {
 	msg::MSG_START,
 	msg::MSG_WIN,
+	msg::MSG_CONFIRM_DECKTOP,
+	msg::MSG_CONFIRM_CARDS,
 	msg::MSG_SHUFFLE_DECK,
 	msg::MSG_SHUFFLE_HAND,
 	msg::MSG_NEW_TURN,
@@ -32,6 +34,7 @@ constexpr std::array<std::uint8_t, 29> kSupported = {
 	msg::MSG_CHAIN_SOLVING,
 	msg::MSG_CHAIN_SOLVED,
 	msg::MSG_CHAIN_END,
+	msg::MSG_BECOME_TARGET,
 	msg::MSG_DRAW,
 	msg::MSG_DAMAGE,
 	msg::MSG_RECOVER,
@@ -43,6 +46,8 @@ constexpr std::array<std::uint8_t, 29> kSupported = {
 	msg::MSG_DAMAGE_STEP_END,
 	msg::MSG_UPDATE_DATA,
 	msg::MSG_UPDATE_CARD,
+	msg::MSG_CARD_HINT,
+	msg::MSG_PLAYER_HINT,
 };
 
 // The protocol's loc_info, read verbatim. Its four fields do not mean the same
@@ -220,6 +225,87 @@ void handle_win(Decoding& d) {
 	d.emit(DuelEnded{winner, reason});
 }
 
+void handle_confirm_decktop(Decoding& d) {
+	auto& r = d.reader();
+	const auto player = r.u8();
+	const auto count = d.compat() ? r.u8() : r.u32();
+	const std::size_t entry_size = sizeof(std::uint32_t) + (d.compat() ? 3 : 6);
+	if(!count_fits(r, count, entry_size))
+		return;
+	std::vector<std::uint32_t> codes;
+	codes.reserve(count);
+	for(std::uint32_t i = 0; i < count; ++i) {
+		codes.push_back(r.u32());
+		// The legacy handler consumes controller/location/sequence metadata but
+		// does not inspect it. Consume exactly the protocol width below.
+		// PacketReader has no arbitrary skip primitive, so reconstruct the
+		// ignored bytes with checked reads.
+		for(std::size_t byte = 0; byte < (d.compat() ? 3 : 6); ++byte)
+			r.u8();
+	}
+	if(!fully_read(r))
+		return;
+	if(!d.require_duelist(player))
+		return;
+	const auto& deck = d.state().zone(player, Zone::Deck);
+	if(codes.size() > deck.size()) {
+		d.inconsistent("confirm deck top names " + std::to_string(codes.size()) +
+			" cards in a deck of " + std::to_string(deck.size()));
+		return;
+	}
+	for(std::size_t i = 0; i < codes.size(); ++i) {
+		if(codes[i] != 0)
+			d.apply_code(deck[deck.size() - 1 - i], to_code(codes[i]));
+	}
+}
+
+void handle_confirm_cards(Decoding& d) {
+	auto& r = d.reader();
+	const auto player = r.u8();
+	if(d.compat())
+		r.u8(); // skip_panel: presentation-only in ClientAnalyze
+	const auto count = d.compat() ? r.u8() : r.u32();
+	const std::size_t entry_size = sizeof(std::uint32_t) + 2 + (d.compat() ? 1 : 4);
+	if(!count_fits(r, count, entry_size))
+		return;
+	struct Entry { std::uint32_t code; CardLocation location; };
+	std::vector<Entry> entries;
+	entries.reserve(count);
+	for(std::uint32_t i = 0; i < count; ++i) {
+		const auto code = r.u32();
+		const auto controller = r.u8();
+		const auto raw_location = r.u8();
+		const auto sequence = d.compat() ? r.u8() : r.u32();
+		entries.push_back({code, CardLocation{controller, zone_from_protocol(raw_location),
+			sequence, (raw_location & msg::LOCATION_OVERLAY) != 0, 0}});
+	}
+	if(!fully_read(r))
+		return;
+	if(!d.require_duelist(player))
+		return;
+	std::vector<CardInstanceId> tracked;
+	tracked.reserve(entries.size());
+	for(const auto& entry : entries) {
+		// ClientAnalyze allocates a temporary limbo card for location zero.
+		// It is a display object, not a persistent card in ClientField.
+		if(entry.location.zone == Zone::None)
+			continue;
+		const auto id = d.state().at(entry.location);
+		if(id == CardInstanceId::None) {
+			d.inconsistent("confirm card names no card at " + to_string(entry.location));
+			return;
+		}
+		tracked.push_back(id);
+	}
+	std::size_t tracked_index = 0;
+	for(const auto& entry : entries) {
+		if(entry.location.zone != Zone::None && entry.code != 0)
+			d.apply_code(tracked[tracked_index++], to_code(entry.code));
+		else if(entry.location.zone != Zone::None)
+			++tracked_index;
+	}
+}
+
 void handle_shuffle_deck(Decoding& d) {
 	auto& r = d.reader();
 	const auto player = r.u8();
@@ -260,8 +346,10 @@ void handle_shuffle_hand(Decoding& d) {
 		return;
 	}
 	d.emit(HandShuffled{player, hand.size()});
-	for(std::size_t i = 0; i < hand.size(); ++i)
+	for(std::size_t i = 0; i < hand.size(); ++i) {
+		d.state().clear_card_description_hints(hand[i]);
 		d.apply_code(hand[i], codes[i]);
+	}
 }
 
 void handle_new_turn(Decoding& d) {
@@ -519,6 +607,73 @@ void handle_chain_end(Decoding& d) {
 	d.emit(ChainEnded{links});
 }
 
+void handle_become_target(Decoding& d) {
+	auto& r = d.reader();
+	const auto count = d.compat() ? r.u8() : r.u32();
+	const std::size_t entry_size = d.compat() ? 4 : 10;
+	if(!count_fits(r, count, entry_size))
+		return;
+	std::vector<CardInstanceId> targets;
+	targets.reserve(count);
+	for(std::uint32_t i = 0; i < count; ++i) {
+		const auto info = read_loc_info(r, d.compat());
+		const auto location = to_location(info);
+		const auto id = d.state().at(location);
+		if(id == CardInstanceId::None) {
+			d.inconsistent("target names no card at " + to_string(location));
+			continue;
+		}
+		targets.push_back(id);
+	}
+	if(!fully_read(r) || d.is_inconsistent())
+		return;
+	if(auto error = d.state().add_chain_targets(targets)) {
+		d.inconsistent(*error);
+		return;
+	}
+	d.emit(CardsBecameTargets{std::move(targets)});
+}
+
+void handle_card_hint(Decoding& d) {
+	auto& r = d.reader();
+	const auto info = read_loc_info(r, d.compat());
+	const auto type = r.u8();
+	const auto value = d.compat() ? r.u32() : r.u64();
+	if(!fully_read(r))
+		return;
+	const auto id = d.state().at(to_location(info));
+	// ClientAnalyze consumes the packet and returns when the display card is
+	// unavailable. Preserve that safe no-op rather than inventing an instance.
+	if(id == CardInstanceId::None)
+		return;
+	if(auto error = d.state().apply_card_hint(id, type, value)) {
+		d.inconsistent(*error);
+		return;
+	}
+	d.emit(CardHintChanged{id, type, value});
+}
+
+void handle_player_hint(Decoding& d) {
+	auto& r = d.reader();
+	const auto player = r.u8();
+	const auto type = r.u8();
+	const auto value = d.compat() ? r.u32() : r.u64();
+	if(!fully_read(r))
+		return;
+	if(!d.require_duelist(player))
+		return;
+	// Upstream currently defines only description add/remove. Unknown hint
+	// types are consumed and ignored by ClientAnalyze, but remain decoded
+	// because their framing is completely understood.
+	if(type != 6 && type != 7)
+		return;
+	if(auto error = d.state().apply_player_hint(player, type, value)) {
+		d.inconsistent(*error);
+		return;
+	}
+	d.emit(PlayerHintChanged{player, type, value});
+}
+
 void handle_draw(Decoding& d) {
 	auto& r = d.reader();
 	const auto player = r.u8();
@@ -737,6 +892,10 @@ void decode_supported(std::uint8_t message, Decoding& d) {
 		return handle_start(d);
 	case msg::MSG_WIN:
 		return handle_win(d);
+	case msg::MSG_CONFIRM_DECKTOP:
+		return handle_confirm_decktop(d);
+	case msg::MSG_CONFIRM_CARDS:
+		return handle_confirm_cards(d);
 	case msg::MSG_SHUFFLE_DECK:
 		return handle_shuffle_deck(d);
 	case msg::MSG_SHUFFLE_HAND:
@@ -769,6 +928,8 @@ void decode_supported(std::uint8_t message, Decoding& d) {
 		return handle_chain_solved(d);
 	case msg::MSG_CHAIN_END:
 		return handle_chain_end(d);
+	case msg::MSG_BECOME_TARGET:
+		return handle_become_target(d);
 	case msg::MSG_DRAW:
 		return handle_draw(d);
 	case msg::MSG_DAMAGE:
@@ -791,6 +952,10 @@ void decode_supported(std::uint8_t message, Decoding& d) {
 		return handle_update_data(d);
 	case msg::MSG_UPDATE_CARD:
 		return handle_update_card(d);
+	case msg::MSG_CARD_HINT:
+		return handle_card_hint(d);
+	case msg::MSG_PLAYER_HINT:
+		return handle_player_hint(d);
 	default:
 		// Unreachable: supports() gates this switch, and a unit test asserts
 		// the two agree.

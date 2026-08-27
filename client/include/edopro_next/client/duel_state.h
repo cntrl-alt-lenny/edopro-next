@@ -15,6 +15,7 @@
 
 #include <array>
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -61,6 +62,9 @@ struct ChainLink {
 	// Opaque string id for the effect description. Resolving it needs the
 	// card database, which this layer deliberately does not have.
 	std::uint64_t description = 0;
+	// MSG_BECOME_TARGET adds the referenced instances to the pending/current
+	// chain link. This is distinct from query-derived card target relations.
+	std::vector<CardInstanceId> targets;
 	bool resolving = false;
 	bool resolved = false;
 
@@ -153,6 +157,8 @@ public:
 	Error set_position(CardInstanceId id, CardPosition position);
 	Error set_code(CardInstanceId id, CardCode code);
 	Error set_combat_stats(CardInstanceId id, std::int32_t attack, std::int32_t defense);
+	Error apply_card_hint(CardInstanceId id, std::uint8_t type, std::uint64_t value);
+	void clear_card_description_hints(CardInstanceId id);
 	// Applies a query as a state patch. It emits no gameplay event: query
 	// packets synchronize client knowledge and are not actions in the duel.
 	Error apply_query_patch(CardInstanceId id, const CardQueryPatch& patch);
@@ -162,9 +168,14 @@ public:
 	const std::vector<ChainLink>& chain() const noexcept { return chain_; }
 	// Links must arrive in order; a gap or a repeat is an integrity error.
 	Error push_chain_link(const ChainLink& link);
+	Error add_chain_targets(const std::vector<CardInstanceId>& targets);
 	Error mark_chain_resolving(std::uint32_t link);
 	Error mark_chain_resolved(std::uint32_t link);
 	void clear_chain() noexcept { chain_.clear(); }
+
+	const std::map<std::uint64_t, std::uint32_t>& player_description_hints(
+		PlayerId player) const;
+	Error apply_player_hint(PlayerId player, std::uint8_t type, std::uint64_t value);
 
 	// --- battle ---
 
@@ -219,6 +230,7 @@ private:
 	std::array<std::uint32_t, kPlayerCount> extra_face_up_{};
 	std::vector<CardState> cards_;
 	std::vector<ChainLink> chain_;
+	std::array<std::map<std::uint64_t, std::uint32_t>, kPlayerCount> player_desc_hints_{};
 	CardInstanceId attacker_ = CardInstanceId::None;
 	CardInstanceId attack_target_ = CardInstanceId::None;
 	bool finished_ = false;

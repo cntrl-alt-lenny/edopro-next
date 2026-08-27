@@ -365,9 +365,12 @@ DuelState::Error DuelState::move_card(CardInstanceId id, const CardLocation& des
 	// that the card itself occupies - is allowed explicitly.
 	if(auto error = validate_destination(*card, destination))
 		return error;
+	const bool clears_hint = !card->location.overlay && !destination.overlay;
 	if(auto error = detach(*card))
 		return error;
 	place(*card, destination, position);
+	if(clears_hint)
+		card->hint.reset();
 	return std::nullopt;
 }
 
@@ -427,6 +430,32 @@ DuelState::Error DuelState::set_combat_stats(CardInstanceId id, std::int32_t att
 	card->attack = attack;
 	card->defense = defense;
 	return std::nullopt;
+}
+
+DuelState::Error DuelState::apply_card_hint(CardInstanceId id, std::uint8_t type,
+										std::uint64_t value) {
+	auto* card = find(id);
+	if(card == nullptr)
+		return "no such card instance " + to_string(id);
+	if(type == protocol::CHINT_DESC_ADD) {
+		++card->description_hints[value];
+	} else if(type == protocol::CHINT_DESC_REMOVE) {
+		const auto it = card->description_hints.find(value);
+		if(it != card->description_hints.end()) {
+			if(it->second <= 1)
+				card->description_hints.erase(it);
+			else
+				--it->second;
+		}
+	} else {
+		card->hint = CardHint{type, value};
+	}
+	return std::nullopt;
+}
+
+void DuelState::clear_card_description_hints(CardInstanceId id) {
+	if(auto* card = find(id); card != nullptr)
+		card->description_hints.clear();
 }
 
 DuelState::Error DuelState::apply_query_patch(CardInstanceId id, const CardQueryPatch& patch) {
@@ -506,6 +535,44 @@ DuelState::Error DuelState::push_chain_link(const ChainLink& link) {
 		return "chain link " + std::to_string(link.link) + " arrived where " +
 			   std::to_string(expected) + " was expected";
 	chain_.push_back(link);
+	return std::nullopt;
+}
+
+DuelState::Error DuelState::add_chain_targets(const std::vector<CardInstanceId>& targets) {
+	if(chain_.empty())
+		return "target notification arrived without a chain link";
+	auto& link = chain_.back();
+	for(const auto id : targets) {
+		if(find(id) == nullptr)
+			return "target names no card instance " + to_string(id);
+		if(std::find(link.targets.begin(), link.targets.end(), id) == link.targets.end())
+			link.targets.push_back(id);
+	}
+	return std::nullopt;
+}
+
+const std::map<std::uint64_t, std::uint32_t>& DuelState::player_description_hints(
+	PlayerId player) const {
+	static const std::map<std::uint64_t, std::uint32_t> empty;
+	return is_duelist(player) ? player_desc_hints_[player] : empty;
+}
+
+DuelState::Error DuelState::apply_player_hint(PlayerId player, std::uint8_t type,
+										std::uint64_t value) {
+	if(!is_duelist(player))
+		return "hint names player " + player_name(player);
+	auto& hints = player_desc_hints_[player];
+	if(type == protocol::PHINT_DESC_ADD) {
+		++hints[value];
+	} else if(type == protocol::PHINT_DESC_REMOVE) {
+		const auto it = hints.find(value);
+		if(it != hints.end()) {
+			if(it->second <= 1)
+				hints.erase(it);
+			else
+				--it->second;
+		}
+	}
 	return std::nullopt;
 }
 
@@ -643,6 +710,16 @@ std::vector<std::string> DuelState::check_invariants() const {
 		if(chain_[i].link != i + 1)
 			problems.push_back("chain position " + std::to_string(i) + " holds link " +
 							   std::to_string(chain_[i].link));
+		for(std::size_t j = 0; j < chain_[i].targets.size(); ++j) {
+			const auto id = chain_[i].targets[j];
+			if(find(id) == nullptr || !find(id)->tracked)
+				problems.push_back("chain link " + std::to_string(chain_[i].link) +
+					" names an untracked target " + to_string(id));
+			if(std::find(chain_[i].targets.begin(), chain_[i].targets.begin() + j, id) !=
+				chain_[i].targets.begin() + j)
+				problems.push_back("chain link " + std::to_string(chain_[i].link) +
+					" repeats target " + to_string(id));
+		}
 	}
 
 	return problems;

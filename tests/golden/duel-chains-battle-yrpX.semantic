@@ -4,8 +4,8 @@ protocol: modern
 packets: 990
 
 ## coverage
-decoded: 967
-unsupported: 23
+decoded: 990
+unsupported: 0
 unknown: 0
 malformed: 0
 inconsistent: 0
@@ -45,6 +45,7 @@ unknown_query_fields: 0
   5 MSG_WIN                  1
   6 MSG_UPDATE_DATA          799
   7 MSG_UPDATE_CARD          30
+ 31 MSG_CONFIRM_CARDS        2
  32 MSG_SHUFFLE_DECK         3
  33 MSG_SHUFFLE_HAND         3
  40 MSG_NEW_TURN             5
@@ -61,18 +62,18 @@ unknown_query_fields: 0
  72 MSG_CHAIN_SOLVING        8
  73 MSG_CHAIN_SOLVED         8
  74 MSG_CHAIN_END            6
+ 83 MSG_BECOME_TARGET        2
  90 MSG_DRAW                 8
  91 MSG_DAMAGE               1
 110 MSG_ATTACK               3
 111 MSG_BATTLE               2
 113 MSG_DAMAGE_STEP_START    2
 114 MSG_DAMAGE_STEP_END      2
-
-### known but not implemented
- 31 MSG_CONFIRM_CARDS        2
- 83 MSG_BECOME_TARGET        2
 160 MSG_CARD_HINT            17
 165 MSG_PLAYER_HINT          2
+
+### known but not implemented
+(none)
 
 ### unknown message ids
 (none)
@@ -81,7 +82,7 @@ unknown_query_fields: 0
 (none)
 
 ## semantic events
-count: 251
+count: 268
     0 DuelStarted player_type=0 lp=[8000,8000] deck=[40,40] extra=[15,15]
     5 CardsDrawn player=p0 cards=[40,39,38,37,36]
     7 CardsDrawn player=p1 cards=[95,94,93,92,91]
@@ -94,11 +95,13 @@ count: 251
    60 CardMoved instance=38 HAND[p0:2] -> GRAVE[p0:0] reason=COST|DISCARD
    77 ChainLinkResolving link=1
    78 CardMoved instance=15 DECK[p0:14] -> HAND[p0:5] reason=EFFECT
+   80 CardHintChanged instance=15 type=6 value=225
    82 HandShuffled player=p0 cards=6
    82 CardIdentityRevealed instance=40 code=70828912
    82 CardIdentityRevealed instance=39 code=49140998
    82 CardIdentityRevealed instance=37 code=504700123
    82 CardIdentityRevealed instance=35 code=14087893
+   84 CardHintChanged instance=36 type=6 value=225
    85 DeckShuffled player=p0 cards=33
    85 CardIdentityConcealed instance=1
    85 CardIdentityConcealed instance=2
@@ -135,6 +138,7 @@ count: 251
    85 CardIdentityConcealed instance=34
    86 ChainLinkResolved link=1
    87 ChainEnded links=1
+   96 CardHintChanged instance=36 type=7 value=225
   111 CardMoved instance=37 HAND[p0:2] -> SZONE[p0:2] reason=RULE|DRAW
   113 CardSetAnnounced at=SZONE[p0:2] code=504700123
   132 PhaseChanged END
@@ -150,15 +154,20 @@ count: 251
   248 AttackDeclared attacker=91 target=direct
   257 PositionChanged instance=37 FACEDOWN -> FACEUP
   259 ChainLinkAdded link=1 instance=37 code=504700123 from=SZONE[p0:2] trigger=SZONE[p0:2] desc=0
+  260 PlayerHintChanged player=p0 type=6 value=529216436174849
   276 ChainLinkResolving link=1
   277 CardCreated instance=111 at=MZONE[p0:0] code=73915052
   279 SummonAnnounced kind=SPECIAL code=73915052 at=MZONE[p0:0]
+  280 CardHintChanged instance=111 type=6 value=3304
   281 CardCreated instance=112 at=MZONE[p0:1] code=73915053
   283 SummonAnnounced kind=SPECIAL code=73915053 at=MZONE[p0:1]
+  284 CardHintChanged instance=112 type=6 value=3304
   285 CardCreated instance=113 at=MZONE[p0:2] code=73915054
   287 SummonAnnounced kind=SPECIAL code=73915054 at=MZONE[p0:2]
+  288 CardHintChanged instance=113 type=6 value=3304
   289 CardCreated instance=114 at=MZONE[p0:3] code=73915055
   291 SummonAnnounced kind=SPECIAL code=73915055 at=MZONE[p0:3]
+  292 CardHintChanged instance=114 type=6 value=3304
   293 SummonCompleted kind=SPECIAL
   298 ChainLinkResolved link=1
   299 CardMoved instance=37 SZONE[p0:2] -> GRAVE[p0:1] reason=RULE
@@ -171,6 +180,7 @@ count: 251
   387 DamageStepEnded
   400 PhaseChanged MAIN2
   417 PhaseChanged END
+  424 PlayerHintChanged player=p0 type=7 value=529216436174849
   429 TurnStarted player=p0 turn=3
   430 PhaseChanged DRAW
   437 CardsDrawn player=p0 cards=[34]
@@ -195,11 +205,13 @@ count: 251
   589 ChainLinkResolved link=2
   590 ChainLinkResolving link=1
   591 CardMoved instance=58 DECK[p1:2] -> HAND[p1:5] reason=EFFECT
+  593 CardHintChanged instance=58 type=6 value=225
   595 HandShuffled player=p1 cards=6
   595 CardIdentityRevealed instance=94 code=504700087
   595 CardIdentityRevealed instance=92 code=5318639
   595 CardIdentityRevealed instance=89 code=511000818
   595 CardIdentityRevealed instance=58 code=504700123
+  597 CardHintChanged instance=89 type=6 value=225
   598 DeckShuffled player=p1 cards=32
   598 CardIdentityConcealed instance=56
   598 CardIdentityConcealed instance=57
@@ -235,6 +247,7 @@ count: 251
   598 CardIdentityConcealed instance=88
   599 ChainLinkResolved link=1
   600 ChainEnded links=2
+  609 CardHintChanged instance=89 type=7 value=225
   628 PhaseChanged BATTLE_START
   641 AttackDeclared attacker=95 target=direct
   658 DamageStepStarted
@@ -248,6 +261,7 @@ count: 251
   761 ChainLinkAdded link=1 instance=95 code=89111398 from=MZONE[p1:2] trigger=MZONE[p1:2] desc=1105
   777 ChainLinkResolving link=1
   778 CardMoved instance=95 MZONE[p1:2] -> HAND[p1:5] reason=EFFECT
+  780 CardHintChanged instance=95 type=6 value=225
   781 HandShuffled player=p1 cards=6
   781 CardIdentityRevealed instance=94 code=89111398
   781 CardIdentityRevealed instance=93 code=504700123
@@ -255,8 +269,10 @@ count: 251
   781 CardIdentityRevealed instance=89 code=46411259
   781 CardIdentityRevealed instance=58 code=45986603
   781 CardIdentityRevealed instance=95 code=504700087
+  783 CardHintChanged instance=94 type=6 value=225
   784 ChainLinkResolved link=1
   785 ChainEnded links=1
+  794 CardHintChanged instance=94 type=7 value=225
   807 TurnStarted player=p0 turn=5
   808 PhaseChanged DRAW
   815 CardsDrawn player=p0 cards=[33]
@@ -321,8 +337,10 @@ count: 251
   928 CardMoved instance=40 HAND[p0:4] -> SZONE[p0:3] reason=EFFECT|DRAW
   930 ChainLinkAdded link=1 instance=40 code=49140998 from=SZONE[p0:3] trigger=SZONE[p0:3] desc=0
   931 CardMoved instance=35 HAND[p0:1] -> GRAVE[p0:3] reason=COST|DISCARD
+  933 CardsBecameTargets cards=[37]
   945 PositionChanged instance=92 FACEDOWN -> FACEUP
   947 ChainLinkAdded link=2 instance=92 code=5318639 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=5576997208064
+  948 CardsBecameTargets cards=[34]
   964 ChainLinkResolving link=2
   965 CardMoved instance=34 SZONE[p0:2] -> GRAVE[p0:4] reason=DESTROY|EFFECT
   967 ChainLinkResolved link=2

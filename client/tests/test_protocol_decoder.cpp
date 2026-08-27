@@ -7,6 +7,7 @@
 #include "edopro_next/client/protocol_decoder.h"
 
 #include <algorithm>
+#include <tuple>
 
 using namespace edopro_next::client;
 using edopro_next::testing::PayloadBuilder;
@@ -27,6 +28,17 @@ Packet start_packet(std::uint16_t main = 5, std::uint16_t extra = 1) {
 		.u16(extra)
 		.u16(main)
 		.u16(extra)
+		.packet(proto::MSG_START);
+}
+
+Packet variant_start_packet(bool compat, std::uint16_t main = 5, std::uint16_t extra = 1) {
+	if(!compat)
+		return start_packet(main, extra);
+	return PayloadBuilder()
+		.u8(0).u8(0)
+		.u32(8000).u32(8000)
+		.u16(main).u16(extra)
+		.u16(main).u16(extra)
 		.packet(proto::MSG_START);
 }
 
@@ -68,6 +80,78 @@ Packet move_packet(std::uint32_t code, std::uint8_t from_location, std::uint32_t
 		.loc(controller, to_location, to_sequence, to_position)
 		.u32(reason)
 		.packet(proto::MSG_MOVE);
+}
+
+std::uint8_t raw_location(Zone zone) {
+	switch(zone) {
+	case Zone::Deck: return proto::LOCATION_DECK;
+	case Zone::Hand: return proto::LOCATION_HAND;
+	case Zone::MonsterZone: return proto::LOCATION_MZONE;
+	case Zone::SpellZone: return proto::LOCATION_SZONE;
+	case Zone::Graveyard: return proto::LOCATION_GRAVE;
+	case Zone::Banished: return proto::LOCATION_REMOVED;
+	case Zone::ExtraDeck: return proto::LOCATION_EXTRA;
+	default: return 0;
+	}
+}
+
+Packet confirm_decktop_packet(std::uint8_t player, const std::vector<std::uint32_t>& codes,
+							 bool compat = false) {
+	PayloadBuilder builder;
+	builder.u8(player);
+	if(compat) builder.u8(static_cast<std::uint8_t>(codes.size()));
+	else builder.u32(static_cast<std::uint32_t>(codes.size()));
+	for(const auto code : codes) {
+		builder.u32(code);
+		if(compat) builder.u8(0).u8(proto::LOCATION_DECK).u8(0);
+		else builder.u8(0).u8(proto::LOCATION_DECK).u32(0);
+	}
+	return builder.packet(proto::MSG_CONFIRM_DECKTOP);
+}
+
+Packet confirm_cards_packet(std::uint8_t player,
+							 const std::vector<std::tuple<std::uint32_t, std::uint8_t,
+															 std::uint8_t, std::uint32_t>>& entries,
+							 bool compat = false) {
+	PayloadBuilder builder;
+	builder.u8(player);
+	if(compat) builder.u8(0).u8(static_cast<std::uint8_t>(entries.size()));
+	else builder.u32(static_cast<std::uint32_t>(entries.size()));
+	for(const auto& [code, controller, location, sequence] : entries) {
+		builder.u32(code).u8(controller).u8(location);
+		if(compat) builder.u8(static_cast<std::uint8_t>(sequence));
+		else builder.u32(sequence);
+	}
+	return builder.packet(proto::MSG_CONFIRM_CARDS);
+}
+
+Packet become_target_packet(const std::vector<CardLocation>& locations, bool compat = false) {
+	PayloadBuilder builder;
+	if(compat) builder.u8(static_cast<std::uint8_t>(locations.size()));
+	else builder.u32(static_cast<std::uint32_t>(locations.size()));
+	for(const auto& location : locations)
+		builder.loc(location.controller, raw_location(location.zone),
+				location.sequence, 0, compat);
+	return builder.packet(proto::MSG_BECOME_TARGET);
+}
+
+Packet card_hint_packet(const CardLocation& location, std::uint8_t type, std::uint64_t value,
+						bool compat = false) {
+	PayloadBuilder builder;
+	builder.loc(location.controller, raw_location(location.zone), location.sequence,
+				0, compat).u8(type);
+	if(compat) builder.u32(static_cast<std::uint32_t>(value));
+	else builder.u64(value);
+	return builder.packet(proto::MSG_CARD_HINT);
+}
+
+Packet player_hint_packet(std::uint8_t player, std::uint8_t type, std::uint64_t value,
+						  bool compat = false) {
+	PayloadBuilder builder;
+	builder.u8(player).u8(type);
+	if(compat) builder.u32(static_cast<std::uint32_t>(value));
+	else builder.u64(value);
+	return builder.packet(proto::MSG_PLAYER_HINT);
 }
 
 struct Fixture {
@@ -800,4 +884,156 @@ EDOPRO_TEST(supported_message_list_is_sorted_and_unique) {
 	EDOPRO_CHECK(std::is_sorted(ids.begin(), ids.end()));
 	EDOPRO_CHECK(std::adjacent_find(ids.begin(), ids.end()) == ids.end());
 	EDOPRO_CHECK(!ids.empty());
+}
+
+EDOPRO_TEST(confirm_decktop_reveals_from_the_back_in_modern_and_compat_layouts) {
+	for(const bool compat : {false, true}) {
+		ProtocolDecoder decoder{ProtocolVariant{compat}};
+		DuelState state;
+		const auto start = variant_start_packet(compat, 3, 0);
+		EDOPRO_CHECK_EQ(decoder.decode(start, state).status, DecodeStatus::Decoded);
+		const auto deck = state.zone(0, Zone::Deck);
+		const auto result = decoder.decode(confirm_decktop_packet(0, {101, 202}, compat), state);
+		EDOPRO_CHECK_EQ(result.status, DecodeStatus::Decoded);
+		EDOPRO_CHECK_EQ(state.find(deck.back())->code, static_cast<CardCode>(101));
+		EDOPRO_CHECK_EQ(state.find(deck[deck.size() - 2])->code, static_cast<CardCode>(202));
+		EDOPRO_CHECK(state.check_invariants().empty());
+	}
+}
+
+EDOPRO_TEST(confirm_decktop_truncated_second_entry_is_transactional) {
+	auto fixture = started(2, 0);
+	const auto before = fixture.state;
+	PayloadBuilder packet;
+	packet.u8(0).u32(2).u32(101).u8(0).u8(proto::LOCATION_DECK).u32(0).u32(0)
+		.u32(202).u8(0);
+	const auto result = fixture.run(packet.packet(proto::MSG_CONFIRM_DECKTOP));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Malformed);
+	EDOPRO_CHECK(fixture.state == before);
+}
+
+EDOPRO_TEST(zero_confirmation_code_preserves_existing_identity) {
+	auto fixture = started(1, 0);
+	const auto id = fixture.state.zone(0, Zone::Deck).back();
+	EDOPRO_CHECK(!fixture.state.set_code(id, CardCode{1234}));
+	const auto decktop = fixture.run(confirm_decktop_packet(0, {0}));
+	EDOPRO_CHECK_EQ(decktop.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
+
+	const auto cards = fixture.run(confirm_cards_packet(0,
+		{{0, 0, proto::LOCATION_DECK, 0}}));
+	EDOPRO_CHECK_EQ(cards.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
+}
+
+EDOPRO_TEST(confirm_cards_updates_tracked_cards_and_ignores_temporary_location_zero) {
+	auto fixture = started(0, 0);
+	CardInstanceId id = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
+		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+	const auto result = fixture.run(confirm_cards_packet(1, {{1234, 0, proto::LOCATION_MZONE, 0},
+		{5678, 0, 0, 0}}));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
+	EDOPRO_CHECK_EQ(fixture.state.cards().size(), std::size_t{1});
+
+	ProtocolDecoder compat{ProtocolVariant{true}};
+	DuelState compat_state;
+	EDOPRO_CHECK_EQ(compat.decode(variant_start_packet(true, 0, 0), compat_state).status,
+		DecodeStatus::Decoded);
+	CardInstanceId compat_id = CardInstanceId::None;
+	EDOPRO_CHECK(!compat_state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
+		CardPosition{proto::POS_FACEUP_ATTACK}, &compat_id));
+	EDOPRO_CHECK_EQ(compat.decode(confirm_cards_packet(0,
+		{{4321, 0, proto::LOCATION_MZONE, 0}}, true), compat_state).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(compat_state.find(compat_id)->code, static_cast<CardCode>(4321));
+}
+
+EDOPRO_TEST(confirm_cards_bad_later_reference_rolls_back_earlier_reveal) {
+	auto fixture = started(0, 0);
+	CardInstanceId id = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
+		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+	const auto before = fixture.state;
+	const auto result = fixture.run(confirm_cards_packet(0, {{1234, 0, proto::LOCATION_MZONE, 0},
+		{5678, 0, proto::LOCATION_MZONE, 4}}));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Inconsistent);
+	EDOPRO_CHECK(fixture.state == before);
+}
+
+EDOPRO_TEST(become_target_records_current_chain_targets_without_card_relationship_state) {
+	auto fixture = started(0, 0);
+	CardInstanceId id = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+	ChainLink link;
+	link.link = 1;
+	EDOPRO_CHECK(!fixture.state.push_chain_link(link));
+	const auto result = fixture.run(become_target_packet({{0, Zone::MonsterZone, 0, false, 0}}));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.chain().back().targets, std::vector<CardInstanceId>{id});
+	EDOPRO_CHECK(std::holds_alternative<CardsBecameTargets>(result.events.front()));
+	EDOPRO_CHECK(fixture.state.find(id)->targets.empty());
+}
+
+EDOPRO_TEST(become_target_bad_later_reference_is_transactional) {
+	auto fixture = started(0, 0);
+	CardInstanceId id = CardInstanceId::None;
+	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+	ChainLink link;
+	link.link = 1;
+	EDOPRO_CHECK(!fixture.state.push_chain_link(link));
+	const auto before = fixture.state;
+	const auto result = fixture.run(become_target_packet({
+		{0, Zone::MonsterZone, 0, false, 0}, {0, Zone::MonsterZone, 6, false, 0}}));
+	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Inconsistent);
+	EDOPRO_CHECK(fixture.state == before);
+}
+
+EDOPRO_TEST(card_hint_replaces_latest_and_tracks_description_deltas_in_both_widths) {
+	for(const bool compat : {false, true}) {
+		ProtocolDecoder decoder{ProtocolVariant{compat}};
+		DuelState state;
+		EDOPRO_CHECK_EQ(decoder.decode(variant_start_packet(compat, 0, 0), state).status,
+			DecodeStatus::Decoded);
+		CardInstanceId id = CardInstanceId::None;
+		EDOPRO_CHECK(!state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+			CardPosition{proto::POS_FACEUP_ATTACK}, &id));
+		EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0}, 3,
+			0x1234, compat), state).status, DecodeStatus::Decoded);
+		EDOPRO_CHECK_EQ(state.find(id)->hint->type, std::uint8_t{3});
+		EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0}, 4,
+			0x5678, compat), state).status, DecodeStatus::Decoded);
+		EDOPRO_CHECK_EQ(state.find(id)->hint->value, std::uint64_t{0x5678});
+		for(int i = 0; i < 2; ++i)
+			EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0},
+				proto::CHINT_DESC_ADD, 225, compat), state).status, DecodeStatus::Decoded);
+		EDOPRO_CHECK_EQ(state.find(id)->description_hints.at(225), std::uint32_t{2});
+		EDOPRO_CHECK_EQ(decoder.decode(card_hint_packet({0, Zone::MonsterZone, 0, false, 0},
+			proto::CHINT_DESC_REMOVE, 225, compat), state).status, DecodeStatus::Decoded);
+		EDOPRO_CHECK_EQ(state.find(id)->description_hints.at(225), std::uint32_t{1});
+	}
+}
+
+EDOPRO_TEST(player_hints_are_protocol_absolute_and_reset_by_start) {
+	auto fixture = started(0, 0);
+	EDOPRO_CHECK_EQ(fixture.run(player_hint_packet(1, proto::PHINT_DESC_ADD, 0x123456789ull)).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(fixture.state.player_description_hints(1).at(0x123456789ull),
+		std::uint32_t{1});
+	EDOPRO_CHECK_EQ(fixture.run(player_hint_packet(1, proto::PHINT_DESC_REMOVE, 0x123456789ull)).status,
+		DecodeStatus::Decoded);
+	fixture.expect_decoded(start_packet(0, 0));
+	EDOPRO_CHECK(fixture.state.player_description_hints(1).empty());
+
+	ProtocolDecoder compat{ProtocolVariant{true}};
+	DuelState compat_state;
+	EDOPRO_CHECK_EQ(compat.decode(variant_start_packet(true, 0, 0), compat_state).status,
+		DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(compat.decode(player_hint_packet(0, proto::PHINT_DESC_ADD, 0x12345678u, true),
+		compat_state).status, DecodeStatus::Decoded);
+	EDOPRO_CHECK_EQ(compat_state.player_description_hints(0).at(0x12345678u),
+		std::uint32_t{1});
 }
