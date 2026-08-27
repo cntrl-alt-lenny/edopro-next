@@ -325,7 +325,8 @@ Client-state integrity only. Nothing here is a game rule; `ocgcore` owns those.
 - every card's stored location agrees with the zone that holds it;
 - material lists and `attached_to` back-references agree, and material indices are dense;
 - the extra deck's face-up counter matches the cards actually face-up in it;
-- chain links are numbered contiguously from 1.
+- chain links are numbered contiguously from 1, and chain targets name live cards
+  without duplicates.
 
 `DuelState::check_invariants()` re-derives all of them from scratch and returns one line per
 violation. The semantic trace runs it at the end of every fixture, and a unit test
@@ -344,8 +345,8 @@ Named so the gaps are visible:
   compares only fields with an equivalent legacy provenance. See
   [query-stream.md](query-stream.md).
 - **Independent relationship/counter messages** — `MSG_ADD_COUNTER`, `MSG_REMOVE_COUNTER`,
-  `MSG_EQUIP`, `MSG_UNEQUIP`, `MSG_CARD_TARGET`, `MSG_CANCEL_TARGET`, and
-  `MSG_BECOME_TARGET` remain unsupported. `CardState` already retains counters,
+  `MSG_EQUIP`, `MSG_UNEQUIP`, `MSG_CARD_TARGET`, and `MSG_CANCEL_TARGET` remain unsupported.
+  `MSG_BECOME_TARGET` is decoded as current-chain target state. `CardState` already retains counters,
   equip-target state, and target state when those values arrive through a decoded
   `MSG_UPDATE_DATA` / `MSG_UPDATE_CARD` query patch; it does not yet apply these
   independent `MSG_*` relationship/counter messages.

@@ -4,8 +4,8 @@ protocol: modern
 packets: 1133
 
 ## coverage
-decoded: 1018
-unsupported: 115
+decoded: 1133
+unsupported: 0
 unknown: 0
 malformed: 0
 inconsistent: 0
@@ -45,6 +45,8 @@ unknown_query_fields: 0
   5 MSG_WIN                  1
   6 MSG_UPDATE_DATA          649
   7 MSG_UPDATE_CARD          124
+ 30 MSG_CONFIRM_DECKTOP      6
+ 31 MSG_CONFIRM_CARDS        4
  32 MSG_SHUFFLE_DECK         2
  33 MSG_SHUFFLE_HAND         11
  40 MSG_NEW_TURN             2
@@ -61,13 +63,12 @@ unknown_query_fields: 0
  72 MSG_CHAIN_SOLVING        15
  73 MSG_CHAIN_SOLVED         15
  74 MSG_CHAIN_END            13
+ 83 MSG_BECOME_TARGET        9
  90 MSG_DRAW                 6
+160 MSG_CARD_HINT            96
 
 ### known but not implemented
- 30 MSG_CONFIRM_DECKTOP      6
- 31 MSG_CONFIRM_CARDS        4
- 83 MSG_BECOME_TARGET        9
-160 MSG_CARD_HINT            96
+(none)
 
 ### unknown message ids
 (none)
@@ -76,7 +77,7 @@ unknown_query_fields: 0
 (none)
 
 ## semantic events
-count: 362
+count: 467
     0 DuelStarted player_type=0 lp=[8000,8000] deck=[40,40] extra=[0,15]
     5 CardsDrawn player=p0 cards=[40,39,38,37,36]
     7 CardsDrawn player=p1 cards=[80,79,78,77,76]
@@ -101,6 +102,8 @@ count: 362
   177 ChainLinkResolving link=1
   178 CardMoved instance=52 DECK[p1:11] -> HAND[p1:5] reason=EFFECT
   180 CardMoved instance=45 DECK[p1:4] -> HAND[p1:6] reason=EFFECT
+  182 CardHintChanged instance=45 type=6 value=225
+  183 CardHintChanged instance=52 type=6 value=225
   185 HandShuffled player=p1 cards=7
   185 CardIdentityRevealed instance=80 code=504700054
   185 CardIdentityRevealed instance=79 code=3136426
@@ -109,6 +112,8 @@ count: 362
   185 CardIdentityRevealed instance=75 code=504700054
   185 CardIdentityRevealed instance=52 code=22589918
   185 CardIdentityRevealed instance=45 code=38699854
+  187 CardHintChanged instance=80 type=6 value=225
+  188 CardHintChanged instance=75 type=6 value=225
   189 DeckShuffled player=p1 cards=32
   189 CardIdentityConcealed instance=41
   189 CardIdentityConcealed instance=42
@@ -144,21 +149,27 @@ count: 362
   189 CardIdentityConcealed instance=74
   190 ChainLinkResolved link=1
   191 ChainEnded links=1
+  200 CardHintChanged instance=75 type=7 value=225
+  201 CardHintChanged instance=80 type=7 value=225
   216 CardMoved instance=76 HAND[p1:3] -> SZONE[p1:2] reason=RULE|DRAW
   218 ChainLinkAdded link=1 instance=76 code=42703248 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
   234 ChainLinkResolving link=1
   235 CardMoved instance=39 SZONE[p0:0] -> HAND[p0:4] reason=EFFECT
+  237 CardHintChanged instance=39 type=6 value=225
   238 HandShuffled player=p0 cards=5
   238 CardIdentityRevealed instance=37 code=97077563
   238 CardIdentityRevealed instance=36 code=7572887
   238 CardIdentityRevealed instance=39 code=504700055
+  240 CardHintChanged instance=37 type=6 value=225
   241 ChainLinkResolved link=1
   242 CardMoved instance=76 SZONE[p1:2] -> GRAVE[p1:1] reason=RULE
   244 ChainEnded links=1
+  253 CardHintChanged instance=37 type=7 value=225
   268 CardMoved instance=78 HAND[p1:2] -> MZONE[p1:2] reason=RULE|DRAW
   270 CardSetAnnounced at=MZONE[p1:2] code=504700188
   285 CardMoved instance=45 HAND[p1:4] -> SZONE[p1:2] reason=RULE|DRAW
   287 ChainLinkAdded link=1 instance=45 code=38699854 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  288 CardsBecameTargets cards=[78]
   304 ChainLinkResolving link=1
   305 PositionChanged instance=78 FACEDOWN_DEFENSE -> FACEUP_ATTACK
   307 ChainLinkResolved link=1
@@ -180,12 +191,26 @@ count: 362
   362 CardMoved instance=33 DECK[p0:31] -> HAND[p0:6] reason=EFFECT
   364 CardMoved instance=31 DECK[p0:30] -> HAND[p0:7] reason=EFFECT
   366 CardMoved instance=30 DECK[p0:29] -> HAND[p0:8] reason=EFFECT
+  368 CardHintChanged instance=30 type=6 value=225
+  369 CardHintChanged instance=31 type=6 value=225
+  370 CardHintChanged instance=33 type=6 value=225
+  371 CardHintChanged instance=34 type=6 value=225
+  372 CardHintChanged instance=71 type=6 value=225
+  373 CardHintChanged instance=72 type=6 value=225
+  374 CardHintChanged instance=73 type=6 value=225
+  375 CardHintChanged instance=74 type=6 value=225
+  376 CardHintChanged instance=70 type=6 value=225
   377 HandShuffled player=p1 cards=9
   377 CardIdentityRevealed instance=79 code=14087893
   377 CardIdentityRevealed instance=75 code=22589918
   377 CardIdentityRevealed instance=52 code=504700054
   377 CardIdentityRevealed instance=73 code=3136426
   377 CardIdentityRevealed instance=70 code=43434803
+  379 CardHintChanged instance=79 type=6 value=225
+  380 CardHintChanged instance=74 type=6 value=225
+  381 CardHintChanged instance=73 type=6 value=225
+  382 CardHintChanged instance=71 type=6 value=225
+  383 CardHintChanged instance=70 type=6 value=225
   384 HandShuffled player=p0 cards=9
   384 CardIdentityRevealed instance=38 code=97077563
   384 CardIdentityRevealed instance=37 code=7572887
@@ -193,10 +218,25 @@ count: 362
   384 CardIdentityRevealed instance=35 code=83968380
   384 CardIdentityRevealed instance=34 code=4178474
   384 CardIdentityRevealed instance=31 code=4041838
+  386 CardHintChanged instance=35 type=6 value=225
+  387 CardHintChanged instance=34 type=6 value=225
+  388 CardHintChanged instance=33 type=6 value=225
+  389 CardHintChanged instance=30 type=6 value=225
   390 ChainLinkResolved link=1
   391 ChainEnded links=1
+  400 CardHintChanged instance=79 type=7 value=225
+  401 CardHintChanged instance=73 type=7 value=225
+  402 CardHintChanged instance=74 type=7 value=225
+  403 CardHintChanged instance=71 type=7 value=225
+  404 CardHintChanged instance=70 type=7 value=225
+  405 CardHintChanged instance=35 type=7 value=225
+  406 CardHintChanged instance=33 type=7 value=225
+  407 CardHintChanged instance=34 type=7 value=225
+  408 CardHintChanged instance=30 type=7 value=225
   423 CardMoved instance=71 HAND[p1:7] -> SZONE[p1:2] reason=EFFECT
   425 ChainLinkAdded link=1 instance=71 code=43434803 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  426 CardsBecameTargets cards=[78]
+  427 CardsBecameTargets cards=[40]
   443 ChainLinkResolving link=1
   444 CardMoved instance=78 GRAVE[p1:3] -> MZONE[p1:2] reason=SPSUMMON
   446 SummonAnnounced kind=SPECIAL code=? at=MZONE[p1:2]
@@ -210,8 +250,10 @@ count: 362
   483 ChainLinkAdded link=1 instance=74 code=29228529 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
   484 CardMoved instance=79 HAND[p1:1] -> GRAVE[p1:4] reason=COST
   486 CardMoved instance=73 HAND[p1:3] -> GRAVE[p1:5] reason=COST
+  488 CardsBecameTargets cards=[45]
   504 ChainLinkResolving link=1
   505 CardMoved instance=45 GRAVE[p1:2] -> HAND[p1:5] reason=EFFECT
+  507 CardHintChanged instance=45 type=6 value=225
   509 HandShuffled player=p1 cards=6
   509 CardIdentityRevealed instance=80 code=38699854
   509 CardIdentityRevealed instance=75 code=3136426
@@ -219,15 +261,18 @@ count: 362
   509 CardIdentityRevealed instance=72 code=504700054
   509 CardIdentityRevealed instance=70 code=504700054
   509 CardIdentityRevealed instance=45 code=43434803
+  511 CardHintChanged instance=80 type=6 value=225
   512 ChainLinkResolved link=1
   513 CardMoved instance=74 SZONE[p1:2] -> GRAVE[p1:5] reason=RULE
   515 ChainEnded links=1
+  524 CardHintChanged instance=80 type=7 value=225
   539 CardMoved instance=80 HAND[p1:0] -> SZONE[p1:2] reason=EFFECT
   541 CardSetAnnounced at=SZONE[p1:2] code=38699854
   556 CardMoved instance=45 HAND[p1:4] -> SZONE[p1:1] reason=EFFECT
   558 CardSetAnnounced at=SZONE[p1:1] code=43434803
   573 PositionChanged instance=80 FACEDOWN -> FACEUP
   575 ChainLinkAdded link=1 instance=80 code=38699854 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  576 CardsBecameTargets cards=[78]
   592 ChainLinkResolving link=1
   593 PositionChanged instance=78 FACEDOWN_DEFENSE -> FACEUP_ATTACK
   595 ChainLinkResolved link=1
@@ -252,6 +297,13 @@ count: 362
   654 CardMoved instance=29 DECK[p0:26] -> HAND[p0:9] reason=EFFECT
   656 CardMoved instance=28 DECK[p0:25] -> HAND[p0:10] reason=EFFECT
   658 CardMoved instance=26 DECK[p0:24] -> HAND[p0:11] reason=EFFECT
+  660 CardHintChanged instance=26 type=6 value=225
+  661 CardHintChanged instance=28 type=6 value=225
+  662 CardHintChanged instance=29 type=6 value=225
+  663 CardHintChanged instance=67 type=6 value=225
+  664 CardHintChanged instance=65 type=6 value=225
+  665 CardHintChanged instance=68 type=6 value=225
+  666 CardHintChanged instance=69 type=6 value=225
   667 HandShuffled player=p1 cards=8
   667 CardIdentityRevealed instance=75 code=504700123
   667 CardIdentityRevealed instance=52 code=504700054
@@ -260,6 +312,10 @@ count: 362
   667 CardIdentityRevealed instance=69 code=29228529
   667 CardIdentityRevealed instance=67 code=504700054
   667 CardIdentityRevealed instance=65 code=3136426
+  669 CardHintChanged instance=75 type=6 value=225
+  670 CardHintChanged instance=72 type=6 value=225
+  671 CardHintChanged instance=69 type=6 value=225
+  672 CardHintChanged instance=68 type=6 value=225
   673 HandShuffled player=p0 cards=12
   673 CardIdentityRevealed instance=38 code=4041838
   673 CardIdentityRevealed instance=37 code=45986603
@@ -272,10 +328,22 @@ count: 362
   673 CardIdentityRevealed instance=30 code=97077563
   673 CardIdentityRevealed instance=29 code=511000824
   673 CardIdentityRevealed instance=28 code=83968380
+  675 CardHintChanged instance=37 type=6 value=225
+  676 CardHintChanged instance=34 type=6 value=225
+  677 CardHintChanged instance=28 type=6 value=225
   678 ChainLinkResolved link=1
   679 ChainEnded links=1
+  688 CardHintChanged instance=75 type=7 value=225
+  689 CardHintChanged instance=68 type=7 value=225
+  690 CardHintChanged instance=72 type=7 value=225
+  691 CardHintChanged instance=69 type=7 value=225
+  692 CardHintChanged instance=28 type=7 value=225
+  693 CardHintChanged instance=37 type=7 value=225
+  694 CardHintChanged instance=34 type=7 value=225
   709 PositionChanged instance=45 FACEDOWN -> FACEUP
   711 ChainLinkAdded link=1 instance=45 code=43434803 from=SZONE[p1:1] trigger=SZONE[p1:1] desc=0
+  712 CardsBecameTargets cards=[78]
+  713 CardsBecameTargets cards=[40]
   729 ChainLinkResolving link=1
   730 CardMoved instance=78 GRAVE[p1:7] -> MZONE[p1:1] reason=SPSUMMON
   732 SummonAnnounced kind=SPECIAL code=? at=MZONE[p1:1]
@@ -289,18 +357,23 @@ count: 362
   769 ChainLinkAdded link=1 instance=69 code=29228529 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
   770 CardMoved instance=75 HAND[p1:0] -> GRAVE[p1:8] reason=COST
   772 CardMoved instance=68 HAND[p1:3] -> GRAVE[p1:9] reason=COST
+  774 CardsBecameTargets cards=[80]
   790 ChainLinkResolving link=1
   791 CardMoved instance=80 GRAVE[p1:6] -> HAND[p1:5] reason=EFFECT
+  793 CardHintChanged instance=80 type=6 value=225
   795 HandShuffled player=p1 cards=6
   795 CardIdentityRevealed instance=52 code=38699854
   795 CardIdentityRevealed instance=72 code=22589918
   795 CardIdentityRevealed instance=70 code=72892473
   795 CardIdentityRevealed instance=80 code=504700054
+  797 CardHintChanged instance=52 type=6 value=225
   798 ChainLinkResolved link=1
   799 CardMoved instance=69 SZONE[p1:2] -> GRAVE[p1:9] reason=RULE
   801 ChainEnded links=1
+  810 CardHintChanged instance=52 type=7 value=225
   825 CardMoved instance=52 HAND[p1:0] -> SZONE[p1:2] reason=EFFECT
   827 ChainLinkAdded link=1 instance=52 code=38699854 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
+  828 CardsBecameTargets cards=[78]
   844 ChainLinkResolving link=1
   845 PositionChanged instance=78 FACEDOWN_DEFENSE -> FACEUP_ATTACK
   847 ChainLinkResolved link=1
@@ -323,6 +396,16 @@ count: 362
   902 CardMoved instance=22 DECK[p0:21] -> HAND[p0:14] reason=EFFECT
   904 CardMoved instance=21 DECK[p0:20] -> HAND[p0:15] reason=EFFECT
   906 CardMoved instance=20 DECK[p0:19] -> HAND[p0:16] reason=EFFECT
+  908 CardHintChanged instance=20 type=6 value=225
+  909 CardHintChanged instance=21 type=6 value=225
+  910 CardHintChanged instance=22 type=6 value=225
+  911 CardHintChanged instance=23 type=6 value=225
+  912 CardHintChanged instance=24 type=6 value=225
+  913 CardHintChanged instance=64 type=6 value=225
+  914 CardHintChanged instance=61 type=6 value=225
+  915 CardHintChanged instance=60 type=6 value=225
+  916 CardHintChanged instance=63 type=6 value=225
+  917 CardHintChanged instance=62 type=6 value=225
   918 HandShuffled player=p1 cards=10
   918 CardIdentityRevealed instance=72 code=49398568
   918 CardIdentityRevealed instance=70 code=22589918
@@ -333,6 +416,11 @@ count: 362
   918 CardIdentityRevealed instance=62 code=42703248
   918 CardIdentityRevealed instance=61 code=3136426
   918 CardIdentityRevealed instance=60 code=504700054
+  920 CardHintChanged instance=72 type=6 value=225
+  921 CardHintChanged instance=70 type=6 value=225
+  922 CardHintChanged instance=65 type=6 value=225
+  923 CardHintChanged instance=63 type=6 value=225
+  924 CardHintChanged instance=62 type=6 value=225
   925 HandShuffled player=p0 cards=17
   925 CardIdentityRevealed instance=38 code=72892473
   925 CardIdentityRevealed instance=37 code=79571449
@@ -349,11 +437,27 @@ count: 362
   925 CardIdentityRevealed instance=22 code=83968380
   925 CardIdentityRevealed instance=21 code=45986603
   925 CardIdentityRevealed instance=20 code=504700055
+  927 CardHintChanged instance=38 type=6 value=225
+  928 CardHintChanged instance=37 type=6 value=225
+  929 CardHintChanged instance=30 type=6 value=225
+  930 CardHintChanged instance=28 type=6 value=225
+  931 CardHintChanged instance=23 type=6 value=225
   932 ChainLinkResolved link=1
   933 ChainEnded links=1
+  942 CardHintChanged instance=70 type=7 value=225
+  943 CardHintChanged instance=62 type=7 value=225
+  944 CardHintChanged instance=63 type=7 value=225
+  945 CardHintChanged instance=65 type=7 value=225
+  946 CardHintChanged instance=72 type=7 value=225
+  947 CardHintChanged instance=23 type=7 value=225
+  948 CardHintChanged instance=28 type=7 value=225
+  949 CardHintChanged instance=37 type=7 value=225
+  950 CardHintChanged instance=30 type=7 value=225
+  951 CardHintChanged instance=38 type=7 value=225
   952 ChainLinkAdded link=1 instance=66 code=504700178 from=GRAVE[p1:12] trigger=GRAVE[p1:12] desc=529216493846528
   968 ChainLinkResolving link=1
   969 CardMoved instance=59 DECK[p1:16] -> HAND[p1:10] reason=EFFECT
+  971 CardHintChanged instance=59 type=6 value=225
   973 HandShuffled player=p1 cards=11
   973 CardIdentityRevealed instance=72 code=33508719
   973 CardIdentityRevealed instance=70 code=504700054
@@ -366,6 +470,7 @@ count: 362
   973 CardIdentityRevealed instance=61 code=42703248
   973 CardIdentityRevealed instance=60 code=22589918
   973 CardIdentityRevealed instance=59 code=49398568
+  975 CardHintChanged instance=72 type=6 value=225
   976 DeckShuffled player=p1 cards=16
   976 CardIdentityConcealed instance=41
   976 CardIdentityConcealed instance=42
@@ -385,6 +490,7 @@ count: 362
   976 CardIdentityConcealed instance=58
   977 ChainLinkResolved link=1
   978 ChainEnded links=1
+  987 CardHintChanged instance=72 type=7 value=225
  1002 CardMoved instance=65 HAND[p1:3] -> SZONE[p1:2] reason=EFFECT
  1004 ChainLinkAdded link=1 instance=65 code=72892473 from=SZONE[p1:2] trigger=SZONE[p1:2] desc=0
  1020 CardMoved instance=59 HAND[p1:9] -> SZONE[p1:1] reason=EFFECT

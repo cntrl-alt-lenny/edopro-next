@@ -59,7 +59,7 @@ this repository can make automatically.
 **Known limit:** the trace is structural (message ids and payload digests), not semantic.
 A change altering payload *contents* is caught; one altering *interpretation* of unchanged
 bytes is not. M2 adds a second, semantic trace over the same fixtures which does catch the
-latter — for the 29 message types it decodes, and no further.
+latter — for the 34 message types it decodes, and no further.
 
 ## M2 — Semantic client model  🔶 in progress
 
@@ -67,7 +67,7 @@ latter — for the 29 message types it decodes, and no further.
       `client/` builds against a C++20 compiler and nothing else. Design and the source
       research behind it: [semantic-model.md](architecture/semantic-model.md),
       [ADR 0002](adr/0002-semantic-event-model.md).
-- [x] Decode the duel message stream into semantic events and state patches. **29 of
+- [x] Decode the duel message stream into semantic events and state patches. **34 of
       upstream's ~90 messages**, chosen for clear semantics and real coverage in the
       fixtures rather than for headline count. `MSG_UPDATE_DATA` and
       `MSG_UPDATE_CARD` use the bounded modern/compat query parsers documented in
@@ -75,7 +75,7 @@ latter — for the 29 message types it decodes, and no further.
 - [x] Semantic golden traces over the same fixtures, alongside the structural M1 traces,
       plus direct assertions that no packet is malformed, unknown or inconsistent and that
       the model's integrity invariants hold.
-- [x] Unit tests for the model, independent of any UI. Six CTest suites covering zone
+- [x] Unit tests for the model, independent of any UI. Seven CTest suites covering zone
       bookkeeping, decoder layouts and refusals, hidden information, the trace, the
       all-or-nothing decode guarantee, and the legacy player-perspective formula.
 - [x] Decoding is transactional: a refused packet leaves `DuelState` byte-for-byte
@@ -100,7 +100,7 @@ latter — for the 29 message types it decodes, and no further.
 **Met for the implemented slice** — `client/tools/semantic_trace_main.cpp` reads a real
 recorded duel and reports life points, turn, phase, chain and every zone's contents, with
 no renderer, no Qt, no `ocgcore` and no card database anywhere in the build. The milestone
-stays *in progress* because the two unchecked items above are part of it.
+stays *in progress* because the one unchecked item above is part of it.
 
 ## M3 — Deck and card data
 
