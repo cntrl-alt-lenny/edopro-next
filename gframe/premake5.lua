@@ -262,6 +262,10 @@ local ygopro_config=function(static_core)
 		libdirs { _OPTIONS["prebuilt-core"] }
 	end
 	links { "ocgcore", "lua" }
+	if _OPTIONS["semantic-observer"] then
+		defines "EDOPRO_NEXT_SEMANTIC_OBSERVER"
+		links { "edopro_next_legacy_observer", "edopro_next_client" }
+	end
 end
 
 include "lzma/."

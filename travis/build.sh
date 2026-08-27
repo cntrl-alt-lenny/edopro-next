@@ -34,6 +34,9 @@ fi
 if [[ -n "${TARGET_OS:-""}" ]]; then
 	PREMAKE_FLAGS="$PREMAKE_FLAGS --os=$TARGET_OS"
 fi
+if [[ "${EDOPRO_NEXT_SEMANTIC_OBSERVER:-0}" == "1" ]]; then
+	PREMAKE_FLAGS="$PREMAKE_FLAGS --semantic-observer"
+fi
 if [[ -n "${VCPKG_TRIPLET:-""}" ]]; then
 	PREMAKE_FLAGS="$PREMAKE_FLAGS --vcpkg-triplet=$VCPKG_TRIPLET"
 fi

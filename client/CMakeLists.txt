@@ -26,6 +26,14 @@ add_library(edopro_next_client STATIC
     src/semantic_trace.cpp
 )
 
+add_library(edopro_next_legacy_observer_model STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../integration/legacy/observer_model.cpp
+)
+target_include_directories(edopro_next_legacy_observer_model
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../integration/legacy
+)
+target_link_libraries(edopro_next_legacy_observer_model PUBLIC edopro_next_client)
+
 target_include_directories(edopro_next_client
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -58,9 +66,12 @@ if(EDOPRO_NEXT_CLIENT_TESTS)
     target_link_libraries(edopro_next_client_test_main PUBLIC edopro_next_client)
 
     foreach(suite duel_state protocol_decoder hidden_information semantic_trace
-                  transactional_decoding legacy_perspective)
+                  transactional_decoding legacy_perspective legacy_observer)
         add_executable(test_${suite} tests/test_${suite}.cpp)
         target_link_libraries(test_${suite} PRIVATE edopro_next_client_test_main)
+        if(suite STREQUAL legacy_observer)
+            target_link_libraries(test_${suite} PRIVATE edopro_next_legacy_observer_model)
+        endif()
         if(MSVC)
             target_compile_options(test_${suite} PRIVATE /W4)
             if(EDOPRO_NEXT_WERROR)

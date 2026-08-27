@@ -79,6 +79,10 @@ newoption {
 	value = "font",
 	description = "Path to a font file that will be bundled in the client and used as fallback font for missing glyphs"
 }
+newoption {
+	trigger = "semantic-observer",
+	description = "Build the opt-in semantic observer alongside the legacy client"
+}
 
 local function default_arch()
 	if os.istarget("linux") or os.istarget("macosx") then return "x64" end
@@ -327,6 +331,10 @@ workspace "ygo"
 	if _OPTIONS["bundled-font"] then
 		local bin2c=require("tools.bin2c")
 		bin2c(_OPTIONS["bundled-font"], "gframe/CGUITTFont/bundled_font.cpp")
+	end
+	if _OPTIONS["semantic-observer"] then
+		include "client"
+		include "integration/legacy"
 	end
 	include "gframe"
 	if os.istarget("windows") or os.istarget("haiku") then
