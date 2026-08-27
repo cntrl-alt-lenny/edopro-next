@@ -2097,16 +2097,52 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				pcard = new ClientCard{};
 				pcard->sequence = static_cast<uint32_t>(mainGame->dField.limbo_temp.size());
 				mainGame->dField.limbo_temp.push_back(pcard);
-				panelmode = true;
-			} else
+		mainGame->dField.select_cancelable = BufferIO::Read<uint8_t>(pbuf) != 0;
+		mainGame->dField.select_min = CompatRead<uint8_t, uint32_t>(pbuf);
+		mainGame->dField.select_max = CompatRead<uint8_t, uint32_t>(pbuf);
+		auto count1 = CompatRead<uint8_t, uint32_t>(pbuf);
+		mainGame->dField.selectable_cards.clear();
+		mainGame->dField.selected_cards.clear();
+		for(auto i = 0u; i < count1; ++i) {
+			auto code = BufferIO::Read<uint32_t>(pbuf);
+			auto info = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
+			info.controler = mainGame->LocalPlayer(info.controler);
+			ClientCard* pcard;
+			if(info.location & LOCATION_OVERLAY)
+				pcard = mainGame->dField.GetCard(info.controler, info.location & (~LOCATION_OVERLAY) & 0xff, info.sequence)->overlayed[info.position];
+			else
 				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
-			if (code != 0 && pcard->code != code)
-				pcard->SetCode(code);
-			pcard->select_seq = i;
-			mainGame->dField.selectable_cards.push_back(pcard);
-			pcard->is_selectable = true;
-			pcard->is_selected = true;
-			if (info.location & 0xf1)
+			if(pcard) {
+				if(code != 0 && pcard->code != code)
+					pcard->SetCode(code);
+				mainGame->dField.selectable_cards.push_back(pcard);
+				pcard->select_seq = i;
+			}
+		}
+		auto count2 = CompatRead<uint8_t, uint32_t>(pbuf);
+		for(auto i = 0u; i < count2; ++i) {
+			auto code = BufferIO::Read<uint32_t>(pbuf);
+			auto info = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
+			info.controler = mainGame->LocalPlayer(info.controler);
+			ClientCard* pcard;
+			if(info.location & LOCATION_OVERLAY)
+				pcard = mainGame->dField.GetCard(info.controler, info.location & (~LOCATION_OVERLAY) & 0xff, info.sequence)->overlayed[info.position];
+			else
+				pcard = mainGame->dField.GetCard(info.controler, info.location, info.sequence);
+			if(pcard) {
+				if(code != 0 && pcard->code != code)
+					pcard->SetCode(code);
+				mainGame->dField.selected_cards.push_back(pcard);
+				pcard->select_seq = count1 + i;
+			}
+		}
+		bool panelmode = false;
+		for(auto& pcard : mainGame->dField.selectable_cards) {
+			if(pcard->location & 0xf1)
+				panelmode = true;
+		}
+		for(auto& pcard : mainGame->dField.selected_cards) {
+			if(pcard->location & 0xf1)
 				panelmode = true;
 		}
 		std::sort(mainGame->dField.selectable_cards.begin(), mainGame->dField.selectable_cards.end(), ClientCard::client_card_sort);
@@ -2116,11 +2152,14 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		std::lock_guard<epro::mutex> lock(mainGame->gMutex);
 		select_hint = 0;
 		if (panelmode) {
-			mainGame->wCardSelect->setText(text.data());
+			if(mainGame->wCardSelect)
+				mainGame->wCardSelect->setText(text.data());
 			mainGame->dField.ShowSelectCard(mainGame->dField.select_cancelable);
 		} else {
-			mainGame->stHintMsg->setText(text.data());
-			mainGame->stHintMsg->setVisible(true);
+			if(mainGame->stHintMsg) {
+				mainGame->stHintMsg->setText(text.data());
+				mainGame->stHintMsg->setVisible(true);
+			}
 		}
 		if (mainGame->dField.select_cancelable) {
 			if (count2 == 0)
@@ -2623,30 +2662,32 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 				mainGame->dField.limbo_temp.push_back(pcard);
 			} else
 				pcard = mainGame->dField.GetCard(controller, location, sequence);
-			if (code != 0)
+			if (pcard && code != 0)
 				pcard->SetCode(code);
 			mainGame->AddLog(epro::format(L"*[{}]", gDataManager->GetName(code)), code);
-			if (location & (LOCATION_EXTRA | LOCATION_DECK) || location == 0) {
-				if(count == 1 && location != 0) {
-					constexpr float milliseconds = 5.0f * 1000.0f / 60.0f;
-					float shift = -0.75f / milliseconds;
-					if (controller == 0 && location == LOCATION_EXTRA) shift *= -1.0f;
-					pcard->dPos.set(shift, 0, 0);
-					if(((location == LOCATION_DECK) && mainGame->dField.deck_reversed) || pcard->is_reversed || (pcard->position & POS_FACEUP))
-						pcard->dRot.set(0, 0, 0);
-					else pcard->dRot.set(0, irr::core::PI / milliseconds, 0);
-					pcard->is_moving = true;
-					pcard->aniFrame = milliseconds;
-					mainGame->WaitFrameSignal(45, lock);
-					mainGame->dField.MoveCard(pcard, 5);
-					mainGame->WaitFrameSignal(5, lock);
+			if (pcard) {
+				if (location & (LOCATION_EXTRA | LOCATION_DECK) || location == 0) {
+					if(count == 1 && location != 0) {
+						constexpr float milliseconds = 5.0f * 1000.0f / 60.0f;
+						float shift = -0.75f / milliseconds;
+						if (controller == 0 && location == LOCATION_EXTRA) shift *= -1.0f;
+						pcard->dPos.set(shift, 0, 0);
+						if(((location == LOCATION_DECK) && mainGame->dField.deck_reversed) || pcard->is_reversed || (pcard->position & POS_FACEUP))
+							pcard->dRot.set(0, 0, 0);
+						else pcard->dRot.set(0, irr::core::PI / milliseconds, 0);
+						pcard->is_moving = true;
+						pcard->aniFrame = milliseconds;
+						mainGame->WaitFrameSignal(45, lock);
+						mainGame->dField.MoveCard(pcard, 5);
+						mainGame->WaitFrameSignal(5, lock);
+					} else {
+						if(!mainGame->dInfo.isReplay)
+							panel_confirm.push_back(pcard);
+					}
 				} else {
-					if(!mainGame->dInfo.isReplay)
-						panel_confirm.push_back(pcard);
+					if(!mainGame->dInfo.isReplay || (location & LOCATION_ONFIELD) || (location & LOCATION_HAND && gGameConfig->hideHandsInReplays))
+						field_confirm.push_back(pcard);
 				}
-			} else {
-				if(!mainGame->dInfo.isReplay || (location & LOCATION_ONFIELD) || (location & LOCATION_HAND && gGameConfig->hideHandsInReplays))
-					field_confirm.push_back(pcard);
 			}
 		}
 		if (field_confirm.size() > 0) {
@@ -2703,7 +2744,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 			}
 			std::unique_lock<epro::mutex> lock(mainGame->gMutex);
 			std::swap(mainGame->dField.selectable_cards, panel_confirm);
-			mainGame->wCardSelect->setText(epro::sprintf(gDataManager->GetSysString(208), mainGame->dField.selectable_cards.size()).data());
+			if(mainGame->wCardSelect)
+				mainGame->wCardSelect->setText(epro::sprintf(gDataManager->GetSysString(208), mainGame->dField.selectable_cards.size()).data());
 			mainGame->dField.ShowSelectCard(true);
 			mainGame->actionSignal.Wait(lock);
 		}
