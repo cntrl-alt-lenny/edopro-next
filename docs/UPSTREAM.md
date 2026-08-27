@@ -112,3 +112,17 @@ conflict can be resolved with the original intent visible.
 | `README.md` | Replaced; upstream's preserved at `docs/upstream-README.md` | This repository is a distinct project and must not misrepresent itself as upstream. Attribution retained. |
 
 *(No source changes to `gframe/` or `ocgcore/` yet.)*
+
+### Upstream files read but not modified
+
+M2 built a second decoder for the duel protocol. It reads upstream headers, and one
+generator consumes them, but nothing in `gframe/` was edited:
+
+| File | Relationship |
+|---|---|
+| `gframe/ocgapi_constants.h` | Parsed by `tools/generate_protocol_constants.py` to generate `client/include/edopro_next/client/protocol_constants.h`. CI fails on drift. |
+| `gframe/common.h` | Same, for `OLD_REPLAY_MODE`. |
+| `gframe/duelclient.cpp`, `client_card.*`, `client_field.*`, `core_utils.*`, `game.h`, `replay_mode.cpp` | Read as the reference for message layouts and zone bookkeeping. Findings recorded in `docs/architecture/semantic-model.md`. |
+
+The generated header is committed under `client/`, not `gframe/`, so a merge that changes
+an upstream constant surfaces as a CI drift failure rather than a conflict.

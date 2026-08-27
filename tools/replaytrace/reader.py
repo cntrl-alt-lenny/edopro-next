@@ -352,3 +352,23 @@ def parse(data: bytes) -> Replay:
 def parse_file(path) -> Replay:
     with open(path, "rb") as fh:
         return parse(fh.read())
+
+
+def frame_packets(packets) -> bytes:
+    """Re-frame parsed packets into upstream's own on-the-wire framing.
+
+    That framing is `uint8 message, uint32 length, payload` - the same one used
+    inside a replay body. It is the interchange format between this reader and
+    the C++ semantic decoder in `client/`, which consumes a stream of packets
+    rather than a replay container: reading .yrpX headers, LZMA bodies and
+    embedded YRP1 belongs here (M1) and duplicating it in C++ would buy nothing.
+
+    OLD_REPLAY_MODE packets are absent by construction: `parse` lifts the
+    embedded YRP1 out of the stream, and it is not a duel message.
+    """
+    out = bytearray()
+    for pkt in packets:
+        out.append(pkt.message)
+        out += len(pkt.payload).to_bytes(4, "little")
+        out += pkt.payload
+    return bytes(out)

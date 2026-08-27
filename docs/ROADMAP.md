@@ -58,17 +58,47 @@ this repository can make automatically.
 
 **Known limit:** the trace is structural (message ids and payload digests), not semantic.
 A change altering payload *contents* is caught; one altering *interpretation* of unchanged
-bytes is not. That is the natural extension in M2, once a semantic decoder exists.
+bytes is not. M2 adds a second, semantic trace over the same fixtures which does catch the
+latter — for the 27 message types it decodes, and no further.
 
-## M2 — Semantic client model
+## M2 — Semantic client model  🔶 in progress
 
-- [ ] Presentation-free duel state types — no Irrlicht, no Qt, no rendering concepts
-- [ ] Decode the duel message stream into semantic events, *in parallel with* the existing
-      handler rather than replacing it
-- [ ] Prove equivalence: legacy state and model state agree across the M1 fixtures
-- [ ] Unit tests for the model, independent of any UI
+- [x] Presentation-free duel state types — no Irrlicht, no Qt, no rendering concepts.
+      `client/` builds against a C++20 compiler and nothing else. Design and the source
+      research behind it: [semantic-model.md](architecture/semantic-model.md),
+      [ADR 0002](adr/0002-semantic-event-model.md).
+- [x] Decode the duel message stream into semantic events. **27 of upstream's ~90
+      messages**, chosen for clear semantics and real coverage in the fixtures rather than
+      for headline count. `MSG_UPDATE_DATA` and `MSG_UPDATE_CARD` — the query stream, and
+      roughly three quarters of the packets in both fixtures — are deliberately not among
+      them; they are the next slice.
+- [x] Semantic golden traces over the same fixtures, alongside the structural M1 traces,
+      plus direct assertions that no packet is malformed, unknown or inconsistent and that
+      the model's integrity invariants hold.
+- [x] Unit tests for the model, independent of any UI. Six CTest suites covering zone
+      bookkeeping, decoder layouts and refusals, hidden information, the trace, the
+      all-or-nothing decode guarantee, and the legacy player-perspective formula.
+- [x] Decoding is transactional: a refused packet leaves `DuelState` byte-for-byte
+      unchanged, verified by whole-state equality, not a field-by-field spot check.
+      Pre-merge review found this false for four handlers; fixed centrally rather than
+      handler by handler — [ADR 0002, Decision 6](adr/0002-semantic-event-model.md).
+- [x] Legacy player-perspective normalization documented and pinned by a small, tested,
+      deliberately test-only reference implementation, so the equivalence work below has a
+      verified formula to build on without pulling perspective into the model itself —
+      [ADR 0002, Decision 7](adr/0002-semantic-event-model.md).
+- [ ] **Run the model alongside the legacy handler.** `gframe/` is untouched so far: the
+      model runs only in tests. The additive hook in `DuelClient::ClientAnalyze` is the
+      recommended next step.
+- [ ] **Prove equivalence: legacy state and model state agree across the M1 fixtures.**
+      Not started, and dependent on the item above. No equivalence claim is made anywhere
+      in this milestone. The normalization rule it will need is now documented and tested
+      (see the two items above), but not implemented as part of an actual comparison.
 
 **Exit criterion:** game state can be inspected without instantiating a renderer.
+**Met for the implemented slice** — `client/tools/semantic_trace_main.cpp` reads a real
+recorded duel and reports life points, turn, phase, chain and every zone's contents, with
+no renderer, no Qt, no `ocgcore` and no card database anywhere in the build. The milestone
+stays *in progress* because the two unchecked items above are part of it.
 
 ## M3 — Deck and card data
 
