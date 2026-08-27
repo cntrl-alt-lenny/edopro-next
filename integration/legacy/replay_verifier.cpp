@@ -47,14 +47,22 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	std::fprintf(stderr, "[debug] OpenReplay succeeded: %zu packets\n", replay.packets_stream.size());
 	std::fflush(stderr);
 
-	ygo::Game game{};
-	ygo::mainGame = &game;
-	ygo::DataManager dataManager{};
-	ygo::gDataManager = &dataManager;
-	ygo::GameConfig config{};
-	ygo::gGameConfig = &config;
-	ygo::SoundManager soundManager(0.0, 0.0, false, false, ygo::SoundManager::BACKEND::NONE);
-	ygo::gSoundManager = &soundManager;
+	auto game = std::make_unique<ygo::Game>();
+	std::fprintf(stderr, "[debug 3] Game allocated\n");
+	std::fflush(stderr);
+	ygo::mainGame = game.get();
+	auto dataManager = std::make_unique<ygo::DataManager>();
+	std::fprintf(stderr, "[debug 4] DataManager allocated\n");
+	std::fflush(stderr);
+	ygo::gDataManager = dataManager.get();
+	auto config = std::make_unique<ygo::GameConfig>();
+	std::fprintf(stderr, "[debug 5] GameConfig allocated\n");
+	std::fflush(stderr);
+	ygo::gGameConfig = config.get();
+	auto soundManager = std::make_unique<ygo::SoundManager>(0.0, 0.0, false, false, ygo::SoundManager::BACKEND::NONE);
+	std::fprintf(stderr, "[debug 6] SoundManager allocated\n");
+	std::fflush(stderr);
+	ygo::gSoundManager = soundManager.get();
 
 	const auto& replay_header = replay.pheader;
 	ygo::mainGame->dInfo.isReplay = true;
@@ -71,12 +79,21 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::mainGame->dInfo.current_player[1] = 0;
 	if(!ygo::mainGame->dInfo.isRelay)
 		ygo::mainGame->dInfo.current_player[1] = ygo::mainGame->dInfo.team2 - 1;
+	std::fprintf(stderr, "[debug 7] Team sizes: %u vs %u\n", static_cast<unsigned>(ygo::mainGame->dInfo.team1), static_cast<unsigned>(ygo::mainGame->dInfo.team2));
+	std::fflush(stderr);
+
 	const auto& names = replay.GetPlayerNames();
-	const auto first_oppo = names.begin() + ygo::mainGame->dInfo.team1;
-	ygo::mainGame->dInfo.selfnames.assign(names.begin(), first_oppo);
-	ygo::mainGame->dInfo.opponames.assign(first_oppo, names.end());
+	std::fprintf(stderr, "[debug 8] Player names size: %zu\n", names.size());
+	std::fflush(stderr);
+	if(names.size() >= static_cast<std::size_t>(ygo::mainGame->dInfo.team1)) {
+		const auto first_oppo = names.begin() + ygo::mainGame->dInfo.team1;
+		ygo::mainGame->dInfo.selfnames.assign(names.begin(), first_oppo);
+		ygo::mainGame->dInfo.opponames.assign(first_oppo, names.end());
+	}
 	ygo::mainGame->dInfo.duel_params = replay.params.duel_flags;
 	ygo::mainGame->dInfo.duel_field = ygo::mainGame->GetMasterRule(ygo::mainGame->dInfo.duel_params);
+	std::fprintf(stderr, "[debug 9] SetActiveVertices\n");
+	std::fflush(stderr);
 	ygo::matManager.SetActiveVertices(ygo::mainGame->dInfo.HasFieldFlag(DUEL_3_COLUMNS_FIELD),
 	                                  !ygo::mainGame->dInfo.HasFieldFlag(DUEL_SEPARATE_PZONE));
 	ygo::mainGame->dInfo.turn = 0;
@@ -84,7 +101,7 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::mainGame->dInfo.isInDuel = true;
 	ygo::mainGame->dInfo.isStarted = true;
 
-	std::fprintf(stderr, "[debug] Setup complete, starting packet loop...\n");
+	std::fprintf(stderr, "[debug 10] Setup complete, starting packet loop...\n");
 	std::fflush(stderr);
 
 	set_active_verification_stats(&stats);
