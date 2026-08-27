@@ -107,6 +107,13 @@ Design changes so that claim is demonstrable.
   decoder" is.
 - Python is tooling only. It must never sit in the render or input loop.
 
+The live semantic observer is an opt-in integration boundary. Keep `client/`
+and `integration/legacy/` as separate targets: the semantic implementation and
+observer may use C++20, while `gframe/` remains C++17 and sees only the small
+C++17-compatible interface in `integration/legacy/semantic_observer.h`.
+Never include semantic C++20 headers directly from gframe or make the observer
+authoritative over legacy behaviour.
+
 ## Upstream merge policy
 
 ```

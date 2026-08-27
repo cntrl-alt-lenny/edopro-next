@@ -115,7 +115,7 @@ Nothing here is rounded up.
 | Linux CI | ✅ **Working** | harness, Qt shell, upstream baseline |
 | Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
 | Semantic duel model | 🔶 **In progress** | 27 of ~90 messages decoded, no renderer involved — [design](docs/architecture/semantic-model.md) |
-| Legacy/model equivalence check | ⬜ Not started | `gframe/` is untouched; the model runs only in tests so far |
+| Legacy/model equivalence check | 🔶 **In progress** | opt-in live observer and real-state projection; fixture execution remains open — [scope](docs/architecture/live-semantic-observer.md) |
 | Deck builder | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |

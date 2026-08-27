@@ -148,7 +148,7 @@ jobs:
           echo "shell ran for the full timeout with no QML diagnostics"
 
   upstream-baseline:
-    name: Upstream EDOPro baseline
+    name: Upstream EDOPro baseline (observer=${{ matrix.observer }})
     runs-on: ubuntu-latest
     # Expensive. Skipped on ordinary feature and documentation pushes.
     if: >
@@ -156,6 +156,10 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.ref == 'refs/heads/master' ||
       github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        observer: [false, true]
     env:
       TRAVIS_OS_NAME: linux
       TARGET_OS: linux
@@ -219,6 +223,7 @@ jobs:
       - name: Build client
         env:
           VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+          EDOPRO_NEXT_SEMANTIC_OBSERVER: ${{ matrix.observer && '1' || '0' }}
         run: ./travis/build.sh
 
       - name: Verify artifact

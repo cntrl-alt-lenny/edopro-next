@@ -107,22 +107,27 @@ Disabling is a repository setting, not a file change, so it creates no merge con
 Anything we knowingly change in upstream-owned files is recorded here, so a future merge
 conflict can be resolved with the original intent visible.
 
-| File | Change | Why |
-|---|---|---|
-| `README.md` | Replaced; upstream's preserved at `docs/upstream-README.md` | This repository is a distinct project and must not misrepresent itself as upstream. Attribution retained. |
+| File | Purpose | Approximate scope | Why unavoidable | Expected upstream-merge risk |
+|---|---|---|---|---|
+| `README.md` | Replaced; upstream's preserved at `docs/upstream-README.md` | Existing repository-level replacement | This repository is a distinct project and must not misrepresent itself as upstream. Attribution retained. | Existing project-level delta |
+| `gframe/duelclient.cpp` | One include and one RAII observer scope at `ClientAnalyze` entry | One include plus one five-line call site | The live observer must see the exact normalized packet and compare after every existing return without rewriting the legacy switch. | Low; the switch and its control flow remain unchanged, but this is the runtime seam to recheck after upstream merges |
+| `gframe/premake5.lua` | Conditional observer define/link on the legacy targets | Four localized lines in the target configuration | gframe must remain C++17 while the optional observer is linked as a separate target. | Low |
+| `premake5.lua` | `--semantic-observer` option and conditional `client`/observer project includes | Eight additive lines | Premake needs an explicit, reversible opt-in build path. | Low |
+| `travis/build.sh` | Forwards `EDOPRO_NEXT_SEMANTIC_OBSERVER=1` to Premake | Three environment-gated lines | CI needs to exercise the observer-enabled legacy build without changing the ordinary baseline command. | Low |
 
-*(No source changes to `gframe/` or `ocgcore/` yet.)*
+No source changes were made to `ocgcore`; the intentional `gframe/` changes are listed above.
 
 ### Upstream files read but not modified
 
 M2 built a second decoder for the duel protocol. It reads upstream headers, and one
-generator consumes them, but nothing in `gframe/` was edited:
+generator consumes them. The following upstream files were read but not edited in this
+slice:
 
 | File | Relationship |
 |---|---|
 | `gframe/ocgapi_constants.h` | Parsed by `tools/generate_protocol_constants.py` to generate `client/include/edopro_next/client/protocol_constants.h`. CI fails on drift. |
 | `gframe/common.h` | Same, for `OLD_REPLAY_MODE`. |
-| `gframe/duelclient.cpp`, `client_card.*`, `client_field.*`, `core_utils.*`, `game.h`, `replay_mode.cpp` | Read as the reference for message layouts and zone bookkeeping. Findings recorded in `docs/architecture/semantic-model.md`. |
+| `gframe/duelclient.cpp`, `client_card.*`, `client_field.*`, `core_utils.*`, `game.h`, `replay_mode.cpp` | Read as the reference for message layouts, packet boundaries and zone bookkeeping. Findings recorded in `docs/architecture/semantic-model.md` and `docs/architecture/live-semantic-observer.md`. |
 
 The generated header is committed under `client/`, not `gframe/`, so a merge that changes
 an upstream constant surfaces as a CI drift failure rather than a conflict.
