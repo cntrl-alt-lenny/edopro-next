@@ -1088,7 +1088,7 @@ void Game::DrawBackImage(irr::video::ITexture* texture, bool resized) {
 void Game::ShowElement(irr::gui::IGUIElement * win, int autoframe) {
 	if(!win)
 		return;
-	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL) {
+	if(!device || (device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL)) {
 		win->setVisible(true);
 		return;
 	}
@@ -1135,7 +1135,7 @@ void Game::ShowElement(irr::gui::IGUIElement * win, int autoframe) {
 void Game::HideElement(irr::gui::IGUIElement * win, bool set_action) {
 	if(!win)
 		return;
-	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL) {
+	if(!device || (device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL)) {
 		win->setVisible(false);
 		return;
 	}
@@ -1178,7 +1178,7 @@ void Game::HideElement(irr::gui::IGUIElement * win, bool set_action) {
 void Game::PopupElement(irr::gui::IGUIElement * element, int hideframe) {
 	if(!element)
 		return;
-	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL) {
+	if(!device || (device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL)) {
 		element->setVisible(true);
 		return;
 	}
@@ -1194,7 +1194,7 @@ void Game::PopupElement(irr::gui::IGUIElement * element, int hideframe) {
 	else ShowElement(element, hideframe);
 }
 void Game::WaitFrameSignal(int frame, std::unique_lock<epro::mutex>& _lck) {
-	if(device && device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL)
+	if(!device || (device->getVideoDriver() && device->getVideoDriver()->getDriverType() == irr::video::EDT_NULL))
 		return;
 	signalFrame = (gGameConfig->quick_animation && frame >= 12) ? 12 * 1000 / 60 : frame * 1000 / 60;
 	frameSignal.Wait(_lck);

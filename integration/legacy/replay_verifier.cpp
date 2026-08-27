@@ -56,51 +56,6 @@ ReplayVerificationStats verify_replay(const std::string& path, bool inject_fault
 	ygo::SoundManager soundManager(0.0, 0.0, false, false, ygo::SoundManager::BACKEND::NONE);
 	ygo::gSoundManager = &soundManager;
 
-	irr::SIrrlichtCreationParameters params{};
-	params.DriverType = irr::video::EDT_NULL;
-	params.WindowSize = {1024, 640};
-	auto* dev = irr::createDeviceEx(params);
-	std::fprintf(stderr, "[debug] createDeviceEx returned: %p\n", static_cast<void*>(dev));
-	std::fflush(stderr);
-	if(dev != nullptr) {
-		ygo::Utils::irrTimer = dev->getTimer();
-		game.device = std::shared_ptr<irr::IrrlichtDevice>(dev, [](irr::IrrlichtDevice* d) { d->drop(); });
-		game.driver = dev->getVideoDriver();
-		game.env = dev->getGUIEnvironment();
-		if(game.env != nullptr) {
-			game.wCmdMenu = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wPhase = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
-			game.lstLog = game.env->addListBox(irr::core::recti(0, 0, 10, 10));
-			game.stHintMsg = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
-			game.stACMessage = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
-			game.stMessage = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
-			game.stQMessage = game.env->addStaticText(L"", irr::core::recti(0, 0, 10, 10));
-			game.wACMessage = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wMessage = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wHand = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wPosSelect = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wCardSelect = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wOptions = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wFTSelect = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wQuery = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wANCard = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wANNumber = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wANRace = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.wANAttribute = game.env->addWindow(irr::core::recti(0, 0, 10, 10));
-			game.btnDP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnSP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnM1 = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnBP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnM2 = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnEP = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnCancelOrFinish = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnChainAlways = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnChainIgnore = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnChainWhenAvail = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-			game.btnShuffle = game.env->addButton(irr::core::recti(0, 0, 10, 10));
-		}
-	}
-
 	const auto& replay_header = replay.pheader;
 	ygo::mainGame->dInfo.isReplay = true;
 	ygo::mainGame->dInfo.isFirst = true;
