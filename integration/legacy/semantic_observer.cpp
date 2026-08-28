@@ -1,6 +1,7 @@
 #include "semantic_observer.h"
 
 #include "observer_model.h"
+#include "replay_verifier.h"
 
 #include "game.h"
 
@@ -71,6 +72,8 @@ extern "C" void* edopro_next_semantic_observer_begin(
 	try {
 		auto& instance = runtime();
 		std::lock_guard<std::mutex> lock(instance.mutex);
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr)
+			stats->packets_processed++;
 		Packet packet;
 		packet.message = message;
 		if(payload != nullptr)
@@ -80,6 +83,10 @@ extern "C" void* edopro_next_semantic_observer_begin(
 		const bool newly_tainted = comparison_was_available &&
 			!instance.session.comparison_available();
 		instance.report_decode(instance.session.packet_number(), message, result, newly_tainted);
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr) {
+			if(result.status != edopro_next::client::DecodeStatus::Decoded)
+				stats->decode_failures++;
+		}
 		// The game pointer is read only at scope exit, after ClientAnalyze's
 		// legacy switch has run. Store it immediately after the safe decode.
 		auto token = std::make_unique<PendingObservation>();
@@ -91,8 +98,12 @@ extern "C" void* edopro_next_semantic_observer_begin(
 		token->game = legacy_game;
 		return token.release();
 	} catch(const std::exception& error) {
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr)
+			stats->observer_failures++;
 		std::fprintf(stderr, "edopro-next semantic observer disabled for packet: %s\n", error.what());
 	} catch(...) {
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr)
+			stats->observer_failures++;
 		std::fprintf(stderr, "edopro-next semantic observer disabled for packet: unknown exception\n");
 	}
 	return nullptr;
@@ -114,11 +125,22 @@ extern "C" void edopro_next_semantic_observer_end(void* opaque) noexcept {
 		const auto legacy = edopro_next::legacy_observer::project_legacy_state(token->game);
 		const auto result = edopro_next::legacy_observer::compare(
 			instance.session.state(), legacy, token->packet, token->message);
-		if(!result.equivalent())
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr)
+			stats->comparisons_performed++;
+		if(!result.equivalent()) {
 			instance.report_compare(result);
+			if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr) {
+				for(const auto& mismatch : result.mismatches)
+					stats->mismatches.push_back(mismatch);
+			}
+		}
 	} catch(const std::exception& error) {
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr)
+			stats->comparison_failures++;
 		std::fprintf(stderr, "edopro-next semantic observer comparison skipped: %s\n", error.what());
 	} catch(...) {
+		if(auto* stats = edopro_next::legacy_observer::get_active_verification_stats(); stats != nullptr)
+			stats->comparison_failures++;
 		std::fprintf(stderr, "edopro-next semantic observer comparison skipped: unknown exception\n");
 	}
 }

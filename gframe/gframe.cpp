@@ -95,7 +95,21 @@ using Game = ygo::Game;
 #define ADMIN_STR "root"
 #endif
 
+#if defined(EDOPRO_NEXT_SEMANTIC_OBSERVER)
+#include "../integration/legacy/replay_verifier.h"
+#endif
+
 int edopro_main(const args_t& args) {
+#if defined(EDOPRO_NEXT_SEMANTIC_OBSERVER)
+	if(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY].enabled) {
+		const auto path = ygo::Utils::ToUTF8IfNeeded(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY].argument);
+		return edopro_next_verify_replay_cli(path.c_str());
+	}
+	if(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY_FAULT].enabled) {
+		const auto path = ygo::Utils::ToUTF8IfNeeded(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY_FAULT].argument);
+		return edopro_next_verify_replay_fault_cli(path.c_str());
+	}
+#endif
 	std::puts(EDOPRO_VERSION_STRING_DEBUG);
 	if(ygo::Utils::IsRunningAsAdmin() && !args[LAUNCH_PARAM::WANTS_TO_RUN_AS_ADMIN].enabled) {
 		constexpr auto err = "Attempted to run the game as " ADMIN_STR ".\n"

@@ -1,6 +1,7 @@
 #include "game_config.h"
 #include <irrlicht.h>
 #include "game.h"
+#include "../integration/legacy/semantic_observer.h"
 #include "materials.h"
 #include "client_card.h"
 #include "deck_manager.h"
@@ -1086,6 +1087,8 @@ void Game::DrawBackImage(irr::video::ITexture* texture, bool resized) {
 		driver->draw2DImage(texture, dest_size, bg_size);
 }
 void Game::ShowElement(irr::gui::IGUIElement * win, int autoframe) {
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return;
 	FadingUnit fu;
 	fu.fadingSize = win->getRelativePosition();
 	fu.wasEnabled = win->isEnabled();
@@ -1127,6 +1130,8 @@ void Game::ShowElement(irr::gui::IGUIElement * win, int autoframe) {
 	fadingList.push_back(fu);
 }
 void Game::HideElement(irr::gui::IGUIElement * win, bool set_action) {
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return;
 	FadingUnit fu;
 	fu.fadingSize = win->getRelativePosition();
 	fu.wasEnabled = win->isEnabled();
@@ -1164,6 +1169,8 @@ void Game::HideElement(irr::gui::IGUIElement * win, bool set_action) {
 	fadingList.push_back(fu);
 }
 void Game::PopupElement(irr::gui::IGUIElement * element, int hideframe) {
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return;
 	element->getParent()->bringToFront(element);
 	if(!is_building)
 		dField.panel = element;
@@ -1176,6 +1183,8 @@ void Game::PopupElement(irr::gui::IGUIElement * element, int hideframe) {
 	else ShowElement(element, hideframe);
 }
 void Game::WaitFrameSignal(int frame, std::unique_lock<epro::mutex>& _lck) {
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return;
 	signalFrame = (gGameConfig->quick_animation && frame >= 12) ? 12 * 1000 / 60 : frame * 1000 / 60;
 	frameSignal.Wait(_lck);
 }

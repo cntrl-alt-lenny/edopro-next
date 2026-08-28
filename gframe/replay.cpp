@@ -358,8 +358,8 @@ bool Replay::ReadData(std::vector<uint8_t>& data, uint32_t length) {
 		can_read = false;
 		return false;
 	}
+	data.resize(length);
 	if(length) {
-		data.resize(length);
 		memcpy(data.data(), &replay_data[data_position], length);
 		data_position += length;
 	}

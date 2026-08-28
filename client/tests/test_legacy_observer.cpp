@@ -209,3 +209,55 @@ EDOPRO_TEST(partially_understood_query_is_safe_but_remains_unsupported) {
 	EDOPRO_CHECK(session.comparison_available());
 	EDOPRO_CHECK_EQ(session.state().cards().size(), 0u);
 }
+
+EDOPRO_TEST(fault_injection_detects_synthetic_life_point_mismatch) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(5, 1), ProtocolVariant{}).status,
+		DecodeStatus::Decoded);
+	auto legacy = snapshot_for_start(5, 1);
+	// Synthetic fault: mutate legacy life point
+	legacy.life[0] += 500;
+	const auto result = compare(session.state(), legacy, 50, proto::MSG_DAMAGE);
+	EDOPRO_CHECK(!result.equivalent());
+	EDOPRO_CHECK_EQ(result.mismatches.size(), 1u);
+	EDOPRO_CHECK_EQ(result.mismatches.front().field, "p0.life");
+	EDOPRO_CHECK_EQ(result.mismatches.front().semantic, "8000");
+	EDOPRO_CHECK_EQ(result.mismatches.front().legacy, "8500");
+}
+
+EDOPRO_TEST(fault_injection_detects_synthetic_zone_card_mismatch) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(5, 1), ProtocolVariant{}).status,
+		DecodeStatus::Decoded);
+	auto legacy = snapshot_for_start(5, 1);
+	// Synthetic fault: remove a card from legacy deck snapshot
+	legacy.cards.pop_back();
+	const auto result = compare(session.state(), legacy, 51, proto::MSG_DRAW);
+	EDOPRO_CHECK(!result.equivalent());
+	EDOPRO_CHECK_EQ(result.mismatches.size(), 1u);
+	EDOPRO_CHECK(result.mismatches.front().field.find(".occupancy") != std::string::npos);
+	EDOPRO_CHECK_EQ(result.mismatches.front().semantic, "occupied");
+	EDOPRO_CHECK_EQ(result.mismatches.front().legacy, "empty");
+}
+
+EDOPRO_TEST(fault_injection_detects_synthetic_material_count_mismatch) {
+	ObserverSession session;
+	EDOPRO_CHECK_EQ(session.observe(start_packet(0, 0), ProtocolVariant{}).status,
+		DecodeStatus::Decoded);
+	DuelState semantic = session.state();
+	CardInstanceId host = CardInstanceId::None;
+	CardInstanceId material = CardInstanceId::None;
+	EDOPRO_CHECK(!semantic.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode{1},
+		CardPosition{proto::POS_FACEUP_ATTACK}, &host));
+	EDOPRO_CHECK(!semantic.create_card({0, Zone::Hand, 0, false, 0}, CardCode{2},
+		CardPosition{proto::POS_FACEDOWN}, &material));
+	EDOPRO_CHECK(!semantic.move_card(material, {0, Zone::MonsterZone, 0, true, 0},
+		CardPosition{proto::POS_FACEUP_ATTACK}));
+	auto legacy = snapshot_for_start(0, 0);
+	legacy.cards.push_back({{0, Zone::MonsterZone, 0, false, 0}, 2}); // Synthetic fault: claims 2 materials instead of 1
+	legacy.cards.push_back({{0, Zone::MonsterZone, 0, true, 0}, 0});
+	legacy.cards.push_back({{0, Zone::MonsterZone, 0, true, 1}, 0});
+	const auto result = compare(semantic, legacy, 52, proto::MSG_MOVE);
+	EDOPRO_CHECK(!result.equivalent());
+	EDOPRO_CHECK_EQ(result.mismatches.size(), 2u); // occupancy of material 1 plus count mismatch on host
+}

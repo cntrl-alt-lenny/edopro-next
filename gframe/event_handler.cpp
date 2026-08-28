@@ -40,6 +40,7 @@
 #include "porting.h"
 #include "config.h"
 #include "fmt.h"
+#include "../integration/legacy/semantic_observer.h"
 
 namespace {
 
@@ -2701,6 +2702,8 @@ void ClientField::ShowMenu(int flag, int x, int y) {
 	mainGame->wCmdMenu->setRelativePosition(irr::core::recti(x - mainGame->Scale(20), y - mainGame->Scale(20) - height, x + mainGame->Scale(80), y - mainGame->Scale(20)));
 }
 void ClientField::UpdateChainButtons(irr::gui::IGUIElement* caller) {
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return;
 	if(!caller) {
 		if(mainGame->ignore_chain || mainGame->always_chain || mainGame->chain_when_avail) {
 			mainGame->btnChainIgnore->setPressed(mainGame->ignore_chain);
@@ -2723,6 +2726,8 @@ void ClientField::UpdateChainButtons(irr::gui::IGUIElement* caller) {
 	}
 }
 void ClientField::ShowCancelOrFinishButton(int buttonOp) {
+	if(edopro_next::legacy_observer::replay_verification_active())
+		return;
 	if (!mainGame->dInfo.isReplay) {
 		switch (buttonOp) {
 		case 1:

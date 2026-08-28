@@ -231,3 +231,43 @@ jobs:
           test -f bin/x64/release/ygoprodll || { echo "::error::client binary missing"; exit 1; }
           file bin/x64/release/ygoprodll
           ls -lh bin/x64/release/ygoprodll
+
+      - name: Real legacy / semantic fixture equivalence
+        if: matrix.observer == true
+        # The verifier is fail-closed on its own (processed == expected ==
+        # comparisons, zero failures/mismatches - see equivalent() in
+        # integration/legacy/replay_verifier.h). That alone would still pass
+        # if a future regression in the legacy replay parser truncated the
+        # packet stream, since expected_packets and packets_processed would
+        # shrink together. So CI independently pins the known committed
+        # fixture totals here, outside production verifier logic.
+        run: |
+          set -e
+          assert_fixture_totals() {
+            local fixture="$1" want="$2" log="$3"
+            ./bin/x64/release/ygoprodll --semantic-verify-replay "$fixture" | tee "$log"
+            for field in "expected packets" "packets processed" "comparisons performed"; do
+              got=$(grep "^${field}: " "$log" | sed -E "s/^${field}: //")
+              if [ "$got" != "$want" ]; then
+                echo "::error::$fixture: '$field' was $got, expected the known fixture total of $want"
+                exit 1
+              fi
+            done
+          }
+          assert_fixture_totals tests/fixtures/duel-chains-battle.yrpX 990 chains-battle.log
+          assert_fixture_totals tests/fixtures/duel-extended.yrpX 1133 extended.log
+
+      - name: Fault-injected verifier fails deterministically
+        if: matrix.observer == true
+        run: |
+          set +e
+          ./bin/x64/release/ygoprodll --semantic-verify-replay-fault tests/fixtures/duel-chains-battle.yrpX > fault-a.log 2>&1
+          first_status=$?
+          ./bin/x64/release/ygoprodll --semantic-verify-replay-fault tests/fixtures/duel-chains-battle.yrpX > fault-b.log 2>&1
+          second_status=$?
+          set -e
+          cat fault-a.log
+          test "$first_status" -ne 0
+          test "$second_status" -ne 0
+          grep -F "p0.life" fault-a.log
+          diff -u fault-a.log fault-b.log
