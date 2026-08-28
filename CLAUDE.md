@@ -48,6 +48,7 @@ patch that silently diverges.
 | `gframe/` | Legacy Irrlicht client | Upstream. Touch minimally. |
 | `ocgcore/` | Rules engine submodule | Upstream. Do not touch. |
 | `client/` | New semantic client model (no UI types) | Ours |
+| `data/` | Card database facade (SQLite, `.cdb` schema) | Ours |
 | `ui/` | Qt 6 / QML presentation | Ours |
 | `docs/` | Architecture, ADRs, roadmap | Ours |
 | `tools/` | Python tooling | Mixed — check before editing |

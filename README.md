@@ -116,6 +116,7 @@ Nothing here is rounded up.
 | Engine re-simulation regression | ⬜ Not started | the layer that would prove *live* duel behaviour |
 | Semantic duel model | ✅ **Working** | 34 of ~90 messages decoded, including bounded query-stream patches and fixture message closure; no renderer involved — [design](docs/architecture/semantic-model.md) |
 | Legacy/model equivalence check | ✅ **Working** | reviewed, scoped structural equivalence over both committed YRPX fixtures — LP, turn, and structural card/material topology only; no card code/position, no `ocgcore` — [design](docs/architecture/fixture-equivalence.md) |
+| Card database facade | ✅ **Working** | reads Project Ignis `.cdb` files into a presentation-independent record; no legality, no search yet — [design](docs/architecture/card-database.md) |
 | Deck builder | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |

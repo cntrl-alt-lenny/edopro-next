@@ -97,6 +97,34 @@ jobs:
           python tests/test_semantic_trace.py --update
           git diff --exit-code -- tests/golden
 
+  card-database:
+    name: Card database facade
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # No Qt, no Irrlicht, no vcpkg, no ocgcore, no gframe, no legacy
+      # DataManager - only a C++20 compiler and SQLite. If this step ever
+      # needs any of the others, the separation this module exists to create
+      # is broken. SQLite comes from apt, not vcpkg: this job stays in the
+      # cheap, every-push tier, and does not need the upstream vcpkg bundle
+      # the expensive baseline job fetches for a completely different build.
+      - name: Ninja and SQLite3 development headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build libsqlite3-dev
+
+      - name: Configure
+        run: >
+          cmake -S data -B data/build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON
+
+      - name: Build
+        run: cmake --build data/build --parallel
+
+      - name: Unit tests
+        run: ctest --test-dir data/build --output-on-failure
+
   qt-shell:
     name: Qt 6 shell (Linux)
     runs-on: ubuntu-latest
