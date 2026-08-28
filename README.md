@@ -117,7 +117,8 @@ Nothing here is rounded up.
 | Semantic duel model | ✅ **Working** | 34 of ~90 messages decoded, including bounded query-stream patches and fixture message closure; no renderer involved — [design](docs/architecture/semantic-model.md) |
 | Legacy/model equivalence check | ✅ **Working** | reviewed, scoped structural equivalence over both committed YRPX fixtures — LP, turn, and structural card/material topology only; no card code/position, no `ocgcore` — [design](docs/architecture/fixture-equivalence.md) |
 | Card database facade | ✅ **Working** | reads Project Ignis `.cdb` files into a presentation-independent record; no legality, no search yet — [design](docs/architecture/card-database.md) |
-| Deck builder | ⬜ Not started | first screen to migrate |
+| Deck model / `.ydk` codec | ✅ **Working** | presentation-independent deck value type, reads and writes Project Ignis's `.ydk` format; no legality, no fast search, no UI yet — [design](docs/architecture/deck-model.md) |
+| Deck builder UI | ⬜ Not started | first screen to migrate |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |
 
@@ -222,7 +223,7 @@ The full system — colour, spacing, typography, motion, focus — is in
 | **M0** | Foundation — architecture, baseline, ADR, shell | ✅ done |
 | **M1** | **Make change provable** — regression harness, CI | 🔶 in progress |
 | **M2** | **Semantic client model** — presentation-free duel state | 🔶 in progress |
-| **M3** | Deck and card data — the first screen to migrate | ⬜ |
+| **M3** | Deck and card data — the first screen to migrate | 🔶 in progress |
 | **M4** | Low-risk screens — settings, replays, lobby | ⬜ |
 | **M5** | Duel field — last, and highest risk | ⬜ |
 | **M6** | Platform and input — Windows, macOS, controller, Steam Deck | ⬜ |

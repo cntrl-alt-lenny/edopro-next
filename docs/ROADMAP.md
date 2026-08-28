@@ -128,13 +128,24 @@ already presentation-independent, so it can be built without touching the duel p
       the deliberate divergences (load atomicity, locale overlay) are in
       [card-database.md](architecture/card-database.md) and
       [ADR 0003](adr/0003-card-database-facade.md).
-- [ ] Deck model reading and writing `.ydk`
+- [x] Deck model reading and writing `.ydk`. `data/` reads and writes the same file-
+      structural grammar `DeckManager::LoadCardList`/`SaveDeck` do, into a presentation-
+      independent `Deck` of `data::CardCode` values - no `CardDataC` pointers, no
+      `CardDatabase` dependency, no card-type classification or legality of its own. Source
+      research, the two upstream load modes, and the deliberate divergences (explicit
+      sections over type-based auto-classification, card code 0 excluded rather than
+      stored) are in [deck-model.md](architecture/deck-model.md) and
+      [ADR 0004](adr/0004-deck-model-ydk-codec.md).
 - [ ] Fast search over the full card pool
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
-**Pending** - only the card database facade above is done so far.
+**Pending** - the card database facade and the deck model/`.ydk` codec above are done; there
+is still no deck builder UI, so "a deck can be built ... in the new client" is not yet true.
+The format-level half of "opened by upstream EDOPro unchanged" is supported by construction
+(the writer matches `SaveDeck`'s own section syntax and `LoadCardList` accepts it) but not
+proven by an end-to-end GUI test, which does not exist yet.
 
 ## M4 — Low-risk screens
 

@@ -98,7 +98,13 @@ jobs:
           git diff --exit-code -- tests/golden
 
   card-database:
-    name: Card database facade
+    # Covers both edopro_next_data (the card database facade, SQLite-backed)
+    # and edopro_next_deck (the deck model / .ydk codec, added alongside it -
+    # data/CMakeLists.txt) since data/build carries both targets' tests. The
+    # job id is left as card-database to avoid touching anything that refers
+    # to it by that id; only the display name changed to stay truthful about
+    # what it now runs.
+    name: Card and deck data
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +115,9 @@ jobs:
       # is broken. SQLite comes from apt, not vcpkg: this job stays in the
       # cheap, every-push tier, and does not need the upstream vcpkg bundle
       # the expensive baseline job fetches for a completely different build.
+      # edopro_next_deck itself needs none of this - see data/CMakeLists.txt
+      # - but the job still installs it because edopro_next_data (built in
+      # the same data/build tree) does.
       - name: Ninja and SQLite3 development headers
         run: |
           sudo apt-get update
