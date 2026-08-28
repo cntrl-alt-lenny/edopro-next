@@ -220,10 +220,29 @@ Confirmed against the actual toolchain this project builds with (Linux x86-64, g
   caught by `catch(...)`, the line is skipped, no diagnostic is possible from inside
   `LoadCardList` (it has none to give).
 - `std::out_of_range` is thrown when the parsed magnitude exceeds `unsigned long`'s own
-  range (64 bits here) - e.g. a 30+ digit number - also caught and skipped. This is
-  different from the `code == 4294967296` case above: that value fits comfortably in a
-  64-bit `unsigned long` and only overflows on the subsequent `static_cast<uint32_t>`, which
-  is defined wraparound, not an exception.
+  range - e.g. a 30+ digit number, comfortably beyond 64 bits and therefore beyond *any*
+  conforming platform's `unsigned long` - also caught and skipped.
+
+**`4294967296` (2³²) is `unsigned long`-width-dependent, and this codec's test suite pins
+both outcomes rather than assuming the Linux one is universal.** On this baseline
+(64-bit `unsigned long`), `4294967296` fits comfortably in `std::stoul`'s own range and only
+overflows on the subsequent `static_cast<uint32_t>`, which is defined wraparound (§5), not
+an exception - so it parses to `0` and is excluded by the code-0 policy. On a platform where
+`unsigned long` is exactly 32 bits (LLP64 - MSVC/Windows, which `README.md` states as an
+intended future target, not attempted yet), `4294967296` does not fit in `unsigned long` at
+all, so `std::stoul` itself throws `std::out_of_range`, and the line is excluded as
+malformed instead - the same `catch(...)`-and-skip path as the 30+-digit case above, not the
+code-0 path. The C++ standard guarantees `unsigned long` is never narrower than 32 bits, so
+these are the only two possible outcomes; `data/tests/test_deck_ydk.cpp`'s
+`two_to_the_32_is_excluded_one_way_or_another_depending_on_unsigned_long_width` checks
+`std::numeric_limits<unsigned long>::max()` against `std::numeric_limits<std::uint32_t>::max()`
+and asserts whichever diagnostic actually applies on the ABI being built for - never a
+different Main Deck outcome, only a different reported reason.
+
+This is not an inconsistency this codec introduces or should paper over: `LoadCardList`
+calls the same `std::stoul` on the same string, so upstream's own real behaviour for this
+input is exactly as ABI-dependent as this codec's is - matching it precisely is the point,
+not a platform-independence gap to close with a hand-rolled parser.
 
 `edopro_next::data::parse_ydk` calls `std::stoul` the same way, on the same platform
 baseline, and inherits these exact semantics rather than approximating them - see
@@ -399,17 +418,22 @@ upstream's two behaviours are mode-dependent artifacts of the dummy/alias mechan
 this module's value-based `Deck` has no use for; this codec's own behaviour is neither of
 them, chosen instead for internal consistency with the rest of `data/`.
 
-Also excluded, by the same reasoning and the same mechanism: a code that overflows
-`uint32_t` when truncated (`static_cast<uint32_t>` wraps `4294967296` to `0`) is
-**indistinguishable, after truncation, from a literal `"0"` line**, and is excluded for the
-identical reason - not because this codec detects the overflow specially, but because the
-truncated value genuinely is `0`. A magnitude that overflows `std::stoul`'s own return type
-(`unsigned long`, 64-bit on this baseline) is a different case entirely: it throws
-`std::out_of_range` before truncation ever happens, and is reported as `"malformed card
-code"`, not as code 0. `data/tests/test_deck_ydk.cpp` pins both cases separately
-(`two_to_the_32_wraps_to_zero_and_is_excluded_by_the_code_zero_policy` vs.
-`a_number_far_beyond_any_native_integer_width_is_reported_as_malformed`) precisely so they
-are never conflated.
+Also excluded, by the same reasoning and the same mechanism, **when `unsigned long` is wide
+enough for it to arise at all (§2.5)**: a code that overflows `uint32_t` when truncated
+(`static_cast<uint32_t>` wraps `4294967296` to `0`) is **indistinguishable, after
+truncation, from a literal `"0"` line**, and is excluded for the identical reason - not
+because this codec detects the overflow specially, but because the truncated value
+genuinely is `0`. A magnitude that overflows `std::stoul`'s own return type - `unsigned
+long`, which is 64 bits on this project's Linux baseline but only guaranteed to be at least
+32 bits by the C++ standard, so `4294967296` itself is one such magnitude on a strictly
+32-bit `unsigned long` (§2.5) - is a different case entirely: it throws `std::out_of_range`
+before truncation ever happens, and is reported as `"malformed card code"`, not as code 0.
+`data/tests/test_deck_ydk.cpp` pins both the always-malformed case
+(`a_number_far_beyond_any_native_integer_width_is_reported_as_malformed`, using a magnitude
+far beyond even a 64-bit `unsigned long` so it is malformed on every conforming platform) and
+the ABI-dependent `4294967296` case separately
+(`two_to_the_32_is_excluded_one_way_or_another_depending_on_unsigned_long_width`, §2.5)
+precisely so they are never conflated.
 
 ---
 
@@ -451,6 +475,39 @@ source text), and none of the tests expect them to.
 by any database round-trips exactly like any other - there is no dummy/alias construction to
 reproduce (§4), and no `CardDatabase` is ever consulted during either parse or write.
 
+### The contract's actual precondition: no `CardCode::None` entries
+
+The guarantee above is phrased "for a `Deck` produced by `parse_ydk`/`load_ydk`" rather than
+"for any `Deck`" deliberately, and the difference is not academic: `Deck::main`/`extra`/
+`side` are public `std::vector<CardCode>`s (§1), so nothing in this codec's type system stops
+a caller from constructing `Deck{.main = {CardCode::None}}` directly - something a future
+programmatic deck builder is exactly the kind of caller likely to do by accident (e.g.
+default-constructing a `CardCode` field before it is assigned a real value, since
+`CardCode::None == 0` is also `CardCode`'s zero-initialized state - `card_code.h`).
+
+`serialize_ydk` does not filter or validate `deck`'s contents (deliberately - see its own doc
+comment in `ydk.h`, and CLAUDE.md's guidance against adding validation for scenarios a type's
+own contract already rules out): a `CardCode::None` entry is written as a literal `"0"` line,
+exactly like any other code. `parse_ydk` then excludes that line under the code-0 policy §5
+already establishes - a rule this document deliberately does not reopen or special-case for
+the writer side. The net effect, verified by
+`data/tests/test_deck_ydk.cpp`'s `a_deck_containing_card_code_none_does_not_round_trip`, is
+that **`parse_ydk(serialize_ydk(deck)) != deck` for such a `Deck`** - the `CardCode::None`
+entry is silently dropped by the round trip. This is the one documented, intentional
+exception to the round-trip contract above, not an accidental gap: `CardCode::None` was
+never a valid semantic entry in a `Deck` to begin with (`deck.h`), so the contract's true
+precondition is "a `Deck` containing only non-zero `CardCode` values" - which every `Deck`
+`parse_ydk`/`load_ydk` themselves produce always satisfies, since neither ever stores a
+`CardCode::None` entry (§5).
+
+Considered and rejected: having `serialize_ydk` silently skip `CardCode::None` entries
+instead of writing them. It would not actually restore round-trip equality either - the
+entry would still be missing afterward, for the same reason - and it would add a filtering
+step to the one function in this codec that is otherwise a pure, unconditional
+transcription of `deck`'s contents, for a caller-error case `deck.h`'s own contract already
+rules out. Documenting the precondition and pinning the current, honest behaviour with a
+test is the smaller change.
+
 ---
 
 ## 7. Filesystem semantics
@@ -484,15 +541,27 @@ rather than taken on the reviewer's word:
   state correctly, and checks `file.bad()` only after that loop - verified both for byte-
   exact correctness across file sizes that do and do not land on a chunk boundary (including
   empty), and for actually detecting a forced read error where the `rdbuf()` form did not.
-- **`save_ydk` calls `file.flush()` before checking whether the write succeeded.**
-  `ofstream::write()` can leave the stream reporting `good()` even though the data never
-  reached the destination: a full filesystem can accept the write into the stream's own
-  buffer and only fail once that buffer actually flushes - which, without an explicit
-  `flush()`, would happen silently at the `ofstream`'s destruction, after `save_ydk` had
-  already returned `ok == true`. Confirmed empirically against `/dev/full` (a device that
-  always accepts an open and a `write()`, but always fails the underlying flush): checking
-  `file`'s state immediately after `write()` reported `good()`; the same check after an
-  explicit `flush()` correctly reported the failure.
+- **`save_ydk`'s success path is write, then flush, then close, each checked in turn -
+  never relying on the destructor to close.** `ofstream::write()` can leave the stream
+  reporting `good()` even though the data never reached the destination: a full filesystem
+  can accept the write into the stream's own buffer and only fail once that buffer actually
+  flushes - which, without an explicit `flush()`, would happen silently at the `ofstream`'s
+  destruction, after `save_ydk` had already returned `ok == true`. Confirmed empirically
+  against `/dev/full` (a device that always accepts an open and a `write()`, but always
+  fails the underlying flush): checking `file`'s state immediately after `write()` reported
+  `good()`; the same check after an explicit `flush()` correctly reported the failure. A
+  successful `flush()` does not make the subsequent `close()` a formality, though:
+  `std::basic_fstream::close()` sets `failbit` if the underlying close itself fails,
+  independently of any earlier flush - a filesystem, network mount, or quota check that only
+  reports an error at close time, with an empty buffer and nothing left to flush, is a real
+  and well-known class of failure this project does not have a portable way to force in a
+  unit test (`/dev/full` already fails at the flush step, before `close()` is ever reached,
+  so it cannot exercise this specific path; deliberately not building an injection seam
+  solely to manufacture one - see CLAUDE.md's proportionate-validation guidance). `save_ydk`
+  therefore checks `file` again after `close()`, and only sets `ok = true` once that check
+  passes, so a close-only failure - not exercised by any test here, but real and
+  standard-guaranteed to be detectable this way - is reported rather than silently returned
+  as success.
 
 ---
 

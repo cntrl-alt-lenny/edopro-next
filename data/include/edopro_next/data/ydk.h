@@ -96,6 +96,20 @@ struct YdkWriteOptions {
 // unconditionally, with a plain '\n' terminator throughout regardless of
 // host platform. Deterministic: the same Deck and options always produce
 // byte-identical output. Never touches a CardDatabase.
+//
+// Every code, including CardCode::None, is written out exactly as given -
+// this function does not filter or validate `deck`'s contents, matching
+// this codec's general policy of not adding validation this module has no
+// business owning (deck.h). The round-trip guarantee
+// (parse_ydk(serialize_ydk(deck)) == deck, see deck-model.md) therefore
+// holds only for a `deck` containing no CardCode::None entries - which is
+// always true of anything parse_ydk()/load_ydk() themselves produce, since
+// neither ever stores one. A caller that constructs a Deck containing
+// CardCode::None directly (deck.h notes nothing stops this) will see it
+// written as a literal "0" line, which a later parse_ydk() of that output
+// then excludes under the same code-0 policy §serialize_ydk's input came
+// from - so that specific Deck will not round-trip, by design, not by
+// oversight.
 std::string serialize_ydk(const Deck& deck, const YdkWriteOptions& options = {});
 
 // The result of save_ydk(). `ok` is false exactly when the file could not

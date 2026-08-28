@@ -123,7 +123,12 @@ An overflowed value that truncates to exactly `0` (`4294967296 -> 0` via
 `static_cast<uint32_t>`, itself matching upstream's own truncation - `docs/architecture/
 deck-model.md`§2.5) is excluded by the identical rule, since after truncation it is
 genuinely indistinguishable from a literal `"0"` line - not a separately invented special
-case.
+case. Whether `4294967296` actually reaches that truncation step at all is itself
+`unsigned long`-width-dependent (64-bit on this project's Linux baseline; exactly 32-bit
+under LLP64, where `std::stoul` overflows first and the line is excluded as malformed
+instead) - both are upstream's own real, per-platform `std::stoul` behaviour, not a gap
+this codec should close with platform-independent parsing (`docs/architecture/
+deck-model.md`§2.5).
 
 ## Decision 4 — The writer never depends on a card database or UI state
 

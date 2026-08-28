@@ -228,13 +228,30 @@ YdkSaveResult save_ydk(const std::filesystem::path& path, const Deck& deck,
 	// write() can leave `file` reporting good() even though the data
 	// never reached the destination: a full filesystem (verified
 	// empirically against /dev/full) can accept the write() call into the
-	// stream buffer and only fail once that buffer is actually flushed,
-	// which would otherwise happen silently at destruction, after `ok`
-	// has already been returned. Flushing explicitly here, before
-	// checking `file`, surfaces that failure to this result instead.
+	// stream buffer and only fail once that buffer is actually flushed.
+	// Flushing explicitly here, before checking `file`, surfaces that
+	// failure at a precise point instead of leaving it for whatever
+	// implicitly flushes next.
 	file.flush();
 	if(!file) {
 		result.error = "failed to write file: " + path.string();
+		return result;
+	}
+	// A successful flush() does not make close() a formality: close()
+	// performs its own finalization (std::basic_fstream::close() sets
+	// failbit if the underlying close fails, independently of any earlier
+	// flush - e.g. a filesystem, network mount, or quota check that only
+	// reports an error at close time, with an empty buffer and nothing
+	// left to flush). Relying on the destructor to close - as the
+	// original version of this function did - would let that failure
+	// happen after `ok` had already been returned to the caller with no
+	// way to report it, which is the same class of false-success this
+	// function's flush() check was already added to close. The success
+	// path is therefore write, then flush, then close, each checked in
+	// turn, only setting `ok = true` once close() has itself succeeded.
+	file.close();
+	if(!file) {
+		result.error = "failed to close file: " + path.string();
 		return result;
 	}
 	result.ok = true;

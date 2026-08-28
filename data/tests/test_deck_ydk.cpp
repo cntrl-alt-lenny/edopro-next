@@ -15,6 +15,7 @@
 #include <atomic>
 #include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <string>
 
 #include "test_support.h"
@@ -281,16 +282,37 @@ EDOPRO_DATA_TEST(the_maximum_valid_uint32_code_is_stored_normally) {
 	EDOPRO_DATA_CHECK(parsed.ignored.empty());
 }
 
-// 2^32 fits in a 64-bit unsigned long (this project's Linux baseline -
-// see docs/BASELINE.md) so std::stoul does not throw; truncating to
-// uint32_t wraps it to 0, which this codec's code-0 policy then excludes
-// - the same outcome as upstream's own static_cast<uint32_t>(std::stoul(...)),
-// not a special case added here.
-EDOPRO_DATA_TEST(two_to_the_32_wraps_to_zero_and_is_excluded_by_the_code_zero_policy) {
+// Whether "4294967296" (2^32) parses successfully and then truncates to 0,
+// or std::stoul throws std::out_of_range on the string itself, depends on
+// unsigned long's own width - this codec calls std::stoul exactly as
+// upstream does (deck-model.md#2.5), so it inherits whichever behaviour
+// the build's C++ standard library actually has, deliberately not
+// papered over with platform-independent parsing. 64-bit unsigned long
+// (this project's Linux baseline, docs/BASELINE.md) parses then wraps;
+// exactly-32-bit unsigned long (e.g. Windows/LLP64, per README.md's
+// stated intent to eventually support it) overflows std::stoul itself.
+// Both are genuine per-platform std::stoul behaviour, verified by
+// std::numeric_limits rather than assumed - see the "ABI-dependent" note
+// in docs/architecture/deck-model.md#2.5. Either way, no card is stored.
+EDOPRO_DATA_TEST(two_to_the_32_is_excluded_one_way_or_another_depending_on_unsigned_long_width) {
 	const auto parsed = edopro_next::data::parse_ydk("#main\n4294967296\n");
 	EDOPRO_DATA_CHECK(parsed.deck.main.empty());
 	EDOPRO_DATA_CHECK_EQ(parsed.ignored.size(), std::size_t{1});
-	EDOPRO_DATA_CHECK_EQ(parsed.ignored.at(0).reason, std::string("card code 0 is not a real card"));
+	if constexpr(std::numeric_limits<unsigned long>::max() >
+				 std::numeric_limits<std::uint32_t>::max()) {
+		// unsigned long is wider than uint32_t: std::stoul("4294967296")
+		// succeeds, static_cast<uint32_t> wraps it to 0, and this codec's
+		// code-0 policy excludes it - matching upstream's own
+		// static_cast<uint32_t>(std::stoul(...)) on the same ABI.
+		EDOPRO_DATA_CHECK_EQ(parsed.ignored.at(0).reason,
+							 std::string("card code 0 is not a real card"));
+	} else {
+		// unsigned long is exactly 32 bits (the C++ standard guarantees
+		// it is never narrower): std::stoul("4294967296") itself throws
+		// std::out_of_range before any truncation happens, caught and
+		// reported as malformed - matching upstream's own catch(...).
+		EDOPRO_DATA_CHECK_EQ(parsed.ignored.at(0).reason, std::string("malformed card code"));
+	}
 }
 
 // ---------------------------------------------------------------------
@@ -360,6 +382,27 @@ EDOPRO_DATA_TEST(parse_then_serialize_then_parse_again_yields_an_identical_deck)
 	const auto text = edopro_next::data::serialize_ydk(first.deck);
 	const auto second = edopro_next::data::parse_ydk(text);
 	EDOPRO_DATA_CHECK(second.deck == first.deck);
+}
+
+// The round-trip contract above is scoped to a Deck containing only
+// non-zero CardCode values - true of anything parse_ydk()/load_ydk()
+// themselves produce, since neither ever stores CardCode::None (§I above).
+// Deck::main/extra/side are public vectors, though (deck.h), so nothing
+// stops a caller from constructing one directly. This pins the actual,
+// documented (not accidental) result: serialize_ydk writes CardCode::None
+// as a literal "0" line like any other code (no filtering - see
+// serialize_ydk's own doc comment), which a later parse_ydk() then
+// excludes under the same code-0 policy - so this specific Deck does not
+// round-trip, and this test exists so that stays a known, intentional
+// contract boundary rather than an untested gap.
+EDOPRO_DATA_TEST(a_deck_containing_card_code_none_does_not_round_trip) {
+	Deck deck;
+	deck.main = {CardCode{1}, CardCode::None, CardCode{2}};
+	const auto text = edopro_next::data::serialize_ydk(deck);
+	EDOPRO_DATA_CHECK_EQ(text, std::string("#main\n1\n0\n2\n#extra\n!side\n"));
+	const auto parsed = edopro_next::data::parse_ydk(text);
+	EDOPRO_DATA_CHECK(parsed.deck != deck);
+	EDOPRO_DATA_CHECK_EQ(parsed.deck.main, (std::vector<CardCode>{CardCode{1}, CardCode{2}}));
 }
 
 // ---------------------------------------------------------------------

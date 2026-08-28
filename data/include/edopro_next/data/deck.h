@@ -23,6 +23,15 @@ namespace edopro_next::data {
 // and their position relative to each other survives a load/save round
 // trip. A CardCode here need not be known to any loaded CardDatabase -
 // see ydk.h's "unknown codes" policy.
+//
+// CardCode::None is not a valid entry in main/extra/side - it is this
+// project's "not a real card" sentinel (card_code.h), and parse_ydk()
+// never produces one (ydk.h's code-0 policy excludes it during parsing).
+// These are public vectors, though, so nothing here stops a caller from
+// constructing one anyway; if a caller does, ydk.h's round-trip guarantee
+// does not apply to that Deck - see ydk.h's serialize_ydk() doc comment
+// and docs/architecture/deck-model.md#round-trip-contract for the exact,
+// deliberately un-special-cased behaviour this produces.
 struct Deck {
 	std::vector<CardCode> main;
 	std::vector<CardCode> extra;
