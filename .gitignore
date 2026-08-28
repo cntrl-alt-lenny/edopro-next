@@ -50,5 +50,6 @@ NotoSansJP-Regular.otf
 # directories need naming. The README tells people to create both.
 /client/build/
 /ui/build/
+/data/build/
 __pycache__/
 *.pyc
