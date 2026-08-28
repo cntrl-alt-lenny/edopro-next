@@ -195,9 +195,10 @@ the packed column value must be `-249` (`-249`'s bit pattern is `0xFFFFFF07`, so
 value's upper three bytes are all `0xFF` by sign extension, `left_scale`/`right_scale` come
 out as `255` for *any* negative-level card - a mechanical side effect of the shared packing,
 not a second, independent encoding. `data/tests/test_card_database.cpp`'s
-`negative_level_unpacks_bit_for_bit_like_upstream` fixes this exact case (`level = -249` in
-the synthetic row, `record->level == static_cast<std::uint32_t>(-7)`) so a future change to
-this formula cannot silently start producing a different number for the same bytes. Callers
+`negative_level_wraps_to_the_same_uint32_upstream_stores` fixes this exact case
+(`level = -249` in the synthetic row, `record->level ==
+static_cast<std::uint32_t>(-7) == 4294967289u`) so a future change to this formula
+cannot silently start producing a different number for the same bytes. Callers
 should treat `left_scale`/`right_scale` as meaningful only when `type` carries the Pendulum
 bit; this module does not make that judgement itself, matching how it leaves every other
 `type`-flag interpretation to the caller.

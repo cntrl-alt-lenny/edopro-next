@@ -117,11 +117,13 @@ public:
 	// upstream's ClearLocaleTexts(), called unconditionally by
 	// Game::ApplyLocale() before loading a newly selected locale (or before
 	// loading nothing at all, to return to the base language). Performs no
-	// filesystem or SQLite operation, so it has no LoadResult-style failure
-	// state to report - unlike load_database()/load_locale() it always runs
-	// to completion, including as a harmless no-op when no locale is active.
-	// It is not declared noexcept: resolving text back to the base value
-	// copies strings, which can allocate.
+	// filesystem, SQLite, or schema operation, so - unlike
+	// load_database()/load_locale() - it has no LoadResult-style
+	// operational failure state to report, and it is harmless when no
+	// locale is active. It is not declared noexcept: restoring each
+	// touched code's text copies strings, which can allocate, and standard
+	// C++ allocation exceptions are free to propagate out of this call like
+	// any other - this function does not claim otherwise.
 	void clear_locale();
 
 	const CardRecord* find(CardCode code) const noexcept;
