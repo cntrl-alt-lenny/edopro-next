@@ -215,22 +215,84 @@ capable of overwriting anything the previous ones defined.
 
 ---
 
-## 4. Locale overlay
+## 4. Locale: a separate, clearable layer
 
-`CardDatabase::load_locale()` reads the schema in §1.2 and overlays each of `name`, `text`,
-and the sixteen `strings[]` **independently**: a non-empty locale value replaces the base
-value for that one field, an empty one leaves the base value in place. A locale row for a
-code this catalogue has not already loaded via `load_database()` is ignored.
+`CardDatabase` keeps three maps, not one - `base_text_` (what `load_database()` loaded,
+untouched by any locale operation), `locale_text_` (the active locale layer), and
+`records_` (the effective view `find()`/iteration return, recomputed from the other two by
+`resolve_text()` whenever either changes). Full rationale for this shape, and for the bug it
+replaces, is in
+[ADR 0003, Decision 4](../adr/0003-card-database-facade.md#decision-4-locale-is-a-separate-clearable-overlay-layer-with-upstreams-actual-fallback-rules).
+This section states the resulting externally observable rules.
 
-This is a deliberate, documented divergence from `DataManager`, in two respects - both
-explained in full, with their source citations, in
-[ADR 0003, Decision 4](../adr/0003-card-database-facade.md#decision-4-locale-overlay-is-per-field-and-requires-the-base-card-first):
-upstream swaps the *entire* `name`/`text` pair as one unit rather than falling back per
-field the way it already does for the sixteen auxiliary strings, and upstream's locale
-linking is order-independent in a way its own real startup path never exercises. Both of
-those are named there as an implementation detail of `DataManager`'s memory layout, not a
-documented part of the `.cdb`/locale-file format itself, which is why this module does not
-reproduce them.
+### The lifecycle
+
+Traced from `Game::ApplyLocale` (`gframe/game.cpp:3987-4020`):
+
+```
+load base databases
+    -> load_database() one or more times
+selected locale begins
+    -> clear_locale()                          (ClearLocaleTexts, unconditional)
+    -> load_locale() one or more times, for that locale's files
+effective strings now reflect that locale
+user changes locale (or returns to the base language)
+    -> clear_locale()                          (ClearLocaleTexts, unconditional - even
+                                                 when returning to base, which loads nothing)
+    -> load_locale() one or more times for the new locale, or none at all
+```
+
+`clear_locale()` is the data-layer half of `ClearLocaleTexts()`
+(`gframe/data_manager.cpp:46-54`): it discards `locale_text_` entirely and restores every
+touched code's `name`/`text`/`strings` to its `base_text_` value. It is harmless and
+deterministic when no locale is active.
+
+### name/text: linked as a pair, not per field
+
+Once any `load_locale()` call has mentioned a code at all (since the last `clear_locale()`),
+that code's `name` and `text` come from the locale layer **as a pair** - even if one or both
+are empty - and do not fall back to the base value individually. This matches
+`CardDataM::GetStrings()` (`gframe/data_manager.h:111-115`), which returns the whole linked
+`CardString` or the whole base one, never a mix. `DataManager::GetName()`'s separate
+`"???"`-on-empty placeholder is not reproduced - that is a presentation default layered on
+top of `GetStrings()`, not part of the `CardString` it selects, and this module's job stops
+at reporting what the selected `CardString` actually holds.
+
+### The sixteen auxiliary strings: per-slot fallback, deliberately different
+
+Each of `strings[0..15]` falls back to its own base value independently, exactly when the
+locale layer's same slot for that code is empty - matching `CardDataM::GetDesc()`
+(`gframe/data_manager.h:116-124`). This is *not* the same rule as name/text above, and this
+module does not unify them: that unification was the invented behavior an earlier version
+of this facade shipped, and external review of the resulting bug is why Decision 4 exists in
+its current form.
+
+### Multiple files in one active locale: last file wins, in full
+
+A later `load_locale()` call for a code the active locale already touched **completely
+replaces** that code's locale entry, field by field, even with an empty value - the same
+last-file-wins rule §3 documents for the base layer, applied here to `locale_text_`.
+`DataManager::ParseLocaleDB` (`gframe/data_manager.cpp:180-228`) reuses `locales[code]`
+across every file loaded into one active locale, and its `GetWstring` helper
+(`:77-96`) unconditionally writes each column - explicitly clearing the target string when a
+column is empty, never leaving a prior file's value in place.
+
+This is a different operation from switching locales: loading two files for the *same*
+active locale accumulates into one overlay (last file wins per code); calling
+`clear_locale()` between two locale loads discards the first overlay entirely before the
+second begins. `data/tests/test_card_database.cpp` keeps these as separate tests
+(`later_locale_file_in_the_same_active_locale_overwrites_the_earlier_one` vs.
+`switching_locale_after_clear_does_not_leak_the_previous_locale`) precisely so the two are
+never conflated.
+
+### A locale row for an unknown code is still ignored
+
+Unchanged from the original decision: a `load_locale()` row for a code not already present
+via `load_database()` is ignored, not queued for a base row that might arrive later. Verified
+against the two real call sites (`gframe/data_handler.cpp:28`, `gframe/game.cpp:2647`/
+`:4001`): every real startup loads every base database before any locale data, so
+upstream's own order-independent linking is real `DataManager` capability but dead code in
+practice.
 
 ---
 
@@ -246,18 +308,32 @@ required table or column all fail at the same two points upstream's own `ParseDB
 (anything that makes the fixed column list in §1 not resolve - SQLite validates a
 database's header lazily, on first real access, which is why an invalid-but-openable file
 still fails here and not at open time). Every failure path returns a `LoadResult` with
-`ok == false` and a non-empty, diagnosable `error` string; none of them touch `cards_` at
-all in this module's implementation (§3's staging-then-merge shape), which is a **stronger**
-guarantee than `DataManager::ParseDB` provides - see
+`ok == false` and a non-empty, diagnosable `error` string; none of them touch `base_text_`,
+`locale_text_`, or `records_` at all, in either `load_database()` or `load_locale()`
+independently (each stages into a private local map first, per §3/§4), which is a
+**stronger** guarantee than `DataManager::ParseDB`/`ParseLocaleDB` provide - see
 [ADR 0003, Decision 3](../adr/0003-card-database-facade.md#decision-3-a-load-is-atomic-against-the-catalogue-which-is-stronger-than-upstream)
 for why upstream's own version of this can leave a catalogue part-old, part-new, part
-neither, and why this module does not copy that.
+neither, and why this module does not copy that. `clear_locale()` cannot fail at all - it
+only discards in-memory state - so it is not a `LoadResult`-returning operation.
 
 `data/tests/test_card_database.cpp` covers all of: a missing file, a non-SQLite file, a
 `.cdb`-shaped-but-wrong file with no `datas`/`texts` tables at all, a schema missing exactly
-one required column, and - the guarantee itself - that a failed load leaves a previously
-loaded catalogue's size and contents completely unchanged, with a subsequent successful load
-still working normally afterward.
+one required column, that a failed `load_database()` leaves a previously loaded catalogue's
+size and contents completely unchanged (with a subsequent successful load still working
+normally afterward), and separately that a failed `load_locale()` leaves the *currently
+active locale* - not just the base layer - completely unchanged
+(`failed_locale_load_leaves_the_active_locale_unchanged`).
+
+### Pointer/reference stability
+
+`find()` returns a pointer into `records_`, never into a temporary, and no operation in this
+module ever erases a loaded card - so a pointer once obtained stays valid for the lifetime of
+the owning `CardDatabase`. It is not a snapshot, though: a later `load_database()`,
+`load_locale()`, or `clear_locale()` call can update the `CardRecord` that pointer refers to
+in place (a base field changing on reload, or the text fields changing because the active
+locale changed). A caller that needs a point-in-time value should copy `*find(code)` rather
+than hold the pointer across a call that can mutate this catalogue.
 
 ---
 
@@ -274,7 +350,28 @@ do not appear in this module at all.
 
 ---
 
-## 7. What is out of scope for this slice, on purpose
+## 7. Card code 0
+
+`CardDatabase::load_database()` rejects a file whose `datas` table has a row with `id = 0` -
+the whole file fails (§5's atomicity), rather than that row being stored. Nothing in
+`DataManager::ParseDB` special-cases this; a real `.cdb` row with id 0 would load like any
+other. But 0 is not a value real `.cdb` data uses in practice - it is upstream's own
+synthesized "not a real card" sentinel, constructed only in memory:
+`CardDataC::getRealCode()` (`gframe/data_manager.h:87-90`) reads `code == 0` as "this is a
+dummy entry, use `alias` instead" by its own comment, and
+`DeckManager::GetDummyOrMappedCardData` (`gframe/deck_manager.cpp:17-28`) is exactly that
+construction (`tmp->code = 0; tmp->alias = code;`) for a code the loaded catalogue does not
+recognize.
+
+This module's own `CardCode::None = 0` already carries that identical meaning throughout its
+public API (`alias == CardCode::None` means "no alias"). Enforcing that a loaded card can
+never have `code == CardCode::None` keeps that sentinel unambiguous, rather than merely
+documenting an invariant the loader did not actually check. See
+[ADR 0003, Decision 5](../adr/0003-card-database-facade.md#decision-5-card-code-0-is-a-load-failure-not-data).
+
+---
+
+## 8. What is out of scope for this slice, on purpose
 
 - **Search.** `category`, `type`, `race`, and friends are carried verbatim; indexing or
   filtering them is the "fast search" M3 item, not this one.
@@ -297,3 +394,9 @@ do not appear in this module at all.
   same process is exactly the kind of global state CLAUDE.md's module boundaries exist to
   avoid, and this module's own tests (which create and read SQLite files directly,
   concurrently with nothing) do not need it either.
+- **Which locale is active, and where its files live.** `clear_locale()`/`load_locale()` are
+  a pure data-layer state transition - discard the overlay, or add to it from one file.
+  There is no locale name, language code, or directory-scanning logic here (compare
+  `Game::ApplyLocale`'s `Utils::FindFiles(locale, {"cdb"})` over `./config/languages/<code>/`,
+  `gframe/game.cpp:4000`): choosing which files correspond to which language, and calling
+  `clear_locale()` at the right moment, is a caller's job.

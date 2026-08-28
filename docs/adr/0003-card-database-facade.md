@@ -16,13 +16,15 @@ knowing SQLite or touching a `.cdb` file directly. Upstream already has this:
 [card-database.md](../architecture/card-database.md) so it does not need re-deriving - but
 where this capability should live and what it should depend on.
 
-Four decisions turned out to be load-bearing:
+Five decisions turned out to be load-bearing:
 
 1. a new top-level module, not `client/` and not `gframe/`;
 2. SQLite via CMake's own `FindSQLite3`, not the project's vcpkg bundle;
 3. a stronger per-file load guarantee than `DataManager::ParseDB` actually gives;
-4. locale overlay that is per-field and base-first, not `DataManager`'s whole-string-swap,
-   order-independent linking.
+4. locale is a separate, clearable overlay layer, matching upstream's actual fallback rules
+   (which are *not* uniform across fields) rather than the uniform per-field rule an earlier
+   draft of this module invented;
+5. a `.cdb` row with card code 0 is a load failure, not data.
 
 ---
 
@@ -142,47 +144,132 @@ tens of thousands of rows once per file, not a per-packet budget.
 
 ---
 
-## Decision 4 — Locale overlay is per-field and requires the base card first
+## Decision 4 — Locale is a separate, clearable overlay layer with upstream's actual fallback rules
 
-**A locale value replaces the base value one field at a time - a non-empty locale `name`
-overrides, an empty one falls back to the base `name`, and likewise independently for
-`text` and each of the sixteen auxiliary strings. A locale row for a card code not already
-loaded via `load_database()` is ignored.**
+**`CardDatabase` keeps the base layer (`load_database()`) and the active locale layer
+(`load_locale()`) as independent state, with an explicit `clear_locale()` to discard the
+locale layer and restore base text - and the layer's fallback rule is upstream's actual
+one, not a "cleaner" invented uniform rule.**
+
+### The bug this replaces
+
+An earlier version of this decision recorded a different design: `load_locale()` wrote
+translated values directly into the only stored `CardRecord`, field by field, with no way
+to discard them. External review of the resulting PR found the consequence directly:
+switching locale - or returning to the base language - could not un-apply a previously
+loaded locale, because the base string it would need to restore had already been
+overwritten and discarded. A `.cdb` schema fact search would have caught this immediately
+by asking how `Game::ApplyLocale` actually works; that research had not been done.
+
+### What upstream actually does, traced end to end
+
+`Game::ApplyLocale` (`gframe/game.cpp:3987-4020`) is the real state machine:
+
+```cpp
+gDataManager->ClearLocaleStrings();
+gDataManager->ClearLocaleTexts();
+if(index > 0) {
+    // ... load one or more locale .cdb files for the newly selected locale ...
+}
+```
+
+`ClearLocaleTexts()` (`gframe/data_manager.cpp:46-54`) runs **unconditionally**, before
+loading anything - including before switching back to the base language (`index == 0`,
+which loads nothing at all). It nulls every card's `_locale_strings` pointer and clears the
+separate `locales` map outright. This is the operation an earlier draft of this facade had
+no equivalent for.
+
+`DataManager::GetStrings()` (`gframe/data_manager.h:111-115`) returns the *entire* locale
+`CardString` if a locale pointer is linked at all, or the entire base `CardString` if it is
+not - never a mix of the two. A locale entry that is linked but has an empty `name` does
+**not** fall back to the base name; `GetName()` separately turns that empty result into a
+`"???"` placeholder (a presentation concern this module does not reproduce - see
+`card-database.md#locale`). Only the sixteen `desc[]` strings get per-slot fallback
+(`CardDataM::GetDesc`, `gframe/data_manager.h:116-124`): each slot falls back to base
+independently exactly when the locale layer's own slot for that card is empty.
+
+`ParseLocaleDB` (`gframe/data_manager.cpp:180-228`) reuses `locales[code]` across every file
+loaded into the same active locale (nothing but `ClearLocaleTexts()` resets it), and
+`GetWstring` (`:77-96`) unconditionally writes each column - clearing the target string when
+the column is empty rather than leaving a prior value in place. So a later file's row for a
+code an earlier file in the same active locale already touched replaces it completely, field
+by field, even with an empty value - the same last-file-wins rule `ParseDB` uses for the
+base layer, applied here to the locale layer instead. `ParseLocaleDB`/`ParseDB`'s shared
+`indexes` map also links a locale row to a base row whichever order they arrive in, which
+upstream's real startup path (`gframe/data_handler.cpp:28`'s `LoadDatabases()`, then
+`gframe/game.cpp:2647`'s locale load afterward) never actually exercises in reverse.
+
+### The corrected design
+
+- **Three maps**, not one: `base_text_` (immutable once loaded, independent of any locale
+  operation), `locale_text_` (the active locale layer; a code present here - regardless of
+  whether its fields are empty - is "linked", in upstream's terms), and `records_` (the
+  materialized, effective view `find()`/iteration expose, recomputed by `resolve_text()`
+  whenever a load or clear touches a code).
+- **`clear_locale()`** discards `locale_text_` and recomputes every code it had touched back
+  to its `base_text_` value - the data-layer half of `ClearLocaleTexts()`.
+- **`name`/`text` are linked as a pair**, exactly matching `GetStrings()`: once a code is
+  linked, both come from the locale layer even if one or both are empty, never falling back
+  to base field-by-field. This module does not reproduce the `"???"` placeholder - that is
+  `GetName()`'s own presentation fallback, a layer above the raw `CardString` selection this
+  facade's job stops at (see `card-database.md#locale`).
+- **The sixteen auxiliary strings keep their own per-slot fallback**, matching `GetDesc()`,
+  deliberately *not* unified with the name/text rule above - that unification was the
+  invented behavior this decision replaces.
+- **A later `load_locale()` call for a code the active locale already touched fully
+  replaces its entry**, matching `ParseLocaleDB`'s `locales[code]` reuse - not a per-field
+  merge across files.
+- **Base-before-locale only** is retained from the original decision, for the same reason:
+  verified against the two real call sites (`data_handler.cpp:28`, `game.cpp:2647`/`:4001`),
+  every real startup loads every base database before any locale data, and order-independent
+  linking is real `DataManager` capability but dead code in practice. A locale row for a
+  code not already loaded via `load_database()` is ignored, not queued.
+
+### Why this is not "blindly clone DataManager"
+
+The remaining, deliberate divergence is narrow and already stated in
+`docs/architecture/card-database.md`: this module does not reproduce `GetName()`'s `"???"`
+placeholder substitution (a UI-facing default, not a `CardString`-level fact), it does not
+reproduce the Irrlicht `IReadFile` locale-load path, and it does not track *which* locale is
+active by name - `clear_locale()` is a pure data-layer state transition, and choosing which
+files correspond to which language stays a caller's job, per this module's own scope rule.
+Everything else in this decision is upstream's actual, source-verified fallback and
+lifecycle behavior, reproduced because the earlier "cleaner" version of this facade turned
+out to be an invented rule this module's own purpose - exposing authoritative EDOPro
+card-data semantics - gives it no license to invent.
+
+---
+
+## Decision 5 — Card code 0 is a load failure, not data
+
+**`CardDatabase::load_database()` rejects a file containing a `datas` row with `id = 0`,
+atomically (the whole file fails, matching Decision 3), rather than storing it as
+`CardCode::None`.**
 
 ### What upstream actually does
 
-`DataManager::GetStrings()` (`gframe/data_manager.h:111`) returns the *entire* locale
-`CardString` if a locale pointer is set at all, or the entire base `CardString` if it is
-not - never a merge of the two. So a locale entry that exists but has an empty `name`
-column makes `GetName()` return `"???"`, not the base-language name, because the whole
-locale struct was selected over the whole base struct field-for-field-indiscriminately.
-Only the sixteen `desc[]` strings get per-slot fallback (`CardDataM::GetDesc`,
-`gframe/data_manager.h:116`), and that inconsistency - str1..16 fall back per slot, `name`
-and `text` do not - is the shape of one implementation choice (a nullable pointer to a
-whole `CardString`, chosen so `ClearLocaleTexts()` can drop every locale string in one
-pass over `indexes`) leaking into what looks like a data contract, not a documented locale
-format. `ParseLocaleDB`/`ParseDB`'s shared `indexes` map also links a locale row to a base
-row whichever order they arrive in, which upstream's real startup path
-(`gframe/data_handler.cpp:28`'s `LoadDatabases()`, then `gframe/game.cpp:2647`'s locale load
-afterward) never actually exercises in reverse.
+Nothing in `DataManager::ParseDB` special-cases `id = 0` - if a real `.cdb` row had it, it
+would load like any other code. But 0 is not a value real `.cdb` data uses: it is
+upstream's own synthesized "not a real card" sentinel, constructed only in memory, never
+read from a database row. `CardDataC::getRealCode()` (`gframe/data_manager.h:87-90`) treats
+`code == 0` as meaning "this is a dummy entry; use `alias` instead" by its own comment
+("dummy entries have a code of 0 with the alias corresponding to the actual code"), and
+`DeckManager::GetDummyOrMappedCardData` (`gframe/deck_manager.cpp:17-28`) is exactly that
+construction: `tmp->code = 0; tmp->alias = code;` for a code the loaded catalogue does not
+recognize. 0 is upstream's placeholder for "no real card", used pervasively, never a `.cdb`
+primary key in practice.
 
-### Why this module diverges, twice
+### Why this module enforces it
 
-**Per-field fallback.** Extending the `desc[]` slots' own per-slot fallback to `name` and
-`text` too is not a new rule; it is the *one* consistent rule where upstream has two
-(Decision framing: "where this model reproduces a legacy quirk, that is deliberate and
-marked; where it diverges, the divergence is named and justified" -
-[semantic-model.md](../architecture/semantic-model.md)). A caller of this facade has no way
-to observe upstream's internal pointer-swap mechanism and no reason to want its
-side effect.
-
-**Base-before-locale only.** Verified against the two real call sites
-(`data_handler.cpp:28`, `game.cpp:2647`/`:4001`): every real startup loads every base
-database, then loads locale data on top. Order-independent linking is real capability in
-`DataManager` but dead code in practice. Implementing it here would mean carrying a second,
-pending-link data structure to support an ordering nothing in this project's own source
-ever uses. If a future caller needs locale-before-base, that is a real, then-justified
-reason to revisit this decision - not a hypothetical to build against now.
+This module's own `CardCode::None = 0` already carries the identical meaning throughout its
+public API - `alias == CardCode::None` means "no alias" (`card_record.h`). If a real card
+could also have `code == CardCode::None`, that convention would become ambiguous for
+exactly that one card: does `alias == CardCode::None` on card 0 mean "card 0 has no alias",
+or would it even be reachable, given `CardCode::None` is also `find()`'s and every consumer's
+spelling for "no card"? Rejecting a code-0 row keeps `CardCode::None` an unambiguous
+sentinel, consistent with both upstream's own convention and this module's public API
+contract - not a guess, and not general schema validation: it is the one row shape that
+would make this module's own stated invariant false.
 
 ---
 
