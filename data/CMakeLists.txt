@@ -78,6 +78,36 @@ else()
     endif()
 endif()
 
+# Fast search over the loaded card catalogue - a snapshot built from a
+# CardDatabase, so it depends on edopro_next_data (and, transitively,
+# SQLite) - see docs/adr/0005-card-search-structured-query.md for why that
+# dependency direction is acceptable here even though edopro_next_deck
+# deliberately has none: searching necessarily needs card data, reading or
+# writing a deck does not. The search algorithm itself never touches
+# SQLite or sqlite3.h directly - only CardDatabase's own public API.
+add_library(edopro_next_search STATIC
+    src/text_normalize.cpp
+    src/card_search_index.cpp
+)
+
+target_include_directories(edopro_next_search
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(edopro_next_search PUBLIC edopro_next_data)
+
+if(MSVC)
+    target_compile_options(edopro_next_search PRIVATE /W4 /permissive-)
+    if(EDOPRO_NEXT_WERROR)
+        target_compile_options(edopro_next_search PRIVATE /WX)
+    endif()
+else()
+    target_compile_options(edopro_next_search PRIVATE -Wall -Wextra -Wpedantic)
+    if(EDOPRO_NEXT_WERROR)
+        target_compile_options(edopro_next_search PRIVATE -Werror)
+    endif()
+endif()
+
 if(EDOPRO_NEXT_DATA_TESTS)
     enable_testing()
 
@@ -129,4 +159,38 @@ if(EDOPRO_NEXT_DATA_TESTS)
         endif()
     endif()
     add_test(NAME deck_ydk COMMAND test_deck_ydk)
+
+    # A third harness copy, linked against edopro_next_search (which
+    # itself links edopro_next_data, unlike the deck harnesses above -
+    # see the edopro_next_search target comment).
+    add_library(edopro_next_search_test_main STATIC tests/test_support.cpp)
+    target_include_directories(edopro_next_search_test_main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    target_link_libraries(edopro_next_search_test_main PUBLIC edopro_next_search)
+
+    add_executable(test_card_search tests/test_card_search.cpp)
+    target_link_libraries(test_card_search PRIVATE edopro_next_search_test_main SQLite::SQLite3)
+    if(MSVC)
+        target_compile_options(test_card_search PRIVATE /W4)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_card_search PRIVATE /WX)
+        endif()
+    else()
+        target_compile_options(test_card_search PRIVATE -Wall -Wextra)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_card_search PRIVATE -Werror)
+        endif()
+    endif()
+    add_test(NAME card_search COMMAND test_card_search)
+
+    # A non-gating measurement executable, not a CTest case: see
+    # docs/architecture/card-search.md#performance for why wall-clock
+    # numbers do not belong in pass/fail CI. Prints timings to stdout;
+    # nothing consumes its exit code as a signal beyond "did it crash".
+    add_executable(bench_card_search tests/bench_card_search.cpp)
+    target_link_libraries(bench_card_search PRIVATE edopro_next_search SQLite::SQLite3)
+    if(MSVC)
+        target_compile_options(bench_card_search PRIVATE /W4 /O2)
+    else()
+        target_compile_options(bench_card_search PRIVATE -Wall -Wextra -O2)
+    endif()
 endif()
