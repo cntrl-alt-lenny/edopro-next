@@ -103,6 +103,8 @@ std::string column_utf8(sqlite3_stmt* stmt, int column) {
 // every transformation DataManager::ParseDB applies: the setcode unpack, the
 // Link defense/link-marker swap, and the signed level/pendulum-scale unpack.
 // See docs/architecture/card-database.md for the source citation of each.
+// The returned record's name/text/strings are the BASE values only - callers
+// are responsible for layering any active locale overlay on top.
 CardRecord decode_row(sqlite3_stmt* stmt) {
 	CardRecord record;
 	record.code = static_cast<CardCode>(static_cast<std::uint32_t>(sqlite3_column_int64(stmt, 0)));
@@ -151,28 +153,37 @@ CardRecord decode_row(sqlite3_stmt* stmt) {
 	return record;
 }
 
-struct LocaleRow {
-	std::string name;
-	std::string text;
-	std::array<std::string, 16> strings{};
-};
-
-// Overlays a non-empty locale field onto `base`, leaving an empty locale
-// field untouched. Deliberately per-field, not the whole-CardString swap
-// DataManager::GetStrings()/GetDesc() perform - see
-// docs/architecture/card-database.md#locale-overlay for why.
-void apply_locale(CardRecord& base, const LocaleRow& locale) {
-	if(!locale.name.empty())
-		base.name = locale.name;
-	if(!locale.text.empty())
-		base.text = locale.text;
-	for(std::size_t i = 0; i < base.strings.size(); ++i) {
-		if(!locale.strings[i].empty())
-			base.strings[i] = locale.strings[i];
-	}
-}
-
 } // namespace
+
+void CardDatabase::resolve_text(CardCode code) {
+	const auto base_it = base_text_.find(code);
+	if(base_it == base_text_.end())
+		return;
+	auto& record = records_[code];
+	const auto locale_it = locale_text_.find(code);
+	if(locale_it == locale_text_.end()) {
+		// Not linked to the active locale (or no locale is active): the
+		// whole CardString is the base one, matching
+		// CardDataM::GetStrings()'s `return _strings;` branch.
+		record.name = base_it->second.name;
+		record.text = base_it->second.text;
+		record.strings = base_it->second.strings;
+		return;
+	}
+	// Linked: name/text come from the locale layer as a pair, even if both
+	// are empty - matching CardDataM::GetStrings()'s `return
+	// *_locale_strings;` branch, which does not fall back to the base
+	// CardString field-by-field. The sixteen auxiliary strings are
+	// different: each one independently falls back to its own base value
+	// when the locale layer's same slot is empty, matching
+	// CardDataM::GetDesc(). See docs/architecture/card-database.md#locale.
+	const auto& base = base_it->second;
+	const auto& locale = locale_it->second;
+	record.name = locale.name;
+	record.text = locale.text;
+	for(std::size_t i = 0; i < record.strings.size(); ++i)
+		record.strings[i] = locale.strings[i].empty() ? base.strings[i] : locale.strings[i];
+}
 
 LoadResult CardDatabase::load_database(const std::filesystem::path& path) {
 	std::string error;
@@ -185,10 +196,11 @@ LoadResult CardDatabase::load_database(const std::filesystem::path& path) {
 		return {false, "failed to prepare card query on '" + path.string() + "': " + error, 0};
 
 	// Parsed into a private staging map first. Nothing is merged into
-	// `cards_` until the whole file has been read without error, so a file
-	// that fails partway through leaves the catalogue exactly as it was
-	// before this call - a stronger guarantee than DataManager::ParseDB
-	// itself provides (docs/architecture/card-database.md#load-atomicity).
+	// `records_`/`base_text_` until the whole file has been read without
+	// error, so a file that fails partway through leaves the catalogue
+	// exactly as it was before this call - a stronger guarantee than
+	// DataManager::ParseDB itself provides
+	// (docs/architecture/card-database.md#load-atomicity).
 	std::map<CardCode, CardRecord> staged;
 	for(;;) {
 		const auto step = sqlite3_step(stmt.get());
@@ -197,13 +209,27 @@ LoadResult CardDatabase::load_database(const std::filesystem::path& path) {
 		if(step != SQLITE_ROW)
 			return {false, "failed to read '" + path.string() + "': " + sqlite3_errmsg(db.get()), 0};
 		auto record = decode_row(stmt.get());
+		if(record.code == CardCode::None) {
+			return {false,
+					"'" + path.string() +
+						"' contains a row with card code 0, which is reserved as \"no card\" "
+						"throughout this module and is never a real .cdb entry",
+					0};
+		}
 		const auto code = record.code;
 		staged.insert_or_assign(code, std::move(record));
 	}
 
 	const auto rows_loaded = staged.size();
-	for(auto& [code, record] : staged)
-		cards_.insert_or_assign(code, std::move(record));
+	for(auto& [code, record] : staged) {
+		base_text_.insert_or_assign(code, TextFields{record.name, record.text, record.strings});
+		records_.insert_or_assign(code, std::move(record));
+		// If this code already has an active locale overlay (a load_locale()
+		// not since cleared), keep it applied on top of the freshly (re)
+		// loaded base row - matching DataManager::ParseDB's own re-link via
+		// `indexes` when a base row is parsed while a locale is active.
+		resolve_text(code);
+	}
 	return {true, "", rows_loaded};
 }
 
@@ -217,7 +243,7 @@ LoadResult CardDatabase::load_locale(const std::filesystem::path& path) {
 	if(!stmt)
 		return {false, "failed to prepare locale query on '" + path.string() + "': " + error, 0};
 
-	std::map<CardCode, LocaleRow> staged;
+	std::map<CardCode, TextFields> staged;
 	for(;;) {
 		const auto step = sqlite3_step(stmt.get());
 		if(step == SQLITE_DONE)
@@ -226,7 +252,7 @@ LoadResult CardDatabase::load_locale(const std::filesystem::path& path) {
 			return {false, "failed to read '" + path.string() + "': " + sqlite3_errmsg(db.get()), 0};
 		const auto code =
 			static_cast<CardCode>(static_cast<std::uint32_t>(sqlite3_column_int64(stmt.get(), 0)));
-		LocaleRow row;
+		TextFields row;
 		row.name = column_utf8(stmt.get(), 1);
 		row.text = column_utf8(stmt.get(), 2);
 		for(int i = 0; i < 16; ++i)
@@ -234,27 +260,46 @@ LoadResult CardDatabase::load_locale(const std::filesystem::path& path) {
 		staged.insert_or_assign(code, std::move(row));
 	}
 
-	// Applied only to cards already present. A locale row for a code this
-	// catalogue has not loaded via load_database() is ignored - see
-	// docs/architecture/card-database.md#locale-overlay.
+	// Merged into the active locale layer only now that the whole file has
+	// read successfully (load_locale()'s own atomicity guarantee), and only
+	// for codes already present in the base layer (this module's documented
+	// base-before-locale simplification - see load_locale()'s doc comment).
+	// The merge is a full per-code overwrite, matching
+	// DataManager::ParseLocaleDB reusing `locales[code]` - and its
+	// `GetWstring` unconditionally clearing a field with no value - across
+	// every file loaded into one active locale: a later file's row for a
+	// code an earlier file in the same active locale already touched
+	// replaces it completely, even with an empty value.
 	std::size_t rows_applied = 0;
 	for(auto& [code, row] : staged) {
-		auto it = cards_.find(code);
-		if(it == cards_.end())
+		if(base_text_.find(code) == base_text_.end())
 			continue;
-		apply_locale(it->second, row);
+		locale_text_.insert_or_assign(code, std::move(row));
+		resolve_text(code);
 		++rows_applied;
 	}
 	return {true, "", rows_applied};
 }
 
+void CardDatabase::clear_locale() {
+	if(locale_text_.empty())
+		return;
+	// Grab the set of codes the active locale touched, then discard the
+	// overlay itself, before recomputing - resolve_text() must see an empty
+	// locale_text_ to fall back to base.
+	std::map<CardCode, TextFields> cleared;
+	cleared.swap(locale_text_);
+	for(const auto& entry : cleared)
+		resolve_text(entry.first);
+}
+
 const CardRecord* CardDatabase::find(CardCode code) const noexcept {
-	auto it = cards_.find(code);
-	return it == cards_.end() ? nullptr : &it->second;
+	auto it = records_.find(code);
+	return it == records_.end() ? nullptr : &it->second;
 }
 
 bool CardDatabase::contains(CardCode code) const noexcept {
-	return cards_.find(code) != cards_.end();
+	return records_.find(code) != records_.end();
 }
 
 } // namespace edopro_next::data

@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -78,6 +79,13 @@ void create_datas_texts_schema(sqlite3* db) {
 			"alias INTEGER NOT NULL, setcode INTEGER NOT NULL, type INTEGER NOT NULL, "
 			"atk INTEGER NOT NULL, def INTEGER NOT NULL, level INTEGER NOT NULL, "
 			"race INTEGER NOT NULL, attribute INTEGER NOT NULL, category INTEGER NOT NULL);");
+	run(db, "CREATE TABLE texts (id INTEGER PRIMARY KEY NOT NULL, name TEXT, desc TEXT, "
+			"str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
+			"str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
+			"str14 TEXT, str15 TEXT, str16 TEXT);");
+}
+
+void create_texts_only_schema(sqlite3* db) {
 	run(db, "CREATE TABLE texts (id INTEGER PRIMARY KEY NOT NULL, name TEXT, desc TEXT, "
 			"str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
 			"str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
@@ -533,70 +541,343 @@ EDOPRO_DATA_TEST(later_database_completely_overwrites_a_duplicate_code) {
 	EDOPRO_DATA_CHECK_EQ(catalogue.size(), 2u);
 }
 
-EDOPRO_DATA_TEST(locale_overlay_replaces_only_nonempty_fields) {
-	TempFile base("locale_base");
-	{
-		sqlite3* db = open_writable(base.path());
-		create_datas_texts_schema(db);
-		insert_data_row(db, DataRow{800});
-		TextRow text{};
-		text.id = 800;
-		text.name = "Base Name";
-		text.desc = "Base Text";
-		text.str[0] = "Base Str1";
-		text.str[1] = "Base Str2";
-		insert_text_row(db, text);
-		sqlite3_close(db);
-	}
-	TempFile locale("locale_overlay");
-	{
-		sqlite3* db = open_writable(locale.path());
-		run(db, "CREATE TABLE texts (id INTEGER PRIMARY KEY NOT NULL, name TEXT, desc TEXT, "
-				"str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
-				"str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
-				"str14 TEXT, str15 TEXT, str16 TEXT);");
-		TextRow text{};
-		text.id = 800;
-		text.name = "Locale Name"; // non-empty: should override
-		text.desc = ""; // empty: should keep the base value
-		text.str[0] = "Locale Str1"; // non-empty: should override
-		// str[1] left empty: should keep "Base Str2"
-		insert_text_row(db, text);
-		sqlite3_close(db);
-	}
+namespace {
+
+// A base card with distinguishable name/text/all-16-strings, for the locale
+// lifecycle tests below.
+void insert_full_card(sqlite3* db, std::uint32_t id, const std::string& tag) {
+	insert_data_row(db, DataRow{id});
+	TextRow text{};
+	text.id = id;
+	text.name = tag + " Name";
+	text.desc = tag + " Text";
+	for(int i = 0; i < 16; ++i)
+		text.str[static_cast<std::size_t>(i)] = tag + " Str" + std::to_string(i + 1);
+	insert_text_row(db, text);
+}
+
+// A locale-only (texts-table-only) file with one row. Fields left as "" are
+// genuinely empty in the row, not omitted. Ownership of the temp file is
+// returned to the caller, who must keep it alive (in a local variable) for
+// as long as any load_locale() call still needs to read it.
+std::unique_ptr<TempFile> make_locale_file(const char* label, std::uint32_t id,
+											const std::string& name, const std::string& desc,
+											const std::string& str1 = "",
+											const std::string& str2 = "") {
+	auto file = std::make_unique<TempFile>(label);
+	sqlite3* db = open_writable(file->path());
+	create_texts_only_schema(db);
+	TextRow text{};
+	text.id = id;
+	text.name = name;
+	text.desc = desc;
+	text.str[0] = str1;
+	text.str[1] = str2;
+	insert_text_row(db, text);
+	sqlite3_close(db);
+	return file;
+}
+
+// Same, but with name/text and all sixteen strings set from `tag`, mirroring
+// insert_full_card() - for tests that need every field distinguishable.
+std::unique_ptr<TempFile> make_full_locale_file(const char* label, std::uint32_t id,
+												 const std::string& tag) {
+	auto file = std::make_unique<TempFile>(label);
+	sqlite3* db = open_writable(file->path());
+	create_texts_only_schema(db);
+	TextRow text{};
+	text.id = id;
+	text.name = tag + " Name";
+	text.desc = tag + " Text";
+	for(int i = 0; i < 16; ++i)
+		text.str[static_cast<std::size_t>(i)] = tag + " Str" + std::to_string(i + 1);
+	insert_text_row(db, text);
+	sqlite3_close(db);
+	return file;
+}
+
+} // namespace
+
+// D. name/text fallback semantics: once a code is linked to the active
+// locale at all, name and text are taken from the locale layer as a pair -
+// even when one of them is empty - and do NOT fall back to the base value
+// field by field. This pins CardDataM::GetStrings() returning the whole
+// linked CardString or the whole base one, never a mix
+// (gframe/data_manager.h:111-115).
+EDOPRO_DATA_TEST(locale_name_and_text_are_linked_as_a_pair_not_per_field_fallback) {
+	TempFile base("locale_base_nametext");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 800, "Base");
+	sqlite3_close(db);
+
+	const auto locale_file = make_locale_file("locale_nametext", 800, "Locale Name", "",
+											   "Locale Str1", "");
 
 	CardDatabase catalogue;
 	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
-	const auto locale_result = catalogue.load_locale(locale.path());
+	const auto locale_result = catalogue.load_locale(locale_file->path());
 	EDOPRO_DATA_CHECK(locale_result.ok);
 	EDOPRO_DATA_CHECK_EQ(locale_result.rows_loaded, 1u);
 
 	const auto* record = catalogue.find(static_cast<CardCode>(800));
 	EDOPRO_DATA_CHECK(record != nullptr);
 	EDOPRO_DATA_CHECK_EQ(record->name, std::string("Locale Name"));
-	EDOPRO_DATA_CHECK_EQ(record->text, std::string("Base Text"));
-	EDOPRO_DATA_CHECK_EQ(record->strings[0], std::string("Locale Str1"));
-	EDOPRO_DATA_CHECK_EQ(record->strings[1], std::string("Base Str2"));
+	// The locale row's text is empty, and the code IS linked, so text stays
+	// empty - it does not fall back to "Base Text".
+	EDOPRO_DATA_CHECK_EQ(record->text, std::string(""));
 }
 
-EDOPRO_DATA_TEST(locale_row_for_unknown_code_is_ignored) {
-	TempFile locale("locale_unknown");
-	sqlite3* db = open_writable(locale.path());
-	run(db, "CREATE TABLE texts (id INTEGER PRIMARY KEY NOT NULL, name TEXT, desc TEXT, "
-			"str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
-			"str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
-			"str14 TEXT, str15 TEXT, str16 TEXT);");
-	TextRow text{};
-	text.id = 900123;
-	text.name = "Nobody Loaded This Card";
-	insert_text_row(db, text);
+// E. auxiliary-string fallback semantics: each of the sixteen strings falls
+// back to its own base value independently whenever the locale layer's same
+// slot is empty - pins CardDataM::GetDesc() (gframe/data_manager.h:116-124),
+// which is deliberately NOT the same rule as D above.
+EDOPRO_DATA_TEST(auxiliary_strings_fall_back_per_slot_when_locale_slot_is_empty) {
+	TempFile base("locale_base_aux");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 801, "Base");
+	sqlite3_close(db);
+
+	const auto locale_file =
+		make_locale_file("locale_aux", 801, "Locale Name", "Locale Text", "Locale Str1", "");
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale_file->path()).ok);
+
+	const auto* record = catalogue.find(static_cast<CardCode>(801));
+	EDOPRO_DATA_CHECK(record != nullptr);
+	// str1 non-empty in the locale row: overrides.
+	EDOPRO_DATA_CHECK_EQ(record->strings[0], std::string("Locale Str1"));
+	// str2 empty in the locale row: falls back to this one slot's base value.
+	EDOPRO_DATA_CHECK_EQ(record->strings[1], std::string("Base Str2"));
+	// Every other slot was never mentioned by the locale row either -
+	// same per-slot fallback.
+	for(int i = 2; i < 16; ++i)
+		EDOPRO_DATA_CHECK_EQ(record->strings[static_cast<std::size_t>(i)],
+							 "Base Str" + std::to_string(i + 1));
+}
+
+// A. base -> locale A -> clear -> base: every localized field returns to the
+// original base value, matching the data-layer half of
+// Game::ApplyLocale()'s unconditional ClearLocaleTexts() call
+// (gframe/game.cpp:3994-3995).
+EDOPRO_DATA_TEST(clearing_the_active_locale_restores_base_strings) {
+	TempFile base("locale_base_clear");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 810, "Base");
+	sqlite3_close(db);
+
+	const auto locale_a_file = make_full_locale_file("locale_a_clear", 810, "Locale A");
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale_a_file->path()).ok);
+
+	// Sanity: locale A is visible before clearing.
+	{
+		const auto* record = catalogue.find(static_cast<CardCode>(810));
+		EDOPRO_DATA_CHECK(record != nullptr);
+		EDOPRO_DATA_CHECK_EQ(record->name, std::string("Locale A Name"));
+	}
+
+	catalogue.clear_locale();
+
+	const auto* record = catalogue.find(static_cast<CardCode>(810));
+	EDOPRO_DATA_CHECK(record != nullptr);
+	EDOPRO_DATA_CHECK_EQ(record->name, std::string("Base Name"));
+	EDOPRO_DATA_CHECK_EQ(record->text, std::string("Base Text"));
+	for(int i = 0; i < 16; ++i)
+		EDOPRO_DATA_CHECK_EQ(record->strings[static_cast<std::size_t>(i)],
+							 "Base Str" + std::to_string(i + 1));
+}
+
+// B. base -> locale A -> clear -> locale B, where B leaves some fields
+// empty: nothing from A survives. An empty field in B falls back to base
+// (per-slot, for the auxiliary strings) or resolves to empty (for
+// name/text, per test D above) - never to A's value.
+EDOPRO_DATA_TEST(switching_locale_after_clear_does_not_leak_the_previous_locale) {
+	TempFile base("locale_base_switch");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 820, "Base");
+	sqlite3_close(db);
+
+	const auto locale_a_file = make_locale_file("locale_a_switch", 820, "Locale A Name",
+												 "Locale A Text", "Locale A Str1", "Locale A Str2");
+	// Locale B leaves name and str1 empty on purpose.
+	const auto locale_b_file =
+		make_locale_file("locale_b_switch", 820, "", "Locale B Text", "", "Locale B Str2");
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale_a_file->path()).ok);
+	catalogue.clear_locale();
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale_b_file->path()).ok);
+
+	const auto* record = catalogue.find(static_cast<CardCode>(820));
+	EDOPRO_DATA_CHECK(record != nullptr);
+	// Linked to B, whose name is empty: resolves to empty, not to A's name
+	// and not to base's name.
+	EDOPRO_DATA_CHECK_EQ(record->name, std::string(""));
+	EDOPRO_DATA_CHECK_EQ(record->text, std::string("Locale B Text"));
+	// str1 empty in B: falls back to BASE, not to A's "Locale A Str1".
+	EDOPRO_DATA_CHECK_EQ(record->strings[0], std::string("Base Str1"));
+	EDOPRO_DATA_CHECK_EQ(record->strings[1], std::string("Locale B Str2"));
+}
+
+// C. Multiple locale files loaded into ONE active locale (no clear_locale()
+// between them - contrast with test B above, which does clear between
+// locales). A later file's row for a code an earlier file already touched
+// replaces it completely, field by field, even with an empty value -
+// matching DataManager::ParseLocaleDB reusing `locales[code]` across files
+// and GetWstring unconditionally clearing an empty column
+// (gframe/data_manager.cpp:195-223, :77-96). A card only the first file
+// mentions is unaffected by the second file.
+EDOPRO_DATA_TEST(later_locale_file_in_the_same_active_locale_overwrites_the_earlier_one) {
+	TempFile base("locale_base_multi");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 830, "Base");
+	insert_full_card(db, 831, "Base");
+	sqlite3_close(db);
+
+	// File 1 sets both cards.
+	TempFile locale1("locale_multi_1");
+	{
+		sqlite3* locale_db = open_writable(locale1.path());
+		create_texts_only_schema(locale_db);
+		TextRow row830{};
+		row830.id = 830;
+		row830.name = "File1 Name";
+		row830.str[0] = "File1 Str1";
+		insert_text_row(locale_db, row830);
+		TextRow row831{};
+		row831.id = 831;
+		row831.name = "File1 Only Name";
+		insert_text_row(locale_db, row831);
+		sqlite3_close(locale_db);
+	}
+	// File 2, same active locale, only re-mentions card 830 - and clears its
+	// name to empty while giving str1 a new value.
+	TempFile locale2("locale_multi_2");
+	{
+		sqlite3* locale_db = open_writable(locale2.path());
+		create_texts_only_schema(locale_db);
+		TextRow row830{};
+		row830.id = 830;
+		row830.name = ""; // explicitly empty - must overwrite File 1's "File1 Name"
+		row830.str[0] = "File2 Str1";
+		insert_text_row(locale_db, row830);
+		sqlite3_close(locale_db);
+	}
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale1.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale2.path()).ok);
+
+	const auto* card830 = catalogue.find(static_cast<CardCode>(830));
+	EDOPRO_DATA_CHECK(card830 != nullptr);
+	// File 2 completely replaced File 1's row for 830: name is empty (not
+	// "File1 Name"), str1 is File 2's value (not "File1 Str1").
+	EDOPRO_DATA_CHECK_EQ(card830->name, std::string(""));
+	EDOPRO_DATA_CHECK_EQ(card830->strings[0], std::string("File2 Str1"));
+
+	// Card 831 was never mentioned by File 2, so File 1's row for it stands.
+	const auto* card831 = catalogue.find(static_cast<CardCode>(831));
+	EDOPRO_DATA_CHECK(card831 != nullptr);
+	EDOPRO_DATA_CHECK_EQ(card831->name, std::string("File1 Only Name"));
+}
+
+// F. A failed load_locale() call must leave the currently active locale
+// exactly as it was, the same load-atomicity guarantee load_database()
+// already gives the base layer.
+EDOPRO_DATA_TEST(failed_locale_load_leaves_the_active_locale_unchanged) {
+	TempFile base("locale_base_atomic");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 840, "Base");
+	sqlite3_close(db);
+
+	const auto locale_a_file =
+		make_locale_file("locale_a_atomic", 840, "Locale A Name", "Locale A Text", "Locale A Str1");
+
+	TempFile bad_locale("locale_bad_atomic");
+	{
+		// Present but wrong shape: no `texts` table at all.
+		sqlite3* bad_db = open_writable(bad_locale.path());
+		run(bad_db, "CREATE TABLE not_texts (id INTEGER PRIMARY KEY NOT NULL);");
+		sqlite3_close(bad_db);
+	}
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale_a_file->path()).ok);
+
+	const auto failed = catalogue.load_locale(bad_locale.path());
+	EDOPRO_DATA_CHECK(!failed.ok);
+	EDOPRO_DATA_CHECK(!failed.error.empty());
+
+	const auto* record = catalogue.find(static_cast<CardCode>(840));
+	EDOPRO_DATA_CHECK(record != nullptr);
+	EDOPRO_DATA_CHECK_EQ(record->name, std::string("Locale A Name"));
+	EDOPRO_DATA_CHECK_EQ(record->text, std::string("Locale A Text"));
+	EDOPRO_DATA_CHECK_EQ(record->strings[0], std::string("Locale A Str1"));
+}
+
+// G. clear_locale() with no active locale is a harmless no-op; base data
+// remains visible, and clearing twice is equally harmless.
+EDOPRO_DATA_TEST(clear_locale_without_an_active_locale_is_harmless) {
+	TempFile base("locale_base_noop");
+	sqlite3* db = open_writable(base.path());
+	create_datas_texts_schema(db);
+	insert_full_card(db, 850, "Base");
 	sqlite3_close(db);
 
 	CardDatabase catalogue;
-	const auto result = catalogue.load_locale(locale.path());
+	EDOPRO_DATA_CHECK(catalogue.load_database(base.path()).ok);
+
+	catalogue.clear_locale();
+	catalogue.clear_locale();
+
+	const auto* record = catalogue.find(static_cast<CardCode>(850));
+	EDOPRO_DATA_CHECK(record != nullptr);
+	EDOPRO_DATA_CHECK_EQ(record->name, std::string("Base Name"));
+	EDOPRO_DATA_CHECK_EQ(record->text, std::string("Base Text"));
+}
+
+EDOPRO_DATA_TEST(locale_row_for_unknown_code_is_ignored) {
+	const auto locale_file = make_locale_file("locale_unknown", 900123,
+											   "Nobody Loaded This Card", "");
+
+	CardDatabase catalogue;
+	const auto result = catalogue.load_locale(locale_file->path());
 	EDOPRO_DATA_CHECK(result.ok);
 	EDOPRO_DATA_CHECK_EQ(result.rows_loaded, 0u);
 	EDOPRO_DATA_CHECK_EQ(catalogue.size(), 0u);
+}
+
+EDOPRO_DATA_TEST(card_code_zero_is_rejected_as_a_load_failure) {
+	TempFile file("code_zero");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	// 0 is reserved as CardCode::None ("no card") throughout this module and
+	// upstream's own code (getRealCode(), DeckManager's dummy entries) -
+	// never a real .cdb row. A valid row alongside it must not survive
+	// either: the whole file is rejected atomically.
+	insert_card(db, 0, "Should Never Load");
+	insert_card(db, 950, "Valid Sibling Row");
+	sqlite3_close(db);
+
+	CardDatabase catalogue;
+	const auto result = catalogue.load_database(file.path());
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK(!result.error.empty());
+	EDOPRO_DATA_CHECK_EQ(catalogue.size(), 0u);
+	EDOPRO_DATA_CHECK(catalogue.find(static_cast<CardCode>(950)) == nullptr);
 }
 
 EDOPRO_DATA_TEST(loading_a_missing_file_reports_failure) {

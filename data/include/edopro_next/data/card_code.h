@@ -17,9 +17,14 @@
 namespace edopro_next::data {
 
 // A card passcode, as printed on the card and used as the primary key of the
-// `datas`/`texts` tables. `None` means "no card" - the value alias/setcode
-// fields use to say "not present" - and is never a valid loaded card code
-// (the `.cdb` schema does not use id 0).
+// `datas`/`texts` tables. `None` means "no card" - the value `alias` uses to
+// say "no alias" - and is never a valid loaded card code: it is upstream's
+// own convention too (CardDataC::getRealCode(), DeckManager's dummy/unknown-
+// card entries all use code 0 as a synthesized "not a real card" sentinel,
+// never as a `.cdb` row - gframe/data_manager.h, gframe/deck_manager.cpp).
+// CardDatabase::load_database() enforces this: a row with id 0 fails that
+// load rather than being stored, so `None` never has to be disambiguated
+// from "the actual card with code 0" anywhere in this API.
 enum class CardCode : std::uint32_t { None = 0 };
 
 constexpr std::uint32_t to_number(CardCode code) noexcept {
