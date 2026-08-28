@@ -222,7 +222,7 @@ The full system — colour, spacing, typography, motion, focus — is in
 |:--|:--|:--|
 | **M0** | Foundation — architecture, baseline, ADR, shell | ✅ done |
 | **M1** | **Make change provable** — regression harness, CI | 🔶 in progress |
-| **M2** | **Semantic client model** — presentation-free duel state | 🔶 in progress |
+| **M2** | **Semantic client model** — presentation-free duel state | ✅ done |
 | **M3** | Deck and card data — the first screen to migrate | 🔶 in progress |
 | **M4** | Low-risk screens — settings, replays, lobby | ⬜ |
 | **M5** | Duel field — last, and highest risk | ⬜ |
