@@ -116,18 +116,25 @@ position, the verifier does not run `ocgcore`, and this is not M1 Level 2 — M1
 re-simulation-based proof of live engine equivalence, scoped separately above and still
 not started.
 
-## M3 — Deck and card data
+## M3 — Deck and card data  🔶 in progress
 
 Chosen first among screens because upstream's `deck_manager` and card database are
 already presentation-independent, so it can be built without touching the duel path.
 
-- [ ] Card database facade (sqlite, Project Ignis `.cdb` schema)
+- [x] Card database facade (SQLite, Project Ignis `.cdb` schema). `data/` reads the same
+      `datas`/`texts` tables `DataManager::ParseDB` does, into a presentation-independent
+      `CardRecord` - no Irrlicht, no Qt, no `ocgcore`, no legacy `DataManager`, and no
+      legality or search logic of its own. Source research, exact schema semantics, and
+      the deliberate divergences (load atomicity, locale overlay) are in
+      [card-database.md](architecture/card-database.md) and
+      [ADR 0003](adr/0003-card-database-facade.md).
 - [ ] Deck model reading and writing `.ydk`
 - [ ] Fast search over the full card pool
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
+**Pending** - only the card database facade above is done so far.
 
 ## M4 — Low-risk screens
 
