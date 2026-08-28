@@ -116,8 +116,12 @@ public:
 	// card's name/text/strings to its base value - the data-layer half of
 	// upstream's ClearLocaleTexts(), called unconditionally by
 	// Game::ApplyLocale() before loading a newly selected locale (or before
-	// loading nothing at all, to return to the base language). Harmless,
-	// deterministic, and non-failing when no locale is active.
+	// loading nothing at all, to return to the base language). Performs no
+	// filesystem or SQLite operation, so it has no LoadResult-style failure
+	// state to report - unlike load_database()/load_locale() it always runs
+	// to completion, including as a harmless no-op when no locale is active.
+	// It is not declared noexcept: resolving text back to the base value
+	// copies strings, which can allocate.
 	void clear_locale();
 
 	const CardRecord* find(CardCode code) const noexcept;
@@ -135,9 +139,10 @@ public:
 
 private:
 	// name/text/strings only - everything a locale `texts` row can carry.
-	// Used for both the immutable base copy and the active locale overlay;
-	// the base copy is never mutated by a locale operation, and the overlay
-	// is discarded whole by clear_locale().
+	// Used for both the base text copy and the active locale overlay; the
+	// base copy is modified only by a successful load_database() call for
+	// that code (never by a locale operation), and the overlay is
+	// discarded whole by clear_locale().
 	struct TextFields {
 		std::string name;
 		std::string text;

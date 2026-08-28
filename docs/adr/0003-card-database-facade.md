@@ -201,11 +201,12 @@ upstream's real startup path (`gframe/data_handler.cpp:28`'s `LoadDatabases()`, 
 
 ### The corrected design
 
-- **Three maps**, not one: `base_text_` (immutable once loaded, independent of any locale
-  operation), `locale_text_` (the active locale layer; a code present here - regardless of
-  whether its fields are empty - is "linked", in upstream's terms), and `records_` (the
-  materialized, effective view `find()`/iteration expose, recomputed by `resolve_text()`
-  whenever a load or clear touches a code).
+- **Three maps**, not one: `base_text_` (the base layer, modified only by a successful
+  `load_database()` call for that code and never by a locale operation), `locale_text_` (the
+  active locale layer; a code present here - regardless of whether its fields are empty - is
+  "linked", in upstream's terms), and `records_` (the materialized, effective view
+  `find()`/iteration expose, recomputed by `resolve_text()` whenever a load or clear touches
+  a code).
 - **`clear_locale()`** discards `locale_text_` and recomputes every code it had touched back
   to its `base_text_` value - the data-layer half of `ClearLocaleTexts()`.
 - **`name`/`text` are linked as a pair**, exactly matching `GetStrings()`: once a code is

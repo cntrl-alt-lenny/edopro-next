@@ -6,9 +6,11 @@
 // docs/adr/0003-card-database-facade.md): neither includes the other, so
 // neither can share a type without creating the coupling the separation
 // exists to avoid. A caller that uses both is expected to convert at its own
-// boundary, which is one std::uint32_t round-trip via to_number()/from
-// aggregate init - cheap, and the price of keeping the module graph a DAG
-// with no edge between "duel protocol model" and "card database".
+// boundary, which is one std::uint32_t round-trip - to_number() one way,
+// an explicit static_cast<CardCode>(...) (or CardCode{n} direct-list-
+// initialization, valid for a scoped enum's underlying type since C++17)
+// the other - cheap, and the price of keeping the module graph a DAG with
+// no edge between "duel protocol model" and "card database".
 #ifndef EDOPRO_NEXT_DATA_CARD_CODE_H
 #define EDOPRO_NEXT_DATA_CARD_CODE_H
 
