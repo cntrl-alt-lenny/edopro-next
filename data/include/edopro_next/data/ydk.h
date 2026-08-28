@@ -78,10 +78,16 @@ YdkLoadResult load_ydk(const std::filesystem::path& path);
 // lookup) is deliberately not offered here at all, and why creator is the
 // only piece of upstream's optional writer metadata this codec exposes.
 struct YdkWriteOptions {
-	// When set, emitted verbatim as the file's first line: "#created by
+	// When set, emitted as the file's first line: "#created by
 	// <creator>\n", matching DeckManager::SaveDeck. When unset, that line
 	// is omitted entirely - this codec has no notion of a "current
-	// nickname" to default it to, by design (see deck-model.md).
+	// nickname" to default it to, by design (see deck-model.md). Not
+	// emitted byte-for-byte verbatim: any '\n'/'\r' in `creator` is
+	// stripped first, so this can never become more than the one
+	// cosmetic comment line it is meant to be - an embedded newline could
+	// otherwise start a new, unintended line of file content (a section
+	// marker, or a bare number parse_ydk() would read as a card code).
+	// Every other character passes through unchanged.
 	std::optional<std::string> creator;
 };
 

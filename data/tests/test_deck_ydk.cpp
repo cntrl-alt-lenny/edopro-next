@@ -321,6 +321,36 @@ EDOPRO_DATA_TEST(serialize_ydk_writes_all_three_section_markers_even_when_empty)
 	EDOPRO_DATA_CHECK_EQ(text, std::string("#main\n#extra\n!side\n"));
 }
 
+// A caller-supplied creator string is metadata, not deck content - an
+// embedded newline must not be able to turn "one comment line" into
+// "one comment line plus whatever the rest of the string looks like as
+// file content". Found by external review, not by initial implementation.
+EDOPRO_DATA_TEST(serialize_ydk_strips_embedded_newlines_from_creator) {
+	Deck deck;
+	deck.main = {CardCode{1}};
+	YdkWriteOptions options;
+	options.creator = "line one\nline two\r\nline three";
+	const auto text = edopro_next::data::serialize_ydk(deck, options);
+	EDOPRO_DATA_CHECK_EQ(text,
+						 std::string("#created by line oneline twoline three\n#main\n1\n#extra\n!side\n"));
+}
+
+// The concrete failure scenario the previous test's byte-level check is
+// meant to rule out: without sanitization, this exact creator string would
+// place "999" on its own line before "#main", which the parser (nothing
+// yet having set is_extra/is_side) would read as a Main Deck card - a
+// caller-controlled string silently mutating deck semantics on the next
+// load.
+EDOPRO_DATA_TEST(a_creator_containing_a_newline_cannot_inject_a_card_line) {
+	Deck deck;
+	deck.main = {CardCode{1}};
+	YdkWriteOptions options;
+	options.creator = "x\n999";
+	const auto text = edopro_next::data::serialize_ydk(deck, options);
+	const auto parsed = edopro_next::data::parse_ydk(text);
+	EDOPRO_DATA_CHECK_EQ(parsed.deck.main, (std::vector<CardCode>{CardCode{1}}));
+}
+
 // ---------------------------------------------------------------------
 // L) semantic round-trip
 // ---------------------------------------------------------------------
@@ -372,6 +402,41 @@ EDOPRO_DATA_TEST(loading_a_missing_file_fails_and_leaves_an_existing_deck_untouc
 	if(result.ok)
 		existing = result.deck;
 	EDOPRO_DATA_CHECK_EQ(existing.main, (std::vector<CardCode>{CardCode{1}, CardCode{2}}));
+}
+
+// ---------------------------------------------------------------------
+// A failure the stream's own state does not surface for free, without an
+// explicit flush()/a read through file.read() - see
+// docs/architecture/deck-model.md's "Detecting a failure the stream's own
+// state does not surface for free" for the empirical verification these
+// two fixes are based on. Both use real Linux-only special files that do
+// not exist on every platform this project might eventually build on
+// (README.md's Windows/macOS builds are "not attempted" so far) - each
+// test checks for its file first and does nothing if absent, rather than
+// hard-failing a platform that cannot exercise this exact scenario. On
+// this project's actual CI platform (ubuntu-latest) both files exist and
+// both checks run for real.
+// ---------------------------------------------------------------------
+
+EDOPRO_DATA_TEST(saving_to_a_destination_that_only_fails_at_flush_is_reported_as_a_failure) {
+	const std::filesystem::path full_device = "/dev/full";
+	if(!std::filesystem::exists(full_device))
+		return;
+	Deck deck;
+	deck.main = {CardCode{1}, CardCode{2}, CardCode{3}};
+	const auto result = edopro_next::data::save_ydk(full_device, deck);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK(!result.error.empty());
+}
+
+EDOPRO_DATA_TEST(loading_a_file_that_fails_mid_read_is_reported_as_a_failure_not_an_empty_deck) {
+	const std::filesystem::path unreadable = "/proc/self/mem";
+	if(!std::filesystem::exists(unreadable))
+		return;
+	const auto result = edopro_next::data::load_ydk(unreadable);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK(!result.error.empty());
+	EDOPRO_DATA_CHECK(result.deck.empty());
 }
 
 // ---------------------------------------------------------------------

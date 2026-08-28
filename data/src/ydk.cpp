@@ -1,7 +1,6 @@
 #include "edopro_next/data/ydk.h"
 
 #include <fstream>
-#include <sstream>
 #include <stdexcept>
 
 namespace edopro_next::data {
@@ -58,6 +57,25 @@ std::vector<RawLine> split_lines(std::string_view text) {
 		pos = nl + 1;
 	}
 	return lines;
+}
+
+// Strips '\n'/'\r' from a caller-supplied creator string before it is
+// emitted. Without this, a creator string containing an embedded newline
+// would not stay a single cosmetic comment line: text after the break
+// would start a new line of its own, potentially matching "#extra"/"!..."
+// or a bare card code and changing what a later parse_ydk() of this
+// codec's own output actually contains - a caller-controlled string should
+// never be able to inject deck content this way. Every other character is
+// passed through unchanged; only the two characters that can create a new
+// line are removed.
+std::string sanitize_creator_line(std::string_view creator) {
+	std::string out;
+	out.reserve(creator.size());
+	for(const char c : creator) {
+		if(c != '\n' && c != '\r')
+			out += c;
+	}
+	return out;
 }
 
 } // namespace
@@ -143,13 +161,27 @@ YdkLoadResult load_ydk(const std::filesystem::path& path) {
 		result.error = "failed to open file: " + path.string();
 		return result;
 	}
-	std::ostringstream buffer;
-	buffer << file.rdbuf();
+	// Deliberately not `buffer << file.rdbuf()`: that inserter reads
+	// directly from the streambuf, bypassing basic_istream::read()'s own
+	// sentry/state-update machinery entirely, so a genuine mid-read I/O
+	// error below the streambuf (short read, device error) can leave
+	// `file` reporting good() with a silently truncated or empty result -
+	// confirmed empirically (a streambuf-backed read of /proc/self/mem,
+	// which opens successfully but fails on read, left file.bad() false
+	// with zero bytes captured). Reading through file.read() in a sized
+	// loop goes through that machinery, so a genuine read failure is
+	// distinguishable from a clean EOF via file.bad() below - verified
+	// empirically for exact and non-exact chunk-boundary file sizes, and
+	// for a zero-byte file.
+	std::string content;
+	char chunk[4096];
+	while(file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
+		content.append(chunk, static_cast<std::size_t>(file.gcount()));
 	if(file.bad()) {
 		result.error = "failed to read file: " + path.string();
 		return result;
 	}
-	auto parsed = parse_ydk(buffer.str());
+	auto parsed = parse_ydk(content);
 	result.ok = true;
 	result.deck = std::move(parsed.deck);
 	result.ignored = std::move(parsed.ignored);
@@ -163,7 +195,7 @@ std::string serialize_ydk(const Deck& deck, const YdkWriteOptions& options) {
 	// than being folded into it.
 	if(options.creator) {
 		out += "#created by ";
-		out += *options.creator;
+		out += sanitize_creator_line(*options.creator);
 		out += '\n';
 	}
 	auto write_section = [&out](std::string_view marker, const std::vector<CardCode>& cards) {
@@ -193,6 +225,14 @@ YdkSaveResult save_ydk(const std::filesystem::path& path, const Deck& deck,
 	}
 	const auto text = serialize_ydk(deck, options);
 	file.write(text.data(), static_cast<std::streamsize>(text.size()));
+	// write() can leave `file` reporting good() even though the data
+	// never reached the destination: a full filesystem (verified
+	// empirically against /dev/full) can accept the write() call into the
+	// stream buffer and only fail once that buffer is actually flushed,
+	// which would otherwise happen silently at destruction, after `ok`
+	// has already been returned. Flushing explicitly here, before
+	// checking `file`, surfaces that failure to this result instead.
+	file.flush();
 	if(!file) {
 		result.error = "failed to write file: " + path.string();
 		return result;

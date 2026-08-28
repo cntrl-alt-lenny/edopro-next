@@ -328,8 +328,16 @@ writer, on purpose:
 - **`"#created by <nickname>"`** comes from `mainGame->ebNickName` - live UI state this
   module has no access to and should not depend on (`data/` has no notion of "the current
   user"). `edopro_next::data::YdkWriteOptions::creator` exposes the *mechanism* (an optional
-  string, emitted verbatim as that exact line when present, omitted entirely when absent) -
-  see §6 - without this codec ever sourcing a value for it itself.
+  string, emitted as that exact line when present, omitted entirely when absent) - see §6 -
+  without this codec ever sourcing a value for it itself. Not emitted byte-for-byte
+  verbatim, though: `serialize_ydk` strips any `'\n'`/`'\r'` from `creator` first. Without
+  that, a caller-supplied string containing an embedded newline would not stay one cosmetic
+  comment line - the text after the break becomes a new line of real file content, able to
+  match a section marker or parse as a bare card code on a later `parse_ydk()` of this
+  codec's own output (`creator = "x\n999"` would otherwise inject a phantom code-`999` Main
+  Deck card - `data/tests/test_deck_ydk.cpp`'s
+  `a_creator_containing_a_newline_cannot_inject_a_card_line` pins that this cannot happen).
+  This was caught by external review of this PR, not found during initial implementation.
 - **The optional `"# <CardName>\n<code>\n"` form** requires `gDataManager->GetName(code)` -
   a card-database name lookup. This is presentation/export sugar with zero effect on
   loading (§2.3/§2.4: any `#`-prefixed line is just a comment to the parser, name-comment or
@@ -459,6 +467,32 @@ where `.cdb` files are discovered from (`docs/architecture/card-database.md`§8)
 default open mode); `save_ydk` opens with `std::ios::trunc`, overwriting any existing file at
 that path - there is no partial-write or backup-then-replace behaviour, matching
 `FileStream::out`'s own plain-truncate semantics (`gframe/file_stream.h`).
+
+### Detecting a failure the stream's own state does not surface for free
+
+Two failure modes here are easy to get wrong with `<iostream>`'s ordinary-looking API, and
+both were caught by external review, not by initial implementation - verified empirically
+(`/dev/full`, `/proc/self/mem`, both real Linux devices built for exactly this kind of test)
+rather than taken on the reviewer's word:
+
+- **`load_ydk` does not read via `output << file.rdbuf()`.** That inserter operates
+  directly on the streambuf, bypassing `basic_istream::read()`'s own sentry/state-update
+  machinery - so a genuine mid-read I/O error below the streambuf can leave `file` reporting
+  `good()` with a silently truncated (or, confirmed empirically, completely empty) result.
+  `load_ydk` instead reads through `file.read()` in a fixed-size, sign-correct loop
+  (`while(file.read(chunk, sizeof(chunk)) || file.gcount() > 0)`), which does update `file`'s
+  state correctly, and checks `file.bad()` only after that loop - verified both for byte-
+  exact correctness across file sizes that do and do not land on a chunk boundary (including
+  empty), and for actually detecting a forced read error where the `rdbuf()` form did not.
+- **`save_ydk` calls `file.flush()` before checking whether the write succeeded.**
+  `ofstream::write()` can leave the stream reporting `good()` even though the data never
+  reached the destination: a full filesystem can accept the write into the stream's own
+  buffer and only fail once that buffer actually flushes - which, without an explicit
+  `flush()`, would happen silently at the `ofstream`'s destruction, after `save_ydk` had
+  already returned `ok == true`. Confirmed empirically against `/dev/full` (a device that
+  always accepts an open and a `write()`, but always fails the underlying flush): checking
+  `file`'s state immediately after `write()` reported `good()`; the same check after an
+  explicit `flush()` correctly reported the failure.
 
 ---
 
