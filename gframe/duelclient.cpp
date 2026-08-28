@@ -2596,6 +2596,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		const auto count = CompatRead<uint8_t, uint32_t>(pbuf);
 		std::vector<ClientCard*> field_confirm;
 		std::vector<ClientCard*> panel_confirm;
+		if(mainGame->dInfo.isCatchingUp)
+			return true;
 		if(!edopro_next::legacy_observer::replay_verification_active())
 			mainGame->AddLog(epro::sprintf(gDataManager->GetSysString(208), count));
 		for(uint32_t i = 0; i < count; ++i) {
@@ -3507,6 +3509,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 	}
 	case MSG_CARD_SELECTED:
 	case MSG_BECOME_TARGET: {
+		if(mainGame->dInfo.isCatchingUp)
+			return true;
 		const auto count = CompatRead<uint8_t, uint32_t>(pbuf);
 		for(uint32_t i = 0; i < count; ++i) {
 			CoreUtils::loc_info info = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
@@ -3771,6 +3775,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		mainGame->dField.attacker = mainGame->dField.GetCard(info1.controler, info1.location, info1.sequence);
 		if(!PlayChant(SoundManager::CHANT::ATTACK, mainGame->dField.attacker->code))
 			Play(SoundManager::SFX::ATTACK);
+		if(mainGame->dInfo.isCatchingUp)
+			return true;
 		CoreUtils::loc_info info2 = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
 		const bool is_direct = info2.location == 0;
 		info2.controler = mainGame->LocalPlayer(info2.controler);
@@ -3808,6 +3814,8 @@ int DuelClient::ClientAnalyze(const uint8_t* msg, uint32_t len) {
 		return true;
 	}
 	case MSG_BATTLE: {
+		if(mainGame->dInfo.isCatchingUp)
+			return true;
 		CoreUtils::loc_info info1 = CoreUtils::ReadLocInfo(pbuf, mainGame->dInfo.compat_mode);
 		info1.controler = mainGame->LocalPlayer(info1.controler);
 		const auto aatk = static_cast<int32_t>(BufferIO::Read<uint32_t>(pbuf));
