@@ -19,8 +19,13 @@ namespace edopro_next::data {
 // any Latin-1/Latin Extended character not in upstream's own table, such
 // as Æ or ß) passes through unchanged, matching upstream's real observable
 // behaviour - not a Unicode-complete case-folding implementation, and not
-// meant to be one. Malformed UTF-8 bytes are passed through unchanged
-// rather than rejected: this function never fails and never throws.
+// meant to be one. Malformed UTF-8 bytes (a stray continuation byte, a
+// truncated multi-byte sequence) are copied through byte-for-byte
+// unchanged rather than rejected or folded - a malformed byte's raw
+// numeric value is never run through the fold table, even though it can
+// coincidentally fall inside one of that table's ranges (see the .cpp) -
+// so this function never fails, never throws, and never turns invalid
+// input into different invalid output.
 std::string normalize_search_text(std::string_view utf8);
 
 } // namespace edopro_next::data

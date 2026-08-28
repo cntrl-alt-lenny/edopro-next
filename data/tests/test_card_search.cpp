@@ -187,6 +187,22 @@ EDOPRO_DATA_TEST(accented_and_unaccented_synthetic_text_normalize_identically) {
 	EDOPRO_DATA_CHECK(match_kind_of(results, CardCode{1}) == MatchKind::ExactName);
 }
 
+// A malformed byte's raw numeric value must never be run through the fold
+// table: 0xC3 (195) is a valid lead byte for a two-byte sequence, but if
+// truncated (nothing follows it) it is not a real codepoint - and 195
+// happens to fall inside the fold table's 192-197 "A" range, so a naive
+// "treat the raw byte as a codepoint" fallback would incorrectly turn a
+// truncated sequence into "A". Found by external review, not by initial
+// implementation.
+EDOPRO_DATA_TEST(a_truncated_multibyte_lead_byte_is_not_folded_to_a_table_letter) {
+	// "\xC3" alone: a valid two-byte lead byte with no continuation byte.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xC3"), std::string("\xC3"));
+	// A lone continuation byte (never a valid lead byte at all).
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\x80"), std::string("\x80"));
+	// The malformed byte does not disturb decoding of what surrounds it.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("ab\xC3zy"), std::string("AB\xC3ZY"));
+}
+
 // ---------------------------------------------------------------------
 // F) Name-only scope: a text-only occurrence must not match
 // ---------------------------------------------------------------------

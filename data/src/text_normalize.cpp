@@ -48,45 +48,52 @@ char32_t fold_codepoint(char32_t c) {
 	return c;
 }
 
-// Decodes one UTF-8 codepoint starting at `pos`, advancing `pos` past it.
-// Malformed input (a stray continuation byte, a truncated multi-byte
-// sequence) is not rejected: the leading byte's raw value is returned as
-// a one-byte "codepoint" and `pos` advances by exactly one, so this always
-// makes forward progress - normalize_search_text never throws and never
-// loops, on any input, which matters because it is a public boundary
-// function, not one that can assume its input was already validated.
-char32_t decode_utf8(std::string_view text, std::size_t& pos) {
+// Decodes one UTF-8 codepoint starting at `pos`, advancing `pos` past it
+// and returning true - unless the byte at `pos` cannot start a valid
+// sequence (a stray continuation byte) or the sequence it starts is
+// truncated by the end of `text`, in which case `pos` still advances by
+// exactly one (so this always makes forward progress - normalize_
+// search_text never throws and never loops, on any input, which matters
+// because it is a public boundary function, not one that can assume its
+// input was already validated) but `cp` is left unset and false is
+// returned: the raw byte's numeric value is not a real codepoint and
+// must not be run through fold_codepoint() (whose ranges are codepoint
+// values, some of which a raw non-ASCII byte can numerically collide
+// with by coincidence - e.g. the lead byte 0xC3/195 of a truncated
+// two-byte sequence falls inside the table's 192-197 "A" range despite
+// never having been decoded as anything) - see normalize_search_text,
+// which copies such a byte through unchanged instead.
+bool decode_utf8(std::string_view text, std::size_t& pos, char32_t& cp) {
 	const auto byte = [&](std::size_t i) { return static_cast<unsigned char>(text[i]); };
 	const unsigned char lead = byte(pos);
 	const auto continuation = [&](std::size_t i) {
 		return pos + i < text.size() && (byte(pos + i) & 0xC0) == 0x80;
 	};
 	if(lead < 0x80) {
+		cp = lead;
 		++pos;
-		return lead;
+		return true;
 	}
 	if((lead & 0xE0) == 0xC0 && continuation(1)) {
-		const char32_t cp = (static_cast<char32_t>(lead & 0x1F) << 6) | (byte(pos + 1) & 0x3F);
+		cp = (static_cast<char32_t>(lead & 0x1F) << 6) | (byte(pos + 1) & 0x3F);
 		pos += 2;
-		return cp;
+		return true;
 	}
 	if((lead & 0xF0) == 0xE0 && continuation(1) && continuation(2)) {
-		const char32_t cp = (static_cast<char32_t>(lead & 0x0F) << 12) |
-							 (static_cast<char32_t>(byte(pos + 1) & 0x3F) << 6) |
-							 (byte(pos + 2) & 0x3F);
+		cp = (static_cast<char32_t>(lead & 0x0F) << 12) |
+			 (static_cast<char32_t>(byte(pos + 1) & 0x3F) << 6) | (byte(pos + 2) & 0x3F);
 		pos += 3;
-		return cp;
+		return true;
 	}
 	if((lead & 0xF8) == 0xF0 && continuation(1) && continuation(2) && continuation(3)) {
-		const char32_t cp = (static_cast<char32_t>(lead & 0x07) << 18) |
-							 (static_cast<char32_t>(byte(pos + 1) & 0x3F) << 12) |
-							 (static_cast<char32_t>(byte(pos + 2) & 0x3F) << 6) |
-							 (byte(pos + 3) & 0x3F);
+		cp = (static_cast<char32_t>(lead & 0x07) << 18) |
+			 (static_cast<char32_t>(byte(pos + 1) & 0x3F) << 12) |
+			 (static_cast<char32_t>(byte(pos + 2) & 0x3F) << 6) | (byte(pos + 3) & 0x3F);
 		pos += 4;
-		return cp;
+		return true;
 	}
 	++pos;
-	return lead;
+	return false;
 }
 
 void encode_utf8(char32_t cp, std::string& out) {
@@ -114,8 +121,17 @@ std::string normalize_search_text(std::string_view utf8) {
 	out.reserve(utf8.size());
 	std::size_t pos = 0;
 	while(pos < utf8.size()) {
-		const char32_t cp = decode_utf8(utf8, pos);
-		encode_utf8(fold_codepoint(cp), out);
+		const std::size_t start = pos;
+		char32_t cp = 0;
+		if(decode_utf8(utf8, pos, cp)) {
+			encode_utf8(fold_codepoint(cp), out);
+		} else {
+			// A malformed byte is not a codepoint - copy it through
+			// exactly as given, never folded, never re-encoded (which
+			// would risk producing a *different* invalid byte sequence
+			// than the one that came in).
+			out += utf8[start];
+		}
 	}
 	return out;
 }
