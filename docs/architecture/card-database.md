@@ -140,7 +140,7 @@ module reproduces the identical branch, reading the Link bit's value
 public API, because a caller of this facade needs to know the *result*
 (`defense`/`link_marker`), never the bit that produced it.
 
-### 2.3 Level and Pendulum scale share one packed int
+### 2.3 Level and Pendulum scale share one packed int - and `level`'s destination is unsigned
 
 `DataManager::ParseDB:146-153`:
 
@@ -155,28 +155,52 @@ cd.rscale = (level >> 16) & 0xff;
 ```
 
 The low byte is the level/rank magnitude; the sign of the *whole* packed value, not of the
-low byte alone, decides the sign of the decoded level; bits 16-23 and 24-31 are the right
-and left Pendulum scale.
+low byte alone, decides the sign of the intermediate result; bits 16-23 and 24-31 are the
+right and left Pendulum scale.
 
-This is reproduced bit-for-bit in `data/src/card_database.cpp`, on the raw `std::int32_t`,
-with a signed arithmetic right shift - not on a value reinterpreted as unsigned first, which
-would change the result whenever the packed value is negative (arithmetic shift on a signed
-type is well-defined in C++20, which is what `level` is decoded with here).
+**The destination type is the load-bearing fact here, and it is easy to misread this snippet
+without checking it.** `level` (the local variable) is `int`, so `-(level & 0xff)` is a
+genuine negative `int` when the packed value is negative. But `cd.level` - the field the
+result is assigned into - is declared `uint32_t` in *both* `CardData` and `CardDataC`
+(`gframe/data_manager.h:44-69`), not `int32_t`. Assigning a negative `int` to a `uint32_t`
+field is well-defined C++ (reduction modulo 2³²), so the value `CardDataC::level` actually
+holds after this line, for a card whose intermediate result is `-7`, is
+`static_cast<std::uint32_t>(-7)` = `0xfffffff9` = `4294967289` - not `-7`. This is not a
+storage-layout accident either: `DataManager::CardReader` (`gframe/data_manager.cpp:556-560`)
+`memcpy`s a `CardDataC` into an `OCG_CardData` (`ocgcore/ocgapi_types.h:38-51`), whose own
+`level` field is `uint32_t` too - the rules engine's own public API receives this exact
+wrapped bit pattern unchanged. And it is observable, not just internal: `gframe/deck_con.cpp`'s
+level filter (`filter_lv`, itself `uint32_t`) compares `data._data.level` directly with
+`<`/`<=`/`>`/`>=`, so a "negative"-encoded level participates in deck search as an enormous
+unsigned number, not a small negative one - exposing a signed `-7` from this facade would
+make its data disagree with upstream's own observable filtering behaviour, not just its
+storage type. `CardRecord::level` is therefore `std::uint32_t`, and
+`data/src/card_database.cpp` computes the same signed intermediate result upstream does, then
+converts it to `std::uint32_t` explicitly at the same point upstream's implicit assignment
+does - reproducing the bit pattern, not the mathematically "cleaner" signed value.
+
+Pendulum scale is unaffected by this: `(level >> 24) & 0xff` and `(level >> 16) & 0xff` are
+already small non-negative `int` values (0-255) by the time they are computed - the `& 0xff`
+mask discards any sign-extension bits before the result is ever assigned anywhere - so
+converting them to `uint32_t` changes nothing. `left_scale`/`right_scale` stay `std::uint32_t`
+in this record, decoded with the same signed arithmetic right shift upstream uses (well-defined
+in C++20, which is what `level` is decoded with here) - not a value reinterpreted as unsigned
+first, which would change the result for a negative packed value.
 
 **A consequence worth stating plainly, verified by tracing the formula rather than assumed:**
-because the sign comes from the *whole* packed int, a negative level is not simply
-`-(desired level)`. To decode to level `-7`, the stored column value must be `-249`
-(`-(−249 & 0xff)` = `-(0xF9 & 0xff)`... `-249`'s bit pattern is `0xFFFFFF07`, so
-`raw & 0xff == 7`, giving `-7`). And because a negative packed value's upper three bytes are
-all `0xFF` by sign extension, `left_scale`/`right_scale` come out as `255` for *any*
-negative-level card - a mechanical side effect of the shared packing, not a second,
-independent encoding. `data/tests/test_card_database.cpp`'s
+because the sign of the intermediate result comes from the *whole* packed int, a negative
+level is not simply `-(desired level)`. To reach an intermediate `-7` (stored as `4294967289`),
+the packed column value must be `-249` (`-249`'s bit pattern is `0xFFFFFF07`, so
+`raw & 0xff == 7`, giving `-7` before the unsigned conversion). And because a negative packed
+value's upper three bytes are all `0xFF` by sign extension, `left_scale`/`right_scale` come
+out as `255` for *any* negative-level card - a mechanical side effect of the shared packing,
+not a second, independent encoding. `data/tests/test_card_database.cpp`'s
 `negative_level_unpacks_bit_for_bit_like_upstream` fixes this exact case (`level = -249` in
-the synthetic row) so a future change to this formula cannot silently start producing a
-different number for the same bytes. Callers should treat `left_scale`/`right_scale` as
-meaningful only when `type` carries the Pendulum bit; this module does not make that
-judgement itself, matching how it leaves every other `type`-flag interpretation to the
-caller.
+the synthetic row, `record->level == static_cast<std::uint32_t>(-7)`) so a future change to
+this formula cannot silently start producing a different number for the same bytes. Callers
+should treat `left_scale`/`right_scale` as meaningful only when `type` carries the Pendulum
+bit; this module does not make that judgement itself, matching how it leaves every other
+`type`-flag interpretation to the caller.
 
 ### 2.4 Race is a genuine 64-bit value
 
@@ -314,8 +338,11 @@ independently (each stages into a private local map first, per §3/§4), which i
 **stronger** guarantee than `DataManager::ParseDB`/`ParseLocaleDB` provide - see
 [ADR 0003, Decision 3](../adr/0003-card-database-facade.md#decision-3-a-load-is-atomic-against-the-catalogue-which-is-stronger-than-upstream)
 for why upstream's own version of this can leave a catalogue part-old, part-new, part
-neither, and why this module does not copy that. `clear_locale()` cannot fail at all - it
-only discards in-memory state - so it is not a `LoadResult`-returning operation.
+neither, and why this module does not copy that. `clear_locale()` performs no filesystem or
+SQLite operation - it only discards in-memory state and recomputes `records_` from
+`base_text_` - so it has no `LoadResult`-style failure state to report and is not a
+`LoadResult`-returning operation; it is not declared `noexcept`, though, since the string
+copies that restore each touched code's text can themselves allocate.
 
 `data/tests/test_card_database.cpp` covers all of: a missing file, a non-SQLite file, a
 `.cdb`-shaped-but-wrong file with no `datas`/`texts` tables at all, a schema missing exactly

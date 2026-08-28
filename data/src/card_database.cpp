@@ -131,13 +131,24 @@ CardRecord decode_row(sqlite3_stmt* stmt) {
 		record.defense = raw_defense;
 	}
 
-	// Bit-identical to DataManager::ParseDB: the sign comes from the whole
-	// packed value, the magnitude from its low byte, and the scales from the
-	// next two bytes up - all via signed arithmetic shift on the raw int, not
-	// on a reinterpreted unsigned value, which would change the result for a
-	// negative `level`.
+	// The intermediate sign comes from the whole packed value, the magnitude
+	// from its low byte, and the scales from the next two bytes up - all via
+	// signed arithmetic shift on the raw int, not on a reinterpreted
+	// unsigned value, which would change the result for a negative `level`.
+	// This matches DataManager::ParseDB up to this point.
 	const std::int32_t packed_level = sqlite3_column_int(stmt, 7);
-	record.level = packed_level < 0 ? -(packed_level & 0xff) : (packed_level & 0xff);
+	const std::int32_t level_magnitude =
+		packed_level < 0 ? -(packed_level & 0xff) : (packed_level & 0xff);
+	// CardData::level/CardDataC::level (and the OCG_CardData::level they are
+	// memcpy'd into unchanged - ocgcore/ocgapi_types.h) are uint32_t, not
+	// int32_t. DataManager::ParseDB assigns its signed intermediate result
+	// into that unsigned field, which wraps rather than staying negative -
+	// this explicit cast reproduces that exact wrap, not the mathematically
+	// "cleaner" signed value. See docs/architecture/card-database.md#
+	// level-and-pendulum-scale for the worked example and why this is
+	// observable in upstream's own deck-search level filter, not just an
+	// internal storage detail.
+	record.level = static_cast<std::uint32_t>(level_magnitude);
 	record.left_scale = static_cast<std::uint32_t>((packed_level >> 24) & 0xff);
 	record.right_scale = static_cast<std::uint32_t>((packed_level >> 16) & 0xff);
 

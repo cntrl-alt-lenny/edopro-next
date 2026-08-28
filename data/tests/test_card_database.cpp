@@ -205,7 +205,7 @@ EDOPRO_DATA_TEST(ordinary_monster_row_decodes_every_field) {
 	EDOPRO_DATA_CHECK_EQ(record->type, data.type);
 	EDOPRO_DATA_CHECK_EQ(record->attack, data.atk);
 	EDOPRO_DATA_CHECK_EQ(record->defense, data.def);
-	EDOPRO_DATA_CHECK_EQ(record->level, 7);
+	EDOPRO_DATA_CHECK_EQ(record->level, 7u);
 	EDOPRO_DATA_CHECK_EQ(record->race, data.race);
 	EDOPRO_DATA_CHECK_EQ(record->attribute, data.attribute);
 	EDOPRO_DATA_CHECK_EQ(record->link_marker, 0u);
@@ -284,25 +284,31 @@ EDOPRO_DATA_TEST(positive_level_with_pendulum_scale_unpacks) {
 	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
 	const auto* record = catalogue.find(static_cast<CardCode>(77));
 	EDOPRO_DATA_CHECK(record != nullptr);
-	EDOPRO_DATA_CHECK_EQ(record->level, 4);
+	EDOPRO_DATA_CHECK_EQ(record->level, 4u);
 	EDOPRO_DATA_CHECK_EQ(record->left_scale, 3u);
 	EDOPRO_DATA_CHECK_EQ(record->right_scale, 5u);
 }
 
-EDOPRO_DATA_TEST(negative_level_unpacks_bit_for_bit_like_upstream) {
+EDOPRO_DATA_TEST(negative_level_wraps_to_the_same_uint32_upstream_stores) {
 	TempFile file("level_negative");
 	sqlite3* db = open_writable(file.path());
 	create_datas_texts_schema(db);
 
 	// raw = -249 (0xFFFFFF07). DataManager::ParseDB's formula is
 	// `level = raw < 0 ? -(raw & 0xff) : (raw & 0xff)`, and `raw & 0xff` here
-	// is 0x07 = 7, so level = -7 - not -249, and not naively "-(raw)".
-	// lscale/rscale are (raw>>24)&0xff and (raw>>16)&0xff: an arithmetic
-	// right shift of a negative value sign-extends, so both come out as
-	// 0xff = 255, a mechanical consequence of the packing for any negative
-	// level, not a second encoding. This is exactly why the raw formula is
-	// reproduced bit-for-bit rather than approximated with abs()/unary
-	// minus on the decoded magnitude.
+	// is 0x07 = 7, so the SIGNED INTERMEDIATE result is -7 - not -249, and
+	// not naively "-(raw)". But CardData::level/CardDataC::level (and the
+	// OCG_CardData::level the engine actually receives, via CardReader's
+	// memcpy) are uint32_t, not int32_t - upstream's own assignment of that
+	// signed -7 into an unsigned field wraps it, so the value actually
+	// stored - and what this facade must expose to match upstream's own
+	// deck-search level filter (gframe/deck_con.cpp, which compares this
+	// field as uint32_t) - is static_cast<uint32_t>(-7), not -7 itself.
+	// lscale/rscale are unaffected: (raw>>24)&0xff and (raw>>16)&0xff are
+	// already small non-negative ints once the &0xff mask is applied, so
+	// converting them to uint32_t changes nothing; both come out as 0xff =
+	// 255 here, a mechanical consequence of arithmetic-shifting a negative
+	// packed value, not a second encoding.
 	DataRow data{};
 	data.id = 88;
 	data.type = kTypeMonster;
@@ -315,7 +321,8 @@ EDOPRO_DATA_TEST(negative_level_unpacks_bit_for_bit_like_upstream) {
 	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
 	const auto* record = catalogue.find(static_cast<CardCode>(88));
 	EDOPRO_DATA_CHECK(record != nullptr);
-	EDOPRO_DATA_CHECK_EQ(record->level, -7);
+	EDOPRO_DATA_CHECK_EQ(record->level, static_cast<std::uint32_t>(-7));
+	EDOPRO_DATA_CHECK_EQ(record->level, 4294967289u);
 	EDOPRO_DATA_CHECK_EQ(record->left_scale, 255u);
 	EDOPRO_DATA_CHECK_EQ(record->right_scale, 255u);
 }
@@ -790,6 +797,76 @@ EDOPRO_DATA_TEST(later_locale_file_in_the_same_active_locale_overwrites_the_earl
 	const auto* card831 = catalogue.find(static_cast<CardCode>(831));
 	EDOPRO_DATA_CHECK(card831 != nullptr);
 	EDOPRO_DATA_CHECK_EQ(card831->name, std::string("File1 Only Name"));
+}
+
+// A base reload while a locale is active must not drop the locale overlay -
+// matching DataManager::ParseDB's own re-link via `indexes` when a base row
+// is parsed while a locale is active (see load_database()'s doc comment) -
+// and the per-slot auxiliary fallback must resolve against the NEW base
+// value, not a stale copy of the old one, proving base_text_ (not records_
+// itself) is what resolve_text() actually reads.
+EDOPRO_DATA_TEST(base_reload_keeps_the_active_locale_overlay_and_uses_the_new_base_fallback) {
+	TempFile base_a("locale_base_reload_a");
+	{
+		sqlite3* db = open_writable(base_a.path());
+		create_datas_texts_schema(db);
+		insert_data_row(db, DataRow{860});
+		TextRow text{};
+		text.id = 860;
+		text.name = "Base A Name";
+		text.desc = "Base A Text";
+		text.str[0] = "Base A Str1";
+		insert_text_row(db, text);
+		sqlite3_close(db);
+	}
+	// Locale: name overrides (linked as a pair), str1 left empty so it must
+	// fall back to whatever the CURRENT base value is.
+	const auto locale_file =
+		make_locale_file("locale_base_reload", 860, "Locale Name", "Locale Text", "");
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(base_a.path()).ok);
+	EDOPRO_DATA_CHECK(catalogue.load_locale(locale_file->path()).ok);
+
+	// Sanity before the reload.
+	{
+		const auto* record = catalogue.find(static_cast<CardCode>(860));
+		EDOPRO_DATA_CHECK(record != nullptr);
+		EDOPRO_DATA_CHECK_EQ(record->name, std::string("Locale Name"));
+		EDOPRO_DATA_CHECK_EQ(record->strings[0], std::string("Base A Str1"));
+	}
+
+	// A later base load overwrites card 860's base row entirely (also
+	// changing a non-text field, to confirm that side of the reload too).
+	TempFile base_b("locale_base_reload_b");
+	{
+		sqlite3* db = open_writable(base_b.path());
+		create_datas_texts_schema(db);
+		DataRow data{};
+		data.id = 860;
+		data.atk = 3000;
+		insert_data_row(db, data);
+		TextRow text{};
+		text.id = 860;
+		text.name = "Base B Name";
+		text.desc = "Base B Text";
+		text.str[0] = "Base B Str1";
+		insert_text_row(db, text);
+		sqlite3_close(db);
+	}
+	EDOPRO_DATA_CHECK(catalogue.load_database(base_b.path()).ok);
+
+	const auto* record = catalogue.find(static_cast<CardCode>(860));
+	EDOPRO_DATA_CHECK(record != nullptr);
+	// The new base field is visible...
+	EDOPRO_DATA_CHECK_EQ(record->attack, 3000);
+	// ...the locale overlay is still active for name/text, untouched by the
+	// base reload...
+	EDOPRO_DATA_CHECK_EQ(record->name, std::string("Locale Name"));
+	EDOPRO_DATA_CHECK_EQ(record->text, std::string("Locale Text"));
+	// ...and the empty locale str1 slot now falls back to base FILE B's
+	// value, not a stale copy of base file A's.
+	EDOPRO_DATA_CHECK_EQ(record->strings[0], std::string("Base B Str1"));
 }
 
 // F. A failed load_locale() call must leave the currently active locale

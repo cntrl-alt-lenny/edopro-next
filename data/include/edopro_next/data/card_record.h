@@ -10,9 +10,12 @@
 // Irrlicht/global-state/legacy-plumbing detail this module has no reason to
 // carry (the ocgcore C-array setcode terminator, the wchar_t/UTF-16 detour,
 // the Irrlicht virtual filesystem hook) or a deliberately stronger guarantee
-// this module chooses to provide instead (whole-file load atomicity,
-// per-field locale fallback). It is never a guess at what the schema "should"
-// mean.
+// this module chooses to provide instead (CardDatabase's whole-file load
+// atomicity - see card_database.h). It is never a guess at what the schema
+// "should" mean. (Active-locale text overlay is a CardDatabase concern, not
+// a CardRecord one; see card_database.h for its exact, source-verified
+// fallback rules - which are not uniform across name/text vs. the sixteen
+// auxiliary strings.)
 #ifndef EDOPRO_NEXT_DATA_CARD_RECORD_H
 #define EDOPRO_NEXT_DATA_CARD_RECORD_H
 
@@ -69,10 +72,18 @@ struct CardRecord {
 	std::int32_t defense = 0;
 
 	// `datas.level`, the level/rank magnitude, sign-extended from the low
-	// byte of the packed `level` column. Negative values are a real,
-	// schema-defined possibility (see docs/architecture/card-database.md#
-	// level-and-pendulum-scale), not a decode error.
-	std::int32_t level = 0;
+	// byte of the packed `level` column and then stored exactly as upstream
+	// stores it: `CardData::level`/`CardDataC::level` (and the engine-facing
+	// `OCG_CardData::level` they are memcpy'd into unchanged) are all
+	// `uint32_t`, not `int32_t` - so a "negative" decoded level is a large
+	// wrapped value here too (see docs/architecture/card-database.md#
+	// level-and-pendulum-scale for the exact arithmetic and why this is not
+	// a decode error). Deck search's own level filter
+	// (`gframe/deck_con.cpp`) compares this field as `uint32_t`, so matching
+	// that representation - not the mathematically "cleaner" signed one -
+	// is what keeps this facade's data consistent with upstream's actual
+	// observable filtering behaviour, not just its storage layout.
+	std::uint32_t level = 0;
 
 	// The packed `level` column's high two bytes: a Pendulum monster's left
 	// and right scale. Both are 0 for a non-Pendulum card, which is
