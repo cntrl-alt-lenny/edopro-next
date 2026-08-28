@@ -61,7 +61,7 @@ A change altering payload *contents* is caught; one altering *interpretation* of
 bytes is not. M2 adds a second, semantic trace over the same fixtures which does catch the
 latter — for the 34 message types it decodes, and no further.
 
-## M2 — Semantic client model  🔶 in progress
+## M2 — Semantic client model  ✅ done
 
 - [x] Presentation-free duel state types — no Irrlicht, no Qt, no rendering concepts.
       `client/` builds against a C++20 compiler and nothing else. Design and the source
@@ -90,23 +90,31 @@ latter — for the 34 message types it decodes, and no further.
       normalized packet at one RAII seam in `DuelClient::ClientAnalyze`, decodes privately,
       and projects the real legacy state after the handler returns. It is observational and
       reports, rather than propagates, semantic failures.
-- [ ] **Complete external review of the live verifier.** The verifier now drives every
+- [x] **Complete external review of the live verifier.** The verifier drives every
       committed YRPX packet through the direct `Replay::packets_stream` to
       `DuelClient::ClientAnalyze` path with `isCatchingUp = false`, while an explicit
-      verification seam suppresses presentation-only work. Its current comparison is
+      verification seam suppresses presentation-only work. Its comparison is
       deliberately scoped to life points, turn, structural card occupancy/location/
       sequence, and material topology — [fixture-equivalence.md](architecture/fixture-equivalence.md).
+      External review found and required the restoration of four ordinary `isCatchingUp`
+      behavior changes accidentally introduced by the verifier work, then approved the
+      result with no remaining technical blocker.
 - [x] Add fail-closed packet/comparison accounting and a deterministic fault-injection
       CLI path so CI proves that a synthetic legacy mismatch returns non-zero.
 
 **Exit criterion:** game state can be inspected without instantiating a renderer, and a
 reviewed verifier can compare the declared semantic projection to real legacy state across
 all recorded fixture packets.
-**Pending** — the verifier and CI proof path are implemented, but M2 remains under review.
+**Met** — external review is complete and approved. CI independently pins both committed
+fixtures to their known packet totals (990 and 1133) and requires every packet decoded,
+processed and compared with zero decode/observer/comparison failures and zero mismatches;
+a deterministic fault-injection path proves the failure mode is live.
 
-The current result is a scoped structural equivalence signal, not a claim of complete
-internal legacy-client or duel-engine equivalence. The comparator does not include card
-code or position, and the verifier does not run `ocgcore`.
+The result is a scoped structural equivalence signal, not a claim of complete internal
+legacy-client or duel-engine equivalence. The comparator does not include card code or
+position, the verifier does not run `ocgcore`, and this is not M1 Level 2 — M1's own
+re-simulation-based proof of live engine equivalence, scoped separately above and still
+not started.
 
 ## M3 — Deck and card data
 
