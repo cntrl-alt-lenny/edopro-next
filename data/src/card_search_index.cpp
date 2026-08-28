@@ -25,10 +25,13 @@ bool passes_bitmask(const std::optional<BitmaskFilter>& filter, std::uint32_t fi
 	return (field & filter->require_all_bits) == filter->require_all_bits;
 }
 
-bool passes_bitmask64(const std::optional<BitmaskFilter64>& filter, std::uint64_t field) {
+// Upstream's own effect-category semantics (AnyBitmaskFilter's doc
+// comment, search_query.h): reject only when none of the selected bits
+// are present.
+bool passes_any_bitmask(const std::optional<AnyBitmaskFilter>& filter, std::uint32_t field) {
 	if(!filter)
 		return true;
-	return (field & filter->require_all_bits) == filter->require_all_bits;
+	return (field & filter->any_bits) != 0;
 }
 
 bool passes_numeric(const NumericFilter& filter, std::int64_t field) {
@@ -136,11 +139,11 @@ std::vector<SearchResult> CardSearchIndex::search(const SearchQuery& query) cons
 	const auto passes_filters = [&query](const Entry& e) {
 		if(!passes_bitmask(query.type, e.type))
 			return false;
-		if(!passes_bitmask(query.category, e.category))
+		if(!passes_any_bitmask(query.category, e.category))
 			return false;
 		if(query.attribute && e.attribute != *query.attribute)
 			return false;
-		if(!passes_bitmask64(query.race, e.race))
+		if(query.race && e.race != *query.race)
 			return false;
 		if(!passes_bitmask(query.link_marker, e.link_marker))
 			return false;
@@ -188,12 +191,15 @@ std::vector<SearchResult> CardSearchIndex::search(const SearchQuery& query) cons
 		return true;
 	};
 
-	std::string normalized_query;
-	std::vector<std::string_view> tokens;
-	if(!query.text.empty()) {
-		normalized_query = normalize_search_text(query.text);
-		tokens = whitespace_tokens(normalized_query);
-	}
+	// A query that is empty, or contains only whitespace, carries no
+	// actual text constraint - both normalize and tokenize to zero
+	// tokens, so both are treated identically (has_text_query below),
+	// rather than a whitespace-only query being classified as "matched
+	// every token (there were none to check)" under whichever text-tier
+	// its `text_scope` would otherwise evaluate.
+	const std::string normalized_query = normalize_search_text(query.text);
+	const std::vector<std::string_view> tokens = whitespace_tokens(normalized_query);
+	const bool has_text_query = !tokens.empty();
 
 	const auto classify_text_match = [&](const Entry& e) -> std::optional<MatchKind> {
 		if(query.text_scope == TextScope::Name || query.text_scope == TextScope::NameOrText) {
@@ -221,7 +227,7 @@ std::vector<SearchResult> CardSearchIndex::search(const SearchQuery& query) cons
 		if(!passes_filters(e))
 			continue;
 		MatchKind kind;
-		if(query.text.empty()) {
+		if(!has_text_query) {
 			kind = MatchKind::NoTextQuery;
 		} else {
 			const auto classified = classify_text_match(e);

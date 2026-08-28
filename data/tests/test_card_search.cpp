@@ -18,8 +18,8 @@
 #include "synthetic_cdb.h"
 #include "test_support.h"
 
+using edopro_next::data::AnyBitmaskFilter;
 using edopro_next::data::BitmaskFilter;
-using edopro_next::data::BitmaskFilter64;
 using edopro_next::data::CardCode;
 using edopro_next::data::CardDatabase;
 using edopro_next::data::CardSearchIndex;
@@ -101,6 +101,34 @@ EDOPRO_DATA_TEST(empty_text_query_returns_every_card_as_no_text_query) {
 	// Deterministic tie-break: normalized name ascending.
 	EDOPRO_DATA_CHECK_EQ(codes(results),
 						 (std::vector<CardCode>{CardCode{1}, CardCode{2}, CardCode{3}}));
+}
+
+// A query of only whitespace carries no real text constraint either -
+// tokenizes to zero tokens - and must be treated identically to a
+// genuinely empty query, not as "matched every token because there were
+// none to check". Found by external review, not by initial
+// implementation.
+EDOPRO_DATA_TEST(whitespace_only_text_query_behaves_like_an_empty_query) {
+	TempFile file("whitespace_query");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	insert_card(db, 1, "Alpha");
+	insert_card(db, 2, "Beta");
+	insert_card(db, 3, "Gamma");
+	sqlite3_close(db);
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
+	CardSearchIndex index;
+	index.rebuild(catalogue);
+
+	SearchQuery whitespace_query;
+	whitespace_query.text = " \t\r\n ";
+	const auto results = index.search(whitespace_query);
+	EDOPRO_DATA_CHECK(results == index.search(SearchQuery{}));
+	EDOPRO_DATA_CHECK_EQ(results.size(), std::size_t{3});
+	for(const auto& r : results)
+		EDOPRO_DATA_CHECK(r.match == MatchKind::NoTextQuery);
 }
 
 // ---------------------------------------------------------------------
@@ -201,6 +229,64 @@ EDOPRO_DATA_TEST(a_truncated_multibyte_lead_byte_is_not_folded_to_a_table_letter
 	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\x80"), std::string("\x80"));
 	// The malformed byte does not disturb decoding of what surrounds it.
 	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("ab\xC3zy"), std::string("AB\xC3ZY"));
+}
+
+// Adversarial cases a shape-only decoder (right byte count, each a
+// generic 0x80-0xBF continuation byte) accepts but a strictly canonical
+// one must not: overlong encodings, UTF-16 surrogates, and codepoints
+// beyond U+10FFFF. Each of these, decoded naively, lands on a numeric
+// value fold_codepoint() would treat as foldable - exactly the class of
+// bug the truncated/stray-byte case above already showed once. Found by
+// external review, not by initial implementation of the first fix.
+EDOPRO_DATA_TEST(non_canonical_utf8_is_preserved_byte_for_byte_not_folded) {
+	// C1 A1: an illegal overlong two-byte encoding of ASCII 'a' (0x61).
+	// A shape-only decoder accepts it and folds it to "A"; the correct
+	// result is the same two input bytes, unchanged.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xC1\xA1"),
+						 std::string("\xC1\xA1"));
+	// E0 83 80: an illegal overlong three-byte encoding of U+00C0 (192,
+	// "A" in the fold table's 192-197 range). The canonical encoding of
+	// U+00C0 is two bytes ("\xC3\x80", already covered above); using
+	// three bytes for a value that fits in two is overlong and must be
+	// rejected outright, not decoded and then folded.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xE0\x83\x80"),
+						 std::string("\xE0\x83\x80"));
+	// ED A0 80: a shape-only decode of this is U+D800, the first UTF-16
+	// surrogate codepoint - never a valid standalone Unicode scalar value.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xED\xA0\x80"),
+						 std::string("\xED\xA0\x80"));
+	// F4 90 80 80: a shape-only decode of this is U+110000, one past
+	// Unicode's own ceiling of U+10FFFF.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xF4\x90\x80\x80"),
+						 std::string("\xF4\x90\x80\x80"));
+	// F5 80 80 80: 0xF5 is not a valid lead byte at all (no valid
+	// codepoint's encoding begins with F5-FF) - every byte here is
+	// individually malformed and preserved one at a time.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xF5\x80\x80\x80"),
+						 std::string("\xF5\x80\x80\x80"));
+}
+
+// The boundary sequences the checks above are testing the *edge* of -
+// each is the smallest/largest canonical encoding for its length/lead
+// byte, and each must still decode, fold (if applicable), and re-encode
+// normally. Pins that the stricter validator does not over-reject real,
+// well-formed UTF-8.
+EDOPRO_DATA_TEST(canonical_boundary_sequences_are_accepted_and_normalize_normally) {
+	// C2 80 (U+0080): the smallest valid two-byte-lead sequence (C0/C1
+	// would be overlong for this range).
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xC2\x80"),
+						 std::string("\xC2\x80"));
+	// DF BF (U+07FF): the largest valid two-byte codepoint.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xDF\xBF"),
+						 std::string("\xDF\xBF"));
+	// E0 A0 80 (U+0800): the smallest valid three-byte codepoint for lead
+	// E0 (anything with a second byte below A0 would be overlong).
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xE0\xA0\x80"),
+						 std::string("\xE0\xA0\x80"));
+	// F4 8F BF BF (U+10FFFF): Unicode's own maximum codepoint, the
+	// largest valid sequence for lead F4.
+	EDOPRO_DATA_CHECK_EQ(edopro_next::data::normalize_search_text("\xF4\x8F\xBF\xBF"),
+						 std::string("\xF4\x8F\xBF\xBF"));
 }
 
 // ---------------------------------------------------------------------
@@ -414,6 +500,59 @@ EDOPRO_DATA_TEST(cards_with_unusual_scope_bits_are_returned_unless_explicitly_fi
 }
 
 // ---------------------------------------------------------------------
+// Effect-category filter: ANY of the selected bits, not all of them -
+// upstream's own filter_effect semantics (gframe/deck_con.cpp's
+// CheckCardProperties: `if(filter_effect && !(data.category &
+// filter_effect)) return false;`, i.e. reject only when *none* of the
+// selected bits are present). Found by external review, not by initial
+// implementation, which used a "require all selected bits" filter here
+// instead - which would have wrongly excluded a card carrying only one
+// of several selected categories.
+// ---------------------------------------------------------------------
+
+EDOPRO_DATA_TEST(category_filter_matches_any_of_the_selected_bits_not_all) {
+	TempFile file("category");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	constexpr std::uint32_t kCategoryA = 0x1;
+	constexpr std::uint32_t kCategoryB = 0x2;
+	DataRow a{};
+	a.id = 1;
+	a.category = kCategoryA;
+	insert_data_row(db, a);
+	insert_text_row(db, TextRow{1, "Category A", ""});
+	DataRow b{};
+	b.id = 2;
+	b.category = kCategoryB;
+	insert_data_row(db, b);
+	insert_text_row(db, TextRow{2, "Category B", ""});
+	DataRow both{};
+	both.id = 3;
+	both.category = kCategoryA | kCategoryB;
+	insert_data_row(db, both);
+	insert_text_row(db, TextRow{3, "Category Both", ""});
+	DataRow unrelated{};
+	unrelated.id = 4;
+	unrelated.category = 0x4;
+	insert_data_row(db, unrelated);
+	insert_text_row(db, TextRow{4, "Category Unrelated", ""});
+	sqlite3_close(db);
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
+	CardSearchIndex index;
+	index.rebuild(catalogue);
+
+	SearchQuery query;
+	query.category = AnyBitmaskFilter{kCategoryA | kCategoryB};
+	const auto results = index.search(query);
+	EDOPRO_DATA_CHECK(contains(results, CardCode{1}));
+	EDOPRO_DATA_CHECK(contains(results, CardCode{2}));
+	EDOPRO_DATA_CHECK(contains(results, CardCode{3}));
+	EDOPRO_DATA_CHECK(!contains(results, CardCode{4}));
+}
+
+// ---------------------------------------------------------------------
 // M) attack/defense "?" sentinel values (-1/-2)
 // ---------------------------------------------------------------------
 
@@ -532,12 +671,46 @@ EDOPRO_DATA_TEST(race_filter_handles_a_high_bit_beyond_32_bits) {
 	index.rebuild(catalogue);
 
 	SearchQuery matching;
-	matching.race = BitmaskFilter64{UINT64_C(1) << 40};
+	matching.race = UINT64_C(1) << 40;
 	EDOPRO_DATA_CHECK(contains(index.search(matching), CardCode{1}));
 
 	SearchQuery non_matching;
-	non_matching.race = BitmaskFilter64{UINT64_C(1) << 41};
+	non_matching.race = UINT64_C(1) << 41;
 	EDOPRO_DATA_CHECK(!contains(index.search(non_matching), CardCode{1}));
+}
+
+// Upstream's race filter is exact equality against a single selected
+// race bit (CheckCardProperties: `data.race != filter_race`), not "the
+// selected bit is present among possibly several" - a card with two race
+// bits set does not match a query for just one of them, even though that
+// bit is technically present. Found by external review, not by initial
+// implementation, which used a "require these bits" filter here instead.
+EDOPRO_DATA_TEST(race_filter_is_exact_equality_not_bit_containment) {
+	TempFile file("race_exact");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	DataRow single{};
+	single.id = 1;
+	single.race = 0x1;
+	insert_data_row(db, single);
+	insert_text_row(db, TextRow{1, "Single Race Monster", ""});
+	DataRow combined{};
+	combined.id = 2;
+	combined.race = 0x3; // includes bit 0x1, but is not equal to it
+	insert_data_row(db, combined);
+	insert_text_row(db, TextRow{2, "Combined Race Monster", ""});
+	sqlite3_close(db);
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
+	CardSearchIndex index;
+	index.rebuild(catalogue);
+
+	SearchQuery query;
+	query.race = 0x1;
+	const auto results = index.search(query);
+	EDOPRO_DATA_CHECK(contains(results, CardCode{1}));
+	EDOPRO_DATA_CHECK(!contains(results, CardCode{2}));
 }
 
 // ---------------------------------------------------------------------
@@ -570,6 +743,37 @@ EDOPRO_DATA_TEST(a_negative_encoded_level_participates_as_a_huge_unsigned_value)
 	SearchQuery query;
 	query.level = NumericFilter{1, NumericComparison::AtLeast};
 	EDOPRO_DATA_CHECK(contains(index.search(query), CardCode{1}));
+}
+
+// Pins the exact contract search_query.h documents for NumericFilter:
+// the comparison happens against the field's actual widened value
+// (4294967289 here), never against a "logically intended" signed
+// interpretation (-7) the stored uint32_t never actually holds. A query
+// value is never silently reinterpreted just because the field is
+// conceptually "the same number, but negative."
+EDOPRO_DATA_TEST(level_equal_to_matches_the_actual_wrapped_value_not_the_original_negative_one) {
+	TempFile file("level_equal");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	DataRow negative{};
+	negative.id = 1;
+	negative.level = -249; // decodes to level 4294967289u, per card-database.md
+	insert_data_row(db, negative);
+	insert_text_row(db, TextRow{1, "Negative Level Monster", ""});
+	sqlite3_close(db);
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
+	CardSearchIndex index;
+	index.rebuild(catalogue);
+
+	SearchQuery matches_wrapped;
+	matches_wrapped.level = NumericFilter{4294967289, NumericComparison::EqualTo};
+	EDOPRO_DATA_CHECK(contains(index.search(matches_wrapped), CardCode{1}));
+
+	SearchQuery does_not_match_negative_seven;
+	does_not_match_negative_seven.level = NumericFilter{-7, NumericComparison::EqualTo};
+	EDOPRO_DATA_CHECK(!contains(index.search(does_not_match_negative_seven), CardCode{1}));
 }
 
 // ---------------------------------------------------------------------
@@ -763,7 +967,10 @@ EDOPRO_DATA_TEST(limit_truncates_the_already_ranked_results_deterministically) {
 // exact_code field
 // ---------------------------------------------------------------------
 
-EDOPRO_DATA_TEST(exact_code_restricts_to_that_one_code_and_ranks_it_first) {
+// Named for what this actually proves: exact_code is a ranking hint, not
+// a restriction - the second card (which does not match exact_code)
+// remains present in the results, merely ranked after the promoted one.
+EDOPRO_DATA_TEST(exact_code_promotes_the_matching_code_without_restricting_results) {
 	TempFile file("exact_code");
 	sqlite3* db = open_writable(file.path());
 	create_datas_texts_schema(db);

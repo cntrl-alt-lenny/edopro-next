@@ -23,7 +23,7 @@
 namespace edopro_next::data {
 
 // Which searchable field(s) `SearchQuery::text` is matched against. Only
-// `name` and `text` (CardRecord's `text1`, i.e. `texts.desc`) are ever
+// `name` and `text` (CardRecord::text, sourced from `texts.desc`) are ever
 // searched - never the sixteen auxiliary strings, matching upstream's own
 // deck search (DeckBuilder::CheckCardText only ever reads
 // CardString::uppercase_name/uppercase_text, never CardString::desc[16] -
@@ -54,46 +54,73 @@ enum class NumericComparison {
 
 // `value` is intentionally the widest signed type here (not per-field
 // int32_t/uint32_t/uint64_t) so one comparison shape covers every numeric
-// CardRecord field this query supports; CardSearchIndex converts it to
-// each field's real stored type before comparing, using that field's own
-// comparison semantics (see card_search_index.h - this matters
-// specifically for `level`, whose uint32_t wraparound representation for
-// a negative packed value is source-faithful, not a bug - and for
-// `defense` on a Link monster, which this comparison never matches at
-// all, regardless of `value`).
+// CardRecord field this query supports. The comparison itself happens in
+// `std::int64_t`: CardSearchIndex widens the stored field - signed
+// (attack/defense) or unsigned (level/left_scale/right_scale) - into an
+// `std::int64_t` and compares that directly against `value`, unchanged.
+// It does not narrow `value` back down to the field's own native width
+// first, and a query value never silently wraps merely because the
+// stored field happens to be unsigned.
+//
+// This still reproduces `level`'s M3A-established uint32_t wraparound
+// behaviour faithfully, because widening an unsigned value into a wider
+// signed type preserves its numeric value (and therefore its relative
+// order against any other such widened value) exactly - a card whose
+// negative packed level decoded to the wrapped value 4294967289 widens
+// to the int64_t 4294967289, not to -7, so `NumericFilter{4294967289,
+// EqualTo}` matches it and `NumericFilter{-7, EqualTo}` does not -
+// pinned directly by card_search_index.cpp's tests, not left implicit.
+//
+// `defense` on a Link monster never matches any NumericFilter at all,
+// regardless of `value` or `comparison` - see card_search_index.h.
 struct NumericFilter {
 	std::int64_t value = 0;
 	NumericComparison comparison = NumericComparison::EqualTo;
 };
 
 // "This field's bits must include every bit set in `require_all_bits`" -
-// the same shape as upstream's own `(data.type & filter) != filter` /
-// `(data.link_marker & filter_marks) != filter_marks` checks
-// (gframe/deck_con.cpp), just named for what it does rather than left as
-// an inline bitwise expression. Works for any CardRecord bitmask field
-// this query exposes (`type`, `category`, `attribute`, `race`,
-// `link_marker`, `scope`) - it does not itself carry any meaning specific
-// to one field.
+// the same shape as upstream's own `(data.type & filter_type2) !=
+// filter_type2` (for a Monster) and `(data.link_marker & filter_marks) !=
+// filter_marks` checks (gframe/deck_con.cpp's CheckCardProperties), just
+// named for what it does rather than left as an inline bitwise
+// expression. Used for `type`, `link_marker`, and `scope` - see each
+// field's own comment below for why `category` and `race` deliberately do
+// NOT use this shape, despite also being CardRecord bitmask fields.
 struct BitmaskFilter {
 	std::uint32_t require_all_bits = 0;
 };
 
-struct BitmaskFilter64 {
-	std::uint64_t require_all_bits = 0;
+// "This field's bits must include at least one bit set in `any_bits`" -
+// upstream's own effect-category filter semantics, which are genuinely
+// different from the "all bits" shape above: `filter_effect` is built by
+// OR-ing together every checked category checkbox
+// (BUTTON_CATEGORY_OK/CheckCardProperties, gframe/deck_con.cpp), and the
+// actual check is `if(filter_effect && !(data.category & filter_effect))
+// return false;` - reject only when *none* of the selected bits are
+// present, i.e. keep a card matching *any* of them. Reproducing this as
+// a "require all" filter would silently exclude a card that has only one
+// of several selected effect categories, which upstream's own UI does
+// not do.
+struct AnyBitmaskFilter {
+	std::uint32_t any_bits = 0;
 };
 
 struct SearchQuery {
-	// Empty means "no text constraint" - every entry passing the static
-	// filters below matches, with MatchKind::NoTextQuery (see
-	// search_result.h). Non-empty text is normalized once
-	// (normalize_search_text, text_normalize.h) and split on whitespace
-	// into tokens, ALL of which must appear as substrings - in any order -
-	// of the field(s) `text_scope` selects. This is a deliberate departure
-	// from upstream's own token semantics (Utils::ContainsSubstring
-	// requires tokens in left-to-right, non-overlapping order - an
-	// artifact of how it is implemented with a single forward-advancing
-	// find(), not a stated design choice) - see card-search.md for the
-	// full reasoning.
+	// Empty, or containing only whitespace, means "no text constraint" -
+	// every entry passing the static filters below matches, with
+	// MatchKind::NoTextQuery (see search_result.h). A caller that lets a
+	// UI text field's live contents flow straight into this field (e.g.
+	// a search box the user has cleared, or briefly left as only spaces)
+	// gets the browse-everything behaviour, not "match nothing", without
+	// needing to trim/empty-check the field itself first. Otherwise, text
+	// is normalized once (normalize_search_text, text_normalize.h) and
+	// split on whitespace into tokens, ALL of which must appear as
+	// substrings - in any order - of the field(s) `text_scope` selects.
+	// This is a deliberate departure from upstream's own token semantics
+	// (Utils::ContainsSubstring requires tokens in left-to-right,
+	// non-overlapping order - an artifact of how it is implemented with a
+	// single forward-advancing find(), not a stated design choice) - see
+	// card-search.md for the full reasoning.
 	std::string text;
 	TextScope text_scope = TextScope::NameOrText;
 
@@ -112,9 +139,21 @@ struct SearchQuery {
 	std::optional<CardCode> exact_code;
 
 	std::optional<BitmaskFilter> type;
-	std::optional<BitmaskFilter> category;
+	// ANY of the selected category bits, not all of them - see
+	// AnyBitmaskFilter's own comment for the exact source behaviour this
+	// reproduces.
+	std::optional<AnyBitmaskFilter> category;
 	std::optional<std::uint32_t> attribute; // exact match, matching upstream's single-attribute selector
-	std::optional<BitmaskFilter64> race;
+	// Exact equality against CardRecord::race, not "contains this bit" -
+	// matching upstream's own single-race-selector check
+	// (`data.race != filter_race`, CheckCardProperties). A card with
+	// race == 0x3 does NOT match a query for race == 0x1, even though
+	// bit 0x1 is set within it - upstream's own UI only ever offers
+	// picking one race at a time (StartFilter's `filter_race = UINT64_C(1)
+	// << (selected - 1)`), and this field intentionally does not offer a
+	// "contains any/all of these race bits" mode upstream itself has no
+	// equivalent for.
+	std::optional<std::uint64_t> race;
 	std::optional<BitmaskFilter> link_marker;
 	std::optional<BitmaskFilter> scope; // raw CardRecord::scope bits - not a legality decision, see the file-level comment above
 

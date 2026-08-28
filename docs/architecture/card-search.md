@@ -157,19 +157,42 @@ per card, into `Entry::effective_setcodes` (§6), rather than resolving it per q
 
 | Upstream (`CheckCardProperties`) | `SearchQuery` equivalent |
 |---|---|
-| Monster type + subtype bitmask (`filter_type`/`filter_type2`) | `type` (`BitmaskFilter`) |
-| Race (`filter_race`) | `race` (`BitmaskFilter64`) |
+| Monster type + subtype bitmask (`filter_type`/`filter_type2`) | `type` (`BitmaskFilter`, all-bits) |
+| Race (`filter_race`) | `race` (`std::uint64_t`, exact match) |
 | Attribute (`filter_attrib`) | `attribute` (exact match) |
 | ATK/DEF/Level/Scale numeric filters | `attack`/`defense`/`level`/`left_scale`/`right_scale` (`NumericFilter`) |
-| Effect category (`filter_effect`) | `category` (`BitmaskFilter`) |
-| Link markers (`filter_marks`) | `link_marker` (`BitmaskFilter`) |
-| `ot`/scope, used both as data and as legality | `scope` (`BitmaskFilter`) - raw data only, see §0 |
+| Effect category (`filter_effect`) | `category` (`AnyBitmaskFilter`, any-of - **not** all-bits, §2.1) |
+| Link markers (`filter_marks`) | `link_marker` (`BitmaskFilter`, all-bits) |
+| `ot`/scope, used both as data and as legality | `scope` (`BitmaskFilter`, all-bits) - raw data only, see §0 |
 
 | Upstream policy (`CheckCardProperties`/`filter_lm`) | `SearchQuery` equivalent |
 |---|---|
 | `TYPE_TOKEN`/`SCOPE_HIDDEN` auto-exclusion, anime-mode gate | **None.** Not search - visibility policy. A caller wanting to exclude tokens can use `type` with a mask that excludes `TYPE_TOKEN`. |
 | `LFList` ban/limit/semi-limit counts, whitelist | **None.** Legality, explicitly out of scope (§0, CLAUDE.md). |
 | `LIMITATION_FILTER_OCG`/`TCG`/`ANIME`/`ILLEGAL`/etc. named scope categories | **None**, as named categories - `scope` exposes the same underlying bits as a raw filter, with no "this means legal" interpretation attached. |
+
+### 2.1 Operator-level audit: does the *comparison*, not just the field, match?
+
+Naming the right field is not the same as reproducing the right comparison against it -
+`CheckCardProperties` does not use the same kind of check for every bitmask field it reads.
+Audited individually, against the exact source lines:
+
+| Field | Upstream operator | `SearchQuery` operator | Classification |
+|---|---|---|---|
+| `type` | **Category-conditional**: all-bits for Monster (`(type & filter_type2) != filter_type2`); *exact value* for Spell/Trap (`type != filter_type2`); no sub-type filter at all for Skill (`gframe/deck_con.cpp:1194-1249`) | All-bits, uniformly | **Deliberate divergence.** Upstream's own operator already differs by card category - there is no single "the" upstream type operator to match. All-bits (the Monster case, upstream's most detailed one) is the uniform rule chosen; reproducing three different category-conditional operators for one field was judged not worth the complexity for this slice. |
+| `race` | **Exact equality** against one selected bit (`data.race != filter_race`, `:1198`) | Exact equality (`std::uint64_t`) | **Now correct.** Originally implemented as an all-bits filter (a genuine mismatch) - fixed; see ADR 0005. |
+| `attribute` | Exact equality (`data.attribute != filter_attrib`, `:1200`) | Exact equality | Matches. |
+| `attack`/`defense` | Six-way per-field scheme: exact / at-least / at-most / at-most-excluding-"?" / at-least-excluding-"?" / exactly-"?" (`:1202-1214`) | Three general comparisons (`EqualTo`/`AtLeast`/`AtMost`), §9 | **Deliberate simplification**, already reviewed - the "?" sentinel needs no dedicated case (§9). `defense`'s Link-monster exclusion (`:1212`'s `\|\| (type & TYPE_LINK)`) *is* reproduced exactly. |
+| `level` | Same six-way scheme (`:1216-1219`) | Three general comparisons | Same deliberate simplification as attack/defense. |
+| `left_scale`/`right_scale` | Same six-way scheme, plus a Pendulum-only gate (`:1222-1226`'s `\|\| !(type & TYPE_PENDULUM)`) | Three general comparisons; Pendulum-only gate reproduced exactly | Comparison count is the same deliberate simplification; the Pendulum gate matches exactly. |
+| `category`/effect | **Any-of**: `filter_effect && !(category & filter_effect)` rejects only when *none* of the selected bits are present (`:1250-1251`) | Any-of (`AnyBitmaskFilter`) | **Now correct.** Originally implemented as an all-bits filter (a genuine mismatch, the same class of bug as `race`) - fixed; see ADR 0005. |
+| `link_marker` | All-bits (`(link_marker & filter_marks) != filter_marks`, `:1252-1253`) | All-bits | Matches. |
+| `scope` (raw) | No direct upstream analogue - upstream only ever treats `ot` through the named `LIMITATION_FILTER_*` legality categories (`:1254-1322`), never as a plain "require these bits" search filter | All-bits, this module's own design | Not a reproduction of an upstream operator (there isn't one to reproduce) - a new capability, deliberately kept as raw data filtering rather than legality (§0). |
+| `setcodes` | Any-of, alias-resolved (`check_set_code`/`CardSetcodes`, `gframe/deck_con.cpp:1325-1340`) | Any-of, alias-resolved once at `rebuild()` (§1.5, §6) | Matches. |
+
+Two accidental mismatches were found and fixed by this audit (`race`, `category`); everything
+else was either already correct or is a previously-reviewed, documented simplification kept
+as-is.
 
 ---
 
@@ -209,17 +232,25 @@ See ADR 0005, Decision 1 for the fuller reasoning.
 
 `data/include/edopro_next/data/search_query.h`:
 
-- **`text` / `text_scope`.** Empty `text` means no text constraint at all - every entry
-  passing the other filters matches (§8's `NoTextQuery` tier; see §11 for why this, not "no
-  results," was chosen). Non-empty `text` is normalized once (§7) and split on whitespace
-  into tokens; see §7 for exactly how tokens are matched. `TextScope` is `Name`/`Text`/
-  `NameOrText` - never the sixteen auxiliary strings, matching §1.3.
+- **`text` / `text_scope`.** Empty, or *only whitespace* (§11), means no text constraint at
+  all - every entry passing the other filters matches (§8's `NoTextQuery` tier; see §11 for
+  why this, not "no results," was chosen). Otherwise `text` is normalized once (§7) and
+  split on whitespace into tokens; see §7 for exactly how tokens are matched. `TextScope` is
+  `Name`/`Text`/`NameOrText` - never the sixteen auxiliary strings, matching §1.3.
 - **`exact_code`.** A ranking hint, not a filter - see §8 and ADR 0005, Decision 3.
-- **`type`/`category`/`link_marker`/`scope`: `BitmaskFilter{require_all_bits}`.** "This
-  field's bits include every bit in `require_all_bits`" - the same shape as upstream's own
-  `(data.type & filter) != filter` checks, named for what it does.
-- **`race`: `BitmaskFilter64`.** Same shape, 64-bit, matching `CardRecord::race`'s real
-  width (`docs/architecture/card-database.md`§2.4).
+- **`type`/`link_marker`/`scope`: `BitmaskFilter{require_all_bits}`.** "This field's bits
+  include every bit in `require_all_bits`" - the same shape as upstream's own
+  `(data.link_marker & filter_marks) != filter_marks` check for `link_marker`, and the
+  Monster-category case of `type`'s own condition (§2.1) - named for what it does.
+- **`category`: `AnyBitmaskFilter{any_bits}`.** "This field's bits include *at least one*
+  bit in `any_bits`" - a deliberately different shape from `BitmaskFilter`, matching
+  upstream's own any-of effect-category semantics exactly (§2.1) - **not** the same
+  "require all" rule `type`/`link_marker`/`scope` use, despite `category` also being a
+  `CardRecord` bitmask field.
+- **`race`: `std::optional<std::uint64_t>`, exact equality.** Matches `CardRecord::race`'s
+  real 64-bit width (`docs/architecture/card-database.md`§2.4) *and* upstream's own
+  single-value equality check (§2.1) - deliberately not a bitmask-containment filter, since
+  upstream's own UI only ever selects one race value at a time.
 - **`attribute`: exact match**, matching upstream's own single-attribute selector.
 - **`attack`/`defense`/`level`/`left_scale`/`right_scale`: `NumericFilter{value, comparison}`.**
   Three comparisons - `EqualTo`/`AtLeast`/`AtMost` - not upstream's six-way per-field
@@ -294,10 +325,39 @@ Working in UTF-8 rather than `wchar_t` sidesteps a real platform difference in u
 own representation (`wchar_t` is 16 bits on Windows, 32 on Linux) without changing any
 result: every codepoint the fold table cares about fits in one UTF-16 code unit, so upstream's
 narrower Windows `wchar_t` and this module's `char32_t` agree on every input regardless.
-Malformed UTF-8 (a stray continuation byte, a truncated sequence) is not rejected - the
-leading byte is treated as its own one-byte "codepoint" and decoding continues, so this
-function can never throw or loop, which matters because it sits on a public boundary that
-does not get to assume its input was pre-validated.
+
+### 7.1 Malformed UTF-8 is preserved byte-for-byte, never folded
+
+`decode_utf8` (`text_normalize.cpp`) only accepts a byte sequence that is *strictly
+canonical* UTF-8 - not merely "the right number of bytes, each shaped like a continuation
+byte." The distinction matters: a shape-only check accepts overlong encodings (the same
+codepoint spelled with more bytes than necessary), UTF-16 surrogate codepoints
+(U+D800-U+DFFF), and values beyond Unicode's own ceiling (past U+10FFFF) - all of which are
+malformed, not real scalar values, but which a shape-only decoder would still hand to
+`fold_codepoint()` as if they were. This is exactly the same class of bug as the
+truncated/stray-byte case below, generalized: **any** malformed byte's raw numeric value can
+coincidentally land inside the fold table's ranges, so the fix has to be "never fold anything
+that was not validly decoded," not "handle this one malformed shape correctly."
+
+The exact rule (Unicode's own "Well-Formed UTF-8 Byte Sequences" table): a sequence is
+accepted only if its length matches its lead byte, every continuation byte is `0x80-0xBF`,
+*and* the **second** byte additionally satisfies a lead-byte-specific restriction that rules
+out overlong/surrogate/out-of-range values - `C0`/`C1` are never valid leads at all; `E0`'s
+second byte must be `A0-BF` (not `80-9F`, which would be overlong); `ED`'s second byte must
+be `80-9F` (not `A0-BF`, which would be a surrogate); `F0`'s second byte must be `90-BF` (not
+`80-8F`, overlong); `F4`'s second byte must be `80-8F` (not `90-BF`, beyond U+10FFFF); and no
+codepoint's encoding may begin with `F5-FF` at all.
+
+Whenever a byte does not begin (or continue) a sequence satisfying all of this, `pos`
+advances by exactly one byte and that byte is copied to the output completely unchanged -
+never rejected with an error, never replaced with U+FFFD, and never run through
+`fold_codepoint()`. `decode_utf8`'s loop always makes forward progress on any input, so
+`normalize_search_text` always terminates and covers every input byte exactly once, either
+folded (valid, canonical UTF-8) or copied through raw (everything else) - there is no
+explicit parse-error result, though, like any function returning a `std::string`, allocation
+failure can still throw `std::bad_alloc`.
+
+### 7.2 Query tokenization
 
 Query text is normalized once, then split on ASCII whitespace into tokens
 (`whitespace_tokens`, `card_search_index.cpp`) - deliberately simpler than
@@ -309,6 +369,9 @@ requirement in upstream's version is traceable to *how* `ContainsSubstring` happ
 implemented (a single forward-advancing `find()`), not to any stated intent, and because
 order-independent "all these words, anywhere" matches ordinary search-box expectations more
 directly than upstream's implicit left-to-right requirement would.
+
+A query that normalizes and tokenizes to *zero* tokens - an empty string, or one containing
+only whitespace - carries no text constraint at all; see §11.
 
 ---
 
@@ -356,16 +419,28 @@ this module knowing what "?" means; a caller specifically wanting only "?" cards
 `left_scale`/`right_scale` only ever match a card with `TYPE_PENDULUM` set (`0x1000000`),
 matching `CheckCardProperties`'s own `|| !(data.type & TYPE_PENDULUM)` exclusion.
 
+### 9.1 `level`'s wraparound, and exactly what `NumericFilter` compares
+
 `level`'s stored type is `uint32_t`, and a negative packed level wraps to a large unsigned
 value rather than staying negative - a deliberate, source-faithful M3A decision
 (`docs/architecture/card-database.md`§2.3), not something this module treats specially.
-Comparing that wrapped value against a caller's `NumericFilter` (widened to `int64_t`,
-which preserves the exact ordering a `uint32_t`-vs-`uint32_t` comparison would give, since
-widening an unsigned value into a larger signed type never changes its relative order) means
-a huge wrapped level participates in an `AtLeast` filter exactly as it would for upstream's
-own `uint32_t`-typed comparison - `data/tests/test_card_search.cpp`'s
-`a_negative_encoded_level_participates_as_a_huge_unsigned_value` pins this directly, the same
-case `card-database.md`'s own `-249 -> 4294967289` example uses.
+
+The exact comparison contract, stated precisely because it is easy to describe
+approximately and get wrong: `passes_numeric` (`card_search_index.cpp`) widens the stored
+field - signed for `attack`/`defense`, unsigned for `level`/`left_scale`/`right_scale` - into
+an `std::int64_t`, and compares that directly against `NumericFilter::value`, itself an
+`std::int64_t`, with no further conversion in either direction. A query value is **never**
+narrowed back down to the field's native width, and is **never** reinterpreted as unsigned
+merely because the field happens to be. This still reproduces `level`'s wraparound behaviour
+faithfully, precisely because widening an unsigned value into a wider signed type preserves
+its numeric value (and therefore its ordering against anything else widened the same way)
+exactly: a card whose negative packed level decoded to the wrapped value `4294967289` widens
+to the `int64_t` `4294967289`, not to `-7` - so `NumericFilter{4294967289, EqualTo}` matches
+it and `NumericFilter{-7, EqualTo}` does not, pinned directly by
+`data/tests/test_card_search.cpp`'s
+`level_equal_to_matches_the_actual_wrapped_value_not_the_original_negative_one`, alongside
+the pre-existing `a_negative_encoded_level_participates_as_a_huge_unsigned_value` for the
+`AtLeast` case - the same `-249 -> 4294967289` example `card-database.md` itself uses.
 
 ---
 
@@ -423,6 +498,19 @@ by passing a `SearchQuery` with only static filters set and no `text`, rather th
 separate "list everything" code path alongside `search()`.
 `empty_text_query_returns_every_card_as_no_text_query` (`data/tests/test_card_search.cpp`)
 pins this as tested contract.
+
+**A query of only whitespace is treated identically**, not as a separate case: `search()`
+normalizes and tokenizes `text` unconditionally, and checks whether the *token list* came out
+empty, rather than checking `text.empty()` directly (`card_search_index.cpp`'s
+`has_text_query`). Whitespace normalizes to whitespace (untouched by the fold table, §7) and
+tokenizes to zero tokens, so `"   "` reaches exactly the same `NoTextQuery` path as `""` -
+this matters because a real search box's live contents can easily be transiently
+whitespace-only (a user who has cleared the field, or is mid-way through typing after a
+leading space), and that should read as "browse everything," not as a query that happens to
+match every card only because there were no tokens left to fail to find.
+`whitespace_only_text_query_behaves_like_an_empty_query`
+(`data/tests/test_card_search.cpp`) pins this as byte-for-byte identical to the empty-query
+result, not merely "also returns everything."
 
 ---
 

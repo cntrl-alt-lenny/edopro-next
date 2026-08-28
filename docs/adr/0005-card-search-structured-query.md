@@ -114,12 +114,12 @@ have (Decision 2). `exact_code` needed its own, independently reasoned semantics
 
 `exact_code` naming a code that does not exist, or that fails `text`/another active filter,
 contributes nothing and excludes nothing else - the rest of the query still runs normally.
-`data/tests/test_card_search.cpp`'s `exact_code_restricts_to_that_one_code_and_ranks_it_
-first`, `exact_code_for_a_missing_code_does_not_narrow_an_otherwise_unconstrained_query`, and
-`exact_code_for_a_missing_code_with_a_non_matching_text_query_matches_nothing` pin these
-three cases directly - the corrected shape survived the first, wrong implementation being
-caught by exactly the deliberately-adversarial test suite this project's tests are meant to
-be.
+`data/tests/test_card_search.cpp`'s `exact_code_promotes_the_matching_code_without_
+restricting_results`, `exact_code_for_a_missing_code_does_not_narrow_an_otherwise_
+unconstrained_query`, and `exact_code_for_a_missing_code_with_a_non_matching_text_query_
+matches_nothing` pin these three cases directly - the corrected shape survived the first,
+wrong implementation being caught by exactly the deliberately-adversarial test suite this
+project's tests are meant to be.
 
 ## Status
 

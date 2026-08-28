@@ -19,13 +19,20 @@ namespace edopro_next::data {
 // any Latin-1/Latin Extended character not in upstream's own table, such
 // as Æ or ß) passes through unchanged, matching upstream's real observable
 // behaviour - not a Unicode-complete case-folding implementation, and not
-// meant to be one. Malformed UTF-8 bytes (a stray continuation byte, a
-// truncated multi-byte sequence) are copied through byte-for-byte
-// unchanged rather than rejected or folded - a malformed byte's raw
-// numeric value is never run through the fold table, even though it can
-// coincidentally fall inside one of that table's ranges (see the .cpp) -
-// so this function never fails, never throws, and never turns invalid
-// input into different invalid output.
+// meant to be one. Any byte sequence that is not strictly canonical,
+// well-formed UTF-8 (a stray continuation byte, a truncated multi-byte
+// sequence, an overlong encoding, a UTF-16 surrogate codepoint, anything
+// beyond U+10FFFF) is copied through byte-for-byte unchanged rather than
+// rejected, replaced, or folded - such a byte's raw numeric value is
+// never run through the fold table, even though it can coincidentally
+// fall inside one of that table's ranges (see the .cpp). There is no
+// explicit parse-error result or exception path for malformed input -
+// this function always returns a string covering every input byte
+// exactly once, either folded (valid, canonical UTF-8) or copied through
+// unchanged (everything else). That is a statement about how malformed
+// input is *handled*, not a claim that the function cannot throw at all
+// - like any function returning a std::string, an allocation failure can
+// still throw std::bad_alloc.
 std::string normalize_search_text(std::string_view utf8);
 
 } // namespace edopro_next::data

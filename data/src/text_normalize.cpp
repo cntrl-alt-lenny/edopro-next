@@ -49,51 +49,105 @@ char32_t fold_codepoint(char32_t c) {
 }
 
 // Decodes one UTF-8 codepoint starting at `pos`, advancing `pos` past it
-// and returning true - unless the byte at `pos` cannot start a valid
-// sequence (a stray continuation byte) or the sequence it starts is
-// truncated by the end of `text`, in which case `pos` still advances by
-// exactly one (so this always makes forward progress - normalize_
-// search_text never throws and never loops, on any input, which matters
-// because it is a public boundary function, not one that can assume its
-// input was already validated) but `cp` is left unset and false is
-// returned: the raw byte's numeric value is not a real codepoint and
-// must not be run through fold_codepoint() (whose ranges are codepoint
-// values, some of which a raw non-ASCII byte can numerically collide
-// with by coincidence - e.g. the lead byte 0xC3/195 of a truncated
-// two-byte sequence falls inside the table's 192-197 "A" range despite
-// never having been decoded as anything) - see normalize_search_text,
-// which copies such a byte through unchanged instead.
+// and returning true - only when the bytes at `pos` are a strictly
+// canonical, well-formed UTF-8 encoding (Unicode's own "Well-Formed UTF-8
+// Byte Sequences" table): the right number of continuation bytes, each in
+// 0x80..0xBF, AND the correct per-lead-byte restriction on the *second*
+// byte's range that rules out overlong encodings (C0/C1 as leads; E0
+// followed by 80..9F; F0 followed by 80..8F), UTF-16 surrogate codepoints
+// (ED followed by A0..BF, i.e. U+D800..U+DFFF), and codepoints beyond
+// Unicode's own ceiling (F4 followed by 90..BF; any lead F5..FF at all).
+// Accepting a shape-only check (right byte count, each a generic
+// continuation byte) is not enough - it would accept exactly these
+// non-canonical sequences, whose decoded numeric value can still
+// coincidentally land inside fold_codepoint()'s table (this bug shipped
+// once already for truncated/stray bytes - see the git history - and a
+// shape-only check reopens the same class of bug for overlong/surrogate/
+// out-of-range sequences instead).
+//
+// On any sequence this does not accept, `pos` advances by exactly one
+// byte (so this always makes forward progress - normalize_search_text's
+// loop always terminates, on any input) and `cp` is left unset: the raw
+// byte's numeric value is not a real codepoint and must never reach
+// fold_codepoint() - see normalize_search_text, which copies such a byte
+// through unchanged instead.
 bool decode_utf8(std::string_view text, std::size_t& pos, char32_t& cp) {
-	const auto byte = [&](std::size_t i) { return static_cast<unsigned char>(text[i]); };
-	const unsigned char lead = byte(pos);
-	const auto continuation = [&](std::size_t i) {
-		return pos + i < text.size() && (byte(pos + i) & 0xC0) == 0x80;
+	const auto byte_at = [&](std::size_t i) -> int {
+		return pos + i < text.size() ? static_cast<unsigned char>(text[pos + i]) : -1;
 	};
+	const unsigned char lead = static_cast<unsigned char>(text[pos]);
+
 	if(lead < 0x80) {
 		cp = lead;
 		++pos;
 		return true;
 	}
-	if((lead & 0xE0) == 0xC0 && continuation(1)) {
-		cp = (static_cast<char32_t>(lead & 0x1F) << 6) | (byte(pos + 1) & 0x3F);
-		pos += 2;
-		return true;
+
+	// How many bytes this lead byte claims, and the valid range for the
+	// second byte specifically - see the canonical ranges cited above.
+	// Any lead not covered here (0x80..0xC1: a stray continuation byte or
+	// an overlong two-byte lead; 0xF5..0xFF: beyond any valid lead) is
+	// unconditionally malformed.
+	int length = 0;
+	int second_lo = 0x80;
+	int second_hi = 0xBF;
+	if(lead >= 0xC2 && lead <= 0xDF) {
+		length = 2;
+	} else if(lead == 0xE0) {
+		length = 3;
+		second_lo = 0xA0; // rules out the overlong E0 80..9F range
+	} else if((lead >= 0xE1 && lead <= 0xEC) || (lead >= 0xEE && lead <= 0xEF)) {
+		length = 3;
+	} else if(lead == 0xED) {
+		length = 3;
+		second_hi = 0x9F; // rules out the UTF-16 surrogate range
+	} else if(lead == 0xF0) {
+		length = 4;
+		second_lo = 0x90; // rules out the overlong F0 80..8F range
+	} else if(lead >= 0xF1 && lead <= 0xF3) {
+		length = 4;
+	} else if(lead == 0xF4) {
+		length = 4;
+		second_hi = 0x8F; // rules out codepoints beyond U+10FFFF
+	} else {
+		++pos;
+		return false;
 	}
-	if((lead & 0xF0) == 0xE0 && continuation(1) && continuation(2)) {
+
+	const int second = byte_at(1);
+	if(second < second_lo || second > second_hi) {
+		++pos;
+		return false;
+	}
+	int third = 0;
+	if(length >= 3) {
+		third = byte_at(2);
+		if(third < 0x80 || third > 0xBF) {
+			++pos;
+			return false;
+		}
+	}
+	int fourth = 0;
+	if(length == 4) {
+		fourth = byte_at(3);
+		if(fourth < 0x80 || fourth > 0xBF) {
+			++pos;
+			return false;
+		}
+	}
+
+	if(length == 2) {
+		cp = (static_cast<char32_t>(lead & 0x1F) << 6) | static_cast<char32_t>(second & 0x3F);
+	} else if(length == 3) {
 		cp = (static_cast<char32_t>(lead & 0x0F) << 12) |
-			 (static_cast<char32_t>(byte(pos + 1) & 0x3F) << 6) | (byte(pos + 2) & 0x3F);
-		pos += 3;
-		return true;
-	}
-	if((lead & 0xF8) == 0xF0 && continuation(1) && continuation(2) && continuation(3)) {
+			 (static_cast<char32_t>(second & 0x3F) << 6) | static_cast<char32_t>(third & 0x3F);
+	} else {
 		cp = (static_cast<char32_t>(lead & 0x07) << 18) |
-			 (static_cast<char32_t>(byte(pos + 1) & 0x3F) << 12) |
-			 (static_cast<char32_t>(byte(pos + 2) & 0x3F) << 6) | (byte(pos + 3) & 0x3F);
-		pos += 4;
-		return true;
+			 (static_cast<char32_t>(second & 0x3F) << 12) |
+			 (static_cast<char32_t>(third & 0x3F) << 6) | static_cast<char32_t>(fourth & 0x3F);
 	}
-	++pos;
-	return false;
+	pos += static_cast<std::size_t>(length);
+	return true;
 }
 
 void encode_utf8(char32_t cp, std::string& out) {
