@@ -123,6 +123,29 @@ fails to load does not stop the remaining paths from being attempted (matching u
 per-file resilience), but every failure is collected into `lastError` - never silently dropped.
 No `.cdb` is bundled, generated, or downloaded by this PR.
 
+### 4.1 `loaded()`'s contract: tracked explicitly, never derived from `cardCount`
+
+External review found `loaded()`'s documented contract and its implementation disagreed.
+`Q_PROPERTY(bool loaded ...)`'s own doc comment said "true once at least one database file has
+loaded successfully," but the implementation was `database_.size() > 0` - a card *count*, not a
+load-attempt outcome. `CardDatabase::LoadResult::rows_loaded` is explicitly documented as "0 on
+failure," which is a narrower claim than "0 means failure": a syntactically valid, schema-correct
+`.cdb` can legitimately contain zero rows, and loading one is a real success that the old
+implementation reported as `loaded() == false` - indistinguishable from never having supplied a
+path at all.
+
+Fixed by tracking success explicitly: `loadDatabases()` now sets a private `loaded_` member from
+whether *any* of the paths in that call had `result.ok == true`, independently of how many rows
+ended up in `database_`. `cardCount` is unchanged (`database_.size()`, still exactly what it
+says). The two properties can now genuinely disagree in one specific, correct way: a lone,
+valid-but-empty `.cdb` gives `loaded() == true` with `cardCount() == 0` - `hasCatalog` then shows
+the real search UI (an honestly empty results list) rather than the "no database" message, since
+a database *was* successfully supplied, it simply has nothing searchable in it.
+`emptyButValidDatabaseCountsAsLoaded` and `partialSuccessAcrossMultiplePathsStillCountsAsLoaded`
+(`ui/tests/test_deckbuilder.cpp`) pin the corrected contract, including that `loadDatabases()`'s
+own return value keeps its separate, narrower meaning ("every requested path succeeded") - a
+partial success still returns `false` from `loadDatabases()` while `loaded()` is `true`.
+
 ---
 
 ## 5. Search-index rebuild lifecycle
@@ -191,7 +214,15 @@ could drift from the real one.
 
 - **`addCard(code, section)`** appends to the end of the named section's vector. No dedup, no
   reorder, no cap - three calls with the same code produce three vector entries, matching
-  `deck-model.md`§1's "order and multiplicity both matter" invariant.
+  `deck-model.md`§1's "order and multiplicity both matter" invariant. A `code` of `0`
+  (`CardCode::None`, `data/`'s own "not a real card" sentinel) is silently rejected rather than
+  appended - a small, deliberate guard on this public `Q_INVOKABLE` surface, audited during a
+  follow-up review pass: neither real UI path that can add a card can trigger this today
+  (`addSelectedResultTo()` only ever offers a code `CardSearchIndex` actually found in a loaded
+  `CardDatabase`, which itself rejects a code-`0` row as a load failure; `parse_ydk` excludes a
+  code-`0` line from the `Deck` it produces - `deck-model.md`§5), but the guard keeps the
+  invariant true from *any* caller of the public API, not only the shipped QML.
+  `addCardSilentlyRejectsCardCodeZero` (`ui/tests/test_deckbuilder.cpp`) pins it.
 - **`removeAt(section, index)`** erases exactly that one vector element. Removing one copy of
   a triplicated code leaves the other two, in their original relative order.
 - **The caller always names the section explicitly.** `DeckController` has no logic anywhere
@@ -207,6 +238,27 @@ the same code to all three sections keeps it in all three, rather than a hypothe
 Fusion/Synchro/Xyz/Link check moving it to Extra the way upstream's separate `LoadDeck`
 reclassification step would (`deck-model.md`§3) - a step this slice does not implement or call,
 matching `edopro_next_deck` itself.
+
+### 7.0.1 A small robustness audit, two items resolved by inspection alone
+
+A follow-up review pass asked for a targeted audit of a few edge cases without speculatively
+redesigning anything already sound. Two were already correct by inspection, and are recorded
+here rather than given new code or tests for the sake of it:
+
+- **An invalid `Section` value crossing the QML boundary.** `DeckController::Section` is a
+  three-value `Q_ENUM`, and every real call site names one of `DeckController.Main`/`.Extra`/
+  `.Side` explicitly - QML has no path that constructs an out-of-range value. `sectionVector()`/
+  `modelFor()`'s own `switch` statements already fail safe regardless: an unmatched value falls
+  through to `deck_.main`/`mainModel_` (marked `// unreachable` in the source) rather than
+  undefined behaviour or a crash. Left as-is; the existing fallback is defensive enough for a
+  case the real UI cannot reach in the first place.
+- **Catalog replacement while a deck entry is selected.** The preview pane's reload-safety fix
+  (§8.2) is not specific to search-result selections - `entry: { cardCatalog.cardCount; ... }`
+  reacts to *any* catalog reload for whatever `previewCode` currently is, and `selectDeckEntry()`
+  populates `previewCode`/`hasPreview` identically regardless of whether the selection came from
+  a deck section or a search result. A deck-entry-originated preview already refreshes correctly
+  on a catalog reload through the same mechanism §8.2 already pins for the search-result case;
+  no separate code path exists for this to diverge through.
 
 ### 7.1 Selection: one shared notion of "what is selected"
 
@@ -272,6 +324,60 @@ need to keep re-asserting; it only has to win the very first, one-time default b
 selection - imperative or otherwise - ever happens. `populatingASectionNeverAutoSelectsItsFirstRow`
 and `populatingSearchResultsNeverAutoSelectsTheFirstRow` (`ui/tests/test_deckbuilder_screen.cpp`)
 pin both list types directly.
+
+### 7.1.2 Keyboard removal bypassed the whole selection contract
+
+A second-round external review finding, in the same family as §7.1: `DeckSectionList.qml`'s
+`Keys.onDeletePressed`/Backspace handlers called `deckController.removeAt(root.section,
+currentIndex)` directly - a completely separate code path from the "Remove selected" button's
+`removeSelectedDeckEntry()`, which removes the row *and then* calls `clearAllSelection()`. The
+keyboard path removed the row but left `selectedSection`/`selectedDeckRow` pointing at
+now-stale/shifted state, `hasPreview` still `true`, `previewCode` still showing the just-deleted
+card, and "Remove selected" still enabled against a row that no longer represents what was
+selected.
+
+Fixed by making removal itself, not just its cleanup, single-owner: `DeckSectionList` no longer
+calls `deckController` at all - `Keys.onDeletePressed`/Backspace now emit a presentation-level
+`removeRequested(int row)` signal, and `DeckBuilderScreen`'s own `removeDeckEntry(section, row)`
+(validates the row against the model's current bounds, calls `deckController.removeAt()`, then
+`clearAllSelection()`) is the *only* function that ever performs a removal. Both the button
+(`removeSelectedDeckEntry()`, now a two-line wrapper around `removeDeckEntry()`) and every
+`DeckSectionList`'s `onRemoveRequested` handler call it - mouse and keyboard can no longer
+diverge in what cleanup happens afterward, because there is only one removal path left to
+diverge from.
+
+`ui/tests/test_deckbuilder_screen.cpp`'s `keyboardRemovalOneRowSectionClearsSelection`/
+`keyboardRemovalMultiRowSectionRemovesOnlyTheIntendedCard` emit `removeRequested` directly on the
+real `DeckSectionList` instance - the exact signal the real key handlers emit - rather than
+simulating a literal keypress (fragile under the offscreen QPA platform used for testing, which
+has no real window-manager focus semantics) or exercising a parallel test-only path.
+
+### 7.1.3 A stale search-result selection could survive a model reset
+
+A third finding: `SearchResultsModel::refresh()` (`search_results_model.cpp`) does a full
+`beginResetModel()`/`endResetModel()` for every query-text change *and* every catalog reload.
+`resultsList.onCurrentIndexChanged` (§7.1) is not enough on its own to catch this: Qt Quick's
+`ListView` does not reliably re-fire `currentIndexChanged` merely because a reset replaced the
+*data* at an unchanged numeric index - only when the index number itself changes. A selected
+result could therefore survive a query change (or a catalog reload) as the same `currentIndex`,
+now silently pointing at a completely different card, with the old card's name/stats still shown
+in the preview pane and `hasPreview` still `true`.
+
+Fixed using a signal `SearchResultsModel` already exposed for exactly this purpose, just
+unconnected until now: `resultsChanged()` fires once at the end of every `refresh()`, for any
+reason (`Q_PROPERTY(int resultCount ... NOTIFY resultsChanged)` already relied on this).
+`DeckBuilderScreen.qml` connects a `Connections { target: searchResults }` to it: whenever it
+fires while a search result is currently selected (`selectedResultRow >= 0`), the selection and
+preview are cleared. The guard on `selectedResultRow >= 0` is deliberate: it leaves a *deck*
+selection (`selectedSection`/`selectedDeckRow`) completely untouched, since a search-results
+refresh has nothing to do with those, and clearing them too would be exactly the kind of
+"accidentally clear a valid deck-section selection" the task's own instructions single out as a
+mistake to avoid.
+
+`ui/tests/test_deckbuilder_screen.cpp` adds three adversarial cases exercising state *after* a
+selection has already broken the pristine `currentIndex: -1` default (§7.1.1's own tests only
+cover the state before any selection ever happens): `selectedResultClearsOnDifferentQuery`,
+`selectedResultClearsOnZeroResultQuery`, `selectedResultClearsOnCatalogReplacement`.
 
 ---
 
@@ -369,7 +475,12 @@ same failure, and one that also discarded the actual error message a user would 
 understand what went wrong. `DeckBuilderScreen.saveOrSaveAs()` fixes the routing itself: it
 checks `deckController.currentPath.length === 0` *before* calling `saveDeck()` at all, so Save
 As only ever appears for a deck that has genuinely never been saved anywhere, and any other
-`saveDeck()` failure is left entirely to the existing `lastError` banner.
+`saveDeck()` failure is left entirely to the existing `lastError` banner. `saveToPath()`'s own
+failure branch (`deck_controller.cpp`) never touches `currentPath_` at all - audited during a
+follow-up review pass and confirmed already correct by inspection, since the failure path simply
+returns before reaching the line that would update it - so a failed Save As to a bad path cannot
+corrupt what a subsequent plain Save targets; `dirtyStateTransitionsMatchContract`
+(`ui/tests/test_deckbuilder.cpp`) now asserts this directly rather than only the dirty flag.
 
 ### 9.1 Failed load leaves the current deck untouched
 
