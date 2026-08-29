@@ -39,6 +39,7 @@ Flickable {
         Text {
             Layout.fillWidth: true
             text: "Card code " + root.entry.code
+            elide: Text.ElideRight
             font.family: Theme.fontFamilyMono
             font.pointSize: Theme.textCaption
             color: Theme.textTertiary
@@ -119,7 +120,13 @@ Flickable {
                 color: Theme.textTertiary
             }
             Text {
-                text: root.entry.attribute + " / " + root.entry.race
+                // raceDisplay, never the raw `race` value - `race` is a
+                // 64-bit bitmask and QML numbers are doubles; concatenating
+                // it directly does not reliably reproduce its exact digits
+                // for high-bit values (confirmed empirically - see
+                // card_entry.h). raceDisplay is formatted once in C++ from
+                // the real uint64_t, with no double round-trip.
+                text: root.entry.attribute + " / " + root.entry.raceDisplay
                 font.family: Theme.fontFamilyMono
                 font.pointSize: Theme.textBody
                 color: Theme.textSecondary

@@ -47,15 +47,53 @@ Item {
         return null;
     }
 
+    // ---- Selection: one coherent notion of "what is selected", shared
+    // across the search results list and all three deck-section lists.
+    //
+    // Each DeckSectionList's ListView.currentIndex (exposed via its
+    // `currentIndex` alias) and resultsList's own currentIndex are all
+    // driven imperatively from here - never from a declarative binding
+    // back to selectedSection/selectedDeckRow/selectedResultRow. A
+    // declarative `currentIndex: root.selectedResultRow`-style binding is
+    // permanently broken the first time a click imperatively assigns to
+    // that same currentIndex (a real, established QML behaviour: writing
+    // to a property removes its earlier binding), so relying on one here
+    // would silently stop clearing a list's visual highlight after the
+    // first click - exactly the kind of stale-highlight bug this contract
+    // exists to prevent. Selecting anything always clears every other
+    // selection first, so at most one row is ever highlighted at a time.
+    function clearAllSelection() {
+        selectedResultRow = -1;
+        selectedSection = -1;
+        selectedDeckRow = -1;
+        hasPreview = false;
+        resultsList.currentIndex = -1;
+        mainList.currentIndex = -1;
+        extraList.currentIndex = -1;
+        sideList.currentIndex = -1;
+    }
+
     function selectDeckEntry(section, row) {
+        // A list's own currentIndex can become -1 on its own (this screen
+        // clearing it programmatically to deselect that list, or a model
+        // reset leaving nothing current) - that is not a new selection to
+        // act on, just the list reporting its own now-empty state; ignore
+        // it here rather than clobbering whatever this screen just set.
+        if (row < 0)
+            return;
+        const model = sectionModel(section);
+        if (!model || row >= model.rowCount())
+            return;
+        selectedResultRow = -1;
+        resultsList.currentIndex = -1;
         selectedSection = section;
         selectedDeckRow = row;
-        const model = sectionModel(section);
-        if (model && row >= 0 && row < model.rowCount()) {
-            previewCode = model.data(model.index(row, 0), DeckSectionModel.CardCodeRole);
-            previewKnown = model.data(model.index(row, 0), DeckSectionModel.KnownRole);
-            hasPreview = true;
-        }
+        if (section !== DeckController.Main) mainList.currentIndex = -1;
+        if (section !== DeckController.Extra) extraList.currentIndex = -1;
+        if (section !== DeckController.Side) sideList.currentIndex = -1;
+        previewCode = model.data(model.index(row, 0), DeckSectionModel.CardCodeRole);
+        previewKnown = model.data(model.index(row, 0), DeckSectionModel.KnownRole);
+        hasPreview = true;
     }
 
     function addSelectedResultTo(section) {
@@ -68,7 +106,27 @@ Item {
         if (selectedSection < 0 || selectedDeckRow < 0)
             return;
         deckController.removeAt(selectedSection, selectedDeckRow);
-        selectedDeckRow = -1;
+        // Rather than guess a "next" row to land on (which, after a
+        // removal, may not even refer to a sensible neighbour - e.g. the
+        // section can now be empty), clear selection completely: a
+        // deterministic, unambiguous state that can never show a preview
+        // silently mismatched with what is actually still selected.
+        clearAllSelection();
+    }
+
+    function saveOrSaveAs() {
+        // saveDeck() returning false means two different things -
+        // "there is no current path yet" and "there is a path, but
+        // writing it genuinely failed" - and only the first should ever
+        // prompt Save As. Conflating them would turn a real disk/
+        // permission error into a confusing, unexplained Save As dialog
+        // instead of the actual error deckController.lastError already
+        // surfaces in the deck pane.
+        if (deckController.currentPath.length === 0) {
+            saveAsDialog.open();
+        } else {
+            deckController.saveDeck();
+        }
     }
 
     function confirmThen(action) {
@@ -107,10 +165,7 @@ Item {
     Shortcut {
         sequence: "Ctrl+S"
         enabled: root.isActiveScreen
-        onActivated: {
-            if (!deckController.saveDeck())
-                saveAsDialog.open();
-        }
+        onActivated: root.saveOrSaveAs()
     }
     Shortcut {
         sequence: "Ctrl+Shift+S"
@@ -120,11 +175,7 @@ Item {
     Shortcut {
         sequence: "Escape"
         enabled: root.isActiveScreen
-        onActivated: {
-            selectedResultRow = -1;
-            selectedDeckRow = -1;
-            selectedSection = -1;
-        }
+        onActivated: root.clearAllSelection()
     }
 
     FileDialog {
@@ -132,7 +183,13 @@ Item {
         title: "Open deck"
         nameFilters: ["Yu-Gi-Oh! deck (*.ydk)", "All files (*)"]
         fileMode: FileDialog.OpenFile
-        onAccepted: deckController.loadDeck(selectedFile)
+        // Only on a successful load - a failure leaves the current deck
+        // (and therefore its selection/preview) genuinely unchanged, so
+        // there is nothing stale to clear.
+        onAccepted: {
+            if (deckController.loadDeck(selectedFile))
+                root.clearAllSelection();
+        }
     }
     FileDialog {
         id: saveAsDialog
@@ -180,164 +237,221 @@ Item {
         }
     }
 
-    // ---- No catalog loaded: an honest empty state, not a broken screen -
-    ColumnLayout {
-        anchors.centerIn: parent
-        visible: !root.hasCatalog
-        width: Math.min(parent.width - Theme.space7 * 2, 520)
-        spacing: Theme.space4
-
-        SectionHeading { text: "Decks" }
-        Text {
-            Layout.fillWidth: true
-            text: "No card database loaded"
-            font.family: Theme.fontFamily
-            font.pointSize: Theme.textTitle
-            font.weight: Theme.weightBold
-            color: Theme.textPrimary
-        }
-        Text {
-            Layout.fillWidth: true
-            text: "Start edopro-next with one or more --card-db <path> options pointing at a "
-                + "Project Ignis-compatible .cdb file to search and build decks. No database "
-                + "is bundled with this application."
-            font.family: Theme.fontFamily
-            font.pointSize: Theme.textBody
-            color: Theme.textSecondary
-            wrapMode: Text.WordWrap
-            lineHeight: 1.45
-        }
-        Text {
-            Layout.fillWidth: true
-            visible: cardCatalog.lastError.length > 0
-            text: cardCatalog.lastError
-            font.family: Theme.fontFamilyMono
-            font.pointSize: Theme.textCaption
-            color: Theme.danger
-            wrapMode: Text.WordWrap
-        }
-    }
-
-    // ---- The real screen -----------------------------------------------
+    // ---- The real screen - always visible, even with no catalog loaded.
+    // Only card search/resolution degrades without one: the deck pane and
+    // preview pane stay fully functional regardless of hasCatalog, since
+    // data/'s own Deck and .ydk codec never depend on a CardDatabase
+    // either (docs/architecture/deck-builder-ui.md#no-catalog-editing).
     RowLayout {
         anchors.fill: parent
         anchors.margins: Theme.space4
         spacing: Theme.space4
-        visible: root.hasCatalog
 
         // -- Search pane --
         ColumnLayout {
-            Layout.preferredWidth: parent.width * 0.34
+            // 0.32/0.34, not the original 0.34/0.36, and the preview pane
+            // below carries an explicit Layout.minimumWidth - found via
+            // visual verification: at the default 1280x800 window, this
+            // RowLayout's own available width is the *shell's* width
+            // (1064px, after the nav rail's own share), not the full
+            // window width, so the original percentages left the preview
+            // pane only ~138px wide - enough for "Card code " (no
+            // wrapMode, so it silently overflowed the window's own right
+            // edge) and to force-wrap a card title into single overflowing
+            // words rather than comfortably wrapped lines.
+            Layout.preferredWidth: parent.width * 0.32
             Layout.fillHeight: true
             spacing: Theme.space3
 
-            SectionHeading { text: "Search (" + cardCatalog.cardCount + " cards loaded)" }
-
-            // Surfaced here too, not only in the no-catalog empty state:
-            // with multiple --card-db paths, one can fail while another
-            // still succeeds, leaving hasCatalog true - lastError must
-            // stay visible in the usable screen or a partial load failure
-            // is silently lost (CLAUDE.md's honesty rules).
-            Text {
-                Layout.fillWidth: true
-                visible: cardCatalog.lastError.length > 0
-                text: cardCatalog.lastError
-                font.family: Theme.fontFamilyMono
-                font.pointSize: Theme.textCaption
-                color: Theme.danger
-                wrapMode: Text.WordWrap
+            SectionHeading {
+                text: root.hasCatalog
+                    ? ("Search (" + cardCatalog.cardCount + " cards loaded)")
+                    : "Search"
             }
 
-            TextField {
-                id: searchField
-                Layout.fillWidth: true
-                placeholderText: "Search by name or text…"
-                font.family: Theme.fontFamily
-                font.pointSize: Theme.textBody
-                color: Theme.textPrimary
-                Keys.onDownPressed: resultsList.forceActiveFocus()
-            }
-
-            Rectangle {
+            // No catalog: an honest message in place of the search UI, not
+            // a broken or hidden screen - the deck pane and preview pane
+            // beside this one remain fully usable regardless.
+            ColumnLayout {
+                objectName: "noCatalogMessage"
+                visible: !root.hasCatalog
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: Theme.radiusMd
-                color: Theme.surface
-                border.width: 1
-                border.color: Theme.border
+                spacing: Theme.space4
 
-                ListView {
-                    id: resultsList
-                    anchors.fill: parent
-                    anchors.margins: Theme.space1
-                    clip: true
-                    model: searchResults
-                    activeFocusOnTab: true
-                    currentIndex: root.selectedResultRow
-                    onCurrentIndexChanged: {
-                        root.selectedResultRow = currentIndex;
-                        if (currentIndex >= 0) {
-                            root.previewCode = searchResults.cardCodeAt(currentIndex);
-                            root.previewKnown = true;
-                            root.hasPreview = true;
-                        }
-                    }
-                    ScrollBar.vertical: ScrollBar {}
-
-                    delegate: ItemDelegate {
-                        width: resultsList.width
-                        highlighted: ListView.isCurrentItem
-                        onClicked: resultsList.currentIndex = index
-
-                        background: Rectangle {
-                            radius: Theme.radiusSm
-                            color: parent.highlighted ? Theme.accentSubtle
-                                 : (parent.hovered ? Theme.surfaceHover : "transparent")
-                        }
-
-                        contentItem: ColumnLayout {
-                            spacing: 2
-                            Text {
-                                Layout.fillWidth: true
-                                text: model.name
-                                elide: Text.ElideRight
-                                font.family: Theme.fontFamily
-                                font.pointSize: Theme.textBody
-                                font.weight: Theme.weightMedium
-                                color: Theme.textPrimary
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                visible: model.summary.length > 0
-                                text: model.summary
-                                elide: Text.ElideRight
-                                font.family: Theme.fontFamilyMono
-                                font.pointSize: Theme.textCaption
-                                color: Theme.textTertiary
-                            }
-                        }
-
-                        Keys.onReturnPressed: resultsList.currentIndex = index
-                    }
+                Text {
+                    Layout.fillWidth: true
+                    text: "No card database loaded"
+                    wrapMode: Text.WordWrap
+                    font.family: Theme.fontFamily
+                    font.pointSize: Theme.textTitle
+                    font.weight: Theme.weightBold
+                    color: Theme.textPrimary
                 }
+                Text {
+                    Layout.fillWidth: true
+                    text: "Start edopro-next with one or more --card-db <path> options "
+                        + "pointing at a Project Ignis-compatible .cdb file to search for "
+                        + "cards. No database is bundled with this application. A deck can "
+                        + "still be opened, edited and saved without one - card names simply "
+                        + "will not resolve until a database is loaded."
+                    font.family: Theme.fontFamily
+                    font.pointSize: Theme.textBody
+                    color: Theme.textSecondary
+                    wrapMode: Text.WordWrap
+                    lineHeight: 1.45
+                }
+                Text {
+                    Layout.fillWidth: true
+                    visible: cardCatalog.lastError.length > 0
+                    text: cardCatalog.lastError
+                    font.family: Theme.fontFamilyMono
+                    font.pointSize: Theme.textCaption
+                    color: Theme.danger
+                    wrapMode: Text.WordWrap
+                }
+                Item { Layout.fillWidth: true; Layout.fillHeight: true }
             }
 
-            RowLayout {
+            // Has a catalog: the real search UI.
+            ColumnLayout {
+                visible: root.hasCatalog
                 Layout.fillWidth: true
-                spacing: Theme.space2
-                enabled: root.selectedResultRow >= 0
+                Layout.fillHeight: true
+                spacing: Theme.space3
 
-                Button {
-                    text: "Add to Main"
-                    onClicked: root.addSelectedResultTo(DeckController.Main)
+                // Surfaced here too, not only in the no-catalog message
+                // above: with multiple --card-db paths, one can fail
+                // while another still succeeds, leaving hasCatalog true -
+                // lastError must stay visible or a partial load failure
+                // is silently lost (CLAUDE.md's honesty rules).
+                Text {
+                    Layout.fillWidth: true
+                    visible: cardCatalog.lastError.length > 0
+                    text: cardCatalog.lastError
+                    font.family: Theme.fontFamilyMono
+                    font.pointSize: Theme.textCaption
+                    color: Theme.danger
+                    wrapMode: Text.WordWrap
                 }
-                Button {
-                    text: "Extra"
-                    onClicked: root.addSelectedResultTo(DeckController.Extra)
+
+                TextField {
+                    id: searchField
+                    // Set (only) so visual/interaction verification tooling
+                    // can locate this real instance via findChild() - not
+                    // read by any production code.
+                    objectName: "searchField"
+                    Layout.fillWidth: true
+                    placeholderText: "Search by name or text…"
+                    font.family: Theme.fontFamily
+                    font.pointSize: Theme.textBody
+                    color: Theme.textPrimary
+                    Keys.onDownPressed: resultsList.forceActiveFocus()
                 }
-                Button {
-                    text: "Side"
-                    onClicked: root.addSelectedResultTo(DeckController.Side)
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: Theme.radiusMd
+                    color: Theme.surface
+                    border.width: 1
+                    border.color: Theme.border
+
+                    ListView {
+                        id: resultsList
+                        // Set (only) so ui/tests/test_deckbuilder_screen.cpp
+                        // can locate this real instance via findChild() -
+                        // not read or relied upon by any production code.
+                        objectName: "resultsList"
+                        anchors.fill: parent
+                        anchors.margins: Theme.space1
+                        clip: true
+                        model: searchResults
+                        activeFocusOnTab: true
+                        // ListView's own default is 0, not -1, the instant
+                        // a non-empty model is set - without this, typing a
+                        // query (or even the initial, unfiltered "show
+                        // everything" result set) would silently
+                        // auto-select and preview the first result with no
+                        // user interaction at all (found via visual
+                        // verification - see the identical fix and comment
+                        // on DeckSectionList.qml's own internal ListView).
+                        // Not a binding to root.selectedResultRow (see the
+                        // selection-contract comment above sectionModel())
+                        // - currentIndex is driven purely imperatively from
+                        // there on, by user clicks below and by this
+                        // screen's own clearAllSelection()/selectDeckEntry().
+                        currentIndex: -1
+                        onCurrentIndexChanged: {
+                            root.selectedResultRow = currentIndex;
+                            if (currentIndex >= 0) {
+                                root.previewCode = searchResults.cardCodeAt(currentIndex);
+                                root.previewKnown = true;
+                                root.hasPreview = true;
+                                root.selectedSection = -1;
+                                root.selectedDeckRow = -1;
+                                mainList.currentIndex = -1;
+                                extraList.currentIndex = -1;
+                                sideList.currentIndex = -1;
+                            }
+                        }
+                        ScrollBar.vertical: ScrollBar {}
+
+                        delegate: ItemDelegate {
+                            width: resultsList.width
+                            highlighted: ListView.isCurrentItem
+                            onClicked: resultsList.currentIndex = index
+
+                            background: Rectangle {
+                                radius: Theme.radiusSm
+                                color: parent.highlighted ? Theme.accentSubtle
+                                     : (parent.hovered ? Theme.surfaceHover : "transparent")
+                            }
+
+                            contentItem: ColumnLayout {
+                                spacing: 2
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: model.name
+                                    elide: Text.ElideRight
+                                    font.family: Theme.fontFamily
+                                    font.pointSize: Theme.textBody
+                                    font.weight: Theme.weightMedium
+                                    color: Theme.textPrimary
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    visible: model.summary.length > 0
+                                    text: model.summary
+                                    elide: Text.ElideRight
+                                    font.family: Theme.fontFamilyMono
+                                    font.pointSize: Theme.textCaption
+                                    color: Theme.textTertiary
+                                }
+                            }
+
+                            Keys.onReturnPressed: resultsList.currentIndex = index
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.space2
+                    enabled: root.selectedResultRow >= 0
+
+                    Button {
+                        text: "Add to Main"
+                        onClicked: root.addSelectedResultTo(DeckController.Main)
+                    }
+                    Button {
+                        text: "Extra"
+                        onClicked: root.addSelectedResultTo(DeckController.Extra)
+                    }
+                    Button {
+                        text: "Side"
+                        onClicked: root.addSelectedResultTo(DeckController.Side)
+                    }
                 }
             }
         }
@@ -346,7 +460,7 @@ Item {
 
         // -- Deck pane --
         ColumnLayout {
-            Layout.preferredWidth: parent.width * 0.36
+            Layout.preferredWidth: parent.width * 0.34 // see the search pane's own comment above
             Layout.fillHeight: true
             spacing: Theme.space3
 
@@ -373,7 +487,10 @@ Item {
                     Button {
                         Layout.fillWidth: true
                         text: "New"
-                        onClicked: root.confirmThen(function() { deckController.newDeck(); })
+                        onClicked: root.confirmThen(function() {
+                            deckController.newDeck();
+                            root.clearAllSelection();
+                        })
                     }
                     Button {
                         Layout.fillWidth: true
@@ -383,10 +500,7 @@ Item {
                     Button {
                         Layout.fillWidth: true
                         text: "Save"
-                        onClicked: {
-                            if (!deckController.saveDeck())
-                                saveAsDialog.open();
-                        }
+                        onClicked: root.saveOrSaveAs()
                     }
                 }
             }
@@ -403,6 +517,10 @@ Item {
 
             DeckSectionList {
                 id: mainList
+                // Set (only) so ui/tests/test_deckbuilder_screen.cpp can
+                // locate this real instance via findChild() - not read or
+                // relied upon by any production code.
+                objectName: "mainList"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 title: "Main"
@@ -413,6 +531,7 @@ Item {
             }
             DeckSectionList {
                 id: extraList
+                objectName: "extraList"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 title: "Extra"
@@ -423,6 +542,7 @@ Item {
             }
             DeckSectionList {
                 id: sideList
+                objectName: "sideList"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 title: "Side"
@@ -446,11 +566,22 @@ Item {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            // A hard floor, not just "whatever's left over" - found via
+            // visual verification that the plain fillWidth share could
+            // shrink to ~138px at the default 1280x800 window (see the
+            // search pane's own comment above), nowhere near enough to
+            // show a card title or the ATK/DEF grid without text
+            // overflowing this pane's own right edge. Qt Quick Layouts
+            // treats minimumWidth as a harder constraint than a sibling's
+            // preferredWidth, so the search/deck panes shrink first if
+            // there is ever genuinely not enough room for all three.
+            Layout.minimumWidth: 260
             spacing: Theme.space3
 
             SectionHeading { text: "Card details" }
 
             CardPreview {
+                objectName: "cardPreview"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: root.hasPreview
@@ -468,7 +599,21 @@ Item {
                 // code, tracked as a `double` so codes above 2^31-1 are
                 // representable - see its declaration above), so no
                 // clamping is needed here the way an int sentinel required.
-                entry: cardCatalog.cardDetails(root.hasPreview ? root.previewCode : 0)
+                //
+                // cardCatalog.cardCount is read here purely for its
+                // dependency-tracking effect, not its value: cardDetails()
+                // is a plain method call, which QML's binding engine has
+                // no notify signal to react to on its own, so without an
+                // explicit property read this binding would keep showing
+                // whatever cardDetails() returned at the time of the last
+                // *selection* change and never notice a later catalog
+                // reload for the same still-selected code. cardCount is a
+                // real Q_PROPERTY with NOTIFY loadedChanged (card_catalog.h),
+                // so reading it here forces a re-evaluation on every reload.
+                entry: {
+                    cardCatalog.cardCount;
+                    return cardCatalog.cardDetails(root.hasPreview ? root.previewCode : 0);
+                }
             }
 
             Text {

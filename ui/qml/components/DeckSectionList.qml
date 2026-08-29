@@ -21,6 +21,16 @@ ColumnLayout {
     property int section: -1
     signal entryActivated(int row)
 
+    // A plain alias (not a one-way declarative binding) so the owning
+    // screen can imperatively clear or set this list's visual selection -
+    // e.g. to deselect this section when another section or the search
+    // list is selected instead - without fighting a bound expression: a
+    // `currentIndex: someExpression` binding declared elsewhere would be
+    // permanently broken the moment a click below assigns to it directly,
+    // which is exactly the class of bug that let three independently
+    // selectable lists show contradictory highlights at once.
+    property alias currentIndex: listView.currentIndex
+
     spacing: Theme.space1
 
     SectionHeading { text: root.title + " (" + root.count + ")" }
@@ -40,6 +50,14 @@ ColumnLayout {
             clip: true
             model: root.sectionModel
             activeFocusOnTab: true
+            // ListView's own default is 0, not -1, the moment a non-empty
+            // model is set - without this, the first row silently becomes
+            // "selected" the instant a deck is loaded or a card is added,
+            // with no user interaction at all (found via visual
+            // verification: an unrelated screenshot showed an unselected
+            // deck's first entry already highlighted, "Remove selected"
+            // already enabled, and the preview pane already populated).
+            currentIndex: -1
             ScrollBar.vertical: ScrollBar {}
 
             onCurrentIndexChanged: root.entryActivated(currentIndex)
