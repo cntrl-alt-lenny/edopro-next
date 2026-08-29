@@ -93,9 +93,18 @@ DeckSectionModel* DeckController::modelFor(Section section) {
 
 void DeckController::addCard(quint32 code, Section section) {
     auto& vec = sectionVector(section);
+    auto* model = modelFor(section);
     const int index = static_cast<int>(vec.size());
+    // beginInsertRows() must run before the vector actually grows - not
+    // after, which is what calling a single begin+end pair post-mutation
+    // would do - so views observe the old row count for exactly as long as
+    // QAbstractItemModel's own contract requires (caught by external
+    // review, not by ui/tests/test_deckbuilder.cpp: a plain single-row
+    // ListView append tolerates the wrong order in practice, which is
+    // exactly why this needs the contract stated, not just "it worked").
+    model->notifyAboutToInsert(index);
     vec.push_back(static_cast<edopro_next::data::CardCode>(code));
-    modelFor(section)->notifyInserted(index);
+    model->notifyInserted();
     setDirty(true);
     emit deckChanged();
 }
@@ -104,13 +113,18 @@ void DeckController::removeAt(Section section, int index) {
     auto& vec = sectionVector(section);
     if (index < 0 || static_cast<std::size_t>(index) >= vec.size())
         return;
+    auto* model = modelFor(section);
+    model->notifyAboutToRemove(index);
     vec.erase(vec.begin() + index);
-    modelFor(section)->notifyRemoved(index);
+    model->notifyRemoved();
     setDirty(true);
     emit deckChanged();
 }
 
 void DeckController::newDeck() {
+    mainModel_->notifyAboutToReset();
+    extraModel_->notifyAboutToReset();
+    sideModel_->notifyAboutToReset();
     deck_.clear();
     mainModel_->notifyReset();
     extraModel_->notifyReset();
@@ -137,6 +151,9 @@ bool DeckController::loadDeck(const QUrl& fileUrl) {
         setLastError(QString::fromStdString(result.error));
         return false;
     }
+    mainModel_->notifyAboutToReset();
+    extraModel_->notifyAboutToReset();
+    sideModel_->notifyAboutToReset();
     deck_ = std::move(result.deck);
     mainModel_->notifyReset();
     extraModel_->notifyReset();

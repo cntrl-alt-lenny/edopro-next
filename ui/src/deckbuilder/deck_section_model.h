@@ -41,10 +41,19 @@ public:
 
     // C++-only wiring, called only by DeckController - not part of the
     // QML-facing surface (neither parameter type is a Qt/QML type).
+    //
+    // Each operation is a begin/end pair, matching QAbstractItemModel's own
+    // contract: begin*() must be called *before* the backing vector is
+    // mutated, end*()/notify*() immediately after - not both together once
+    // the mutation has already happened. DeckController is expected to
+    // bracket its own vector mutation between the two calls of each pair.
     void bind(const std::vector<edopro_next::data::CardCode>* section,
               const CardCatalog* catalog);
-    void notifyInserted(int index);
-    void notifyRemoved(int index);
+    void notifyAboutToInsert(int index);
+    void notifyInserted();
+    void notifyAboutToRemove(int index);
+    void notifyRemoved();
+    void notifyAboutToReset();
     void notifyReset();
 
 private:

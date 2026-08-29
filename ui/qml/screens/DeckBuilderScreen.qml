@@ -28,7 +28,12 @@ Item {
     // anywhere else; purely this screen's own transient presentation
     // state (ui/qml owns visual selection, never deck contents - see
     // docs/architecture/deck-builder-ui.md#what-qml-owns).
-    property int previewCode: -1
+    // previewCode is a card code, which can be any nonzero uint32 - a
+    // plain QML `int` is signed 32-bit and cannot represent values above
+    // 2^31-1 without wraparound, so "no selection" is tracked with its own
+    // boolean rather than a negative-value sentinel on previewCode itself.
+    property double previewCode: 0
+    property bool hasPreview: false
     property bool previewKnown: false
 
     property int selectedResultRow: -1
@@ -49,6 +54,7 @@ Item {
         if (model && row >= 0 && row < model.rowCount()) {
             previewCode = model.data(model.index(row, 0), DeckSectionModel.CardCodeRole);
             previewKnown = model.data(model.index(row, 0), DeckSectionModel.KnownRole);
+            hasPreview = true;
         }
     }
 
@@ -149,7 +155,14 @@ Item {
         anchors.centerIn: parent
         title: "Discard unsaved changes?"
         standardButtons: Dialog.Discard | Dialog.Cancel
-        onAccepted: {
+        // Dialog.Discard carries Qt's DestructiveRole, which fires
+        // discarded() - not accepted() - confirmed against this project's
+        // own Qt 6.8.3 build (a standalone offscreen QML case that clicked
+        // the button and logged which signal fired). Using onAccepted here
+        // meant clicking Discard closed the dialog but silently dropped
+        // pendingAction, so New/Open could never actually proceed past the
+        // confirmation once a deck had unsaved edits.
+        onDiscarded: {
             if (root.pendingAction) {
                 const action = root.pendingAction;
                 root.pendingAction = null;
@@ -220,6 +233,21 @@ Item {
 
             SectionHeading { text: "Search (" + cardCatalog.cardCount + " cards loaded)" }
 
+            // Surfaced here too, not only in the no-catalog empty state:
+            // with multiple --card-db paths, one can fail while another
+            // still succeeds, leaving hasCatalog true - lastError must
+            // stay visible in the usable screen or a partial load failure
+            // is silently lost (CLAUDE.md's honesty rules).
+            Text {
+                Layout.fillWidth: true
+                visible: cardCatalog.lastError.length > 0
+                text: cardCatalog.lastError
+                font.family: Theme.fontFamilyMono
+                font.pointSize: Theme.textCaption
+                color: Theme.danger
+                wrapMode: Text.WordWrap
+            }
+
             TextField {
                 id: searchField
                 Layout.fillWidth: true
@@ -251,6 +279,7 @@ Item {
                         if (currentIndex >= 0) {
                             root.previewCode = searchResults.cardCodeAt(currentIndex);
                             root.previewKnown = true;
+                            root.hasPreview = true;
                         }
                     }
                     ScrollBar.vertical: ScrollBar {}
@@ -424,7 +453,7 @@ Item {
             CardPreview {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.previewCode >= 0
+                visible: root.hasPreview
                 // Always a real CardEntry, never a placeholder {} - a
                 // plain JS object has no `known`/`isMonster`/etc.
                 // properties at all, so binding CardPreview's strongly
@@ -435,13 +464,17 @@ Item {
                 // (card_code.h) never to be a real loaded card, so
                 // cardDetails(0) reliably returns known: false with every
                 // other field at its ordinary default - never undefined.
-                entry: cardCatalog.cardDetails(Math.max(root.previewCode, 0))
+                // previewCode itself is never negative (it holds a card
+                // code, tracked as a `double` so codes above 2^31-1 are
+                // representable - see its declaration above), so no
+                // clamping is needed here the way an int sentinel required.
+                entry: cardCatalog.cardDetails(root.hasPreview ? root.previewCode : 0)
             }
 
             Text {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.previewCode < 0
+                visible: !root.hasPreview
                 text: "Select a search result or a deck entry to see its details here."
                 font.family: Theme.fontFamily
                 font.pointSize: Theme.textBody

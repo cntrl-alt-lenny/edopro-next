@@ -49,17 +49,11 @@ void DeckSectionModel::bind(const std::vector<edopro_next::data::CardCode>* sect
     endResetModel();
 }
 
-void DeckSectionModel::notifyInserted(int index) {
-    beginInsertRows(QModelIndex(), index, index);
-    endInsertRows();
-}
+void DeckSectionModel::notifyAboutToInsert(int index) { beginInsertRows(QModelIndex(), index, index); }
+void DeckSectionModel::notifyInserted() { endInsertRows(); }
 
-void DeckSectionModel::notifyRemoved(int index) {
-    beginRemoveRows(QModelIndex(), index, index);
-    endRemoveRows();
-}
+void DeckSectionModel::notifyAboutToRemove(int index) { beginRemoveRows(QModelIndex(), index, index); }
+void DeckSectionModel::notifyRemoved() { endRemoveRows(); }
 
-void DeckSectionModel::notifyReset() {
-    beginResetModel();
-    endResetModel();
-}
+void DeckSectionModel::notifyAboutToReset() { beginResetModel(); }
+void DeckSectionModel::notifyReset() { endResetModel(); }
