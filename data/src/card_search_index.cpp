@@ -26,10 +26,14 @@ bool passes_bitmask(const std::optional<BitmaskFilter>& filter, std::uint32_t fi
 }
 
 // Upstream's own effect-category semantics (AnyBitmaskFilter's doc
-// comment, search_query.h): reject only when none of the selected bits
-// are present.
+// comment, search_query.h): `if(filter_effect && !(category &
+// filter_effect)) return false;` - note the leading `filter_effect &&`:
+// a zero mask is "no category selected", not "reject everything", and
+// falls through as a pass, exactly like an absent filter. An explicitly
+// present `AnyBitmaskFilter{0}` is therefore treated identically to no
+// filter at all, not as a mask nothing can satisfy.
 bool passes_any_bitmask(const std::optional<AnyBitmaskFilter>& filter, std::uint32_t field) {
-	if(!filter)
+	if(!filter || filter->any_bits == 0)
 		return true;
 	return (field & filter->any_bits) != 0;
 }
@@ -46,6 +50,15 @@ bool passes_numeric(const NumericFilter& filter, std::int64_t field) {
 	return false;
 }
 
+// The full ASCII whitespace set (space, tab, LF, CR, vertical tab, form
+// feed) - deliberately the plain C/C++ definition (matching, for
+// instance, the "C" locale's std::isspace), not std::isspace itself,
+// which is locale-dependent, and not any Unicode whitespace codepoint
+// beyond this set.
+bool is_ascii_whitespace(char c) {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f';
+}
+
 // Splits on ASCII whitespace, dropping empty segments - " a  b\tc " ->
 // {"a", "b", "c"}, not {"", "a", "", "b", "c", ""}. Deliberately simpler
 // than upstream's Utils::TokenizeString (gframe/utils.h), which is a
@@ -56,14 +69,12 @@ std::vector<std::string_view> whitespace_tokens(std::string_view text) {
 	std::vector<std::string_view> tokens;
 	std::size_t pos = 0;
 	while(pos < text.size()) {
-		while(pos < text.size() && (text[pos] == ' ' || text[pos] == '\t' || text[pos] == '\n' ||
-									 text[pos] == '\r'))
+		while(pos < text.size() && is_ascii_whitespace(text[pos]))
 			++pos;
 		if(pos >= text.size())
 			break;
 		const std::size_t start = pos;
-		while(pos < text.size() && text[pos] != ' ' && text[pos] != '\t' && text[pos] != '\n' &&
-			  text[pos] != '\r')
+		while(pos < text.size() && !is_ascii_whitespace(text[pos]))
 			++pos;
 		tokens.push_back(text.substr(start, pos - start));
 	}

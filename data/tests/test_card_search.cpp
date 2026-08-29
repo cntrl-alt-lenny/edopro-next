@@ -122,8 +122,10 @@ EDOPRO_DATA_TEST(whitespace_only_text_query_behaves_like_an_empty_query) {
 	CardSearchIndex index;
 	index.rebuild(catalogue);
 
+	// All six ASCII whitespace characters (space, tab, CR, LF, vertical
+	// tab, form feed), not just the four most common ones.
 	SearchQuery whitespace_query;
-	whitespace_query.text = " \t\r\n ";
+	whitespace_query.text = " \t\r\n\v\f ";
 	const auto results = index.search(whitespace_query);
 	EDOPRO_DATA_CHECK(results == index.search(SearchQuery{}));
 	EDOPRO_DATA_CHECK_EQ(results.size(), std::size_t{3});
@@ -550,6 +552,30 @@ EDOPRO_DATA_TEST(category_filter_matches_any_of_the_selected_bits_not_all) {
 	EDOPRO_DATA_CHECK(contains(results, CardCode{2}));
 	EDOPRO_DATA_CHECK(contains(results, CardCode{3}));
 	EDOPRO_DATA_CHECK(!contains(results, CardCode{4}));
+}
+
+// Upstream's own check is `if(filter_effect && ...)` - a zero mask means
+// "no category selected" and falls through as a pass, not "reject every
+// card". An explicitly present AnyBitmaskFilter{0} must behave exactly
+// like no category filter at all, not like a mask nothing can satisfy.
+// Found by external review, not by initial implementation.
+EDOPRO_DATA_TEST(an_explicit_zero_category_filter_is_the_same_as_no_category_filter) {
+	TempFile file("category_zero");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	insert_card(db, 1, "Alpha");
+	insert_card(db, 2, "Beta");
+	sqlite3_close(db);
+
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
+	CardSearchIndex index;
+	index.rebuild(catalogue);
+
+	SearchQuery no_filter;
+	SearchQuery explicit_zero;
+	explicit_zero.category = AnyBitmaskFilter{0};
+	EDOPRO_DATA_CHECK(index.search(no_filter) == index.search(explicit_zero));
 }
 
 // ---------------------------------------------------------------------

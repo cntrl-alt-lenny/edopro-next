@@ -101,6 +101,14 @@ struct BitmaskFilter {
 // a "require all" filter would silently exclude a card that has only one
 // of several selected effect categories, which upstream's own UI does
 // not do.
+//
+// `any_bits == 0` - including an explicitly present
+// `AnyBitmaskFilter{0}`, not just an absent filter - means no category
+// constraint at all, matching upstream's own leading `filter_effect &&`
+// short-circuit exactly: a zero mask means "no category selected" there
+// too, and falls through as a pass rather than rejecting every card, so
+// this type has no representable state that silently excludes an entire
+// catalogue.
 struct AnyBitmaskFilter {
 	std::uint32_t any_bits = 0;
 };

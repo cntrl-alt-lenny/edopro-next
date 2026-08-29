@@ -167,7 +167,7 @@ per card, into `Entry::effective_setcodes` (§6), rather than resolving it per q
 
 | Upstream policy (`CheckCardProperties`/`filter_lm`) | `SearchQuery` equivalent |
 |---|---|
-| `TYPE_TOKEN`/`SCOPE_HIDDEN` auto-exclusion, anime-mode gate | **None.** Not search - visibility policy. A caller wanting to exclude tokens can use `type` with a mask that excludes `TYPE_TOKEN`. |
+| `TYPE_TOKEN`/`SCOPE_HIDDEN` auto-exclusion, anime-mode gate | **None.** Not search - visibility policy. `CardSearchIndex` never excludes Token cards (or anything else) automatically. `type`'s `BitmaskFilter` is a positive "must include these bits" predicate - it has no way to express "must *not* include this bit", so it cannot be used to exclude tokens either; a caller/higher layer that wants Token-exclusion has to filter the returned `CardCode`s itself (e.g. against `CardDatabase::find(code)->type`), which is exactly the kind of visibility/policy decision this module deliberately leaves to its caller rather than baking in. |
 | `LFList` ban/limit/semi-limit counts, whitelist | **None.** Legality, explicitly out of scope (§0, CLAUDE.md). |
 | `LIMITATION_FILTER_OCG`/`TCG`/`ANIME`/`ILLEGAL`/etc. named scope categories | **None**, as named categories - `scope` exposes the same underlying bits as a raw filter, with no "this means legal" interpretation attached. |
 
@@ -388,7 +388,9 @@ directly, then by a deterministic tie-break:
 4. **`NameMatch`** - every token is present somewhere in the normalized name (order-independent, §7).
 5. **`TextMatch`** - no name-tier match, but every token is present in the normalized text.
    Only reachable under `TextScope::Text`/`NameOrText`.
-6. **`NoTextQuery`** - `text` was empty; every filter-passing entry lands here uniformly.
+6. **`NoTextQuery`** - `text` was empty, or normalized and tokenized to zero tokens (i.e.
+   contained only ASCII whitespace, §7.2/§11); every filter-passing entry lands here
+   uniformly.
 
 Within one tier, results are ordered by normalized name ascending, then `CardCode` ascending
 - a total order, so the same index and query always produce byte-for-byte-identical output
