@@ -43,6 +43,18 @@ class CardEntry {
 
     Q_PROPERTY(quint32 attribute MEMBER attribute)
     Q_PROPERTY(qulonglong race MEMBER race)
+    // A ready-to-display exact rendering of `race`, computed in C++ - see
+    // card_entry.cpp. `race` is a 64-bit bitmask (Project Ignis's RACE_*
+    // constants run up to bit 62, e.g. RACE_YOKAI = 0x4000000000000000),
+    // and QML/JavaScript numbers are IEEE-754 doubles: concatenating a
+    // qulonglong straight into a QML string expression (`"" + entry.race`)
+    // forces a double round-trip whose *default* decimal string form does
+    // not reliably reproduce the original digits for values in this range,
+    // even when the double itself is bit-exact - confirmed empirically
+    // against this project's real Qt 6.8.3 build (see
+    // docs/architecture/deck-builder-ui.md#race-value-precision). QML must
+    // read raceDisplay for anything shown to a user, never `race` itself.
+    Q_PROPERTY(QString raceDisplay MEMBER raceDisplay)
     Q_PROPERTY(quint32 type MEMBER type)
 
 public:
@@ -63,6 +75,7 @@ public:
 
     quint32 attribute = 0;
     qulonglong race = 0;
+    QString raceDisplay = QStringLiteral("0x0");
     quint32 type = 0;
 };
 Q_DECLARE_METATYPE(CardEntry)

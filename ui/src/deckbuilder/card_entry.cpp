@@ -43,6 +43,12 @@ CardEntry make_card_entry(edopro_next::data::CardCode code,
     entry.linkMarker = record->link_marker;
     entry.attribute = record->attribute;
     entry.race = record->race;
+    // QString::number() operates on the qulonglong directly - no double
+    // round-trip, so this is exact for every representable race bitmask,
+    // unlike concatenating `race` itself into a QML string expression
+    // (see card_entry.h). Hex, not decimal: race is a bitmask of RACE_*
+    // constants, and no human-readable race-name table exists yet.
+    entry.raceDisplay = QStringLiteral("0x%1").arg(record->race, 0, 16);
     entry.type = record->type;
 
     entry.isMonster = (record->type & kTypeMonsterBit) != 0;

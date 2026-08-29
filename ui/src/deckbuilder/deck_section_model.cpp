@@ -45,8 +45,28 @@ void DeckSectionModel::bind(const std::vector<edopro_next::data::CardCode>* sect
                              const CardCatalog* catalog) {
     beginResetModel();
     section_ = section;
-    catalog_ = catalog;
+    if (catalog_ != catalog) {
+        QObject::disconnect(catalogConnection_);
+        catalog_ = catalog;
+        catalogConnection_ = catalog_
+            ? connect(catalog_, &CardCatalog::loadedChanged, this,
+                      &DeckSectionModel::refreshDisplayRoles)
+            : QMetaObject::Connection();
+    }
     endResetModel();
+}
+
+void DeckSectionModel::refreshDisplayRoles() {
+    // CardCodeRole never changes here - only the catalog-derived display
+    // roles can differ after a reload, for a card code this model already
+    // holds. A plain dataChanged over every current row is enough: there is
+    // no O(1) way to know which specific codes' resolution actually
+    // changed without re-deriving the whole database diff, and this is not
+    // hot-path work (it happens once per --card-db reload, not per frame).
+    if (!section_ || section_->empty())
+        return;
+    const int lastRow = static_cast<int>(section_->size()) - 1;
+    emit dataChanged(index(0, 0), index(lastRow, 0), {NameRole, KnownRole});
 }
 
 void DeckSectionModel::notifyAboutToInsert(int index) { beginInsertRows(QModelIndex(), index, index); }

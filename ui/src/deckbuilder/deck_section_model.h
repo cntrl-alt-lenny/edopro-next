@@ -5,14 +5,26 @@
 // owns no card data of its own - it holds a pointer straight at the
 // section vector living inside DeckController, so there is exactly one
 // copy of "what is in this deck" anywhere in the process. DeckController
-// is the only thing that ever mutates that vector, and it does so through
-// notifyInserted()/notifyRemoved()/notifyReset() immediately afterward, so
-// this model's row count is never allowed to disagree with the vector it
+// is the only thing that ever mutates that vector; it brackets each
+// mutation between this model's notifyAboutToInsert()/notifyInserted(),
+// notifyAboutToRemove()/notifyRemoved(), or notifyAboutToReset()/
+// notifyReset() pair - the begin-side call before the vector actually
+// changes, the end-side call immediately after - matching
+// QAbstractItemModel's own contract (a single combined call made *after*
+// mutating was a real bug external review found: views would observe the
+// about-to-change signal when rowCount() already reflected the new state).
+// This model's row count is never allowed to disagree with the vector it
 // reflects.
+//
+// NameRole/KnownRole are resolved from CardCatalog at display time, not
+// stored - so this model also listens for CardCatalog::loadedChanged and
+// re-announces every row's display roles when the bound catalog reloads;
+// see bind()/refreshDisplayRoles() in deck_section_model.cpp.
 
 #pragma once
 
 #include <QAbstractListModel>
+#include <QMetaObject>
 #include <qqmlintegration.h>
 #include <vector>
 
@@ -57,6 +69,9 @@ public:
     void notifyReset();
 
 private:
+    void refreshDisplayRoles();
+
     const std::vector<edopro_next::data::CardCode>* section_ = nullptr;
     const CardCatalog* catalog_ = nullptr;
+    QMetaObject::Connection catalogConnection_;
 };
