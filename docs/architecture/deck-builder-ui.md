@@ -127,18 +127,31 @@ No `.cdb` is bundled, generated, or downloaded by this PR.
 
 ## 5. Search-index rebuild lifecycle
 
-`CardCatalog::loadDatabases()` calls `searchIndex_.rebuild(database_)` **unconditionally**,
-once, at the end of the call - after every path has been attempted, regardless of whether any
-or all of them failed. This means:
+`CardCatalog::loadDatabases()` builds every supplied path into a **fresh** `CardDatabase`,
+swaps it into `database_` only once every path has been attempted, and then calls
+`searchIndex_.rebuild(database_)` **unconditionally** against that just-swapped-in value. This
+means:
 
-- A load with zero successes still rebuilds (against whatever `database_` already contained,
-  including "nothing" on the very first call) - the index can never lag behind a database
-  state that no longer exists.
+- A load with zero successes still rebuilds - but against a **freshly-constructed, empty**
+  `CardDatabase`, not whatever `database_` happened to hold from a previous call. Earlier text
+  in this document described this as rebuilding "against whatever `database_` already
+  contained" - that was true of the original in-place-`load_database()` implementation, but is
+  no longer true after the fix below, and the distinction is not cosmetic: an in-place reload
+  would leave a prior call's codes searchable forever, and an all-failed in-place reload would
+  leave `loaded()` reporting stale data as if it were still current. External review caught
+  exactly this (`ui/tests/test_deckbuilder.cpp`'s `reloadingTheCatalogNeverLeavesStaleResults`
+  now pins the adversarial case directly: a code present only in an earlier successfully-loaded
+  database must be completely gone, not merely unmatched by name, after a later call that does
+  not include it). Either way - build fresh or mutate in place - the index can never lag behind
+  a database state that no longer exists, which is the invariant that actually matters here.
 - `loadedChanged()` fires once per call, after the rebuild - `SearchResultsModel::refresh()`
   (connected to it) always re-runs against the *current* index, never a stale one, matching
   `CardSearchIndex`'s own documented "results are stale until the caller calls `rebuild()`"
   contract (`card-search.md`§3, [ADR 0005](../adr/0005-card-search-structured-query.md) Decision
   1) - the caller here being `CardCatalog`, unconditionally, every time.
+- `DeckSectionModel` also listens for `loadedChanged()` directly (§8.1) - a deck row's
+  displayed name/known-state is resolved from `CardCatalog` at display time, not stored, so it
+  needs its own notification path independent of `SearchResultsModel`'s.
 
 No locale management is added - `CardDatabase::load_locale()`/`clear_locale()` are not called
 anywhere in this slice, since nothing in this PR's scope needs a non-default locale.
@@ -195,6 +208,71 @@ Fusion/Synchro/Xyz/Link check moving it to Extra the way upstream's separate `Lo
 reclassification step would (`deck-model.md`§3) - a step this slice does not implement or call,
 matching `edopro_next_deck` itself.
 
+### 7.1 Selection: one shared notion of "what is selected"
+
+`DeckBuilderScreen.qml` originally let the search results list and each of the three
+`DeckSectionList`s track their own `ListView.currentIndex` completely independently, with
+`selectedSection`/`selectedDeckRow`/`selectedResultRow` merely *recording* whichever one last
+reported a change - nothing ever told the *other* lists to stop showing their own, now-stale,
+highlighted row. External review found this: selecting a `Main` entry, then an `Extra` entry,
+left both visibly highlighted at once, and neither Escape nor a fresh deck ever cleared a list's
+own `currentIndex` once set.
+
+The fix makes this screen the single source of truth for selection, driven entirely
+imperatively rather than through a declarative binding back to it:
+
+- `DeckSectionList` exposes `currentIndex` as a plain `property alias` (`ui/qml/components/
+  DeckSectionList.qml`) - readable and imperatively *writable* from the owning screen, but
+  never the target of a declarative one-way binding *from* the screen. A `currentIndex:
+  someExpression`-style binding would be permanently broken the first time a click assigns to
+  the same property directly - real, ordinary QML behaviour (writing to a property removes its
+  earlier binding) - which is exactly what the original `resultsList.currentIndex:
+  root.selectedResultRow` binding did to itself on the very first click, silently stopping
+  `resultsList` from ever reflecting a later `root.selectedResultRow = -1` again.
+- `DeckBuilderScreen.selectDeckEntry(section, row)` and its `resultsList.onCurrentIndexChanged`
+  counterpart each clear every *other* list's `currentIndex` to `-1` (and the corresponding
+  `selectedResultRow`/`selectedSection`/`selectedDeckRow` bookkeeping) before recording the new
+  selection - so at most one row is ever highlighted anywhere on the screen.
+- `clearAllSelection()` is the single function that clears everything at once: all four lists'
+  `currentIndex`, `hasPreview`, and every selection-tracking property. `Escape`'s `Shortcut`,
+  the New button (after `deckController.newDeck()`), and the Open dialog's `onAccepted` (only on
+  a *successful* load - a failed one leaves the current deck, and therefore its selection,
+  genuinely unchanged) all call it - so a model reset can never leave a stale highlight or a
+  preview referring to a card that may no longer even exist in that position.
+- `removeSelectedDeckEntry()` calls `clearAllSelection()` after removing, rather than trying to
+  select a "next" row - after a removal, index-based neighbours are not a meaningful concept to
+  guess at (the section may now be empty, or the row that slides into the removed index is a
+  different card entirely), so a deterministic, unambiguous cleared state was chosen over a
+  guess that could silently show the wrong card as "still selected."
+
+`ui/tests/test_deckbuilder_screen.cpp` pins this against the real, QML-engine-loaded
+`DeckBuilderScreen` (via `TestHarness.qml`, §10.2) rather than only the underlying C++ models -
+see `selectingOneSectionClearsAllOthers`, `clearAllSelectionClearsEveryList`,
+`newDeckClearsStaleSelection`, and `loadDeckClearsStaleSelection`.
+
+### 7.1.1 A second, independent auto-selection source: `ListView`'s own default
+
+Fixing the above was not the whole story. Visual verification (§13) then caught a screenshot of
+an *otherwise untouched* deck - no click, no scenario, nothing - with its first `Main` entry
+already highlighted, "Remove selected" already enabled, and the preview pane already showing
+that card's details. The cause is independent of anything above: Qt Quick's `ListView` itself
+defaults `currentIndex` to `0`, not `-1`, the instant a non-empty `model` is set - with no click,
+no binding, no code in this project doing anything at all. Both `resultsList`
+(`DeckBuilderScreen.qml`) and the internal `listView` inside every `DeckSectionList`
+(`DeckSectionList.qml`) hit this the moment they first receive a populated model - a card being
+added, a `.ydk` loading, or simply the search results that are already visible before any text
+is typed (empty query text matches everything, §6). Neither `DeckController` nor
+`DeckSectionModel` has any concept of "highlighted" at all - it is a pure QML `ListView`
+property that no C++-only adapter test could ever have exercised, which is exactly why this
+survived every earlier round of review and testing.
+
+Fixed by giving each of the four `ListView`s an explicit `currentIndex: -1` at the point they
+are declared - a plain literal, not a binding to anything the selection-contract fix above would
+need to keep re-asserting; it only has to win the very first, one-time default before any real
+selection - imperative or otherwise - ever happens. `populatingASectionNeverAutoSelectsItsFirstRow`
+and `populatingSearchResultsNeverAutoSelectsTheFirstRow` (`ui/tests/test_deckbuilder_screen.cpp`)
+pin both list types directly.
+
 ---
 
 ## 8. Unknown card codes
@@ -217,7 +295,38 @@ reference" representation to keep in sync or lose.
 directly: loading a `.ydk` with no catalog loaded at all leaves a nine-digit unknown code
 intact in `side`, reported as `known == false` by the model, and
 `savedDeckRoundTripsThroughParseYdk` confirms saving reproduces it byte-identically via
-`parse_ydk`.
+`parse_ydk`. This holds regardless of whether *any* `CardCatalog` has ever loaded a database at
+all - `DeckBuilderScreen.qml`'s deck pane, unlike its search pane, does not gate on
+`hasCatalog` (§10.1): an unknown-code entry is fully selectable and removable with zero
+databases loaded, exercised end-to-end (real screen, real QML bindings, not just the
+`DeckController`/`DeckSectionModel` pair in isolation) by
+`unknownCardDeckIsSelectableWithNoCatalog` (`ui/tests/test_deckbuilder_screen.cpp`).
+
+### 8.1 A deck row's display refreshes when its catalog reloads
+
+`DeckSectionModel::data()` resolves `NameRole`/`KnownRole` from `CardCatalog` fresh on every
+call rather than storing them (§7) - which means a *previous* resolution can go stale the
+moment the bound `CardCatalog` reloads, with nothing telling any observing `ListView` to
+re-read it. `DeckSectionModel::bind()` connects to `CardCatalog::loadedChanged()` (disconnecting
+any previous catalog's connection first, so rebinding to a different `CardCatalog` instance
+never leaves a dangling connection to the old one) and re-emits `dataChanged()` for
+`NameRole`/`KnownRole` across every row it currently holds whenever that signal fires -
+`CardCodeRole` is never included, since the underlying code itself never changes on a reload.
+`deckRowsRefreshWhenCatalogReloads` (`ui/tests/test_deckbuilder.cpp`) pins both directions this
+can move: an unknown code becoming known once its database loads, and a known code's *name*
+changing between two differently-named catalogs for the same code - each transition is
+confirmed to actually emit `dataChanged`, not just to eventually read correctly the next time
+something else happens to call `data()`.
+
+### 8.2 The preview pane also refreshes on a catalog reload
+
+The preview pane's `entry:` binding (§10) reads `cardCatalog.cardCount` purely to establish an
+explicit QML binding dependency on `CardCatalog`'s reload signal before calling
+`cardCatalog.cardDetails(...)` - a bare method-call expression has no notify signal of its own
+for QML's binding engine to react to, so without this, the previewed card's `CardEntry` would
+only ever be recomputed when `previewCode`/`hasPreview` themselves changed, not when the
+catalog underneath an already-selected code changed. `previewCode` itself stays the identity
+that survives a reload - never a `CardRecord*` or a cached `CardEntry`.
 
 ---
 
@@ -248,6 +357,20 @@ matching this being a Qt Quick, not Widgets, application - see `ui/CMakeLists.tx
 still empty, and `DeckBuilderScreen.qml` responds by opening the Save As dialog instead - there
 is no silent no-op "Save" on a brand-new deck.
 
+### 9.0 Save routes on `currentPath`, not on `saveDeck()`'s return value alone
+
+`saveDeck()` returning `false` means two different things - "there is no `currentPath` yet" and
+"there is one, but the write genuinely failed" - and only the first should ever open Save As.
+The Save button and `Ctrl+S` both originally called `saveDeck()` unconditionally and opened
+Save As whenever it returned `false`, which meant a real disk/permission failure on an
+already-named deck silently turned into an unexplained Save As prompt instead of surfacing
+`deckController.lastError` (already rendered in the deck pane) - a second, competing UI for the
+same failure, and one that also discarded the actual error message a user would need to
+understand what went wrong. `DeckBuilderScreen.saveOrSaveAs()` fixes the routing itself: it
+checks `deckController.currentPath.length === 0` *before* calling `saveDeck()` at all, so Save
+As only ever appears for a deck that has genuinely never been saved anywhere, and any other
+`saveDeck()` failure is left entirely to the existing `lastError` banner.
+
 ### 9.1 Failed load leaves the current deck untouched
 
 `loadDeck()` relies entirely on `load_ydk()`'s own transactional contract (`deck-model.md`§6):
@@ -266,7 +389,27 @@ routes through it, which checks `deckController.dirty` and only proceeds immedia
 `false`; when `true`, it opens a small `Dialog` ("Discard unsaved changes?" / Discard / Cancel)
 and defers the actual action until the user picks Discard. This is a QML-owned *decision to
 ask*, not a second copy of dirty-state truth - it reads `deckController.dirty` directly, never
-maintaining its own flag.
+maintaining its own flag. The `Discard` standard button carries Qt's `DestructiveRole`, which
+fires `discarded()`, not `accepted()` - confirmed empirically against this project's actual Qt
+6.8.3 build (a standalone offscreen QML case that clicked the button and logged which signal
+fired), not assumed from memory. Both this dialog and §9.3's use `onDiscarded`, not `onAccepted`
+- the original code used `onAccepted`, which meant clicking Discard closed the dialog but never
+actually ran the pending action, found by external review.
+
+### 9.3 New/Open protect the current screen; closing the window did not
+
+Everything above only guards `DeckBuilderScreen`'s own New/Open actions. Closing the
+application window bypassed both entirely: `DeckController` (and therefore its `dirty` flag)
+lives for the whole application's lifetime as a `main.cpp`-owned object, not something scoped to
+the Decks screen, so a dirty deck could be silently discarded by closing the window - including
+after navigating away to a different screen - even though New and Open both already asked.
+`Main.qml`'s `ApplicationWindow` now handles `Window`'s own `closing(CloseEvent close)` signal:
+if `deckController.dirty`, it sets `close.accepted = false` and opens the same kind of
+Discard/Cancel confirmation dialog `DeckBuilderScreen` uses, calling `Qt.quit()` from
+`onDiscarded`. This reads `deckController.dirty` directly at the window level - the same single
+source of truth, never a second copy - and does not interact with `main.cpp`'s own `--capture`
+mechanism, which quits via `QGuiApplication::exit()`/`quit()` directly rather than through a
+window close request, so it never triggers this guard.
 
 ---
 
@@ -276,16 +419,116 @@ maintaining its own flag.
   in `Main.qml`. Three-pane layout at the default 1280x800 (search | deck sections | preview),
   each pane a `ColumnLayout` inside one `RowLayout` filling the screen; collapses to a usable,
   non-clipping arrangement at the 960x600 minimum (§13 - this needed one real fix, see below).
-  An honest empty state (§4) replaces the three-pane layout entirely when no catalog is loaded.
+  See §10.1 for what happens with no catalog loaded - it is **not** the empty-state-replaces-
+  everything shape this document originally described.
 - **`DeckSectionList.qml`** - one Main/Extra/Side section: a titled, counted (`"Main (12)"`)
   `ListView` over a `DeckSectionModel`, keyboard-selectable, Delete/Backspace-removes-selected.
+  Exposes `currentIndex` as a plain alias for the owning screen's selection contract (§7.1).
 - **`CardPreview.qml`** - a textual/metadata card preview bound to a `CardEntry`: name,
   code, description (word-wrapped), and ATK/DEF/Level or ATK/LINK-markers where the entry's
   own `isMonster`/`isLink`/`isPendulum` flags say they are meaningful. No artwork, no image
-  placeholder pretending to be one.
+  placeholder pretending to be one. Displays `entry.raceDisplay`, never `entry.race` directly -
+  see §10.3.
 - All new QML uses only existing `Theme.qml` tokens - no raw hex colours, no gradients.
 
-**A real layout defect found and fixed during visual verification (§13):** the deck pane's
+### 10.1 No catalog loaded: the deck editor stays functional; only search degrades
+
+M3D1's own original requirement was that a deck file must remain representable even when its
+card codes cannot be resolved (§8) - true of the C++ layer from the start, but not of the QML:
+the entire three-pane `RowLayout` (search, deck sections, *and* preview) was originally hidden
+behind `visible: root.hasCatalog`, with a full-page "No card database loaded" message shown in
+its place. That meant New/Open/Save, Main/Extra/Side, and the preview pane were all unreachable
+with no `--card-db` supplied at all - a mouse user could not even open an existing `.ydk`,
+despite `DeckController`/`edopro_next_deck` never needing a `CardDatabase` for any of that.
+
+The fix scopes the empty state to the search pane alone. The outer `RowLayout` is now always
+visible; only the search pane's own inner content switches, via two sibling `ColumnLayout`s
+gated on `hasCatalog`/`!hasCatalog`:
+
+- **No catalog:** the "No card database loaded" message, the `--card-db` instructions, and
+  `cardCatalog.lastError` (§10.4) - no search field, no results list, no Add-to-section buttons,
+  since none of them have anything to act on without a catalog.
+- **Has a catalog:** the search field, results list, and Add-to-section buttons, unchanged from
+  before.
+
+The deck pane (New/Open/Save, Main/Extra/Side, Remove selected) and the preview pane were never
+actually coupled to `hasCatalog` at the C++ level - `CardCatalog::cardDetails()` already returns
+`known: false` for every code when nothing is loaded (an empty `CardDatabase` simply never
+`find()`s anything), which is exactly the honest "Unknown card" rendering `DeckSectionList`/
+`CardPreview` already use for any unresolved code (§8). Removing the outer `visible:
+root.hasCatalog` gate was the entire fix; no new C++ was needed for this part.
+`noCatalogDeckEditorStaysFunctional` and `unknownCardDeckIsSelectableWithNoCatalog`
+(`ui/tests/test_deckbuilder_screen.cpp`) pin this against the real screen.
+
+### 10.2 Testing the real screen: `TestHarness.qml`
+
+`ui/tests/test_deckbuilder_screen.cpp` loads the actual `DeckBuilderScreen.qml` through a real
+`QQmlApplicationEngine` - not just the C++ adapter classes `test_deckbuilder.cpp` already
+covers in isolation, which cannot see a bug that only exists in the QML itself (every issue
+§7.1 and §10.1 describe was invisible to the adapter-only suite). `ui/tests/TestHarness.qml`
+hosts the screen inside an actual `StackLayout` as the current page, matching `Main.qml`'s own
+shape closely enough that `StackLayout.isCurrentItem` resolves to `true` the same way it does
+for real use - without it, `isActiveScreen` (§11) would never see a `StackLayout` ancestor at
+all. `TestHarness.qml` is registered under its own `qt_add_qml_module` call in `ui/tests/
+CMakeLists.txt`, sharing the `"EdoproNext"` URI with `edopro_next_shell`'s own module - Qt's
+`qmltyperegistrar` generates each target's `CardCatalog`/`DeckController`/`DeckSectionModel`/
+`SearchResultsModel` registration scoped to that target's own compiled-in resources, so the two
+modules never collide despite the shared URI string.
+
+Selection is simulated the way a real click actually drives it - by setting a
+`DeckSectionList`'s own `currentIndex` property (found via `findChild()`, using an `objectName`
+added to `mainList`/`extraList`/`sideList`/`resultsList`/`cardPreview` for exactly this purpose,
+not read by any production code), which triggers the same `entryActivated` ->
+`DeckBuilderScreen.selectDeckEntry()` chain a click does through ordinary Qt property-change
+notification. Calling `selectDeckEntry()` itself directly (an earlier version of this test did)
+looks equivalent but is not: `selectDeckEntry()` only clears *other* lists' selection, on the
+assumption that a click already set the clicked list's own `currentIndex` before it runs - skip
+that step and a test can silently pass while asserting against a `currentIndex` nothing ever
+set. Other screen functions (`clearAllSelection`, `removeSelectedDeckEntry`) genuinely are
+invoked directly via `QMetaObject::invokeMethod`, and native `FileDialog` interaction is avoided
+entirely, since simulating it would be fragile and platform-dependent for no additional
+coverage - these are the *same* functions the real buttons and shortcuts call.
+
+### 10.3 A 64-bit `race` value cannot be handed to QML as a raw number
+
+`CardEntry::race` is a `qulonglong` - Project Ignis's `RACE_*` bitmask constants run up to bit
+62 (e.g. `RACE_YOKAI = 0x4000000000000000`) - and QML/JavaScript numbers are IEEE-754 doubles.
+`CardPreview.qml` originally concatenated `entry.race` straight into a string expression
+(`entry.attribute + " / " + entry.race`). A tiny empirical Qt 6.8.3 program (a `Q_GADGET`
+matching `CardEntry`'s exact `race` property declaration, passed `0x4000000000000000ULL`
+through the identical QML marshalling path) confirmed the actual failure mode is subtler than
+plain precision loss: `2^62` itself round-trips through a `double` **exactly** (`===
+4611686018427387904` holds, and `toString(16)` reproduces `4000000000000000` bit-for-bit) - but
+JavaScript's *default decimal string* form of that exact double is `"4611686018427388000"`, not
+`"4611686018427387904"`, because both decimal strings parse back to the identical double at
+this magnitude (the gap between adjacent representable doubles near `2^62` is `2^10 = 1024`) and
+the engine is free to pick either as its canonical shortest-round-trip form. The number is never
+actually corrupted internally; a human reading the preview pane would still see the wrong
+digits.
+
+The fix keeps `race` as a real, exact `qulonglong` on `CardEntry` (still available to any future
+C++ caller) and adds `raceDisplay` (`QString`), computed once in `make_card_entry()` via
+`QString::number(record->race, 16)` - a direct 64-bit-to-string conversion with no `double`
+round-trip anywhere in the path. `CardPreview.qml` reads `raceDisplay`, never `race`, for
+display. Hex, not decimal: `race` is a bitmask, and no human-readable race-name table exists
+yet (§12). Audited: every other `CardEntry` field QML reads is 32-bit or narrower
+(`code`/`attack`/`defense`/`level`/`leftScale`/`rightScale`/`linkMarker`/`attribute`/`type`),
+comfortably within a double's 53-bit exact-integer range - `race` is the only field this applies
+to.
+
+### 10.4 `cardCatalog.lastError` is visible in both the empty and the usable screen
+
+With multiple `--card-db` paths, one can fail to load while another still succeeds - `hasCatalog`
+becomes `true` from the successful one, but `cardCatalog.lastError` still holds the failed
+path's message (§4). The no-catalog message (§10.1) is not the only place that error is
+rendered: the "has a catalog" search pane also shows it, directly above the search field, so a
+partial load failure stays visible in the screen a user actually sees rather than disappearing
+the moment any single database loads successfully - silently losing it there would have been
+exactly the kind of dropped failure CLAUDE.md's honesty rules exist to prevent.
+
+### 10.5 A real layout defect found and fixed during visual verification (§13)
+
+The deck pane's
 header row originally placed the current filename/dirty `SectionHeading` and the New/Open/Save
 buttons in one `RowLayout`. At 960px width the three fixed-size buttons left the
 `Layout.fillWidth` heading almost no room, and - because `SectionHeading` had no `elide` set -
@@ -296,6 +539,39 @@ and the header itself was restructured into two rows - the heading alone on its 
 full-width line, the three buttons in a `RowLayout` beneath it - so the two no longer compete
 for the same horizontal space at any width this shell supports.
 
+### 10.6 The preview pane's width, and a second missing-`wrapMode` defect
+
+A second, independently-found layout defect: the three panes' widths were originally
+`Layout.preferredWidth: parent.width * 0.34` (search), `* 0.36` (deck), and a bare
+`Layout.fillWidth: true` (preview) - percentages that silently assumed `parent.width` was close
+to the *window's* width. It is not: this `RowLayout` is `DeckBuilderScreen`'s own content, which
+sits beside the shell's nav rail (`Main.qml`), so its actual available width is the *screen's*
+width, already smaller than the window by the rail's own share. At the default 1280×800 window
+this left the preview pane only **138px** wide - measured directly at runtime during visual
+verification, not estimated from the screenshot - nowhere near enough for a title-sized card
+name or the ATK/DEF grid.
+
+That narrowness alone would just look cramped; what made it a real defect is that the "Card
+code " label (`CardPreview.qml`) had no `wrapMode` (`Text`'s own default is `Text.NoWrap`) and
+no `elide` either, so at 138px it did not wrap or truncate - it silently overflowed rightward,
+off the edge of the preview pane and, since preview is the rightmost element in the row, off the
+edge of the window itself. The card title, which *does* set `wrapMode: Text.WordWrap`, still
+overflowed too: word-wrap only breaks *between* words, and a single word like "Dragon" at
+title-point size can still be wider than a 138px box on its own line. The same missing-`wrapMode`
+mistake was found a second time in the no-catalog message's own heading (§10.1) - "No card
+database loaded" - which has nothing to do with pane width at all and overflowed into the deck
+pane's own space purely for lack of `wrapMode: Text.WordWrap`.
+
+Fixed three ways: the search/deck panes' shares were reduced to `0.32`/`0.34` (from `0.34`/
+`0.36`), the preview pane gained an explicit `Layout.minimumWidth: 260` - a hard floor Qt Quick
+Layouts treats as a harder constraint than a sibling's `preferredWidth`, so the other two panes
+shrink first if space is ever genuinely tight - and the "Card code " `Text` gained
+`elide: Text.ElideRight` as a defensive fallback for any width this pane could still end up at.
+Both this and the no-catalog heading's missing `wrapMode: Text.WordWrap` were fixed directly; a
+full sweep of every other `Text` item in `DeckBuilderScreen.qml`/`CardPreview.qml`/
+`DeckSectionList.qml` confirmed every remaining one already had `wrapMode` or `elide` set, or is
+a short, fixed-length label (`"ATK / DEF"`, `"Level"`, ...) with no realistic overflow risk.
+
 ---
 
 ## 11. Keyboard and launch affordances
@@ -304,13 +580,14 @@ Per-screen `Shortcut` items in `DeckBuilderScreen.qml`, all guarded by
 `StackLayout.isCurrentItem` so they only fire while Decks is the visible page (the shell's
 `StackLayout` keeps every page instantiated even when hidden, so an unguarded `Shortcut` would
 fire from any screen): `Ctrl+F` focuses search, `Ctrl+O` opens (through `confirmThen`),
-`Ctrl+S` saves (falling back to Save As if there is no current path yet), `Ctrl+Shift+S` always
-opens Save As, `Escape` clears the current search-result/deck-entry selection. Search results
-and deck entries are both `ListView`s with `activeFocusOnTab: true` and visible
-`highlighted`/focus styling, so Tab/Shift+Tab reaches them in the natural focus chain: no
-custom focus-traversal logic was written. This is explicitly not a claim of full keyboard or
-controller parity with upstream - only the core interactions this slice's own functionality
-needs to be usable without a mouse.
+`Ctrl+S` saves (`saveOrSaveAs()`, §9.0 - falling back to Save As only when there is no current
+path yet), `Ctrl+Shift+S` always opens Save As, `Escape` calls `clearAllSelection()` (§7.1) -
+visibly clearing every list's highlighted row and the preview pane, not only this screen's own
+bookkeeping variables the way an earlier version did. Search results and deck entries are both
+`ListView`s with `activeFocusOnTab: true` and visible `highlighted`/focus styling, so Tab/
+Shift+Tab reaches them in the natural focus chain: no custom focus-traversal logic was written.
+This is explicitly not a claim of full keyboard or controller parity with upstream - only the
+core interactions this slice's own functionality needs to be usable without a mouse.
 
 `main.cpp` also adds `--start-screen <name>` and `--capture <path>[--capture-width/-height]`,
 purely for launching directly to a screen and producing a real screenshot headlessly (§13) -
@@ -337,6 +614,8 @@ is driven by the nav rail), and not part of ordinary interactive use.
 
 ## 13. Visual verification performed for this slice
 
+### 13.1 First pass (static states only)
+
 Screenshots were captured with `--capture` against a small, clearly-synthetic runtime `.cdb`
 (seven cards, names prefixed "Synthetic", including one Link monster, one Pendulum monster, and
 one deliberately long name) generated outside the repository and never committed, at three
@@ -344,12 +623,50 @@ configurations: 1280x800 with the database loaded, 960x600 (this shell's documen
 with the database loaded, and the empty "no database" state. All three were inspected directly
 (not merely "the process exited 0") for clipping, overlapping text, contrast, unwanted
 horizontal scroll, description wrapping, and legible Main/Extra/Side counts - the header-row
-defect in §10 was found this way, at the 960x600 configuration, and confirmed fixed by
-recapturing after the change. Interaction states (a selected search result with the preview
-pane populated, a selected deck entry) were not captured as screenshots - doing so would need
-either a scripted-input capture mode or a second launch-time affordance beyond `--start-screen`,
-which was judged out of proportion to this slice; the selection/highlight styling itself was
-instead verified by reading the QML (`highlighted: ListView.isCurrentItem`, the same pattern
-`NavButton.qml` already establishes elsewhere in this shell) and exercised indirectly by the
-Qt Test suite's own assertions on the underlying models. This is a deliberate, stated limit on
-what was visually verified, not an oversight.
+defect in §10.5 was found this way, at the 960x600 configuration, and confirmed fixed by
+recapturing after the change. At the time, interaction states (a selected search result, a
+selected deck entry) were deliberately not captured, judging a scripted-input capture mode out
+of proportion to the slice at hand - the selection/highlight styling itself was instead verified
+by reading the QML and exercised indirectly by the adapter-only Qt Test suite of the time.
+
+### 13.2 Second pass: interaction states, and what only they could find
+
+External review correctly rejected §13.1's limitation as insufficient once the screen's
+selection contract (§7.1) became load-bearing behaviour, not just styling. A scratch,
+never-committed capture harness (a modified copy of `main.cpp`, built only inside the disposable
+WSL rsync tree this project's local builds already use, never touching the real source tree) was
+extended with a `--capture-scenario` flag that drives one of a few interaction sequences - via
+the same `objectName`-tagged `findChild()` + property-set/`QMetaObject::invokeMethod()` approach
+`ui/tests/test_deckbuilder_screen.cpp` uses - immediately before capturing. Nine screenshots were
+produced and each inspected directly: the two static states re-verified, a `.ydk` with unknown
+codes loaded with **no catalog at all**, a selected search result, a selected `Main` entry,
+switching selection from `Main` to `Extra`, `clearAllSelection()` (the Escape shortcut's own
+action) clearing a prior selection, `New`'s combined `newDeck()` + `clearAllSelection()`, and the
+application-close dirty-confirmation dialog (§9.3).
+
+This pass is what actually found §7.1.1's `ListView`-default-`currentIndex` defect and §10.6's
+preview-pane-width/missing-`wrapMode` defects - neither visible in any static screenshot from
+§13.1, since both only manifest once a list actually holds data or a selection actually happens.
+Both were fixed and the full nine-screenshot set was recaptured and re-inspected to confirm: no
+stale highlight anywhere, the preview pane tracking exactly one selection at a time, the
+dirty-close dialog appearing with the correct text and buttons, and every text element - the
+card title, the `raceDisplay` hex value, the description, the "No card database loaded" heading
+- rendering fully within its pane with no overflow past the window's own edge.
+
+One acknowledged gap in this pass, not judged worth a third capture round: the `new-replaces`
+scenario's setup script omitted the actual `deckController.newDeck()` call before invoking
+`clearAllSelection()`, so its screenshot ended up visually identical to the `escape-clears` one
+rather than showing an emptied deck. The underlying behaviour is not in doubt - it is exactly
+what `newDeckClearsStaleSelection` (`ui/tests/test_deckbuilder.cpp`) already asserts, including
+`mainCount() == 0` after the call - so this is a gap in one scratch script's screenshot coverage,
+not in the verification of the feature itself.
+
+The capture harness's own process reliably fails to exit after `QGuiApplication::quit()` once an
+actual selected/highlighted delegate has been rendered offscreen - confirmed harmless and
+specific to this harness: the frame is captured and written to disk correctly, in well under two
+seconds, before the hang; both threads then sit idle in the kernel (`do_sys_poll`, 0% CPU - not
+spinning) rather than the process ever doing further work. Never observed via the shipped
+`--capture` path (which this harness only extends), and irrelevant to the shell's real behaviour
+either way; worked around by never blocking on the scratch process's own exit when scripting a
+capture, launching it in the background and unconditionally terminating it after a fixed settle
+time instead.

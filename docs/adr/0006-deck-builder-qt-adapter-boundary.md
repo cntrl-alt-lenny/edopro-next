@@ -46,9 +46,10 @@ QML never needing to reason about C++ object lifetime at all.
    separation and this task's own instructions explicitly rule out for QML, and rejecting it
    for a sibling C++ model for the identical reason.
 2. **`DeckSectionModel` holds a raw, non-owning `const std::vector<CardCode>*` directly into
-   `DeckController`'s own `Deck` member, and `DeckController` calls `notifyInserted`/
-   `notifyRemoved`/`notifyReset` immediately after every mutation it performs** (chosen). There
-   is exactly one `Deck` value in the process for a given editing session; the three section
+   `DeckController`'s own `Deck` member, and `DeckController` brackets every mutation between
+   a matching `notifyAboutToInsert()`/`notifyInserted()`, `notifyAboutToRemove()`/
+   `notifyRemoved()`, or `notifyAboutToReset()`/`notifyReset()` pair** (chosen). There is
+   exactly one `Deck` value in the process for a given editing session; the three section
    models are views over slices of it, never independent state.
 
 ### Consequence
@@ -59,13 +60,25 @@ changes for the controller's lifetime, even when reassigned wholesale
 `Deck`'s own three vectors' contents change. `DeckSectionModel` would dangle if `DeckController`
 ever stored `Deck` behind a pointer/`unique_ptr` and reallocated it; it does not, and this ADR
 records that constraint as load-bearing for anyone changing `DeckController`'s storage later.
+
 The corresponding cost: `DeckController` is the *only* code path permitted to mutate `deck_`,
-and it must remember to call the matching `notify*` after every mutation - there is no
-automatic change-detection mechanism enforcing this at compile time. Reviewed and accepted as
-proportionate for a single-writer class this small; `ui/tests/test_deckbuilder.cpp`'s
-`addRemoveOrderAndMultiplicity`/`loadPreservesOrderDuplicatesAndUnknownCodes` exercise the
-model-visible effects of every mutating call, which would fail if a `notify*` call were ever
-dropped for an existing operation.
+and it must call the begin-side notification **before** mutating and the end-side notification
+**after** - not both together once the mutation has already happened, which is a real bug this
+project shipped and external review caught: `addCard()`/`removeAt()` originally mutated the
+vector first and then called a single combined `notifyInserted(index)`/`notifyRemoved(index)`
+that itself issued `beginInsertRows()`/`beginRemoveRows()` followed immediately by
+`endInsertRows()`/`endRemoveRows()` - so `rowCount()` already reflected the new state at the
+moment views were told a change was only about to happen, violating `QAbstractItemModel`'s own
+contract. `ui/tests/test_deckbuilder.cpp`'s Deck-content assertions
+(`addRemoveOrderAndMultiplicity`/`loadPreservesOrderDuplicatesAndUnknownCodes`) passed cleanly
+throughout, because none of them inspected `rowCount()` at the moment a `begin*`/`end*` signal
+fired - they only checked the `Deck`'s final contents, which this bug never affected. What
+actually catches an ordering regression like this now is
+`modelInvariantsHoldAcrossEveryMutation()`'s three `QAbstractItemModelTester` instances (one per
+section), which independently enforce `QAbstractItemModel`'s full contract - including this
+exact begin-before/end-after requirement - on every signal each `DeckSectionModel` emits across
+append, duplicate append, first/middle/last removal, `newDeck()`, and a `loadDeck()` that
+replaces all three sections at once.
 
 A card's deck section is, by the same reasoning as
 [ADR 0004](0004-deck-model-ydk-codec.md)'s explicit-sections decision, always the caller's
