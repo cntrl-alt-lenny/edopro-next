@@ -19,6 +19,41 @@ ApplicationWindow {
     // Layout responds to available width, never to a fixed resolution.
     readonly property bool compact: width < Theme.breakpointCompact
 
+    // Guards the whole application against silently losing an unsaved
+    // deck on close - New and Open already ask (DeckBuilderScreen's own
+    // confirmThen()), but closing the window/quitting bypassed both, and
+    // DeckController (and therefore its dirty state) lives for the whole
+    // application lifetime regardless of which screen is currently shown.
+    // deckController.dirty is read directly, never duplicated into a
+    // second QML-owned flag - it stays the one authoritative source.
+    onClosing: function(close) {
+        if (!deckController.dirty)
+            return;
+        close.accepted = false;
+        closeConfirmDialog.open();
+    }
+
+    Dialog {
+        id: closeConfirmDialog
+        modal: true
+        anchors.centerIn: parent
+        width: 360
+        title: "Discard unsaved changes?"
+        standardButtons: Dialog.Discard | Dialog.Cancel
+        // Dialog.Discard's DestructiveRole fires discarded(), not
+        // accepted() - see the identical, empirically-verified note on
+        // DeckBuilderScreen's own discardDialog.
+        onDiscarded: Qt.quit()
+
+        contentItem: Text {
+            text: "The current deck has unsaved changes. Discard them and quit?"
+            font.family: Theme.fontFamily
+            font.pointSize: Theme.textBody
+            color: Theme.textSecondary
+            wrapMode: Text.WordWrap
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -45,7 +80,13 @@ ApplicationWindow {
 
             HomeScreen {}
 
-            DeckBuilderScreen {}
+            DeckBuilderScreen {
+                // Set (only) so visual/interaction verification tooling can
+                // locate the real screen instance via findChild() the same
+                // way ui/tests/test_deckbuilder_screen.cpp does - not read
+                // by any production code.
+                objectName: "deckBuilderScreen"
+            }
 
             NotImplementedScreen {
                 screenName: "Duel"
