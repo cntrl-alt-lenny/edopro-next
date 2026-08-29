@@ -136,13 +136,23 @@ already presentation-independent, so it can be built without touching the duel p
       sections over type-based auto-classification, card code 0 excluded rather than
       stored) are in [deck-model.md](architecture/deck-model.md) and
       [ADR 0004](adr/0004-deck-model-ydk-codec.md).
-- [ ] Fast search over the full card pool
+- [x] Fast search over the full card pool. `data/`'s `CardSearchIndex` builds an explicit,
+      presentation-independent snapshot from a `CardDatabase` and answers structured
+      `SearchQuery`s - name/text matching, static metadata filters, deterministic ranking -
+      with no `CardDatabase` mutation, no legality, and no UI syntax of its own. A simple
+      linear scan over precomputed normalized strings measured comfortably fast
+      (single-digit milliseconds) across a synthetic 22,000-card catalogue, so no inverted
+      index or third-party search dependency was added. Source research, the deliberate
+      exclusions from upstream's `CheckCardProperties`, and the performance measurements are
+      in [card-search.md](architecture/card-search.md) and
+      [ADR 0005](adr/0005-card-search-structured-query.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
-**Pending** - the card database facade and the deck model/`.ydk` codec above are done; there
-is still no deck builder UI, so "a deck can be built ... in the new client" is not yet true.
+**Pending** - the card database facade, the deck model/`.ydk` codec, and fast search above
+are done; there is still no deck builder UI, so "a deck can be built ... in the new client"
+is not yet true.
 The format-level half of "opened by upstream EDOPro unchanged" is supported by construction
 (the writer matches `SaveDeck`'s own section syntax and `LoadCardList` accepts it) but not
 proven by an end-to-end GUI test, which does not exist yet.
