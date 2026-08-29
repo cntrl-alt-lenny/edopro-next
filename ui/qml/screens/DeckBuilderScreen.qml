@@ -102,16 +102,31 @@ Item {
         deckController.addCard(searchResults.cardCodeAt(selectedResultRow), section);
     }
 
-    function removeSelectedDeckEntry() {
-        if (selectedSection < 0 || selectedDeckRow < 0)
+    // The one and only removal path - both the "Remove selected" button
+    // and each DeckSectionList's Delete/Backspace request funnel through
+    // here, so mouse and keyboard can never diverge in what cleanup
+    // happens afterward (a real bug external review found: the keyboard
+    // path originally called deckController.removeAt() directly, leaving
+    // stale selection/preview state behind that only the button path
+    // cleared).
+    function removeDeckEntry(section, row) {
+        const model = sectionModel(section);
+        if (!model || row < 0 || row >= model.rowCount())
             return;
-        deckController.removeAt(selectedSection, selectedDeckRow);
+        deckController.removeAt(section, row);
         // Rather than guess a "next" row to land on (which, after a
         // removal, may not even refer to a sensible neighbour - e.g. the
-        // section can now be empty), clear selection completely: a
+        // section can now be empty, or a different card has shifted into
+        // the same numeric index), clear selection completely: a
         // deterministic, unambiguous state that can never show a preview
         // silently mismatched with what is actually still selected.
         clearAllSelection();
+    }
+
+    function removeSelectedDeckEntry() {
+        if (selectedSection < 0 || selectedDeckRow < 0)
+            return;
+        removeDeckEntry(selectedSection, selectedDeckRow);
     }
 
     function saveOrSaveAs() {
@@ -143,6 +158,34 @@ Item {
         id: searchResults
         catalog: cardCatalog
         queryText: searchField.text
+    }
+
+    // SearchResultsModel::refresh() (search_results_model.cpp) always
+    // does a full beginResetModel()/endResetModel() - for a new query, a
+    // catalog reload, or both - and emits resultsChanged() unconditionally
+    // once it finishes. resultsList.onCurrentIndexChanged (below) is not
+    // enough on its own to keep a stale selection from surviving that:
+    // Qt Quick's ListView does not reliably re-fire currentIndexChanged
+    // just because a reset replaced the *data* at an unchanged numeric
+    // index (only when the index number itself changes) - so a selected
+    // result could survive a query change or a catalog reload as the same
+    // currentIndex, now silently pointing at a completely different card,
+    // with the old card's preview still showing. Every refresh() - for
+    // any reason - must invalidate any live search-result selection.
+    // Deliberately does not touch a deck-section selection
+    // (selectedSection/selectedDeckRow) - a search refresh has nothing to
+    // do with those, and clearing them here would be exactly the kind of
+    // "accidentally clear a valid deck-section selection" the search/deck
+    // separation this screen owns must not do.
+    Connections {
+        target: searchResults
+        function onResultsChanged() {
+            if (root.selectedResultRow >= 0) {
+                root.selectedResultRow = -1;
+                resultsList.currentIndex = -1;
+                root.hasPreview = false;
+            }
+        }
     }
 
     // ---- Keyboard access (core, not final parity) --------------------
@@ -528,6 +571,7 @@ Item {
                 sectionModel: deckController.mainModel
                 section: DeckController.Main
                 onEntryActivated: function(row) { root.selectDeckEntry(DeckController.Main, row); }
+                onRemoveRequested: function(row) { root.removeDeckEntry(DeckController.Main, row); }
             }
             DeckSectionList {
                 id: extraList
@@ -539,6 +583,7 @@ Item {
                 sectionModel: deckController.extraModel
                 section: DeckController.Extra
                 onEntryActivated: function(row) { root.selectDeckEntry(DeckController.Extra, row); }
+                onRemoveRequested: function(row) { root.removeDeckEntry(DeckController.Extra, row); }
             }
             DeckSectionList {
                 id: sideList
@@ -550,6 +595,7 @@ Item {
                 sectionModel: deckController.sideModel
                 section: DeckController.Side
                 onEntryActivated: function(row) { root.selectDeckEntry(DeckController.Side, row); }
+                onRemoveRequested: function(row) { root.removeDeckEntry(DeckController.Side, row); }
             }
 
             Button {

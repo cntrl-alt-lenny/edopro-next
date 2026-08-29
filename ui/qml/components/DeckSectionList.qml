@@ -20,6 +20,18 @@ ColumnLayout {
     property var sectionModel: null
     property int section: -1
     signal entryActivated(int row)
+    // A presentation-level request only - this component never calls
+    // deckController itself. The owning screen performs the actual
+    // removal and is the only thing that knows how to clean up selection/
+    // preview state afterward (docs/architecture/deck-builder-ui.md#7.1) -
+    // duplicating that cleanup here would be exactly the kind of
+    // mouse-path/keyboard-path divergence external review found: the
+    // original Keys.onDeletePressed/Backspace handlers called
+    // deckController.removeAt() directly, bypassing
+    // DeckBuilderScreen.removeSelectedDeckEntry()'s clearAllSelection()
+    // entirely and leaving stale selectedSection/selectedDeckRow/
+    // hasPreview/previewCode behind.
+    signal removeRequested(int row)
 
     // A plain alias (not a one-way declarative binding) so the owning
     // screen can imperatively clear or set this list's visual selection -
@@ -65,14 +77,16 @@ ColumnLayout {
             // Keys has no dedicated onBackspacePressed handler (unlike
             // onDeletePressed) - Backspace is handled through the generic
             // onPressed dispatch instead, the same pattern NavButton.qml
-            // already uses for Return/Enter/Space.
+            // already uses for Return/Enter/Space. Both just request -
+            // never mutate deckController or this list's own currentIndex
+            // themselves.
             Keys.onDeletePressed: {
                 if (currentIndex >= 0)
-                    deckController.removeAt(root.section, currentIndex);
+                    root.removeRequested(currentIndex);
             }
             Keys.onPressed: function(event) {
                 if (event.key === Qt.Key_Backspace && currentIndex >= 0) {
-                    deckController.removeAt(root.section, currentIndex);
+                    root.removeRequested(currentIndex);
                     event.accepted = true;
                 }
             }
