@@ -123,6 +123,26 @@ private slots:
     // "Unknown card" after a reload until something else happened to
     // touch that row.
     void deckRowsRefreshWhenCatalogReloads();
+
+    // Second follow-up review pass, section 5: CardCatalog::loaded()'s
+    // documented contract ("true once at least one database file has
+    // loaded successfully") disagreed with its own implementation
+    // (`database_.size() > 0`) - a syntactically valid, schema-correct but
+    // legitimately empty .cdb would load successfully yet report
+    // loaded() == false. Fixed by tracking success explicitly rather than
+    // deriving it from cardCount.
+    void emptyButValidDatabaseCountsAsLoaded();
+    void partialSuccessAcrossMultiplePathsStillCountsAsLoaded();
+
+    // Second follow-up review pass, section 6: CardCode::None (0) is
+    // documented everywhere in data/ as "not a real card" and is never
+    // produced by either real UI path that can add a card
+    // (Add-to-section only ever offers codes CardSearchIndex actually
+    // found in a loaded CardDatabase, which itself rejects code-0 rows as
+    // a load failure; parse_ydk excludes a code-0 line from the resulting
+    // Deck) - but DeckController::addCard() is a public Q_INVOKABLE, and
+    // nothing stopped it from accepting 0 directly.
+    void addCardSilentlyRejectsCardCodeZero();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -255,9 +275,12 @@ void TestDeckBuilder::dirtyStateTransitionsMatchContract() {
     controller.removeAt(DeckController::Section::Main, 0);
     QCOMPARE(controller.dirty(), true); // editing again: dirty
 
-    // A save to an unwritable path fails and leaves dirty untouched.
+    // A save to an unwritable path fails and leaves dirty untouched - and
+    // currentPath must stay at the last genuinely successful path, not the
+    // failed one, so a later plain "Save" still targets somewhere real.
     QVERIFY(!controller.saveDeckAs(QUrl::fromLocalFile("/definitely/not/writable/x.ydk")));
     QCOMPARE(controller.dirty(), true); // failed save: remains dirty
+    QCOMPARE(controller.currentPath(), path);
 
     controller.addCard(2, DeckController::Section::Main);
     QVERIFY(controller.saveDeckAs(QUrl::fromLocalFile(path)));
@@ -428,6 +451,46 @@ void TestDeckBuilder::deckRowsRefreshWhenCatalogReloads() {
     QVERIFY(spy.count() >= 1);
     QCOMPARE(controller.mainModel()->data(rowIndex, DeckSectionModel::NameRole).toString(),
              QStringLiteral("Beta"));
+}
+
+void TestDeckBuilder::emptyButValidDatabaseCountsAsLoaded() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // An empty card list still creates the real datas/texts schema (see
+    // writeSyntheticDatabase) and simply inserts zero rows - a genuinely
+    // valid, schema-correct .cdb that happens to have no cards in it, not
+    // a malformed file.
+    const QString dbPath = writeSyntheticDatabase(dir.filePath("empty.cdb"), {});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    QVERIFY(catalog.loaded());
+    QCOMPARE(catalog.cardCount(), 0);
+    QVERIFY(catalog.lastError().isEmpty());
+}
+
+void TestDeckBuilder::partialSuccessAcrossMultiplePathsStillCountsAsLoaded() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString goodPath = writeSyntheticDatabase(dir.filePath("good.cdb"), {{1, "Alpha"}});
+
+    CardCatalog catalog;
+    // loadDatabases()'s own documented return contract is "every
+    // requested path succeeded", which one missing file here violates -
+    // that is a separate claim from loaded(), which only asks whether
+    // *any* path succeeded.
+    QVERIFY(!catalog.loadDatabases({goodPath, "/definitely/does/not/exist.cdb"}));
+    QVERIFY(catalog.loaded());
+    QCOMPARE(catalog.cardCount(), 1);
+    QVERIFY(!catalog.lastError().isEmpty());
+}
+
+void TestDeckBuilder::addCardSilentlyRejectsCardCodeZero() {
+    DeckController controller;
+    controller.addCard(0, DeckController::Section::Main);
+    QCOMPARE(controller.mainCount(), 0);
+    // Not even a no-op edit - a rejected add was never a real edit at all.
+    QCOMPARE(controller.dirty(), false);
 }
 
 QTEST_MAIN(TestDeckBuilder)

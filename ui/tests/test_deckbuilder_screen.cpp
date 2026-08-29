@@ -18,6 +18,7 @@
 // the exact same functions the real buttons and shortcuts call.
 
 #include <QGuiApplication>
+#include <QPair>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
@@ -42,7 +43,7 @@ void run(sqlite3* db, const char* sql) {
         qFatal("synthetic .cdb setup failed: %s", err ? err : "unknown error");
 }
 
-QString writeSyntheticDatabase(const QString& path, quint32 code, const QString& name) {
+QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, QString>>& cards) {
     sqlite3* db = nullptr;
     if (sqlite3_open(path.toStdString().c_str(), &db) != SQLITE_OK)
         qFatal("failed to create synthetic .cdb at %s", qPrintable(path));
@@ -54,15 +55,21 @@ QString writeSyntheticDatabase(const QString& path, quint32 code, const QString&
             "str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
             "str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
             "str14 TEXT, str15 TEXT, str16 TEXT);");
-    run(db, qPrintable(QStringLiteral("INSERT INTO datas (id,ot,alias,setcode,type,atk,def,"
-                                       "level,race,attribute,category) VALUES (%1,0,0,0,1,"
-                                       "1000,1000,4,0,0,0);")
-                            .arg(code)));
-    run(db, qPrintable(QStringLiteral("INSERT INTO texts (id,name,desc) VALUES (%1,'%2','synthetic text');")
-                            .arg(code)
-                            .arg(name)));
+    for (const auto& [code, name] : cards) {
+        run(db, qPrintable(QStringLiteral("INSERT INTO datas (id,ot,alias,setcode,type,atk,def,"
+                                           "level,race,attribute,category) VALUES (%1,0,0,0,1,"
+                                           "1000,1000,4,0,0,0);")
+                                .arg(code)));
+        run(db, qPrintable(QStringLiteral("INSERT INTO texts (id,name,desc) VALUES (%1,'%2','synthetic text');")
+                                .arg(code)
+                                .arg(name)));
+    }
     sqlite3_close(db);
     return path;
+}
+
+QString writeSyntheticDatabase(const QString& path, quint32 code, const QString& name) {
+    return writeSyntheticDatabase(path, QList<QPair<quint32, QString>>{{code, name}});
 }
 
 void writeFile(const QString& path, const QString& contents) {
@@ -119,6 +126,31 @@ public:
         child(listObjectName)->setProperty("currentIndex", row);
     }
 
+    // Emits DeckSectionList's own removeRequested(row) signal directly -
+    // the exact same signal its real Keys.onDeletePressed/Backspace
+    // handlers emit (DeckSectionList.qml) - rather than simulating a
+    // literal keypress (fragile under the offscreen QPA platform, which
+    // has no real window-manager focus semantics) or calling a
+    // test-only alternative path. QML-declared signals are ordinary
+    // invokable members of the dynamic meta-object, so invoking one by
+    // name through QMetaObject::invokeMethod emits it exactly as `emit
+    // removeRequested(row)` from within the component's own QML would.
+    void requestKeyboardRemoval(const char* listObjectName, int row) {
+        // Q_ARG(int, ...), not Q_ARG(QVariant, ...): unlike a QML-declared
+        // JS function (which always takes QVariant parameters, since JS
+        // has no static types), a QML `signal removeRequested(int row)`
+        // generates a real Qt signal whose parameter keeps its declared
+        // C++ type - invokeMethod's overload resolution matches on that
+        // exact type, confirmed empirically (QVariant here produced "No
+        // such method ...::removeRequested(QVariant); Candidates are:
+        // removeRequested(int)").
+        QMetaObject::invokeMethod(child(listObjectName), "removeRequested", Q_ARG(int, row));
+    }
+
+    void setSearchQuery(const QString& text) {
+        child("searchField")->setProperty("text", text);
+    }
+
     CardCatalog catalog;
     DeckController controller;
     QQmlApplicationEngine engine;
@@ -163,6 +195,30 @@ private slots:
     // C++-only test ever reads.
     void populatingASectionNeverAutoSelectsItsFirstRow();
     void populatingSearchResultsNeverAutoSelectsTheFirstRow();
+
+    // External review: DeckSectionList's Keys.onDeletePressed/Backspace
+    // originally called deckController.removeAt() directly, bypassing
+    // DeckBuilderScreen.removeSelectedDeckEntry()'s clearAllSelection()
+    // entirely - leaving stale selectedSection/selectedDeckRow/hasPreview/
+    // previewCode, and "Remove selected" enabled against a row that no
+    // longer represents the selected card. Both exercise the exact
+    // removeRequested signal the real keyboard handlers emit (see
+    // Harness::requestKeyboardRemoval()), not a parallel test-only path.
+    void keyboardRemovalOneRowSectionClearsSelection();
+    void keyboardRemovalMultiRowSectionRemovesOnlyTheIntendedCard();
+
+    // External review, second finding: SearchResultsModel::refresh() does
+    // a full model reset for every query change or catalog reload, but a
+    // previously selected result's currentIndex can survive that reset as
+    // the same *number* pointing at completely different data - Qt Quick's
+    // ListView does not reliably re-fire currentIndexChanged just because
+    // the data at an unchanged index changed. populatingSearchResults...
+    // above only covers the pristine case, before any selection has ever
+    // broken the initial currentIndex: -1 binding; these three cover the
+    // state after a real selection has already happened.
+    void selectedResultClearsOnDifferentQuery();
+    void selectedResultClearsOnZeroResultQuery();
+    void selectedResultClearsOnCatalogReplacement();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -342,6 +398,119 @@ void TestDeckBuilderScreen::populatingSearchResultsNeverAutoSelectsTheFirstRow()
     QCOMPARE(h.currentIndexOf("resultsList"), -1);
     QCOMPARE(h.prop("hasPreview").toBool(), false);
     QCOMPARE(h.prop("selectedResultRow").toInt(), -1);
+}
+
+void TestDeckBuilderScreen::keyboardRemovalOneRowSectionClearsSelection() {
+    Harness h;
+    QVERIFY(h.valid());
+    h.controller.addCard(111, DeckController::Section::Main);
+    h.selectByClick("mainList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+
+    h.requestKeyboardRemoval("mainList", 0);
+
+    QCOMPARE(h.controller.mainCount(), 0);
+    QCOMPARE(h.currentIndexOf("mainList"), -1);
+    QCOMPARE(h.prop("selectedSection").toInt(), -1);
+    QCOMPARE(h.prop("selectedDeckRow").toInt(), -1);
+    QCOMPARE(h.prop("hasPreview").toBool(), false);
+}
+
+void TestDeckBuilderScreen::keyboardRemovalMultiRowSectionRemovesOnlyTheIntendedCard() {
+    Harness h;
+    QVERIFY(h.valid());
+    h.controller.addCard(111, DeckController::Section::Main);
+    h.controller.addCard(222, DeckController::Section::Main);
+    h.selectByClick("mainList", 0);
+    QCOMPARE(h.prop("previewCode").toDouble(), 111.0);
+
+    h.requestKeyboardRemoval("mainList", 0);
+
+    // Only the intended first card (111) was removed - 222 remains, now
+    // shifted into index 0 but never itself selected or previewed.
+    QCOMPARE(h.controller.mainCount(), 1);
+    QCOMPARE(h.controller.deck().main.front(), edopro_next::data::CardCode{222});
+    QCOMPARE(h.currentIndexOf("mainList"), -1);
+    QCOMPARE(h.prop("hasPreview").toBool(), false);
+    QCOMPARE(h.prop("selectedSection").toInt(), -1);
+    QCOMPARE(h.prop("selectedDeckRow").toInt(), -1);
+
+    // Nothing is selected any more, so "Remove selected" - wired to
+    // removeSelectedDeckEntry(), the same function the button calls -
+    // must not accidentally remove card 222.
+    h.invoke("removeSelectedDeckEntry");
+    QCOMPARE(h.controller.mainCount(), 1);
+    QCOMPARE(h.controller.deck().main.front(), edopro_next::data::CardCode{222});
+}
+
+void TestDeckBuilderScreen::selectedResultClearsOnDifferentQuery() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabase(
+        dir.filePath("cards.cdb"), {{111, QStringLiteral("Alpha")}, {222, QStringLiteral("Beta")}});
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    h.setSearchQuery(QStringLiteral("Alpha"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+    QCOMPARE(h.prop("previewCode").toDouble(), 111.0);
+
+    // A different, still non-empty query - SearchResultsModel::refresh()
+    // does a full model reset here, exactly as it would for a real
+    // keystroke.
+    h.setSearchQuery(QStringLiteral("Beta"));
+
+    QCOMPARE(h.currentIndexOf("resultsList"), -1);
+    QCOMPARE(h.prop("selectedResultRow").toInt(), -1);
+    QCOMPARE(h.prop("hasPreview").toBool(), false);
+}
+
+void TestDeckBuilderScreen::selectedResultClearsOnZeroResultQuery() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabase(dir.filePath("cards.cdb"), 111, QStringLiteral("Alpha"));
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    h.setSearchQuery(QStringLiteral("Alpha"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+
+    h.setSearchQuery(QStringLiteral("nonexistent card name"));
+
+    QCOMPARE(h.child("resultsList")->property("count").toInt(), 0);
+    QCOMPARE(h.currentIndexOf("resultsList"), -1);
+    QCOMPARE(h.prop("selectedResultRow").toInt(), -1);
+    QCOMPARE(h.prop("hasPreview").toBool(), false);
+}
+
+void TestDeckBuilderScreen::selectedResultClearsOnCatalogReplacement() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPathA = writeSyntheticDatabase(dir.filePath("a.cdb"), 111, QStringLiteral("Alpha"));
+    const QString dbPathB = writeSyntheticDatabase(dir.filePath("b.cdb"), 222, QStringLiteral("Beta"));
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPathA}));
+
+    h.setSearchQuery(QStringLiteral("Alpha"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+    QCOMPARE(h.prop("previewCode").toDouble(), 111.0);
+
+    // Replaces the catalog entirely - code 111 is no longer present at
+    // all, not merely unmatched by the current query text.
+    QVERIFY(h.catalog.loadDatabases({dbPathB}));
+
+    QCOMPARE(h.currentIndexOf("resultsList"), -1);
+    QCOMPARE(h.prop("selectedResultRow").toInt(), -1);
+    QCOMPARE(h.prop("hasPreview").toBool(), false);
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)
