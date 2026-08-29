@@ -10,6 +10,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
+# Same convention as data/CMakeLists.txt's EDOPRO_NEXT_DATA_TESTS and
+# client/CMakeLists.txt's EDOPRO_NEXT_CLIENT_TESTS: on by default for a
+# standalone build of this module, so a plain local configure exercises
+# its own tests without extra flags. CI passes -DEDOPRO_NEXT_UI_TESTS=ON
+# explicitly anyway, for robustness against this default ever changing.
+option(EDOPRO_NEXT_UI_TESTS "Build the ui/ Qt Test suites (adapter + QML screen)" ON)
+
 # QtQuick.Dialogs (FileDialog, used by the deck builder's Open/Save As) is
 # QuickDialogs2 at the CMake-component level, not a separate find_package.
 find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2 QuickDialogs2)

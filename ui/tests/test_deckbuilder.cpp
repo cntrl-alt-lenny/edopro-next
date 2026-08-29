@@ -7,8 +7,10 @@
 // synthetic SQLite database and/or .ydk text built at runtime - never a
 // committed Project Ignis `.cdb` file (CLAUDE.md) and never real card data.
 
+#include <QAbstractItemModelTester>
 #include <QObject>
 #include <QPair>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QUrl>
@@ -105,6 +107,22 @@ private slots:
 
     // I) model safety
     void reloadingTheCatalogNeverLeavesStaleResults();
+
+    // Section 8 of the follow-up review pass: Qt's own QAbstractItemModel
+    // contract, enforced by QAbstractItemModelTester rather than only by
+    // this file's own Deck-content assertions - which the real P1
+    // model-notification-ordering bug (mutating the vector, then calling a
+    // single combined begin+end pair) passed cleanly, because none of them
+    // inspected rowCount() at the moment a begin*/end* signal fired.
+    void modelInvariantsHoldAcrossEveryMutation();
+
+    // Section 5 of the follow-up review pass: DeckSectionModel resolves
+    // NameRole/KnownRole from CardCatalog at display time rather than
+    // storing them, but was never told when the bound catalog's contents
+    // actually changed - a live view could keep showing a stale name or
+    // "Unknown card" after a reload until something else happened to
+    // touch that row.
+    void deckRowsRefreshWhenCatalogReloads();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -277,11 +295,20 @@ void TestDeckBuilder::searchingNeverMutatesTheDeck() {
 void TestDeckBuilder::reloadingTheCatalogNeverLeavesStaleResults() {
     QTemporaryDir dir;
     QVERIFY(dir.isValid());
-    const QString dbPathA = writeSyntheticDatabase(dir.filePath("a.cdb"), {{1, "Original Name"}});
+    // Deliberately adversarial, not just "the same code, renamed": A has a
+    // code (2) that B does not. The old, buggy in-place-merge
+    // implementation (load_database() called directly on the existing
+    // member) would still pass a same-code-renamed-only test, since
+    // load_database()'s own last-file-wins overlay already handles that
+    // case correctly on its own - the bug only shows up for a code that
+    // should *disappear* on replacement, which is exactly what this checks.
+    const QString dbPathA =
+        writeSyntheticDatabase(dir.filePath("a.cdb"), {{1, "Original Name"}, {2, "Only In A"}});
     const QString dbPathB = writeSyntheticDatabase(dir.filePath("b.cdb"), {{1, "Replaced Name"}});
 
     CardCatalog catalog;
     QVERIFY(catalog.loadDatabases({dbPathA}));
+    QCOMPARE(catalog.cardCount(), 2);
 
     SearchResultsModel results;
     results.setCatalog(&catalog);
@@ -289,12 +316,118 @@ void TestDeckBuilder::reloadingTheCatalogNeverLeavesStaleResults() {
     QCOMPARE(results.resultCount(), 1);
 
     QVERIFY(catalog.loadDatabases({dbPathB}));
+    QCOMPARE(catalog.cardCount(), 1); // not 2 - code 2 must be gone, not merged in
+
     results.setQueryText("Original");
     QCOMPARE(results.resultCount(), 0);
     results.setQueryText("Replaced");
     QCOMPARE(results.resultCount(), 1);
     QCOMPARE(results.data(results.index(0, 0), SearchResultsModel::NameRole).toString(),
              QStringLiteral("Replaced Name"));
+
+    // Code 2 must be completely gone - not just unmatched by name, but
+    // absent from the catalog and unresolvable by its exact code either.
+    results.setQueryText("Only In A");
+    QCOMPARE(results.resultCount(), 0);
+
+    // An all-failed subsequent reload must clear everything, not preserve
+    // B's data as if the failed call had never happened.
+    QVERIFY(!catalog.loadDatabases({"/definitely/does/not/exist.cdb"}));
+    QCOMPARE(catalog.loaded(), false);
+    QCOMPARE(catalog.cardCount(), 0);
+    QVERIFY(!catalog.lastError().isEmpty());
+    results.setQueryText("Replaced");
+    QCOMPARE(results.resultCount(), 0);
+}
+
+void TestDeckBuilder::modelInvariantsHoldAcrossEveryMutation() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    DeckController controller;
+    // Each tester independently enforces QAbstractItemModel's own
+    // contract (begin*() before the model's visible state changes,
+    // end*()/dataChanged() after - among other invariants) on every
+    // signal its bound model emits for the rest of this test. QtTest mode
+    // integrates a violation as an ordinary Qt Test failure rather than
+    // aborting the whole binary (Fatal) or only warning (Warning) -
+    // matching Qt's own documented recommendation for a Qt Test host.
+    QAbstractItemModelTester mainTester(controller.mainModel(),
+                                         QAbstractItemModelTester::FailureReportingMode::QtTest);
+    QAbstractItemModelTester extraTester(controller.extraModel(),
+                                          QAbstractItemModelTester::FailureReportingMode::QtTest);
+    QAbstractItemModelTester sideTester(controller.sideModel(),
+                                         QAbstractItemModelTester::FailureReportingMode::QtTest);
+
+    // empty -> populated, including a duplicate append.
+    controller.addCard(1, DeckController::Section::Main);
+    controller.addCard(2, DeckController::Section::Main);
+    controller.addCard(1, DeckController::Section::Main); // duplicate
+    controller.addCard(10, DeckController::Section::Extra);
+    controller.addCard(20, DeckController::Section::Side);
+    controller.addCard(21, DeckController::Section::Side);
+    controller.addCard(22, DeckController::Section::Side);
+
+    // Remove first, then (what is now) middle, then (what is now) last.
+    controller.removeAt(DeckController::Section::Side, 0); // removes 20; [21, 22]
+    controller.addCard(23, DeckController::Section::Side); // [21, 22, 23]
+    controller.removeAt(DeckController::Section::Side, 1); // removes 22 (middle); [21, 23]
+    controller.addCard(24, DeckController::Section::Side); // [21, 23, 24]
+    controller.removeAt(DeckController::Section::Side, 2); // removes 24 (last); [21, 23]
+    QCOMPARE(controller.sideCount(), 2);
+
+    // populated -> empty, via newDeck().
+    controller.newDeck();
+    QCOMPARE(controller.mainCount(), 0);
+    QCOMPARE(controller.extraCount(), 0);
+    QCOMPARE(controller.sideCount(), 0);
+
+    // empty -> populated again, via loadDeck() replacing all three
+    // sections in one call.
+    const QString path = dir.filePath("model_tester.ydk");
+    writeFile(path, "#main\n1\n2\n#extra\n3\n!side\n4\n5\n");
+    QVERIFY(controller.loadDeck(QUrl::fromLocalFile(path)));
+    QCOMPARE(controller.mainCount(), 2);
+    QCOMPARE(controller.extraCount(), 1);
+    QCOMPARE(controller.sideCount(), 2);
+
+    // populated -> empty again.
+    controller.newDeck();
+    QCOMPARE(controller.mainCount(), 0);
+    QCOMPARE(controller.extraCount(), 0);
+    QCOMPARE(controller.sideCount(), 0);
+}
+
+void TestDeckBuilder::deckRowsRefreshWhenCatalogReloads() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPathA = writeSyntheticDatabase(dir.filePath("a.cdb"), {{1, "Alpha"}});
+    const QString dbPathB = writeSyntheticDatabase(dir.filePath("b.cdb"), {{1, "Beta"}});
+
+    CardCatalog catalog;
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    controller.addCard(1, DeckController::Section::Main);
+
+    const auto rowIndex = controller.mainModel()->index(0, 0);
+    QCOMPARE(controller.mainModel()->data(rowIndex, DeckSectionModel::KnownRole).toBool(), false);
+
+    // unknown -> known must announce itself, not just be true the next
+    // time something else happens to call data() on this row.
+    QSignalSpy spy(controller.mainModel(), &DeckSectionModel::dataChanged);
+    QVERIFY(catalog.loadDatabases({dbPathA}));
+    QVERIFY(spy.count() >= 1);
+
+    QCOMPARE(controller.mainModel()->data(rowIndex, DeckSectionModel::KnownRole).toBool(), true);
+    QCOMPARE(controller.mainModel()->data(rowIndex, DeckSectionModel::NameRole).toString(),
+             QStringLiteral("Alpha"));
+
+    // known(Alpha) -> known(Beta), same code, must announce itself too.
+    spy.clear();
+    QVERIFY(catalog.loadDatabases({dbPathB}));
+    QVERIFY(spy.count() >= 1);
+    QCOMPARE(controller.mainModel()->data(rowIndex, DeckSectionModel::NameRole).toString(),
+             QStringLiteral("Beta"));
 }
 
 QTEST_MAIN(TestDeckBuilder)
