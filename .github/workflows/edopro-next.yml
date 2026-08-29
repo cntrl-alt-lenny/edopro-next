@@ -145,7 +145,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev \
-            libfontconfig1-dev libfreetype-dev ninja-build
+            libfontconfig1-dev libfreetype-dev ninja-build libsqlite3-dev
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -156,11 +156,22 @@ jobs:
           arch: linux_gcc_64
           cache: true
 
+      # ui/CMakeLists.txt nests data/ (the M3 card-database/deck/search
+      # facades the deck builder screen adapts - docs/architecture/
+      # deck-builder-ui.md) as a sibling CMake project, which needs SQLite3
+      # dev headers here in addition to the "Card and deck data" job's own
+      # standalone copy above.
       - name: Configure
-        run: cmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DEDOPRO_NEXT_UI_TESTS=ON
 
       - name: Build
         run: cmake --build ui/build --parallel
+
+      # Covers the deck-builder Qt C++ adapter layer (CardCatalog,
+      # SearchResultsModel, DeckSectionModel, DeckController) - every
+      # fixture is synthetic data built at runtime, never a committed .cdb.
+      - name: Deck builder adapter unit tests
+        run: ctest --test-dir ui/build --output-on-failure
 
       - name: Launch offscreen and require a clean QML load
         # Two independent assertions, because either alone can pass falsely:

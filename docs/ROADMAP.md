@@ -147,12 +147,21 @@ already presentation-independent, so it can be built without touching the duel p
       in [card-search.md](architecture/card-search.md) and
       [ADR 0005](adr/0005-card-search-structured-query.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
+      **A functional core exists (M3D1), not the complete item.** A real `DeckBuilderScreen`
+      wires `CardCatalog`/`CardSearchIndex` text search, an explicit-choice Main/Extra/Side
+      editor over one canonical `Deck`, and `.ydk` open/save/new with a tested dirty-state
+      contract, through a small Qt adapter layer (`ui/src/deckbuilder/`) that keeps `data/`
+      Qt-free. Still missing: legality (deck size, three-copy, banlists), automatic
+      Main/Extra classification, artwork, the legacy sigil search grammar and structured
+      filters beyond plain text, and full keyboard/controller parity. Design and the
+      deliberate exclusions: [deck-builder-ui.md](architecture/deck-builder-ui.md) and
+      [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md).
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
 **Pending** - the card database facade, the deck model/`.ydk` codec, and fast search above
-are done; there is still no deck builder UI, so "a deck can be built ... in the new client"
-is not yet true.
+are done, and a functional deck-builder core now exists (M3D1); legality, automatic
+classification and full keyboard/controller parity remain, so the milestone is not complete.
 The format-level half of "opened by upstream EDOPro unchanged" is supported by construction
 (the writer matches `SaveDeck`'s own section syntax and `LoadCardList` accepts it) but not
 proven by an end-to-end GUI test, which does not exist yet.

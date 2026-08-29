@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/cntrl-alt-lenny/edopro-next/actions/workflows/edopro-next.yml/badge.svg)](https://github.com/cntrl-alt-lenny/edopro-next/actions/workflows/edopro-next.yml)
 [![Status](https://img.shields.io/badge/status-early%20development-C08A3E)](docs/ROADMAP.md)
-[![Milestone](https://img.shields.io/badge/milestone-M2%20semantic%20client%20model-C9A227)](docs/ROADMAP.md)
+[![Milestone](https://img.shields.io/badge/milestone-M3%20deck%20and%20card%20data-C9A227)](docs/ROADMAP.md)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C)](docs/adr/0001-ui-runtime-stack.md)
 [![Qt 6](https://img.shields.io/badge/Qt-6.8%20LTS%20%2F%20QML-41CD52)](ui/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](LICENSE)
@@ -22,8 +22,11 @@
 > [!IMPORTANT]
 > **Early development. This is not yet a playable replacement for EDOPro.**
 >
-> There is no duel field, no deck builder, and no way to play a game. What exists is an
-> architecture, a verified build baseline, a regression harness, and one compiled UI shell.
+> There is no duel field and no way to play a game. A functional deck-builder core exists —
+> search a loaded card pool, build Main/Extra/Side explicitly, open and save a `.ydk` — but
+> it has no legality, no artwork, and no full keyboard/controller parity yet. What else
+> exists is an architecture, a verified build baseline, a regression harness, and one
+> compiled UI shell.
 >
 > **If you want to duel today, use [EDOPro](https://github.com/edo9300/edopro).** This
 > project would not exist without it.
@@ -119,7 +122,7 @@ Nothing here is rounded up.
 | Card database facade | ✅ **Working** | reads Project Ignis `.cdb` files into a presentation-independent record; no legality — [design](docs/architecture/card-database.md) |
 | Deck model / `.ydk` codec | ✅ **Working** | presentation-independent deck value type, reads and writes Project Ignis's `.ydk` format; no legality, no UI yet — [design](docs/architecture/deck-model.md) |
 | Fast card search | ✅ **Working** | structured, presentation-independent search over the full loaded card pool; measured comfortably fast with a plain linear scan, no legality, no UI yet — [design](docs/architecture/card-search.md) |
-| Deck builder UI | ⬜ Not started | first screen to migrate |
+| Deck builder UI | 🔶 **Core working** | search, explicit Main/Extra/Side editing, `.ydk` open/save, over a tested Qt adapter; no legality, no artwork, no full keyboard/controller parity — [design](docs/architecture/deck-builder-ui.md) |
 | Duel field | ⬜ Not started | deliberately last |
 | Windows / macOS builds | ⬜ Not attempted | Linux only so far |
 
