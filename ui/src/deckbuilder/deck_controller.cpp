@@ -92,6 +92,16 @@ DeckSectionModel* DeckController::modelFor(Section section) {
 }
 
 void DeckController::addCard(quint32 code, Section section) {
+    // CardCode::None (0) is never a valid Deck entry (data/'s own
+    // invariant - deck-model.md#5); neither real UI path that can add a
+    // card can trigger this today (search results never contain code 0,
+    // since CardDatabase::load_database() itself rejects a code-0 row as
+    // a load failure; parse_ydk excludes a code-0 line from the resulting
+    // Deck), but addCard() is a public Q_INVOKABLE, and a silent, correct
+    // no-op here is a small, deliberate guard against the public surface
+    // ever being able to violate that invariant, from any caller.
+    if (code == 0)
+        return;
     auto& vec = sectionVector(section);
     auto* model = modelFor(section);
     const int index = static_cast<int>(vec.size());

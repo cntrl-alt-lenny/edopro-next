@@ -20,12 +20,17 @@ class CardCatalog : public QObject {
     Q_OBJECT
     QML_ELEMENT
 
-    // True once at least one database file has loaded successfully. False
-    // both before any load attempt and after every supplied path failed -
-    // there is no "silently keep whatever was there before" state, because
-    // there is nothing to fall back to: this module never bundles or
-    // fabricates card data (CLAUDE.md; docs/architecture/deck-builder-ui.md
-    // #bootstrap).
+    // True once at least one database file has loaded successfully -
+    // tracked explicitly from each load_database() call's own `ok`, never
+    // derived from cardCount: a syntactically valid, schema-correct .cdb
+    // can legitimately contain zero rows (CardDatabase::LoadResult::
+    // rows_loaded documents this - "0 on failure" is not the same claim as
+    // "0 means failure"), and such a file's successful load must still
+    // count as `loaded`. False both before any load attempt and after
+    // every supplied path failed - there is no "silently keep whatever was
+    // there before" state, because there is nothing to fall back to: this
+    // module never bundles or fabricates card data (CLAUDE.md;
+    // docs/architecture/deck-builder-ui.md#bootstrap).
     Q_PROPERTY(bool loaded READ loaded NOTIFY loadedChanged)
     Q_PROPERTY(int cardCount READ cardCount NOTIFY loadedChanged)
     // Empty when the most recent loadDatabases() call had no failures at
@@ -76,4 +81,7 @@ private:
     edopro_next::data::CardDatabase database_;
     edopro_next::data::CardSearchIndex searchIndex_;
     QString lastError_;
+    // Independent of database_.size() on purpose - see loaded()'s own
+    // Q_PROPERTY doc comment above.
+    bool loaded_ = false;
 };
