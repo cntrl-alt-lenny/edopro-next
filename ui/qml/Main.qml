@@ -35,19 +35,17 @@ ApplicationWindow {
             id: stack
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: 0
+            // startScreenIndex is a launch-time convenience for visual
+            // verification/screenshots only (main.cpp's --start-screen) -
+            // normal use always reaches every screen through the nav rail
+            // or the Ctrl+<N> shortcuts below, which is why it seeds the
+            // initial index rather than becoming a routing property this
+            // layout reacts to afterward.
+            currentIndex: typeof startScreenIndex !== "undefined" ? startScreenIndex : 0
 
             HomeScreen {}
 
-            NotImplementedScreen {
-                screenName: "Decks"
-                intent: "A deck builder with instant search across the full card pool, "
-                      + "archetype and attribute filtering, banlist-aware legality, and "
-                      + "keyboard, mouse and controller parity."
-                blockedBy: "First screen scheduled for migration. Upstream's deck_manager "
-                         + "and card database are already presentation-independent, so "
-                         + "this can be built without touching the duel path."
-            }
+            DeckBuilderScreen {}
 
             NotImplementedScreen {
                 screenName: "Duel"

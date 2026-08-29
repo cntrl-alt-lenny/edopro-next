@@ -10,4 +10,5 @@ Text {
     font.letterSpacing: Theme.trackingHeading
     font.capitalization: Font.AllUppercase
     color: Theme.textTertiary
+    elide: Text.ElideRight
 }

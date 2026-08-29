@@ -118,8 +118,11 @@ qt_add_qml_module(edopro_next_shell
         qml/components/NavButton.qml
         qml/components/StatusRow.qml
         qml/components/SectionHeading.qml
+        qml/components/DeckSectionList.qml
+        qml/components/CardPreview.qml
         qml/screens/HomeScreen.qml
         qml/screens/NotImplementedScreen.qml
+        qml/screens/DeckBuilderScreen.qml
 )
 
 target_link_libraries(edopro_next_shell PRIVATE
