@@ -146,25 +146,42 @@ already presentation-independent, so it can be built without touching the duel p
       exclusions from upstream's `CheckCardProperties`, and the performance measurements are
       in [card-search.md](architecture/card-search.md) and
       [ADR 0005](adr/0005-card-search-structured-query.md).
+- [x] Deck legality / LFList policy foundation. `policy/`'s `validate_deck()` reproduces
+      `DeckManager::CheckDeckSize`/`CheckDeckContent`/`CheckCards`'s exact source order -
+      deck size, unknown cards, forbidden types, Legend/Skill limits, per-card scope,
+      section placement, the shared three-copy cap, and LFList/whitelist limitations,
+      including the null-`LFList*`-vs-concrete-"N/A"-list distinction and the
+      `CHECK_UNOFFICIAL` magnitude quirk, both preserved deliberately. `parse_lflist()`
+      reproduces upstream's own banlist grammar, hash formula, and quirks (a `$whitelist`
+      prefix match, duplicate-code content/hash divergence), failing closed for the one
+      count domain in which upstream's own hash expression is undefined behavior. This is a
+      **presentation-independent foundation only** - nothing in `ui/` calls it yet, so a
+      deck built in the QML deck-builder still shows no legality information at all. Source
+      research and the deliberate divergences are in
+      [deck-legality.md](architecture/deck-legality.md) and
+      [ADR 0007](adr/0007-deck-legality-policy-module.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
       **A functional core exists (M3D1), not the complete item.** A real `DeckBuilderScreen`
       wires `CardCatalog`/`CardSearchIndex` text search, an explicit-choice Main/Extra/Side
       editor over one canonical `Deck`, and `.ydk` open/save/new with a tested dirty-state
       contract, through a small Qt adapter layer (`ui/src/deckbuilder/`) that keeps `data/`
-      Qt-free. Still missing: legality (deck size, three-copy, banlists), automatic
-      Main/Extra classification, artwork, the legacy sigil search grammar and structured
-      filters beyond plain text, and full keyboard/controller parity. Design and the
-      deliberate exclusions: [deck-builder-ui.md](architecture/deck-builder-ui.md) and
+      Qt-free. Still missing: legality is not yet surfaced anywhere in the UI (the
+      presentation-independent validation exists as of `policy/` above, but nothing in
+      `ui/` calls it), automatic Main/Extra classification, artwork, the legacy sigil
+      search grammar and structured filters beyond plain text, and full keyboard/controller
+      parity. Design and the deliberate exclusions:
+      [deck-builder-ui.md](architecture/deck-builder-ui.md) and
       [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md).
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
-**Pending** - the card database facade, the deck model/`.ydk` codec, and fast search above
-are done, and a functional deck-builder core now exists (M3D1); legality, automatic
-classification and full keyboard/controller parity remain, so the milestone is not complete.
-The format-level half of "opened by upstream EDOPro unchanged" is supported by construction
-(the writer matches `SaveDeck`'s own section syntax and `LoadCardList` accepts it) but not
-proven by an end-to-end GUI test, which does not exist yet.
+**Pending** - the card database facade, the deck model/`.ydk` codec, fast search, and the
+deck legality/policy foundation above are all done, and a functional deck-builder core
+exists (M3D1); UI-visible legality, automatic classification and full keyboard/controller
+parity remain, so the milestone is not complete. The format-level half of "opened by
+upstream EDOPro unchanged" is supported by construction (the writer matches `SaveDeck`'s
+own section syntax and `LoadCardList` accepts it) but not proven by an end-to-end GUI test,
+which does not exist yet.
 
 ## M4 — Low-risk screens
 
