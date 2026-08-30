@@ -265,7 +265,13 @@ local ygopro_config=function(static_core)
 	if _OPTIONS["semantic-observer"] then
 		defines "EDOPRO_NEXT_SEMANTIC_OBSERVER"
 		includedirs { "../integration/legacy" }
-		links { "edopro_next_legacy_observer", "edopro_next_client" }
+		-- Static-lib link requirements do not propagate transitively here -
+		-- edopro_next_client already had to be listed explicitly alongside
+		-- edopro_next_legacy_observer (which itself links it) for the same
+		-- reason; edopro_next_deck (linked by edopro_next_legacy_observer
+		-- for the .ydk interop harness, see integration/legacy/premake5.lua)
+		-- needs the same explicit re-listing at this final link step.
+		links { "edopro_next_legacy_observer", "edopro_next_client", "edopro_next_deck" }
 	end
 end
 
