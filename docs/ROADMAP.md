@@ -160,6 +160,21 @@ already presentation-independent, so it can be built without touching the duel p
       research and the deliberate divergences are in
       [deck-legality.md](architecture/deck-legality.md) and
       [ADR 0007](adr/0007-deck-legality-policy-module.md).
+- [x] Real upstream `.ydk` interoperability proof. `integration/legacy/ydk_interop.{h,cpp}`
+      hands a `.ydk` produced by this project's own, unmodified `edopro_next::data::
+      save_ydk()` to the real, preserved `DeckManager::LoadDeckFromFile()` - the same entry
+      point upstream's own deck builder calls - against a small, synthetic, committed-safe
+      database fixture, and compares the resulting `ygo::Deck` to independently-derived
+      expected structures for both of upstream's `separated` load modes, including the
+      Extra-Deck reclassification of a card written under `#main` and the documented
+      unknown-card asymmetry between modes. A deterministic fault-injection CLI path proves
+      the comparator is live, the same way M2's replay-verifier fault injection does. This is
+      a **format/loader-level proof only** - it does not touch the QML deck builder, does not
+      exercise upstream's GUI/file-picker path, and does not attempt the reverse direction
+      (upstream `SaveDeck` read back by this project's parser). Source research and the
+      deliberate scope boundaries are in
+      [ydk-interoperability.md](architecture/ydk-interoperability.md) and
+      [ADR 0008](adr/0008-upstream-ydk-interop-harness.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
       **A functional core exists (M3D1), not the complete item.** A real `DeckBuilderScreen`
       wires `CardCatalog`/`CardSearchIndex` text search, an explicit-choice Main/Extra/Side
@@ -177,11 +192,14 @@ already presentation-independent, so it can be built without touching the duel p
 upstream EDOPro unchanged.
 **Pending** - the card database facade, the deck model/`.ydk` codec, fast search, and the
 deck legality/policy foundation above are all done, and a functional deck-builder core
-exists (M3D1); UI-visible legality, automatic classification and full keyboard/controller
-parity remain, so the milestone is not complete. The format-level half of "opened by
-upstream EDOPro unchanged" is supported by construction (the writer matches `SaveDeck`'s
-own section syntax and `LoadCardList` accepts it) but not proven by an end-to-end GUI test,
-which does not exist yet.
+exists (M3D1); UI-visible legality, automatic classification, structured/legacy search
+parity and full keyboard/controller parity remain, so the milestone is not complete.
+Current serializer -> real upstream `LoadDeckFromFile` compatibility is now **CI-proven**
+against deterministic synthetic card data (M3D3, above) - a real improvement over "supported
+by construction" - but actual GUI/file-picker interaction remains outside that harness by
+design ([ydk-interoperability.md](architecture/ydk-interoperability.md)§0/§10), so "opened by
+upstream EDOPro unchanged" is proven at the format/loader level, not end-to-end through
+upstream's own interface.
 
 ## M4 — Low-risk screens
 
