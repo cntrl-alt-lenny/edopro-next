@@ -2,8 +2,10 @@
 // "limitation/forbidden card list" (LFList / banlist) file format. See
 // docs/architecture/deck-legality.md#lflist-grammar for the full,
 // source-verified grammar this reproduces (gframe/deck_manager.cpp's
-// DeckManager::LoadLFListSingle, gframe/deck_manager.h's LFList struct) and
-// #hash-domain for the one deliberate divergence from it.
+// DeckManager::LoadLFListSingle, gframe/deck_manager.h's LFList struct),
+// #hash-domain for the one deliberate content/hash parsing divergence from
+// it, and LfList::name's own doc comment below for a second, separate,
+// narrower divergence in section-name encoding.
 //
 // This is a text/file <-> value boundary only, mirroring edopro_next::data's
 // ydk.h split: parsing in-memory text is independently testable, and

@@ -214,11 +214,21 @@ line:
 
 - `#...` and blank lines are skipped (`:50`).
 - `!Name` opens a new named section, closing and emitting the previous one
-  (if its hash is nonzero) first (`:52-60`). `name` is stored as plain UTF-8
-  `std::string` here, not upstream's `std::wstring` - nothing in this
-  module touches Irrlicht text rendering, and the underlying bytes are
-  identical either way (matching `CardRecord::name`'s own UTF-8
-  convention).
+  (if its hash is nonzero) first (`:52-60`). `name` is an UTF-8-by-convention
+  byte string (`std::string`, matching `CardRecord::name`'s own convention),
+  not upstream's decoded `std::wstring` (`BufferIO::DecodeUTF8`,
+  `gframe/bufferio.h`) - nothing in this module touches Irrlicht text
+  rendering, so there is no reason to carry a wide string, or to decode at
+  all. For **well-formed** UTF-8 input this is text-equivalent to what
+  upstream's decoder would produce (a lossless round-trip) - it is **not**
+  a claim that the two in-memory byte representations (`std::string` vs.
+  `std::wstring`) are themselves identical. For **malformed** UTF-8, this
+  is a documented divergence, not an equivalence: this module passes the
+  bytes through unchanged, while upstream's decoder does not (it silently
+  substitutes a NUL for an unrecognized leading byte, and abandons decoding
+  the rest of the string entirely once a multi-byte sequence's continuation
+  bytes run out early) - see `LfList::name`'s own doc comment
+  (`lf_list.h`) for the full account.
 - `$whitelist` is a **prefix** match (`:62`: `str.rfind(key.data(), 0,
   key.size()) == 0`), not exact equality - `"$whitelistTRUE"` also matches.
   It runs unconditionally, even before any `!Name` line - which has zero
@@ -299,7 +309,11 @@ project's own established precedent of reproducing this exactly, including
 its ABI-dependent edge cases (§10.3), rather than "fixing" it into a
 platform-independent grammar.
 
-### 10.2 The one deliberate divergence: refusing to hash a narrowed count that would be shift-undefined-behavior
+### 10.2 The one deliberate hash-semantic divergence: refusing to hash a narrowed count that would be shift-undefined-behavior
+
+(A second, separate, narrower divergence - in section-name encoding, not in
+content/hash parsing - is documented in §9's own `!Name` bullet; the two
+are independent and this section covers only the first.)
 
 `gframe/deck_manager.cpp:80`:
 
