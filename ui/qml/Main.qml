@@ -19,6 +19,41 @@ ApplicationWindow {
     // Layout responds to available width, never to a fixed resolution.
     readonly property bool compact: width < Theme.breakpointCompact
 
+    // Guards the whole application against silently losing an unsaved
+    // deck on close - New and Open already ask (DeckBuilderScreen's own
+    // confirmThen()), but closing the window/quitting bypassed both, and
+    // DeckController (and therefore its dirty state) lives for the whole
+    // application lifetime regardless of which screen is currently shown.
+    // deckController.dirty is read directly, never duplicated into a
+    // second QML-owned flag - it stays the one authoritative source.
+    onClosing: function(close) {
+        if (!deckController.dirty)
+            return;
+        close.accepted = false;
+        closeConfirmDialog.open();
+    }
+
+    Dialog {
+        id: closeConfirmDialog
+        modal: true
+        anchors.centerIn: parent
+        width: 360
+        title: "Discard unsaved changes?"
+        standardButtons: Dialog.Discard | Dialog.Cancel
+        // Dialog.Discard's DestructiveRole fires discarded(), not
+        // accepted() - see the identical, empirically-verified note on
+        // DeckBuilderScreen's own discardDialog.
+        onDiscarded: Qt.quit()
+
+        contentItem: Text {
+            text: "The current deck has unsaved changes. Discard them and quit?"
+            font.family: Theme.fontFamily
+            font.pointSize: Theme.textBody
+            color: Theme.textSecondary
+            wrapMode: Text.WordWrap
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -35,18 +70,22 @@ ApplicationWindow {
             id: stack
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: 0
+            // startScreenIndex is a launch-time convenience for visual
+            // verification/screenshots only (main.cpp's --start-screen) -
+            // normal use always reaches every screen through the nav rail
+            // or the Ctrl+<N> shortcuts below, which is why it seeds the
+            // initial index rather than becoming a routing property this
+            // layout reacts to afterward.
+            currentIndex: typeof startScreenIndex !== "undefined" ? startScreenIndex : 0
 
             HomeScreen {}
 
-            NotImplementedScreen {
-                screenName: "Decks"
-                intent: "A deck builder with instant search across the full card pool, "
-                      + "archetype and attribute filtering, banlist-aware legality, and "
-                      + "keyboard, mouse and controller parity."
-                blockedBy: "First screen scheduled for migration. Upstream's deck_manager "
-                         + "and card database are already presentation-independent, so "
-                         + "this can be built without touching the duel path."
+            DeckBuilderScreen {
+                // Set (only) so visual/interaction verification tooling can
+                // locate the real screen instance via findChild() the same
+                // way ui/tests/test_deckbuilder_screen.cpp does - not read
+                // by any production code.
+                objectName: "deckBuilderScreen"
             }
 
             NotImplementedScreen {
