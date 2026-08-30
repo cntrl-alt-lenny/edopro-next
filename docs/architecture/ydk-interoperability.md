@@ -127,7 +127,7 @@ behaviour ([deck-model.md](deck-model.md)§4), the resulting file is exactly:
 
 No Ritual monster is included, so `RITUAL_LOCATION::DEFAULT` (the value this harness passes
 throughout) is inert for this fixture - `is_extra_deck_card`'s Ritual branch
-(`gframe/deck_manager.cpp:339-344`) is never reached. Exhaustive `MAIN`/`EXTRA`/`DEFAULT`
+(`gframe/deck_manager.cpp:340-346`) is never reached. Exhaustive `MAIN`/`EXTRA`/`DEFAULT`
 Ritual-placement coverage is out of scope for this slice; see §7.
 
 ---
@@ -145,7 +145,7 @@ own parser, or upstream and capturing the output; the harness's expected constan
 ### `separated=false` (`extralist == nullptr`)
 
 In `LoadCardList`: every `"#..."` line is skipped unconditionally
-(`gframe/deck_manager.cpp:288-291`: `if(!extralist || str != "#extra") continue;` - `
+(`gframe/deck_manager.cpp:287-291`: `if(!extralist || str != "#extra") continue;` - `
 !extralist` is always true here), so `"#extra"` never sets `is_extra`, and every numeric
 line before `"!side"` - including `10000003`, physically written after the `"#extra"`
 marker - lands in the single combined `mainlist`: `[10000001, 10000002, 10000099,
@@ -172,10 +172,10 @@ In `LoadDeck` (`loadalways = !!extralist = true`):
 - `10000001`, `10000002` -> same classification as above -> **Main**, **Extra**.
 - `10000099` -> dummy (`code=0, alias=10000099`); the drop condition's `!loadalways` is now
   false, so it is **not** dropped. The reclassification gate itself
-  (`(!extralist || cd->code != 0)`, `gframe/deck_manager.cpp:346`) is also false here
+  (`(!extralist || cd->code != 0)`, `gframe/deck_manager.cpp:359`) is also false here
   (`extralist` is non-null **and** `cd->code == 0`), so classification is skipped and it
   falls to the `else` branch: **kept in Main, as a dummy** (`code=0, alias=10000099`).
-- `10000003` (extra list) -> the `extralist` loop (`gframe/deck_manager.cpp:365-374`)
+- `10000003` (extra list) -> the `extralist` loop (`gframe/deck_manager.cpp:365-377`)
   applies **no type check at all** - every non-token code reaching it is pushed to
   `deck.extra` unconditionally -> **Extra**, appended after `10000002`.
 - `10000004` (side list) -> **Side**.
@@ -197,8 +197,8 @@ proves both, separately, rather than picking one and generalizing.
 [deck-model.md](deck-model.md)§8 documents this asymmetry from reading source; this harness
 is what turns that reading into a running check against the real, unmodified loader. Per
 the correction accepted for this slice: `LoadDeckFromFile` calls `LoadDeck` and **discards**
-its `uint32_t errorcode` return value (`gframe/deck_manager.cpp:327`: `LoadDeck(...); return
-true;`). This harness does not, and must not, claim to observe that discarded value - it
+its `uint32_t errorcode` return value (`gframe/deck_manager.cpp:327-328`: `LoadDeck(...);
+return true;`). This harness does not, and must not, claim to observe that discarded value - it
 was not changed to expose it, and doing so would misdescribe what `LoadDeckFromFile` (the
 function this harness actually calls) does. What **is** observable, and is exactly what this
 harness checks, is the unknown code's effect on the resulting `ygo::Deck`: absent entirely
@@ -229,7 +229,7 @@ out of scope here, and may be picked up as its own slice if a concrete need for 
 
 This fixture contains no Ritual monster, so `RITUAL_LOCATION::DEFAULT` is passed throughout
 and never actually exercises `is_extra_deck_card`'s Ritual branch
-(`gframe/deck_manager.cpp:339-344`) or the `MAIN`/`EXTRA` values at all. Exhaustive coverage
+(`gframe/deck_manager.cpp:340-346`) or the `MAIN`/`EXTRA` values at all. Exhaustive coverage
 of all three `RITUAL_LOCATION` values is deliberately not built here - it would need a
 Ritual-typed synthetic card and roughly doubles the mode matrix for a case this slice's
 scope does not require. A future slice may add it if a real interoperability requirement
