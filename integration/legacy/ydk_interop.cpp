@@ -9,12 +9,11 @@
 
 #include <sqlite3.h>
 
-#include <atomic>
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
+#include <random>
 #include <string>
-#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -147,22 +146,44 @@ void build_synthetic_database(const std::filesystem::path& path, const std::vect
 	sqlite_check(sqlite3_close(db), nullptr, "close");
 }
 
-// A small RAII temp-file helper, local to this harness for the same reason
-// build_synthetic_database() is: not a reuse of data/tests/synthetic_cdb.h's
-// TempFile, kept minimal and self-contained.
-class TempPath {
+// A small RAII scoped-temp-directory helper, local to this harness for the
+// same reason build_synthetic_database() is: not a reuse of
+// data/tests/synthetic_cdb.h's TempFile, kept minimal and self-contained.
+//
+// A process-local counter alone (an earlier version of this class used one)
+// produces a predictable path such as /tmp/edopro_next_ydk_interop_0.cdb -
+// every invocation of this CLI starts counting from 0 again, so two
+// concurrent invocations can collide on the same fixture path, and a
+// pre-existing file or symlink at that exact, guessable name could make
+// save_ydk() silently write through it. std::filesystem::create_directory()
+// is atomic and exclusive at the OS level (it fails, rather than following
+// or truncating, if anything - including a symlink - already exists at that
+// path), so combining that with a random_device-seeded name and a bounded
+// retry loop removes both hazards: the fixture files themselves get fixed,
+// readable names *inside* this freshly, exclusively created directory,
+// where no other process could plausibly have created anything first.
+class TempDir {
 public:
-	explicit TempPath(std::string_view suffix) {
-		static std::atomic<int> counter{0};
-		path_ = std::filesystem::temp_directory_path() /
-			("edopro_next_ydk_interop_" + std::to_string(counter.fetch_add(1)) + std::string(suffix));
+	TempDir() {
+		std::random_device rd;
+		for(int attempt = 0; attempt < 8; ++attempt) {
+			auto candidate = std::filesystem::temp_directory_path() /
+				("edopro_next_ydk_interop_" + std::to_string(rd()) + std::to_string(rd()));
+			std::error_code ec;
+			if(std::filesystem::create_directory(candidate, ec)) {
+				path_ = candidate;
+				return;
+			}
+		}
+		std::fprintf(stderr, "ydk interop: failed to create a unique temporary directory\n");
+		std::abort();
 	}
-	~TempPath() {
+	~TempDir() {
 		std::error_code ec;
-		std::filesystem::remove(path_, ec);
+		std::filesystem::remove_all(path_, ec);
 	}
-	TempPath(const TempPath&) = delete;
-	TempPath& operator=(const TempPath&) = delete;
+	TempDir(const TempDir&) = delete;
+	TempDir& operator=(const TempDir&) = delete;
 
 	const std::filesystem::path& path() const { return path_; }
 
@@ -276,8 +297,11 @@ const SectionResult kExpectedSeparated{
 YdkInteropStats verify_ydk_interop(bool inject_fault) {
 	YdkInteropStats stats;
 
-	TempPath cdb_path(".cdb");
-	build_synthetic_database(cdb_path.path(), {
+	TempDir workdir;
+	const auto cdb_path = workdir.path() / "fixture.cdb";
+	const auto ydk_path = workdir.path() / "fixture.ydk";
+
+	build_synthetic_database(cdb_path, {
 		{kCardMain, TYPE_MONSTER},
 		{kCardFusion, TYPE_MONSTER | TYPE_FUSION},
 		{kCardExtra, TYPE_SPELL},
@@ -285,9 +309,8 @@ YdkInteropStats verify_ydk_interop(bool inject_fault) {
 		// kCardUnknown is deliberately never inserted.
 	});
 
-	TempPath ydk_path(".ydk");
 	const auto fixture_deck = build_fixture_deck();
-	const auto save_result = next_data::save_ydk(ydk_path.path(), fixture_deck);
+	const auto save_result = next_data::save_ydk(ydk_path, fixture_deck);
 	if(!save_result) {
 		std::fprintf(stderr, "ydk interop: failed to write fixture .ydk: %s\n",
 					 save_result.error.c_str());
@@ -295,7 +318,7 @@ YdkInteropStats verify_ydk_interop(bool inject_fault) {
 	}
 
 	ScopedLegacyState legacy;
-	if(!legacy.data_manager().LoadDB(ygo::Utils::ToPathString(cdb_path.path().string()))) {
+	if(!legacy.data_manager().LoadDB(ygo::Utils::ToPathString(cdb_path.string()))) {
 		std::fprintf(stderr, "ydk interop: failed to load synthetic database\n");
 		return stats;
 	}
@@ -315,7 +338,7 @@ YdkInteropStats verify_ydk_interop(bool inject_fault) {
 	for(const auto& mode : modes) {
 		ygo::Deck out;
 		const bool loaded = ygo::DeckManager::LoadDeckFromFile(
-			ygo::Utils::ToPathString(ydk_path.path().string()), out, mode.separated,
+			ygo::Utils::ToPathString(ydk_path.string()), out, mode.separated,
 			ygo::RITUAL_LOCATION::DEFAULT);
 		std::cout << mode.label << "\n";
 		if(!loaded) {
