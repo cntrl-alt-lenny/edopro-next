@@ -3,6 +3,7 @@
 #include "edopro_next/policy/lf_list.h"
 
 #include <fstream>
+#include <limits>
 
 namespace edopro_next::policy {
 
@@ -165,17 +166,37 @@ LfListParse parse_lflist(std::string_view text) {
 		bool parsed = false;
 		bool is_code_zero = false;
 		try {
-			code = static_cast<std::uint32_t>(std::stoul(line.substr(0, space)));
-			// gframe/deck_manager.cpp:76-77: code 0 short-circuits before
-			// the count field is even parsed - a malformed count on a
-			// code-0 line is therefore irrelevant, exactly as upstream
-			// never attempts that parse either.
-			if(code == 0) {
-				is_code_zero = true;
-			} else {
-				raw_count = std::stol(line.substr(space, count_len));
-				parsed = true;
+			// External review: std::stoul() returns an `unsigned long`, 64
+			// bits wide on an LP64 platform - wider than uint32_t. Exactly
+			// the same class of bug as is_hash_safe_count()'s own domain
+			// check exists to prevent (see above), but for the code field
+			// instead of the count field: narrowing an out-of-uint32_t-
+			// range code BEFORE checking it could silently wrap
+			// "4294967297" into code 1 - applying this line's restriction
+			// to an entirely unrelated, legitimate card - or wrap
+			// "4294967296" into code 0, silently discarding it as if it
+			// were the ordinary, deliberate code-0 no-op, both differing
+			// by platform depending on `unsigned long`'s width. The range
+			// check below runs on the wide, not-yet-narrowed value, exactly
+			// mirroring the count-field fix.
+			const unsigned long raw_code = std::stoul(line.substr(0, space));
+			if(raw_code <= std::numeric_limits<std::uint32_t>::max()) {
+				code = static_cast<std::uint32_t>(raw_code);
+				// gframe/deck_manager.cpp:76-77: code 0 short-circuits
+				// before the count field is even parsed - a malformed
+				// count on a code-0 line is therefore irrelevant, exactly
+				// as upstream never attempts that parse either.
+				if(code == 0) {
+					is_code_zero = true;
+				} else {
+					raw_count = std::stol(line.substr(space, count_len));
+					parsed = true;
+				}
 			}
+			// else: raw_code exceeds uint32_t's range - falls through with
+			// both is_code_zero and parsed still false, so this line is
+			// rejected below exactly like any other malformed code/count,
+			// on every platform regardless of `unsigned long`'s width.
 		} catch(...) {
 			parsed = false;
 		}

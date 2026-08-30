@@ -318,6 +318,37 @@ EDOPRO_POLICY_TEST(countValueThatWouldWrapToASafeValueIsStillRejected) {
 	EDOPRO_POLICY_CHECK_EQ(genuineZero->content.at(CardCode{4}), 0);
 }
 
+EDOPRO_POLICY_TEST(codeValueThatWouldWrapToAnotherCardsCodeIsRejected) {
+	// External review: the identical class of bug as
+	// countValueThatWouldWrapToASafeValueIsStillRejected above, but for the
+	// CODE field - std::stoul() also returns a wide, platform-dependent
+	// type (unsigned long). 4294967297 (2^32 + 1) is nowhere near a valid
+	// uint32_t card code, but narrowing it BEFORE range-checking would wrap
+	// it to code 1 - silently applying this line's restriction to an
+	// entirely unrelated, legitimate card. Must be rejected outright, never
+	// laundered into a real code.
+	auto listWithCardOne = only_list("!L\n1 1\n");
+	EDOPRO_POLICY_CHECK(listWithCardOne.has_value());
+
+	auto wrapsToCardOne = parse_lflist("!L\n4294967297 3\n");
+	EDOPRO_POLICY_CHECK_EQ(wrapsToCardOne.lists.size(), 1u);
+	EDOPRO_POLICY_CHECK_EQ(wrapsToCardOne.lists[0].content.size(), 0u);
+	EDOPRO_POLICY_CHECK(wrapsToCardOne.lists[0].content.find(CardCode{1}) ==
+						 wrapsToCardOne.lists[0].content.end());
+	EDOPRO_POLICY_CHECK_EQ(wrapsToCardOne.ignored.size(), 1u);
+}
+
+EDOPRO_POLICY_TEST(codeValueThatWouldWrapToZeroIsRejectedNotTreatedAsANoOp) {
+	// Same class of bug as above, but wrapping to code 0 specifically -
+	// 4294967296 (2^32 exactly) must be rejected as malformed, not
+	// silently treated as the ordinary, deliberate code-0 no-op (which has
+	// no `ignored` entry at all - see codeZeroIsSilentlySkipped).
+	auto result = parse_lflist("!L\n4294967296 3\n");
+	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 1u);
+	EDOPRO_POLICY_CHECK_EQ(result.lists[0].content.size(), 0u);
+	EDOPRO_POLICY_CHECK_EQ(result.ignored.size(), 1u);
+}
+
 EDOPRO_POLICY_TEST(loadLflistFileRoundTrips) {
 	const auto path = std::filesystem::temp_directory_path() / "edopro_next_policy_test_lflist.conf";
 	{
