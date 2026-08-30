@@ -29,14 +29,31 @@ namespace edopro_next::policy {
 // not including) the next `!` line or end of input. `hash` is a fingerprint
 // of this section's own accepted content lines, computed exactly as
 // upstream computes it (gframe/deck_manager.cpp:80) whenever a content
-// line's count falls within the domain that expression is well-defined for
-// - see docs/architecture/deck-legality.md#hash-domain for the domain and
-// the deliberate divergence outside it (parse_lflist() below).
+// line's NARROWED count (the same int32_t value upstream's own
+// `static_cast<int32_t>(std::stol(...))` produces - see
+// docs/architecture/deck-legality.md#hash-domain) falls within the domain
+// that expression is well-defined for; this module's one deliberate
+// divergence handles the rest (parse_lflist() below).
 //
 // `name` is plain UTF-8 (matching CardRecord::name/text's own convention -
 // see card_record.h), not upstream's std::wstring: nothing in this module
 // touches Irrlicht text rendering, so there is no reason to carry a wide
-// string at all, and the underlying bytes are identical either way.
+// string at all. This module never decodes or re-encodes it, storing
+// exactly the bytes the file contains after the `!` - for WELL-FORMED UTF-8
+// input, this represents the identical text upstream's own
+// BufferIO::DecodeUTF8 (gframe/bufferio.h) would decode into a wstring, a
+// lossless round-trip. Valid UTF-8 is an explicit precondition of this
+// equivalence claim, not a guarantee this module enforces: for MALFORMED
+// UTF-8, this module passes the bytes through completely unchanged, while
+// upstream's own decoder does not - reading its actual implementation shows
+// it silently substitutes a NUL character for any byte that does not match
+// a recognized UTF-8 leading-byte pattern, and - more destructively -
+// abandons decoding the REST of the string entirely the instant a
+// multi-byte sequence's continuation bytes run out before the string does
+// (an early loop exit, not a per-character skip). This module does not
+// reproduce either behavior; a malformed-UTF-8 section name is a
+// documented, narrow divergence, not a bit-for-bit-matched case like the
+// hash/count semantics are.
 struct LfList {
 	std::string name;
 	std::uint32_t hash = 0;

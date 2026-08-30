@@ -3,7 +3,6 @@
 #include "edopro_next/policy/lf_list.h"
 
 #include <fstream>
-#include <limits>
 
 namespace edopro_next::policy {
 
@@ -27,28 +26,39 @@ constexpr std::uint32_t fixed_rotate_term(std::uint32_t code) {
 }
 
 // The count-dependent half of the same expression -
-// `(code << (27 + count)) | (code >> (5 - count))`. C++ requires each shift
-// amount to be in [0, 31] for a 32-bit operand ([expr.shift]); solving
-// `0 <= 27 + count <= 31` and `0 <= 5 - count <= 31` simultaneously gives
-// count in [-26, 4] inclusive - the ONLY domain in which upstream's own
-// expression is defined at all. See docs/architecture/deck-legality.md
-// #hash-domain for the full derivation and the deliberate divergence this
-// module uses outside that domain (a hash-unsafe line is dropped entirely,
-// exactly like a malformed one - see parse_lflist() below). This function
-// must never be called with a count outside that domain; callers check
-// is_hash_safe_count() first.
+// `(code << (27 + count)) | (code >> (5 - count))`, where `count` is
+// upstream's own `int32_t count = static_cast<int32_t>(std::stol(...))`
+// (gframe/deck_manager.cpp:78) - the NARROWED value that expression
+// actually operates on, not the wide `long` std::stol() itself returns.
+// C++ requires each shift amount to be in [0, 31] for a 32-bit operand
+// ([expr.shift]); solving `0 <= 27 + count <= 31` and `0 <= 5 - count <=
+// 31` simultaneously gives count in [-26, 4] inclusive - the ONLY domain
+// in which upstream's own expression is defined at all, once `count` is
+// the value upstream's narrowing actually produces. See
+// docs/architecture/deck-legality.md#hash-domain for the full derivation
+// and why this module's ONE deliberate divergence is scoped to exactly
+// this - refusing to execute the hash expression for a narrowed `count`
+// outside this domain (see parse_lflist() below) - and nothing broader:
+// it is not a rejection of any particular *wide* std::stol() result, and
+// it does not second-guess upstream's own narrowing cast, which this
+// module performs identically and unconditionally, exactly as upstream
+// does. This function must never be called with a count outside that
+// domain; callers check is_hash_safe_count() first.
 constexpr std::int32_t kHashSafeCountMin = -26;
 constexpr std::int32_t kHashSafeCountMax = 4;
 
-// Takes the WIDE `long` std::stol() itself returns, deliberately not
-// std::int32_t - see the call site in parse_lflist() for why: [-26, 4] is
-// a strict subset of int32_t's own range, so comparing against it directly
-// on the not-yet-narrowed value both performs the domain check AND
-// guarantees the later narrowing cast to int32_t is safe, without ever
-// narrowing an out-of-domain value first (which, on an LP64 platform where
-// `long` is wider than int32_t, could otherwise wrap into something that
-// looks in-domain - external review found exactly this).
-constexpr bool is_hash_safe_count(long count) {
+// Takes the NARROWED std::int32_t - the same value upstream's own hash
+// expression operates on (gframe/deck_manager.cpp:78,80) - not the wide
+// `long` std::stol() itself returns. A wide value that narrows (via the
+// exact same `static_cast<int32_t>` upstream performs, including its
+// ABI-dependent behavior for a value outside int32_t's range - see
+// docs/architecture/deck-legality.md#hash-domain) into this domain is
+// accepted normally, exactly as upstream's own hash expression would
+// compute it; only a narrowed value that lands OUTSIDE this domain -
+// whether because the original text was already out of range, or because
+// narrowing wrapped it there - triggers this module's one deliberate
+// divergence.
+constexpr bool is_hash_safe_count(std::int32_t count) {
 	return count >= kHashSafeCountMin && count <= kHashSafeCountMax;
 }
 
@@ -158,45 +168,49 @@ LfListParse parse_lflist(std::string_view text) {
 			count_end == std::string::npos ? std::string::npos : count_end - space;
 
 		std::uint32_t code = 0;
-		// The WIDE result of std::stol(), deliberately not yet narrowed to
-		// std::int32_t - see is_hash_safe_count()'s own domain check below
-		// for why the safe-domain test must run on this value, not on an
-		// already-narrowed one.
-		long raw_count = 0;
+		std::int32_t count = 0;
 		bool parsed = false;
 		bool is_code_zero = false;
 		try {
-			// External review: std::stoul() returns an `unsigned long`, 64
-			// bits wide on an LP64 platform - wider than uint32_t. Exactly
-			// the same class of bug as is_hash_safe_count()'s own domain
-			// check exists to prevent (see above), but for the code field
-			// instead of the count field: narrowing an out-of-uint32_t-
-			// range code BEFORE checking it could silently wrap
-			// "4294967297" into code 1 - applying this line's restriction
-			// to an entirely unrelated, legitimate card - or wrap
-			// "4294967296" into code 0, silently discarding it as if it
-			// were the ordinary, deliberate code-0 no-op, both differing
-			// by platform depending on `unsigned long`'s width. The range
-			// check below runs on the wide, not-yet-narrowed value, exactly
-			// mirroring the count-field fix.
-			const unsigned long raw_code = std::stoul(line.substr(0, space));
-			if(raw_code <= std::numeric_limits<std::uint32_t>::max()) {
-				code = static_cast<std::uint32_t>(raw_code);
-				// gframe/deck_manager.cpp:76-77: code 0 short-circuits
-				// before the count field is even parsed - a malformed
-				// count on a code-0 line is therefore irrelevant, exactly
-				// as upstream never attempts that parse either.
-				if(code == 0) {
-					is_code_zero = true;
-				} else {
-					raw_count = std::stol(line.substr(space, count_len));
-					parsed = true;
-				}
+			// Upstream's own conversion order, reproduced exactly
+			// (gframe/deck_manager.cpp:75-78): parse with std::stoul()'s
+			// full native width, THEN narrow via static_cast<uint32_t> -
+			// unconditionally, with no range check in between. That
+			// narrowing is source semantics, not a hazard this module
+			// corrects: for an out-of-uint32_t-range value it is
+			// ABI-dependent (whether std::stoul() itself throws, or
+			// succeeds and static_cast wraps it) in exactly the same way
+			// upstream's own `static_cast<uint32_t>(std::stoul(...))` is -
+			// see docs/architecture/deck-legality.md#hash-domain for the
+			// full account and the toolchain evidence this project relies
+			// on, and data/src/ydk.cpp's identical `std::stoul` call
+			// (docs/architecture/deck-model.md§2.5) for this project's own
+			// established precedent of reproducing this exactly rather
+			// than "fixing" it into a platform-independent grammar.
+			code = static_cast<std::uint32_t>(std::stoul(line.substr(0, space)));
+			// gframe/deck_manager.cpp:76-77: code 0 short-circuits before
+			// the count field is even parsed - a malformed count on a
+			// code-0 line is therefore irrelevant, exactly as upstream
+			// never attempts that parse either. This also silently catches
+			// the ABI-dependent case where a wide, out-of-uint32_t-range
+			// code (e.g. "4294967296" on a 64-bit `unsigned long`
+			// platform) narrows to exactly 0 - treated identically to a
+			// literal "0", exactly as upstream's own narrowed `code`
+			// variable would be.
+			if(code == 0) {
+				is_code_zero = true;
+			} else {
+				// Same conversion order for the count field
+				// (gframe/deck_manager.cpp:78): parse with std::stol()'s
+				// full native width, then narrow via
+				// static_cast<int32_t> unconditionally - the SAME
+				// ABI-dependent narrowing upstream's own hash expression
+				// operates on (see is_hash_safe_count()'s own doc comment
+				// above for why the domain check below applies to this
+				// NARROWED value, not to the wide std::stol() result).
+				count = static_cast<std::int32_t>(std::stol(line.substr(space, count_len)));
+				parsed = true;
 			}
-			// else: raw_code exceeds uint32_t's range - falls through with
-			// both is_code_zero and parsed still false, so this line is
-			// rejected below exactly like any other malformed code/count,
-			// on every platform regardless of `unsigned long`'s width.
 		} catch(...) {
 			parsed = false;
 		}
@@ -209,39 +223,24 @@ LfListParse parse_lflist(std::string_view text) {
 			continue;
 		}
 
-		// External review: `std::stol` returns a `long`, which on an LP64
-		// platform (most 64-bit Linux/macOS) is 64 bits wide - wider than
-		// int32_t. Narrowing an out-of-int32_t-range value to int32_t
-		// BEFORE this check (as an earlier revision did) would let an
-		// adversarial value like 4294967296 wrap to 0 - a value INSIDE
-		// [-26, 4] - silently defeating this exact safety net, and would
-		// do so differently across platforms (a 32-bit-`long` platform's
-		// own std::stol would instead throw for that same input, landing
-		// in the `!parsed` branch above - a different outcome for
-		// identical input). Comparing the WIDE, not-yet-narrowed
-		// `raw_count` against the domain closes both problems at once:
-		// [-26, 4] is a strict subset of int32_t's own range, so this
-		// single check also implies "fits in int32_t" - no separate range
-		// test is needed, and the narrowing cast below only ever executes
-		// once the value is already known to be in range.
-		if(!is_hash_safe_count(raw_count)) {
-			// Deliberate divergence: gframe/deck_manager.cpp:80's own hash
-			// expression is undefined behavior for this count (see
-			// is_hash_safe_count()'s doc comment above and
-			// docs/architecture/deck-legality.md#hash-domain). Rather than
-			// invent hash semantics upstream itself never defined for this
-			// domain, this line is rejected outright - failing closed by
-			// excluding it from BOTH the content map and the hash, exactly
-			// as a syntactically malformed line is.
+		if(!is_hash_safe_count(count)) {
+			// The one deliberate divergence from upstream (see
+			// is_hash_safe_count()'s own doc comment above and
+			// docs/architecture/deck-legality.md#hash-domain):
+			// gframe/deck_manager.cpp:80's own hash expression is
+			// undefined behavior in C++ for this NARROWED `count` -
+			// reached either because the source text's own magnitude was
+			// already outside [-26, 4], or because upstream's own
+			// narrowing wrapped a wide value there. Either way, this
+			// module refuses to invent hash semantics upstream itself
+			// never defines for this domain: the line is rejected
+			// outright, excluded from BOTH the content map and the hash,
+			// exactly as a syntactically malformed line is.
 			result.ignored.push_back(
 				{line_number, line,
-				 "count outside the domain in which upstream's own hash expression is defined"});
+				 "narrowed count outside the domain in which upstream's own hash expression is defined"});
 			continue;
 		}
-
-		// Safe: is_hash_safe_count() above already confirmed raw_count is
-		// within [-26, 4], strictly inside int32_t's range.
-		const auto count = static_cast<std::int32_t>(raw_count);
 
 		// gframe/deck_manager.cpp:79: `content[code] = count` overwrites on
 		// a duplicate code - the final map holds only the LAST value seen

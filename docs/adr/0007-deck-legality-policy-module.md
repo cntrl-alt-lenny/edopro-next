@@ -127,8 +127,21 @@ happens to emit for it today.
    claim, not a divergence honestly labeled as one.
 3. **Fail closed: reject the line entirely for both `content` and `hash`** (chosen) - a count
    outside `[-26, 4]`'s content-line is treated exactly like a syntactically malformed line
-   (`docs/architecture/deck-legality.md`§10). No hash value is manufactured for a domain
+   (`docs/architecture/deck-legality.md`§10.2). No hash value is manufactured for a domain
    upstream itself has none for; the rest of the file still parses normally.
+
+**Scope correction (external review, second pass):** an interim revision applied this domain
+check to the *wide*, not-yet-narrowed `std::stol()` result, before upstream's own
+`static_cast<int32_t>` narrowing ran - and did the equivalent for the code field's
+`std::stoul()`/`static_cast<uint32_t>` pair, where no divergence is authorized at all (see
+`docs/architecture/deck-legality.md`§10.1). That was a real overreach: a wide value that
+upstream's own narrowing would resolve into a well-defined, in-domain result (e.g.
+`4294967296` narrowing to a `count` of `0`, or a code narrowing to another real card's code)
+was being rejected outright instead of accepted the way upstream's own conversion would
+produce it. The fix restores upstream's exact parse-then-narrow order for both fields, and
+scopes this decision's domain check strictly to the *narrowed* `int32_t count` - the value
+upstream's own hash expression actually operates on - never to the wide `std::stol()`/
+`std::stoul()` results themselves.
 
 ## Decision 6 — `policy/` never touches `gframe/`, `ocgcore/`, or Qt
 
