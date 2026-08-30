@@ -39,7 +39,15 @@ constexpr std::uint32_t fixed_rotate_term(std::uint32_t code) {
 constexpr std::int32_t kHashSafeCountMin = -26;
 constexpr std::int32_t kHashSafeCountMax = 4;
 
-constexpr bool is_hash_safe_count(std::int32_t count) {
+// Takes the WIDE `long` std::stol() itself returns, deliberately not
+// std::int32_t - see the call site in parse_lflist() for why: [-26, 4] is
+// a strict subset of int32_t's own range, so comparing against it directly
+// on the not-yet-narrowed value both performs the domain check AND
+// guarantees the later narrowing cast to int32_t is safe, without ever
+// narrowing an out-of-domain value first (which, on an LP64 platform where
+// `long` is wider than int32_t, could otherwise wrap into something that
+// looks in-domain - external review found exactly this).
+constexpr bool is_hash_safe_count(long count) {
 	return count >= kHashSafeCountMin && count <= kHashSafeCountMax;
 }
 
@@ -149,7 +157,11 @@ LfListParse parse_lflist(std::string_view text) {
 			count_end == std::string::npos ? std::string::npos : count_end - space;
 
 		std::uint32_t code = 0;
-		std::int32_t count = 0;
+		// The WIDE result of std::stol(), deliberately not yet narrowed to
+		// std::int32_t - see is_hash_safe_count()'s own domain check below
+		// for why the safe-domain test must run on this value, not on an
+		// already-narrowed one.
+		long raw_count = 0;
 		bool parsed = false;
 		bool is_code_zero = false;
 		try {
@@ -161,7 +173,7 @@ LfListParse parse_lflist(std::string_view text) {
 			if(code == 0) {
 				is_code_zero = true;
 			} else {
-				count = static_cast<std::int32_t>(std::stol(line.substr(space, count_len)));
+				raw_count = std::stol(line.substr(space, count_len));
 				parsed = true;
 			}
 		} catch(...) {
@@ -176,7 +188,22 @@ LfListParse parse_lflist(std::string_view text) {
 			continue;
 		}
 
-		if(!is_hash_safe_count(count)) {
+		// External review: `std::stol` returns a `long`, which on an LP64
+		// platform (most 64-bit Linux/macOS) is 64 bits wide - wider than
+		// int32_t. Narrowing an out-of-int32_t-range value to int32_t
+		// BEFORE this check (as an earlier revision did) would let an
+		// adversarial value like 4294967296 wrap to 0 - a value INSIDE
+		// [-26, 4] - silently defeating this exact safety net, and would
+		// do so differently across platforms (a 32-bit-`long` platform's
+		// own std::stol would instead throw for that same input, landing
+		// in the `!parsed` branch above - a different outcome for
+		// identical input). Comparing the WIDE, not-yet-narrowed
+		// `raw_count` against the domain closes both problems at once:
+		// [-26, 4] is a strict subset of int32_t's own range, so this
+		// single check also implies "fits in int32_t" - no separate range
+		// test is needed, and the narrowing cast below only ever executes
+		// once the value is already known to be in range.
+		if(!is_hash_safe_count(raw_count)) {
 			// Deliberate divergence: gframe/deck_manager.cpp:80's own hash
 			// expression is undefined behavior for this count (see
 			// is_hash_safe_count()'s doc comment above and
@@ -190,6 +217,10 @@ LfListParse parse_lflist(std::string_view text) {
 				 "count outside the domain in which upstream's own hash expression is defined"});
 			continue;
 		}
+
+		// Safe: is_hash_safe_count() above already confirmed raw_count is
+		// within [-26, 4], strictly inside int32_t's range.
+		const auto count = static_cast<std::int32_t>(raw_count);
 
 		// gframe/deck_manager.cpp:79: `content[code] = count` overwrites on
 		// a duplicate code - the final map holds only the LAST value seen

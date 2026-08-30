@@ -292,6 +292,32 @@ EDOPRO_POLICY_TEST(hashUnsafeCountDomainFailsClosed) {
 	EDOPRO_POLICY_CHECK_EQ(extreme.lists[0].hash, empty->hash);
 }
 
+EDOPRO_POLICY_TEST(countValueThatWouldWrapToASafeValueIsStillRejected) {
+	// External review: 4294967296 (2^32) is far outside [-26, 4], but if
+	// the domain check narrowed to int32_t BEFORE comparing (an earlier
+	// revision did exactly this), 4294967296 wraps to 0 - a value INSIDE
+	// the safe domain - on any platform where `long` is wider than
+	// int32_t (e.g. LP64 Linux/macOS), silently defeating the whole
+	// safety net for this specific adversarial input. The fix compares
+	// the wide, not-yet-narrowed std::stol() result directly, so this
+	// value must still be rejected, not laundered into a false "0".
+	auto empty = only_list("!L\n");
+	EDOPRO_POLICY_CHECK(empty.has_value());
+
+	auto wrapsToZero = parse_lflist("!L\n4 4294967296\n");
+	EDOPRO_POLICY_CHECK_EQ(wrapsToZero.lists.size(), 1u);
+	EDOPRO_POLICY_CHECK_EQ(wrapsToZero.lists[0].content.size(), 0u);
+	EDOPRO_POLICY_CHECK_EQ(wrapsToZero.lists[0].hash, empty->hash);
+	EDOPRO_POLICY_CHECK_EQ(wrapsToZero.ignored.size(), 1u);
+
+	// A genuine, in-domain 0 is still accepted normally - this test is
+	// about the WRAPPED value being rejected, not about 0 itself being
+	// unsafe.
+	auto genuineZero = only_list("!L\n4 0\n");
+	EDOPRO_POLICY_CHECK(genuineZero.has_value());
+	EDOPRO_POLICY_CHECK_EQ(genuineZero->content.at(CardCode{4}), 0);
+}
+
 EDOPRO_POLICY_TEST(loadLflistFileRoundTrips) {
 	const auto path = std::filesystem::temp_directory_path() / "edopro_next_policy_test_lflist.conf";
 	{
