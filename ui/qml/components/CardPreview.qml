@@ -17,8 +17,12 @@
 // real DEF (`CardRecord::defense` is always 0 for one - see card_entry.h)
 // and instead shows its link markers, rendered by `entry.linkMarkerDisplay`
 // (card_entry.cpp, cited against gframe/data_manager.cpp's
-// FormatLinkMarker()). This is presentation of static card metadata only -
-// no legality, no rules evaluation.
+// FormatLinkMarker()). ATK/DEF are read from `entry.attackDisplay`/
+// `entry.defenseDisplay`, never `entry.attack`/`entry.defense` directly -
+// a negative stored value is a real "varies" sentinel, not an error, and
+// renders as "?" exactly as upstream's own card-info panel does (see
+// card_entry.h). This is presentation of static card metadata only - no
+// legality, no rules evaluation.
 
 import QtQuick
 import QtQuick.Layouts
@@ -90,7 +94,7 @@ Flickable {
             }
             Text {
                 objectName: "atkValueText"
-                text: String(root.entry.attack)
+                text: root.entry.attackDisplay
                 font.family: Theme.fontFamilyMono
                 font.pointSize: Theme.textBody
                 color: Theme.textSecondary
@@ -112,7 +116,7 @@ Flickable {
             Text {
                 objectName: "defRowValue"
                 visible: !root.entry.isLink
-                text: String(root.entry.defense)
+                text: root.entry.defenseDisplay
                 font.family: Theme.fontFamilyMono
                 font.pointSize: Theme.textBody
                 color: Theme.textSecondary

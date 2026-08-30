@@ -13,14 +13,22 @@ namespace {
 // not a rules statement. Deliberately says nothing for a non-monster: this
 // project's `data/` layer treats `type` as opaque, and a spell/trap's
 // summary line has no numeric stat worth surfacing here.
+//
+// Reads attackDisplay/defenseDisplay, never attack/defense directly -
+// external review, third pass: a negative stored value is a real "varies"
+// sentinel (CardRecord's own doc comment), and upstream's own card-info
+// panel (gframe/game.cpp) renders it as "?", never the negative number
+// itself. attackDisplay/defenseDisplay already apply that rule once
+// (card_entry.cpp), so CardPreview.qml and this summary line can never
+// disagree with each other about it.
 QString build_summary(const CardEntry& entry) {
     if (!entry.known)
         return QStringLiteral("Unknown card");
     if (!entry.isMonster)
         return QString();
     if (entry.isLink)
-        return QStringLiteral("ATK %1").arg(entry.attack);
-    return QStringLiteral("ATK %1 / DEF %2").arg(entry.attack).arg(entry.defense);
+        return QStringLiteral("ATK %1").arg(entry.attackDisplay);
+    return QStringLiteral("ATK %1 / DEF %2").arg(entry.attackDisplay, entry.defenseDisplay);
 }
 
 } // namespace

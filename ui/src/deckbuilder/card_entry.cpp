@@ -69,6 +69,22 @@ QString format_link_marker(quint32 link_marker) {
     return result;
 }
 
+// Mirrors Game::ShowCardInfo's own combat-stat formatting (gframe/game.cpp:
+// the `cd->attack < 0`/`cd->defense < 0` checks in both its Link and
+// non-Link branches) exactly: any negative value - not just the -1/-2
+// CardRecord's own doc comment names as the values currently in use -
+// renders as a literal "?", never the negative number itself.
+// CardRecord::attack/defense already preserve these values faithfully
+// (data/'s own documented "not sentinels this module strips" contract);
+// this is the one place that turns them into the honest display string.
+// Both CardPreview.qml and SearchResultsModel::build_summary() read the
+// resulting attackDisplay/defenseDisplay off the same CardEntry rather than
+// each recomputing this rule themselves, so the two presentations can never
+// disagree with each other.
+QString format_combat_stat(qint32 value) {
+    return value < 0 ? QStringLiteral("?") : QString::number(value);
+}
+
 } // namespace
 
 CardEntry make_card_entry(edopro_next::data::CardCode code,
@@ -87,6 +103,8 @@ CardEntry make_card_entry(edopro_next::data::CardCode code,
     entry.text = QString::fromStdString(record->text);
     entry.attack = record->attack;
     entry.defense = record->defense;
+    entry.attackDisplay = format_combat_stat(record->attack);
+    entry.defenseDisplay = format_combat_stat(record->defense);
     entry.level = record->level;
     entry.leftScale = record->left_scale;
     entry.rightScale = record->right_scale;

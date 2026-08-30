@@ -268,6 +268,13 @@ private slots:
     void ordinaryMonsterPreviewLabelsItsLevelCorrectly();
     void xyzMonsterPreviewLabelsItsRankNotLevel();
     void linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers();
+
+    // External review, third follow-up pass: a negative stored attack/
+    // defense is a real "varies" sentinel (CardRecord's own doc comment),
+    // and upstream's own card-info panel (gframe/game.cpp) renders it as
+    // "?" - the real CardPreview.qml was showing the literal negative
+    // number instead.
+    void negativeCombatStatsRenderAsQuestionMarksInPreview();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -653,6 +660,31 @@ void TestDeckBuilderScreen::linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndM
     QCOMPARE(h.child("linkMarkerValueText")->property("visible").toBool(), true);
     QCOMPARE(h.child("linkMarkerValueText")->property("text").toString(),
              QStringLiteral("[↗][←][↙]"));
+}
+
+void TestDeckBuilderScreen::negativeCombatStatsRenderAsQuestionMarksInPreview() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // -1 and -2 are both real, in-use "varies" sentinels (CardRecord's own
+    // doc comment), used here together to confirm the rule is "any
+    // negative value", not a narrower equality check against just one.
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{111, QStringLiteral("Varies"), 0x1, -2, -1, 4}});
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    h.setSearchQuery(QStringLiteral("Varies"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+
+    // The bug this pins: the real CardPreview.qml must show "?", never the
+    // literal negative number.
+    QCOMPARE(h.child("atkValueText")->property("text").toString(), QStringLiteral("?"));
+    QCOMPARE(h.child("defRowLabel")->property("visible").toBool(), true);
+    QCOMPARE(h.child("defRowValue")->property("text").toString(), QStringLiteral("?"));
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)

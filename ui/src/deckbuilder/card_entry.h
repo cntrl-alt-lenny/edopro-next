@@ -50,6 +50,15 @@ class CardEntry {
     // exception; the real value lives in `linkMarker` instead). CardPreview
     // must not render this as an ordinary DEF stat for a Link monster.
     Q_PROPERTY(qint32 defense MEMBER defense)
+    // Ready-to-display renderings of `attack`/`defense`, computed once in
+    // C++ (card_entry.cpp) - external review, third pass: `CardRecord`'s
+    // own doc comment documents -1/-2 as *real, displayed* "varies" values,
+    // not sentinels this module strips, and upstream's own card-info panel
+    // (`Game::ShowCardInfo`, `gframe/game.cpp`) renders any negative
+    // attack/defense as literally "?" - never the negative number itself.
+    // QML must read these for display, never `attack`/`defense` directly.
+    Q_PROPERTY(QString attackDisplay MEMBER attackDisplay)
+    Q_PROPERTY(QString defenseDisplay MEMBER defenseDisplay)
     Q_PROPERTY(quint32 level MEMBER level)
     Q_PROPERTY(bool isPendulum MEMBER isPendulum)
     Q_PROPERTY(quint32 leftScale MEMBER leftScale)
@@ -92,6 +101,8 @@ public:
     bool isXyz = false;
     qint32 attack = 0;
     qint32 defense = 0;
+    QString attackDisplay = QStringLiteral("0");
+    QString defenseDisplay = QStringLiteral("0");
     quint32 level = 0;
     bool isPendulum = false;
     quint32 leftScale = 0;

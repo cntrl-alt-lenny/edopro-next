@@ -539,8 +539,10 @@ window close request, so it never triggers this guard.
   description (word-wrapped), and independent ATK/DEF/Level-or-Rank-or-Link-Rating/Link
   Markers/Pendulum scale/Attribute-Race rows, each shown only where the entry's own
   `isMonster`/`isXyz`/`isLink`/`isPendulum` flags say it is meaningful - see §10.7 for the exact
-  labelling rule and the source-fidelity bug it replaces. No artwork, no image placeholder
-  pretending to be one. Displays `entry.raceDisplay`, never `entry.race` directly - see §10.3.
+  labelling rule and the source-fidelity bug it replaces, and §10.8 for why ATK/DEF are read from
+  `entry.attackDisplay`/`entry.defenseDisplay`, never `entry.attack`/`entry.defense` directly. No
+  artwork, no image placeholder pretending to be one. Displays `entry.raceDisplay`, never
+  `entry.race` directly - see §10.3.
 - All new QML uses only existing `Theme.qml` tokens - no raw hex colours, no gradients.
 
 ### 10.1 No catalog loaded: the deck editor stays functional; only search degrades
@@ -754,6 +756,34 @@ suite already follows (§10.2). The Link test deliberately uses three non-adjace
 (top-right, left, bottom-left) so a wrong iteration order - e.g. ascending bit value instead of
 upstream's fixed positional order - would render visibly different, and therefore test-detectable,
 output.
+
+### 10.8 A follow-up finding on the same fix: unknown combat stats were shown as literal negative numbers
+
+A fresh external review of §10.7's own commit found one more instance of the same underlying
+mistake - rendering a raw stored number without checking whether it needs interpreting first.
+`CardRecord::attack`/`defense` document `-1`/`-2` as *real, displayed* "varies" values ("not
+sentinels this module strips"), and upstream's own `Game::ShowCardInfo` (`gframe/game.cpp`) checks
+`cd->attack < 0`/`cd->defense < 0` in both its Link and non-Link branches, rendering a literal `"?"`
+in place of the number whenever either is true. `CardPreview.qml` was instead printing
+`String(entry.attack)`/`String(entry.defense)` directly - a card whose ATK varies would show
+`"-2"` in the preview - and `SearchResultsModel::build_summary()` had the identical bug in the
+search-result summary line (`"ATK -2 / DEF -1"`).
+
+Fixed the same way as §10.7: a tiny, cited formatter in `card_entry.cpp` -
+`format_combat_stat(qint32) -> QString`, `value < 0 ? "?" : QString::number(value)`, matching
+upstream's `< 0` check exactly (not a narrower `== -1`/`== -2` equality test) - populates two new
+`CardEntry` fields, `attackDisplay`/`defenseDisplay`. `CardPreview.qml`'s ATK/DEF rows and
+`SearchResultsModel::build_summary()` both read these instead of the raw `attack`/`defense`
+members, so the two presentations read from one shared computation and cannot disagree with each
+other. `attack`/`defense` themselves are untouched - data/'s own "not sentinels this module strips"
+contract still holds all the way through this layer; only the *display* string changes.
+
+Regression coverage: `negativeCombatStatsRenderAsQuestionMarks` (adapter-level, also confirms an
+ordinary positive-stat card is unaffected) and `searchSummaryRendersUnknownCombatStatsAsQuestionMarks`
+(`ui/tests/test_deckbuilder.cpp`); `negativeCombatStatsRenderAsQuestionMarksInPreview`
+(`ui/tests/test_deckbuilder_screen.cpp`, asserting the real rendered `atkValueText`/`defRowValue`
+items). All three use both `-1` and `-2` together, confirming the fix is "any negative value," not
+an equality check against one specific sentinel.
 
 ---
 

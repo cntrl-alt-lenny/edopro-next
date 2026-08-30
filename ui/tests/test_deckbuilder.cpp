@@ -195,6 +195,14 @@ private slots:
     void ordinaryMonsterEntryIsNotClassifiedAsXyzOrLink();
     void xyzMonsterEntryIsClassifiedAsXyzNotLink();
     void linkMonsterEntryHasNoRealDefenseAndFormatsItsMarkers();
+
+    // External review, third follow-up pass: -1/-2 are real, displayed
+    // "varies" values for a stored attack/defense (CardRecord's own doc
+    // comment), and upstream's own card-info panel (gframe/game.cpp)
+    // renders any negative value as "?" - CardPreview and the search
+    // summary line were both showing the literal negative number instead.
+    void negativeCombatStatsRenderAsQuestionMarks();
+    void searchSummaryRendersUnknownCombatStatsAsQuestionMarks();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -632,6 +640,59 @@ void TestDeckBuilder::linkMonsterEntryHasNoRealDefenseAndFormatsItsMarkers() {
     // FormatLinkMarker()): only top-right, left, and bottom-left are set
     // here, so they must render in exactly that order, not bit-value order.
     QCOMPARE(entry.linkMarkerDisplay, QStringLiteral("[↗][←][↙]"));
+}
+
+void TestDeckBuilder::negativeCombatStatsRenderAsQuestionMarks() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // -1 and -2 are both real, in-use "varies" sentinels (CardRecord's own
+    // doc comment) - using both, not just one, confirms the rule is "any
+    // negative value", matching gframe/game.cpp's own `< 0` check, not a
+    // narrower "== -1" or "== -2" equality check.
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{111, QStringLiteral("Varies"), 0x1, -2, -1, 4}});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    const auto entry = catalog.cardDetails(111);
+    QVERIFY(entry.known);
+    // The raw values are preserved exactly - data/'s own "not sentinels
+    // this module strips" contract - only the *display* string says "?".
+    QCOMPARE(entry.attack, -2);
+    QCOMPARE(entry.defense, -1);
+    QCOMPARE(entry.attackDisplay, QStringLiteral("?"));
+    QCOMPARE(entry.defenseDisplay, QStringLiteral("?"));
+
+    // An ordinary positive-stat card must still show its real numbers -
+    // the fix must not turn every card's stats into "?".
+    const QString normalPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("normal.cdb"),
+        QList<SyntheticCard>{SyntheticCard{222, QStringLiteral("Normal"), 0x1, 1800, 1200, 4}});
+    CardCatalog normalCatalog;
+    QVERIFY(normalCatalog.loadDatabases({normalPath}));
+    const auto normalEntry = normalCatalog.cardDetails(222);
+    QCOMPARE(normalEntry.attackDisplay, QStringLiteral("1800"));
+    QCOMPARE(normalEntry.defenseDisplay, QStringLiteral("1200"));
+}
+
+void TestDeckBuilder::searchSummaryRendersUnknownCombatStatsAsQuestionMarks() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{111, QStringLiteral("Varies"), 0x1, -2, -1, 4}});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    SearchResultsModel results;
+    results.setCatalog(&catalog);
+    results.setQueryText("Varies");
+    QCOMPARE(results.resultCount(), 1);
+    QCOMPARE(results.data(results.index(0, 0), SearchResultsModel::SummaryRole).toString(),
+             QStringLiteral("ATK ? / DEF ?"));
 }
 
 QTEST_MAIN(TestDeckBuilder)
