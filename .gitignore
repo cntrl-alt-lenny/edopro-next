@@ -53,3 +53,10 @@ NotoSansJP-Regular.otf
 /data/build/
 __pycache__/
 *.pyc
+/policy/build/
+
+# Per-checkout Claude Code settings. Deliberately not shared: each worktree
+# (Brain / Builder / Verifier - docs/agents/worktree-mechanism.md) may pin a
+# different model or effortLevel. The shared, version-controlled settings are
+# in .claude/settings.json.
+.claude/settings.local.json
