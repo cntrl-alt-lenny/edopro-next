@@ -334,6 +334,7 @@ workspace "ygo"
 	end
 	if _OPTIONS["semantic-observer"] then
 		include "client"
+		include "data"
 		include "integration/legacy"
 	end
 	include "gframe"
