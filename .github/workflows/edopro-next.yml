@@ -134,6 +134,25 @@ jobs:
       - name: Unit tests
         run: ctest --test-dir data/build --output-on-failure
 
+      # policy/ (the deck legality/policy foundation - docs/architecture/
+      # deck-legality.md, ADR 0007) is a standalone sibling project, same
+      # shape as data/ above - same compiler, same SQLite dependency (its
+      # own tests build synthetic .cdb fixtures directly via the sqlite3 C
+      # API, the same pattern data/tests/synthetic_cdb.h and ui/tests use).
+      # It configures its own nested copy of data/ (policy/CMakeLists.txt's
+      # own comment explains why), so this is a genuinely separate
+      # configure/build/test cycle, not reusing data/build above.
+      - name: Configure policy
+        run: >
+          cmake -S policy -B policy/build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON
+
+      - name: Build policy
+        run: cmake --build policy/build --parallel
+
+      - name: Deck legality/policy unit tests
+        run: ctest --test-dir policy/build --output-on-failure
+
   qt-shell:
     name: Qt 6 shell (Linux)
     runs-on: ubuntu-latest
