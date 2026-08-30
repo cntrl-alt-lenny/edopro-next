@@ -36,7 +36,7 @@ gates. That practice is now the framework's rule — see `AGENTS.md`.
 | **M0** Foundation | done | Baseline build verified, ADR 0001, Qt/QML shell that compiles and runs |
 | **M1** Make change provable | **in progress** | Level 1 (recorded-protocol regression) done. **Level 2 — re-simulation through `ocgcore` — not started**, and it is what the strong claim actually needs |
 | **M2** Semantic client model | done | 34 of upstream's ~90 messages decoded; live observer + reviewed fixture-equivalence verifier |
-| **M3** Deck and card data | **in progress** | `data/`, deck/`.ydk`, search and `policy/` all done; the deck-builder UI item is not |
+| **M3** Deck and card data | **in progress** | `data/`, deck/`.ydk`, search, `policy/` and the real upstream `.ydk` interop proof are done; the deck-builder UI item is not |
 | M4 / M5 / M6 | not started | M5 (duel field) is deliberately last |
 
 ## Architecture boundaries currently accepted
@@ -74,6 +74,12 @@ This distinction is the single most useful thing in this file.
   fault-injection path proving the failure mode is live.
 - `client/`, `data/` and `policy/` build with no Qt, no Irrlicht, no vcpkg and
   no `ocgcore` — CI would break if that separation broke.
+- A `.ydk` written by our own `save_ydk()` loads correctly through the real,
+  preserved `DeckManager::LoadDeckFromFile()`, for both of upstream's
+  `separated` load modes, against a synthetic committed-safe fixture — with a
+  fault-injection path proving the comparator is live
+  ([`architecture/ydk-interoperability.md`](architecture/ydk-interoperability.md),
+  ADR 0008).
 
 **Not proven, and must not be claimed:**
 
@@ -84,8 +90,11 @@ This distinction is the single most useful thing in this file.
 - Complete legacy-client or duel-engine equivalence. The fixture comparator
   covers life points, turn, structural card occupancy/location/sequence and
   material topology — not card code, not position.
-- That a deck written by the new client opens in upstream EDOPro. The
-  *format-level* half holds by construction; there is no end-to-end GUI test.
+- That a deck built in the new client opens in upstream EDOPro **end to end**.
+  The format/loader level is now genuinely proven (above); upstream's own
+  GUI and file-picker path is outside that harness by design, and the reverse
+  direction — upstream's `SaveDeck` output read back by our parser — is not
+  covered either.
 - Semantic coverage beyond the 34 decoded message types.
 
 ## Intentional upstream deltas
@@ -141,13 +150,21 @@ placeholder.
 
 ## Recommended next slice
 
-**Surface deck legality in the deck-builder UI.** It is the natural next M3
-step, it is the one place where `policy/`'s existing foundation turns into
-something a user can see, and it is a good first exercise of the framework:
-the risk is concentrated in the Qt adapter boundary (ADR 0006) rather than
-anywhere near duel behaviour, so a bad round is cheap. It also has a sharp
-invariant for Verifier to attack — **the UI must render legality decided by
-`policy/`, never compute or second-guess it.**
+**Surface deck legality in the deck-builder UI** — but read the blocker first.
 
-Confirm scope with the owner before briefing it; Brain does not start a new
+It is the natural next M3 step and the one place where `policy/`'s existing
+foundation becomes something a user can see. The risk sits in the Qt adapter
+boundary (ADR 0006), nowhere near duel behaviour, so a bad round is cheap —
+which makes it a good first exercise of this framework. It also carries a
+sharp invariant for Verifier to attack: **the UI must render legality decided
+by `policy/`, and never compute or second-guess it.**
+
+**The known blocker, recorded in ADR 0008's context section:** a prior
+planning round deferred this slice because `policy/`'s `ValidationPolicy` has
+no default, and no session layer supplies one. So the real first question is
+not a QML question at all — it is *where does the active LFList and validation
+policy come from, and who owns that lifetime?* A brief that starts by wiring
+QML will hit this immediately. Answering it may itself be the right slice.
+
+Confirm scope with the owner before briefing it. Brain does not start a new
 direction on its own initiative.
