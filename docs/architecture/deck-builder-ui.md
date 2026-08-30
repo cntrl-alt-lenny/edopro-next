@@ -820,10 +820,15 @@ is driven by the nav rail), and not part of ordinary interactive use.
   plain text search is wired up.
 - Full keyboard and controller parity (§11 covers only the core interactions).
 - `.ydke`/Base64 import-export (`deck-model.md`§8).
-- Any end-to-end proof that a deck saved here loads unchanged in real upstream EDOPro - this
-  slice's tests confirm round-tripping through this project's own `parse_ydk`/`load_ydk`
-  (§8), which is format-compatible by construction (`deck-model.md`), but no test here launches
-  actual upstream EDOPro.
+- An end-to-end proof through upstream's own GUI/file-picker interaction - still not
+  attempted anywhere in this project. A real, CI-checked proof one level below that now
+  exists, though: `integration/legacy/ydk_interop.{h,cpp}` hands a `.ydk` produced by this
+  project's own `save_ydk()` to the real, unmodified `DeckManager::LoadDeckFromFile()`
+  directly (no GUI involved) and compares the result against independently-derived expected
+  structures - see [ydk-interoperability.md](ydk-interoperability.md) and
+  [ADR 0008](../adr/0008-upstream-ydk-interop-harness.md) for exactly what that does and does
+  not prove. This slice's own tests still only confirm round-tripping through this project's
+  own `parse_ydk`/`load_ydk` (§8).
 
 ## 13. Visual verification performed for this slice
 

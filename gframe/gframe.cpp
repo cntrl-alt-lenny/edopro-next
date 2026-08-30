@@ -97,6 +97,10 @@ using Game = ygo::Game;
 
 #if defined(EDOPRO_NEXT_SEMANTIC_OBSERVER)
 #include "../integration/legacy/replay_verifier.h"
+// Shares this same opt-in integration build leg for CI-cost reasons only
+// (docs/architecture/ydk-interoperability.md) - it is a real upstream .ydk
+// interoperability proof, not part of the semantic observer.
+#include "../integration/legacy/ydk_interop.h"
 #endif
 
 int edopro_main(const args_t& args) {
@@ -108,6 +112,12 @@ int edopro_main(const args_t& args) {
 	if(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY_FAULT].enabled) {
 		const auto path = ygo::Utils::ToUTF8IfNeeded(args[LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY_FAULT].argument);
 		return edopro_next_verify_replay_fault_cli(path.c_str());
+	}
+	if(args[LAUNCH_PARAM::YDK_INTEROP_VERIFY].enabled) {
+		return edopro_next_verify_ydk_interop_cli();
+	}
+	if(args[LAUNCH_PARAM::YDK_INTEROP_VERIFY_FAULT].enabled) {
+		return edopro_next_verify_ydk_interop_fault_cli();
 	}
 #endif
 	std::puts(EDOPRO_VERSION_STRING_DEBUG);

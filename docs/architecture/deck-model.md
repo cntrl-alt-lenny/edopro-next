@@ -16,6 +16,12 @@ codes rather than card pointers, and why the codec follows the file's own sectio
 rather than reproducing upstream's type-based classification. This document is only about
 what the format means and what upstream's own code actually does with it.
 
+Whether this codec's own writer output is actually accepted by the real, unmodified upstream
+loader described below - not merely format-compatible by construction - is a separate,
+CI-checked claim, not made here: see
+[ydk-interoperability.md](ydk-interoperability.md) and
+[ADR 0008](../adr/0008-upstream-ydk-interop-harness.md).
+
 ---
 
 ## 0. What this module is not

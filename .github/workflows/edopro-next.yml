@@ -338,3 +338,33 @@ jobs:
           test "$second_status" -ne 0
           grep -F "p0.life" fault-a.log
           diff -u fault-a.log fault-b.log
+
+      - name: Real upstream .ydk interoperability proof
+        if: matrix.observer == true
+        # A second, unrelated proof sharing this build leg for CI-cost
+        # reasons only (docs/architecture/ydk-interoperability.md) - the
+        # fixed synthetic fixture and its independently-derived expected
+        # output are pinned in integration/legacy/ydk_interop.cpp itself, so
+        # this step only needs to check the harness's own verdict and that
+        # its output is deterministic, not restate the expected card codes.
+        run: |
+          set -e
+          ./bin/x64/release/ygoprodll --verify-ydk-interop | tee ydk-interop-a.log
+          ./bin/x64/release/ygoprodll --verify-ydk-interop | tee ydk-interop-b.log
+          grep -F "overall: match" ydk-interop-a.log
+          diff -u ydk-interop-a.log ydk-interop-b.log
+
+      - name: YDK interop fault-injected verifier fails deterministically
+        if: matrix.observer == true
+        run: |
+          set +e
+          ./bin/x64/release/ygoprodll --verify-ydk-interop-fault > ydk-interop-fault-a.log 2>&1
+          first_status=$?
+          ./bin/x64/release/ygoprodll --verify-ydk-interop-fault > ydk-interop-fault-b.log 2>&1
+          second_status=$?
+          set -e
+          cat ydk-interop-fault-a.log
+          test "$first_status" -ne 0
+          test "$second_status" -ne 0
+          grep -F "mismatch: separated=false main:" ydk-interop-fault-a.log
+          diff -u ydk-interop-fault-a.log ydk-interop-fault-b.log
