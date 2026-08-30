@@ -28,11 +28,27 @@ class CardEntry {
     Q_PROPERTY(QString text MEMBER text)
 
     // Only meaningful when `isMonster` is true - see card_entry.cpp for why
-    // that one classification (and no other) is made here rather than left
-    // as raw, uninterpreted data, and why it never influences which deck
-    // section a card can be added to.
+    // these classifications (and no others) are made here rather than left
+    // as raw, uninterpreted data, and why none of them ever influences which
+    // deck section a card can be added to.
+    //
+    // `level` is the single stored magnitude upstream's own `cd->level`
+    // is (gframe/game.cpp's card-info formatting - see card_entry.cpp): a
+    // Level monster's Level, an Xyz's Rank, and a Link's Link Rating all
+    // live in this one field, exactly as `CardRecord::level` documents.
+    // `isXyz`/`isLink` exist so the presentation layer (CardPreview.qml)
+    // can label that one magnitude correctly instead of calling it "Level"
+    // unconditionally - which was a real bug (see docs/architecture/
+    // deck-builder-ui.md#10.7) and is not repeated here, deliberately: no
+    // separate `levelLabel`/`rank`/`linkRating` fields are added, so there
+    // is exactly one place to keep in sync with `level`'s real meaning.
     Q_PROPERTY(bool isMonster MEMBER isMonster)
+    Q_PROPERTY(bool isXyz MEMBER isXyz)
     Q_PROPERTY(qint32 attack MEMBER attack)
+    // Only meaningful when `isMonster && !isLink` - a Link monster's
+    // `defense` is always 0 (CardRecord::defense's own documented Link
+    // exception; the real value lives in `linkMarker` instead). CardPreview
+    // must not render this as an ordinary DEF stat for a Link monster.
     Q_PROPERTY(qint32 defense MEMBER defense)
     Q_PROPERTY(quint32 level MEMBER level)
     Q_PROPERTY(bool isPendulum MEMBER isPendulum)
@@ -40,6 +56,15 @@ class CardEntry {
     Q_PROPERTY(quint32 rightScale MEMBER rightScale)
     Q_PROPERTY(bool isLink MEMBER isLink)
     Q_PROPERTY(quint32 linkMarker MEMBER linkMarker)
+    // A ready-to-display rendering of `linkMarker`, computed once in C++ -
+    // see card_entry.cpp's format_link_marker(), cited directly against
+    // gframe/data_manager.cpp's DataManager::FormatLinkMarker(). Keeps the
+    // eight LINK_MARKER_* bit constants and their arrow glyphs out of QML,
+    // matching the existing raceDisplay precedent below. Empty for any
+    // non-Link card, and for a Link card with no marker bits set at all -
+    // the same "absent means omitted, not a placeholder" behaviour upstream
+    // itself has for a zero mask.
+    Q_PROPERTY(QString linkMarkerDisplay MEMBER linkMarkerDisplay)
 
     Q_PROPERTY(quint32 attribute MEMBER attribute)
     Q_PROPERTY(qulonglong race MEMBER race)
@@ -64,6 +89,7 @@ public:
     QString text;
 
     bool isMonster = false;
+    bool isXyz = false;
     qint32 attack = 0;
     qint32 defense = 0;
     quint32 level = 0;
@@ -72,6 +98,7 @@ public:
     quint32 rightScale = 0;
     bool isLink = false;
     quint32 linkMarker = 0;
+    QString linkMarkerDisplay;
 
     quint32 attribute = 0;
     qulonglong race = 0;

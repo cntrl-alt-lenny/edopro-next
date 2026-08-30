@@ -19,6 +19,7 @@
 #include <fstream>
 
 #include "card_catalog.h"
+#include "card_entry.h"
 #include "deck_controller.h"
 #include "edopro_next/data/ydk.h"
 #include "search_results_model.h"
@@ -38,7 +39,33 @@ void run(sqlite3* db, const char* sql) {
     }
 }
 
-QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, QString>>& cards) {
+// A full-control synthetic card row: everything the two-argument
+// (code, name) convenience below defaults for an ordinary Level monster
+// (TYPE_MONSTER, atk/def 1000, level 4) can be overridden explicitly - used
+// by the Level/Rank/Link Rating presentation tests, which each need a
+// distinct real `type` bit combination and, for the Link case, a raw `def`
+// column value that CardDatabase::load_database() reinterprets as
+// `link_marker` (data/src/card_database.cpp - see kTypeLinkBit there).
+struct SyntheticCard {
+    quint32 code;
+    QString name;
+    quint32 type = 0x1; // TYPE_MONSTER (ocgcore/ocgapi_constants.h:33)
+    qint32 attack = 1000;
+    // Raw `datas.def` column value - a real defense for a non-Link type,
+    // or the link-marker bitmask for a Link type (see struct doc above).
+    qint32 defenseOrLinkMarker = 1000;
+    qint32 level = 4;
+};
+
+// A distinct name, not an overload of writeSyntheticDatabase() below: a
+// braced-init-list argument like {{code, "name"}} is equally viable for
+// either QList<SyntheticCard> (via aggregate init) or
+// QList<QPair<quint32, QString>>, which the compiler rejects as an
+// ambiguous overload - confirmed empirically (GCC: "call of overloaded
+// 'writeSyntheticDatabase(...)' is ambiguous") against every pre-existing
+// call site that passes such a list directly, not through a named
+// QList<QPair<...>> variable.
+QString writeSyntheticDatabaseWithFields(const QString& path, const QList<SyntheticCard>& cards) {
     sqlite3* db = nullptr;
     if (sqlite3_open(path.toStdString().c_str(), &db) != SQLITE_OK)
         qFatal("failed to create synthetic .cdb at %s", qPrintable(path));
@@ -50,22 +77,34 @@ QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, Q
             "str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
             "str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
             "str14 TEXT, str15 TEXT, str16 TEXT);");
-    for (const auto& [code, name] : cards) {
+    for (const auto& card : cards) {
         run(db, qPrintable(QStringLiteral("INSERT INTO datas (id,ot,alias,setcode,type,atk,def,"
-                                           "level,race,attribute,category) VALUES (%1,0,0,0,1,"
-                                           "1000,1000,4,0,0,0);")
-                                .arg(code)));
+                                           "level,race,attribute,category) VALUES (%1,0,0,0,%2,"
+                                           "%3,%4,%5,0,0,0);")
+                                .arg(card.code)
+                                .arg(card.type)
+                                .arg(card.attack)
+                                .arg(card.defenseOrLinkMarker)
+                                .arg(card.level)));
         // str1..str16 are left at their column default (NULL - the schema
         // above does not mark them NOT NULL) by omitting them from the
         // column list entirely, rather than hand-counting sixteen '' value
         // placeholders to match a fixed column list.
         run(db, qPrintable(QStringLiteral("INSERT INTO texts (id,name,desc) "
                                            "VALUES (%1,'%2','synthetic text');")
-                                .arg(code)
-                                .arg(name)));
+                                .arg(card.code)
+                                .arg(card.name)));
     }
     sqlite3_close(db);
     return path;
+}
+
+QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, QString>>& cards) {
+    QList<SyntheticCard> converted;
+    converted.reserve(cards.size());
+    for (const auto& [code, name] : cards)
+        converted.push_back(SyntheticCard{code, name});
+    return writeSyntheticDatabaseWithFields(path, converted);
 }
 
 void writeFile(const QString& path, const QString& contents) {
@@ -143,6 +182,19 @@ private slots:
     // Deck) - but DeckController::addCard() is a public Q_INVOKABLE, and
     // nothing stopped it from accepting 0 directly.
     void addCardSilentlyRejectsCardCodeZero();
+
+    // External review, blocker: CardPreview.qml labelled every monster's
+    // stored level/rank/link-rating magnitude "Level" unconditionally, and
+    // never rendered link_marker at all - a source-fidelity bug against
+    // gframe/game.cpp's own card-info formatting and
+    // DataManager::FormatLinkMarker() (gframe/data_manager.cpp). These pin
+    // make_card_entry()'s presentation flags/fields directly; the real QML
+    // rendering is additionally covered in test_deckbuilder_screen.cpp,
+    // which is the mandatory assertion - this file's coverage is the
+    // adapter-level complement, not a substitute for it.
+    void ordinaryMonsterEntryIsNotClassifiedAsXyzOrLink();
+    void xyzMonsterEntryIsClassifiedAsXyzNotLink();
+    void linkMonsterEntryHasNoRealDefenseAndFormatsItsMarkers();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -491,6 +543,95 @@ void TestDeckBuilder::addCardSilentlyRejectsCardCodeZero() {
     QCOMPARE(controller.mainCount(), 0);
     // Not even a no-op edit - a rejected add was never a real edit at all.
     QCOMPARE(controller.dirty(), false);
+}
+
+void TestDeckBuilder::ordinaryMonsterEntryIsNotClassifiedAsXyzOrLink() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{111, QStringLiteral("Ordinary"), 0x1, 1800, 1200, 4}});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    const auto entry = catalog.cardDetails(111);
+    QVERIFY(entry.known);
+    QVERIFY(entry.isMonster);
+    QVERIFY(!entry.isXyz);
+    QVERIFY(!entry.isLink);
+    QCOMPARE(entry.attack, 1800);
+    QCOMPARE(entry.defense, 1200);
+    QCOMPARE(entry.level, 4u);
+    QVERIFY(entry.linkMarkerDisplay.isEmpty());
+}
+
+void TestDeckBuilder::xyzMonsterEntryIsClassifiedAsXyzNotLink() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // TYPE_MONSTER | TYPE_XYZ (ocgcore/ocgapi_constants.h:33,55).
+    constexpr quint32 kXyzType = 0x1 | 0x800000;
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{222, QStringLiteral("Xyz"), kXyzType, 2000, 1500, 4}});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    const auto entry = catalog.cardDetails(222);
+    QVERIFY(entry.known);
+    QVERIFY(entry.isMonster);
+    QVERIFY(entry.isXyz);
+    QVERIFY(!entry.isLink);
+    // An Xyz has an ordinary DEF stat, unlike a Link.
+    QCOMPARE(entry.attack, 2000);
+    QCOMPARE(entry.defense, 1500);
+    // The Rank magnitude - same field a Level monster's Level lives in;
+    // isXyz is what tells the presentation layer to call it "Rank".
+    QCOMPARE(entry.level, 4u);
+}
+
+void TestDeckBuilder::linkMonsterEntryHasNoRealDefenseAndFormatsItsMarkers() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // TYPE_MONSTER | TYPE_LINK (ocgcore/ocgapi_constants.h:33,58).
+    constexpr quint32 kLinkType = 0x1 | 0x4000000;
+    // Three deliberately non-adjacent marker bits (LINK_MARKER_TOP_RIGHT |
+    // LINK_MARKER_LEFT | LINK_MARKER_BOTTOM_LEFT - ocgcore/
+    // ocgapi_constants.h:197-204), chosen so a wrong iteration order (e.g.
+    // ascending bit value instead of upstream's fixed positional order)
+    // would produce visibly different output. Written into the raw `def`
+    // column - CardDatabase::load_database() reinterprets it as
+    // `link_marker` for a Link-type row (data/src/card_database.cpp).
+    constexpr qint32 kLinkMarkerBits = 0x100 | 0x8 | 0x1;
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{
+            SyntheticCard{333, QStringLiteral("Link"), kLinkType, 2500, kLinkMarkerBits, 3}});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    const auto entry = catalog.cardDetails(333);
+    QVERIFY(entry.known);
+    QVERIFY(entry.isMonster);
+    QVERIFY(entry.isLink);
+    QVERIFY(!entry.isXyz);
+    QCOMPARE(entry.attack, 2500);
+    // No real DEF for a Link - CardDatabase already zeroes this at load
+    // time (data/'s own documented Link exception), and CardEntry carries
+    // that straight through.
+    QCOMPARE(entry.defense, 0);
+    QCOMPARE(static_cast<quint32>(entry.linkMarker), static_cast<quint32>(kLinkMarkerBits));
+    // The Link Rating magnitude - same field a Level monster's Level lives
+    // in; isLink is what tells the presentation layer to call it "Link
+    // Rating" instead, and to stop calling `defense` a real DEF stat.
+    QCOMPARE(entry.level, 3u);
+    // Upstream's fixed positional order (top-left, top, top-right, left,
+    // right, bottom-left, bottom, bottom-right - gframe/data_manager.cpp's
+    // FormatLinkMarker()): only top-right, left, and bottom-left are set
+    // here, so they must render in exactly that order, not bit-value order.
+    QCOMPARE(entry.linkMarkerDisplay, QStringLiteral("[↗][←][↙]"));
 }
 
 QTEST_MAIN(TestDeckBuilder)

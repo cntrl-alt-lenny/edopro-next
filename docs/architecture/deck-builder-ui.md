@@ -226,9 +226,9 @@ could drift from the real one.
 - **`removeAt(section, index)`** erases exactly that one vector element. Removing one copy of
   a triplicated code leaves the other two, in their original relative order.
 - **The caller always names the section explicitly.** `DeckController` has no logic anywhere
-  that inspects a `CardEntry`'s `isMonster`/`isLink`/`isPendulum` fields to choose or veto a
-  destination - those fields exist on `CardEntry` purely for the preview pane (§11) and the
-  search result's summary line (§6), never for section routing. This is the direct
+  that inspects a `CardEntry`'s `isMonster`/`isXyz`/`isLink`/`isPendulum` fields to choose or
+  veto a destination - those fields exist on `CardEntry` purely for the preview pane (§10.7) and
+  the search result's summary line (§6), never for section routing. This is the direct
   continuation of upstream's own `push_main`/`push_extra`/`push_side` shape (§1): the
   *destination* is always an explicit parameter, never inferred inside the push/add call
   itself.
@@ -535,11 +535,12 @@ window close request, so it never triggers this guard.
 - **`DeckSectionList.qml`** - one Main/Extra/Side section: a titled, counted (`"Main (12)"`)
   `ListView` over a `DeckSectionModel`, keyboard-selectable, Delete/Backspace-removes-selected.
   Exposes `currentIndex` as a plain alias for the owning screen's selection contract (§7.1).
-- **`CardPreview.qml`** - a textual/metadata card preview bound to a `CardEntry`: name,
-  code, description (word-wrapped), and ATK/DEF/Level or ATK/LINK-markers where the entry's
-  own `isMonster`/`isLink`/`isPendulum` flags say they are meaningful. No artwork, no image
-  placeholder pretending to be one. Displays `entry.raceDisplay`, never `entry.race` directly -
-  see §10.3.
+- **`CardPreview.qml`** - a textual/metadata card preview bound to a `CardEntry`: name, code,
+  description (word-wrapped), and independent ATK/DEF/Level-or-Rank-or-Link-Rating/Link
+  Markers/Pendulum scale/Attribute-Race rows, each shown only where the entry's own
+  `isMonster`/`isXyz`/`isLink`/`isPendulum` flags say it is meaningful - see §10.7 for the exact
+  labelling rule and the source-fidelity bug it replaces. No artwork, no image placeholder
+  pretending to be one. Displays `entry.raceDisplay`, never `entry.race` directly - see §10.3.
 - All new QML uses only existing `Theme.qml` tokens - no raw hex colours, no gradients.
 
 ### 10.1 No catalog loaded: the deck editor stays functional; only search degrades
@@ -681,7 +682,78 @@ shrink first if space is ever genuinely tight - and the "Card code " `Text` gain
 Both this and the no-catalog heading's missing `wrapMode: Text.WordWrap` were fixed directly; a
 full sweep of every other `Text` item in `DeckBuilderScreen.qml`/`CardPreview.qml`/
 `DeckSectionList.qml` confirmed every remaining one already had `wrapMode` or `elide` set, or is
-a short, fixed-length label (`"ATK / DEF"`, `"Level"`, ...) with no realistic overflow risk.
+a short, fixed-length label (`"ATK"`, `"Level"`, ...) with no realistic overflow risk.
+
+### 10.7 `CardPreview` misrepresented Level/Rank/Link Rating, and never rendered link markers
+
+External review found a source-fidelity bug in `CardPreview.qml`, independent of everything
+above: it labelled **every** monster's stored level/rank/link-rating magnitude `"Level"`
+unconditionally, so an Xyz's Rank and a Link's Link Rating both displayed as `"Level"`; it
+presented a Link's ATK/DEF as `"<attack> / LINK"` with no Link Rating anywhere in that string;
+and although `CardEntry` already carried `linkMarker`, nothing in `CardPreview.qml` ever
+rendered it - a Link monster's markers were invisible in this preview entirely.
+
+The authoritative source is upstream's own card-info panel, read directly rather than from
+memory: `Game::ShowCardInfo`'s monster-info branch (`gframe/game.cpp`, around the
+`cd->type & TYPE_LINK` check) never calls the shared magnitude `"Level"` for a Link - it renders
+`"<attack>/LINK <cd->level>"` plus `gDataManager->FormatLinkMarker(cd->link_marker)`, and for a
+non-Link monster renders `"[★<level>]"` for an ordinary Level monster vs. `"[☆<level>]"` (a
+different star glyph, not a text label) for an Xyz. `DataManager::FormatLinkMarker`
+(`gframe/data_manager.cpp`) renders the eight `LINK_MARKER_*` bits (`ocgcore/
+ocgapi_constants.h:197-204`) as `"[<arrow>]"` per set bit, in one fixed order - top-left, top,
+top-right, left, right, bottom-left, bottom, bottom-right - and contributes nothing for an unset
+bit (an omission, not a placeholder).
+
+This structured, row-per-field UI cannot reuse upstream's compact bracketed-string convention
+verbatim (a different glyph for Xyz vs. Level reads naturally inline; a labelled row needs an
+actual word), but it must preserve upstream's underlying distinction faithfully. The fix stays
+entirely in the presentation seam, per this slice's own rule (§2): `data/`'s `CardRecord` was
+already completely correct here (`level` is one shared magnitude field by design; `defense` is
+already forced to 0 for a Link at load time - `data/src/card_database.cpp`'s own
+`kTypeLinkBit` handling - with the real value carried in `link_marker` instead). Two additions
+to `CardEntry` (`ui/src/deckbuilder/card_entry.h`/`.cpp`), following the same
+verified-bit-against-`ocgcore`-header precedent `isMonster`/`isLink`/`isPendulum` already
+established:
+
+- **`isXyz`** - `type & TYPE_XYZ` (`ocgcore/ocgapi_constants.h:55`), used only to choose a label,
+  never for deck-section routing (§7).
+- **`linkMarkerDisplay`** - a `QString` computed once in C++ by `format_link_marker()`
+  (`card_entry.cpp`), a tiny formatter cited directly against `FormatLinkMarker`'s own order and
+  glyphs. This keeps the eight `LINK_MARKER_*` bit constants out of QML entirely, the same
+  boundary `raceDisplay` already draws for `race` (§10.3) - QML never interprets a raw bitmask
+  itself. A card with no marker bits set (link_marker == 0, which is also every non-Link card's
+  value) renders as an empty string, matching upstream's own `FormatLinkMarker(0)`.
+
+`CardPreview.qml`'s monster grid was restructured from the old universal `"ATK / DEF"` +
+`"Level"` pair into independent rows - ATK, DEF, Level-or-Rank-or-Link-Rating, Link Markers,
+Pendulum scale (unchanged), Attribute/Race (unchanged) - each gated on the flags above:
+
+- **DEF** is hidden entirely for a Link (`visible: !entry.isLink`) - not shown as `"0"`, which
+  would misrepresent a value `data/` already knows is not a real stat.
+- **The shared magnitude row**'s label is `entry.isLink ? "Link Rating" : (entry.isXyz ? "Rank" :
+  "Level")` - an ordinary Level monster is unaffected, an Xyz is never called "Level", and a Link
+  is never called "Level" either.
+- **Link Markers** is a new row, visible only for a Link, rendering `entry.linkMarkerDisplay`.
+
+This is presentation of static `CardRecord` metadata only - no legality, no rules evaluation, and
+no change to which section a card can be added to (§7's routing rule is untouched). Pendulum
+stays orthogonal: an Xyz/Pendulum or other multi-type combination still shows its scale row
+exactly as before, unaffected by which label the shared magnitude row picks.
+
+Regression coverage exists at both layers, per this project's now-established pattern of
+adapter-level tests being a complement to real-QML tests, never a substitute for them (§7.1.2's
+own precedent): `ordinaryMonsterEntryIsNotClassifiedAsXyzOrLink`,
+`xyzMonsterEntryIsClassifiedAsXyzNotLink`, `linkMonsterEntryHasNoRealDefenseAndFormatsItsMarkers`
+(`ui/tests/test_deckbuilder.cpp`) pin `make_card_entry()`'s flags and `linkMarkerDisplay`
+directly; `ordinaryMonsterPreviewLabelsItsLevelCorrectly`, `xyzMonsterPreviewLabelsItsRankNotLevel`,
+`linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers`
+(`ui/tests/test_deckbuilder_screen.cpp`) assert the actual rendered `Text` items in the real
+`CardPreview.qml` (each given an `objectName` for exactly this purpose), through a real
+`SearchResultsModel` selection - the same integration-test discipline this file's whole test
+suite already follows (§10.2). The Link test deliberately uses three non-adjacent marker bits
+(top-right, left, bottom-left) so a wrong iteration order - e.g. ascending bit value instead of
+upstream's fixed positional order - would render visibly different, and therefore test-detectable,
+output.
 
 ---
 

@@ -43,7 +43,30 @@ void run(sqlite3* db, const char* sql) {
         qFatal("synthetic .cdb setup failed: %s", err ? err : "unknown error");
 }
 
-QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, QString>>& cards) {
+// A full-control synthetic card row - see test_deckbuilder.cpp's own copy
+// of this struct for why the Level/Rank/Link Rating presentation tests
+// need explicit `type`/`level`/raw-`def` control rather than the fixed
+// TYPE_MONSTER/1000/1000/4 the two-argument convenience below always
+// writes. Duplicated here, not shared, matching this file's own established
+// preference for a tiny local copy over cross-test-file coupling.
+struct SyntheticCard {
+    quint32 code;
+    QString name;
+    quint32 type = 0x1; // TYPE_MONSTER (ocgcore/ocgapi_constants.h:33)
+    qint32 attack = 1000;
+    // Raw `datas.def` column value - a real defense for a non-Link type, or
+    // the link-marker bitmask for a Link type (data/src/card_database.cpp).
+    qint32 defenseOrLinkMarker = 1000;
+    qint32 level = 4;
+};
+
+// A distinct name, not an overload of writeSyntheticDatabase() below - see
+// test_deckbuilder.cpp's identical copy of this comment for why: a
+// braced-init-list argument is ambiguous between QList<SyntheticCard> (via
+// aggregate init) and QList<QPair<quint32, QString>>, confirmed empirically
+// against every pre-existing call site in this file that passes such a
+// list directly.
+QString writeSyntheticDatabaseWithFields(const QString& path, const QList<SyntheticCard>& cards) {
     sqlite3* db = nullptr;
     if (sqlite3_open(path.toStdString().c_str(), &db) != SQLITE_OK)
         qFatal("failed to create synthetic .cdb at %s", qPrintable(path));
@@ -55,17 +78,29 @@ QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, Q
             "str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
             "str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
             "str14 TEXT, str15 TEXT, str16 TEXT);");
-    for (const auto& [code, name] : cards) {
+    for (const auto& card : cards) {
         run(db, qPrintable(QStringLiteral("INSERT INTO datas (id,ot,alias,setcode,type,atk,def,"
-                                           "level,race,attribute,category) VALUES (%1,0,0,0,1,"
-                                           "1000,1000,4,0,0,0);")
-                                .arg(code)));
+                                           "level,race,attribute,category) VALUES (%1,0,0,0,%2,"
+                                           "%3,%4,%5,0,0,0);")
+                                .arg(card.code)
+                                .arg(card.type)
+                                .arg(card.attack)
+                                .arg(card.defenseOrLinkMarker)
+                                .arg(card.level)));
         run(db, qPrintable(QStringLiteral("INSERT INTO texts (id,name,desc) VALUES (%1,'%2','synthetic text');")
-                                .arg(code)
-                                .arg(name)));
+                                .arg(card.code)
+                                .arg(card.name)));
     }
     sqlite3_close(db);
     return path;
+}
+
+QString writeSyntheticDatabase(const QString& path, const QList<QPair<quint32, QString>>& cards) {
+    QList<SyntheticCard> converted;
+    converted.reserve(cards.size());
+    for (const auto& [code, name] : cards)
+        converted.push_back(SyntheticCard{code, name});
+    return writeSyntheticDatabaseWithFields(path, converted);
 }
 
 QString writeSyntheticDatabase(const QString& path, quint32 code, const QString& name) {
@@ -219,6 +254,20 @@ private slots:
     void selectedResultClearsOnDifferentQuery();
     void selectedResultClearsOnZeroResultQuery();
     void selectedResultClearsOnCatalogReplacement();
+
+    // External review, blocker: the real CardPreview.qml labelled every
+    // monster's stored level/rank/link-rating magnitude "Level"
+    // unconditionally (an Xyz's Rank and a Link's Link Rating both showed
+    // as "Level"), presented a Link's DEF as though it were a real stat,
+    // and never rendered link_marker at all - a source-fidelity bug against
+    // gframe/game.cpp's card-info formatting and DataManager::
+    // FormatLinkMarker() (gframe/data_manager.cpp). These exercise the
+    // actual rendered Text items (objectName-tagged in CardPreview.qml),
+    // not just CardEntry's presentation flags in isolation - the adapter-
+    // level complement lives in test_deckbuilder.cpp.
+    void ordinaryMonsterPreviewLabelsItsLevelCorrectly();
+    void xyzMonsterPreviewLabelsItsRankNotLevel();
+    void linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -511,6 +560,99 @@ void TestDeckBuilderScreen::selectedResultClearsOnCatalogReplacement() {
     QCOMPARE(h.currentIndexOf("resultsList"), -1);
     QCOMPARE(h.prop("selectedResultRow").toInt(), -1);
     QCOMPARE(h.prop("hasPreview").toBool(), false);
+}
+
+void TestDeckBuilderScreen::ordinaryMonsterPreviewLabelsItsLevelCorrectly() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{111, QStringLiteral("Ordinary"), 0x1, 1800, 1200, 4}});
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    h.setSearchQuery(QStringLiteral("Ordinary"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+
+    QCOMPARE(h.child("atkValueText")->property("text").toString(), QStringLiteral("1800"));
+    QCOMPARE(h.child("defRowLabel")->property("visible").toBool(), true);
+    QCOMPARE(h.child("defRowValue")->property("visible").toBool(), true);
+    QCOMPARE(h.child("defRowValue")->property("text").toString(), QStringLiteral("1200"));
+    QCOMPARE(h.child("levelRankLabelText")->property("text").toString(), QStringLiteral("Level"));
+    QCOMPARE(h.child("levelRankValueText")->property("text").toString(), QStringLiteral("4"));
+    QCOMPARE(h.child("linkMarkerRowLabel")->property("visible").toBool(), false);
+    QCOMPARE(h.child("linkMarkerValueText")->property("visible").toBool(), false);
+}
+
+void TestDeckBuilderScreen::xyzMonsterPreviewLabelsItsRankNotLevel() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // TYPE_MONSTER | TYPE_XYZ (ocgcore/ocgapi_constants.h:33,55).
+    constexpr quint32 kXyzType = 0x1 | 0x800000;
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        QList<SyntheticCard>{SyntheticCard{222, QStringLiteral("XyzCard"), kXyzType, 2000, 1500, 4}});
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    h.setSearchQuery(QStringLiteral("XyzCard"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+
+    QCOMPARE(h.child("atkValueText")->property("text").toString(), QStringLiteral("2000"));
+    // An Xyz has an ordinary DEF stat, unlike a Link.
+    QCOMPARE(h.child("defRowLabel")->property("visible").toBool(), true);
+    QCOMPARE(h.child("defRowValue")->property("text").toString(), QStringLiteral("1500"));
+    // The bug this pins: the Rank magnitude must never be labelled "Level".
+    QCOMPARE(h.child("levelRankLabelText")->property("text").toString(), QStringLiteral("Rank"));
+    QCOMPARE(h.child("levelRankValueText")->property("text").toString(), QStringLiteral("4"));
+    QCOMPARE(h.child("linkMarkerRowLabel")->property("visible").toBool(), false);
+}
+
+void TestDeckBuilderScreen::linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // TYPE_MONSTER | TYPE_LINK (ocgcore/ocgapi_constants.h:33,58).
+    constexpr quint32 kLinkType = 0x1 | 0x4000000;
+    // LINK_MARKER_TOP_RIGHT | LINK_MARKER_LEFT | LINK_MARKER_BOTTOM_LEFT
+    // (ocgcore/ocgapi_constants.h:197-204) - three deliberately non-
+    // adjacent bits, chosen so a wrong iteration order (e.g. ascending bit
+    // value instead of upstream's fixed positional order) would render
+    // visibly different output. Written into the raw `def` column;
+    // CardDatabase reinterprets it as `link_marker` for a Link-type row.
+    constexpr qint32 kLinkMarkerBits = 0x100 | 0x8 | 0x1;
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"), QList<SyntheticCard>{SyntheticCard{
+                                        333, QStringLiteral("LinkCard"), kLinkType, 2500, kLinkMarkerBits, 3}});
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    h.setSearchQuery(QStringLiteral("LinkCard"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("hasPreview").toBool(), true);
+
+    QCOMPARE(h.child("atkValueText")->property("text").toString(), QStringLiteral("2500"));
+    // No real DEF stat is presented for a Link - the whole row is hidden,
+    // not shown with a fake value.
+    QCOMPARE(h.child("defRowLabel")->property("visible").toBool(), false);
+    QCOMPARE(h.child("defRowValue")->property("visible").toBool(), false);
+    // The bug this pins: the Link Rating magnitude must never be labelled
+    // "Level", and DEF must never masquerade as "<ATK> / LINK" text either.
+    QCOMPARE(h.child("levelRankLabelText")->property("text").toString(),
+             QStringLiteral("Link Rating"));
+    QCOMPARE(h.child("levelRankValueText")->property("text").toString(), QStringLiteral("3"));
+    // The actual marker arrows, in upstream's own fixed positional order.
+    QCOMPARE(h.child("linkMarkerRowLabel")->property("visible").toBool(), true);
+    QCOMPARE(h.child("linkMarkerValueText")->property("visible").toBool(), true);
+    QCOMPARE(h.child("linkMarkerValueText")->property("text").toString(),
+             QStringLiteral("[↗][←][↙]"));
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)

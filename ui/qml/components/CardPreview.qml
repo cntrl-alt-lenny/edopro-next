@@ -4,9 +4,21 @@
 // card images at runtime and does not bundle or cache them (CLAUDE.md), and
 // building that pipeline is explicitly out of scope for this slice (see
 // docs/architecture/deck-builder-ui.md#artwork). Shows raw stored fields;
-// see card_entry.cpp for the one deliberate presentation classification
-// (isMonster) this preview relies on, and why it never affects deck
-// editing.
+// see card_entry.cpp for the presentation classifications this preview
+// relies on (isMonster/isXyz/isLink/isPendulum) and why none of them ever
+// affects deck editing.
+//
+// Level/Rank/Link Rating are one shared stored magnitude
+// (`CardEntry::level`, sourced from `CardRecord::level` - see
+// card_entry.h), labelled here according to the same distinction upstream's
+// own card-info panel makes (gframe/game.cpp - see docs/architecture/
+// deck-builder-ui.md#10.7): "Level" for an ordinary Level monster, "Rank"
+// for an Xyz, "Link Rating" for a Link. A Link monster additionally has no
+// real DEF (`CardRecord::defense` is always 0 for one - see card_entry.h)
+// and instead shows its link markers, rendered by `entry.linkMarkerDisplay`
+// (card_entry.cpp, cited against gframe/data_manager.cpp's
+// FormatLinkMarker()). This is presentation of static card metadata only -
+// no legality, no rules evaluation.
 
 import QtQuick
 import QtQuick.Layouts
@@ -71,28 +83,71 @@ Flickable {
             columnSpacing: Theme.space4
 
             Text {
-                text: "ATK / DEF"
+                text: "ATK"
                 font.family: Theme.fontFamily
                 font.pointSize: Theme.textCaption
                 color: Theme.textTertiary
             }
             Text {
-                text: root.entry.isLink
-                    ? (root.entry.attack + " / LINK")
-                    : (root.entry.attack + " / " + root.entry.defense)
+                objectName: "atkValueText"
+                text: String(root.entry.attack)
                 font.family: Theme.fontFamilyMono
                 font.pointSize: Theme.textBody
                 color: Theme.textSecondary
             }
 
             Text {
-                text: "Level"
+                // A Link monster has no real DEF - CardRecord::defense is
+                // always 0 for one, and the stored `def` column value is
+                // its link markers instead (see card_entry.h). Hiding this
+                // whole row for a Link, rather than showing a fake "0",
+                // is the honest choice.
+                objectName: "defRowLabel"
+                visible: !root.entry.isLink
+                text: "DEF"
                 font.family: Theme.fontFamily
                 font.pointSize: Theme.textCaption
                 color: Theme.textTertiary
             }
             Text {
+                objectName: "defRowValue"
+                visible: !root.entry.isLink
+                text: String(root.entry.defense)
+                font.family: Theme.fontFamilyMono
+                font.pointSize: Theme.textBody
+                color: Theme.textSecondary
+            }
+
+            Text {
+                // See this file's own header comment and docs/architecture/
+                // deck-builder-ui.md#10.7: Level/Rank/Link Rating are one
+                // shared stored magnitude, labelled by isLink/isXyz.
+                objectName: "levelRankLabelText"
+                text: root.entry.isLink ? "Link Rating" : (root.entry.isXyz ? "Rank" : "Level")
+                font.family: Theme.fontFamily
+                font.pointSize: Theme.textCaption
+                color: Theme.textTertiary
+            }
+            Text {
+                objectName: "levelRankValueText"
                 text: String(root.entry.level)
+                font.family: Theme.fontFamilyMono
+                font.pointSize: Theme.textBody
+                color: Theme.textSecondary
+            }
+
+            Text {
+                objectName: "linkMarkerRowLabel"
+                visible: root.entry.isLink
+                text: "Link Markers"
+                font.family: Theme.fontFamily
+                font.pointSize: Theme.textCaption
+                color: Theme.textTertiary
+            }
+            Text {
+                objectName: "linkMarkerValueText"
+                visible: root.entry.isLink
+                text: root.entry.linkMarkerDisplay
                 font.family: Theme.fontFamilyMono
                 font.pointSize: Theme.textBody
                 color: Theme.textSecondary
