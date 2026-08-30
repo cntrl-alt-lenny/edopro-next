@@ -51,6 +51,14 @@ auto GetOption(epro::path_stringview option) {
 		return LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY;
 	if(option == EPRO_TEXT("semantic-verify-replay-fault"sv) || option == EPRO_TEXT("-semantic-verify-replay-fault"sv))
 		return LAUNCH_PARAM::SEMANTIC_VERIFY_REPLAY_FAULT;
+	// A second, unrelated proof sharing the same opt-in integration build
+	// leg as the two options above (see gframe.cpp) - not part of the
+	// semantic observer conceptually, just the same CI vehicle for cost
+	// reasons. See docs/architecture/ydk-interoperability.md.
+	if(option == EPRO_TEXT("verify-ydk-interop"sv) || option == EPRO_TEXT("-verify-ydk-interop"sv))
+		return LAUNCH_PARAM::YDK_INTEROP_VERIFY;
+	if(option == EPRO_TEXT("verify-ydk-interop-fault"sv) || option == EPRO_TEXT("-verify-ydk-interop-fault"sv))
+		return LAUNCH_PARAM::YDK_INTEROP_VERIFY_FAULT;
 	return LAUNCH_PARAM::COUNT;
 }
 
