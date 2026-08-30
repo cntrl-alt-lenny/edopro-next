@@ -128,8 +128,15 @@ exists as a standing role. The project's real defects have not been compiler
 errors. They have been **semantic mismatches with upstream that compiled and
 tested clean** — locale overlay semantics, search filter operators, Link/Xyz
 display semantics, LFList integer-conversion order, legacy-build linkage,
-integration-fixture behaviour. The four commits immediately preceding this
-framework are all corrections of one such mismatch, found after the fact.
+integration-fixture behaviour.
+
+They are also not rare. The `policy/` slice (PR #12) needed a run of five
+follow-up commits correcting LFList integer-conversion order, narrowing before
+range checks, and read-failure detection — every one of them found *after* the
+work was reported complete. The `.ydk` interop slice (PR #13) needed a
+legacy-build linkage fix in the same way. This is the steady-state defect rate
+of a project that layers new code over an authoritative engine, not a bad
+patch.
 
 - **"It compiles" is not evidence.** Neither is "tests pass" on tests that
   could not have failed for the change in question.
