@@ -85,13 +85,20 @@ struct DeckValidationError {
 	// Set only for MainCount/ExtraCount(-as-size-overflow)/SideCount.
 	DeckSizeCount count;
 
-	// The specific card code the failing check was evaluating - set for
-	// every error type except None/MainCount/ExtraCount(-as-size-overflow)/
-	// SideCount/TooManyLegends/TooManySkills, none of which are about one
-	// specific card. For UnknownCard specifically, see this header's own
-	// "Unknown-card semantics" note: this is this module's own
-	// deterministically-chosen unknown code, not a claim of matching any
-	// particular upstream load mode's `errorcode`.
+	// The specific card code the failing check was evaluating - left at
+	// CardCode::None for every whole-deck-level error type, since none of
+	// them are about one specific card: None, MainCount/ExtraCount(-as-
+	// size-overflow)/SideCount (a section's overall count, not a card),
+	// ForbiddenType (gframe/deck_manager.cpp:206-207's TypeCount() reports
+	// only whether any card anywhere matched, never which one), and
+	// TooManyLegends/TooManySkills (likewise a whole-section count, not a
+	// single offending card - see CountLegends()/TypeCount()). Set for
+	// every other error type - UnknownCard, and every per-card CheckCards
+	// failure (OcgOnly/TcgOnly/UnofficialCard/the zone-placement
+	// ExtraCount/CardCount/Lflist). For UnknownCard specifically, see this
+	// header's own "Unknown-card semantics" note: this is this module's
+	// own deterministically-chosen unknown code, not a claim of matching
+	// any particular upstream load mode's `errorcode`.
 	data::CardCode card = data::CardCode::None;
 
 	explicit operator bool() const noexcept { return type != DeckErrorType::None; }

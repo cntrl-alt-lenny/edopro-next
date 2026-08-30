@@ -264,6 +264,10 @@ EDOPRO_POLICY_TEST(forbiddenTypeFailsBeforeLegendAndSkillChecks) {
 
 	auto error = validate_deck(deck, database, policy);
 	EDOPRO_POLICY_CHECK_EQ(error.type, DeckErrorType::ForbiddenType);
+	// ForbiddenType is a whole-deck-level finding (TypeCount() reports only
+	// whether ANY card matched, never which one) - card must stay None,
+	// per DeckValidationError::card's own documented contract.
+	EDOPRO_POLICY_CHECK_EQ(error.card, CardCode{0});
 }
 
 EDOPRO_POLICY_TEST(legendMonsterCheckPrecedesLegendSpellCheck) {

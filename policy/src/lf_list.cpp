@@ -3,7 +3,6 @@
 #include "edopro_next/policy/lf_list.h"
 
 #include <fstream>
-#include <sstream>
 
 namespace edopro_next::policy {
 
@@ -218,14 +217,27 @@ LfListLoadResult load_lflist(const std::filesystem::path& path) {
 		return result;
 	}
 
-	std::ostringstream buffer;
-	buffer << file.rdbuf();
+	// Deliberately not `buffer << file.rdbuf()`: that inserter reads
+	// directly from the streambuf, bypassing basic_istream::read()'s own
+	// sentry/state-update machinery entirely, so a genuine mid-read I/O
+	// error below the streambuf (e.g. `path` naming a directory on some
+	// platforms) can leave `file` reporting good() with a silently
+	// truncated or empty result - external review found this exact defect
+	// here; data/src/ydk.cpp's load_ydk() already carries the fix and its
+	// own empirical verification note for the identical operation. Reading
+	// through file.read() in a sized loop goes through that machinery, so
+	// a genuine read failure is distinguishable from a clean EOF via
+	// file.bad() below.
+	std::string content;
+	char chunk[4096];
+	while(file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
+		content.append(chunk, static_cast<std::size_t>(file.gcount()));
 	if(file.bad()) {
 		result.error = "failed to read file: " + path.string();
 		return result;
 	}
 
-	const auto parsed = parse_lflist(buffer.str());
+	const auto parsed = parse_lflist(content);
 	result.ok = true;
 	result.lists = parsed.lists;
 	result.ignored = parsed.ignored;

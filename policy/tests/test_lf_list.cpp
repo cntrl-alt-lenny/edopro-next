@@ -311,3 +311,17 @@ EDOPRO_POLICY_TEST(loadLflistMissingFileFails) {
 	EDOPRO_POLICY_CHECK(!result.error.empty());
 	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 0u);
 }
+
+EDOPRO_POLICY_TEST(loadLflistDirectoryPathFailsCleanly) {
+	// External review: on Unix, opening a directory as an ifstream can
+	// succeed (open() on a directory succeeds), while any actual read from
+	// it fails - the exact streambuf-vs-istream distinction load_lflist()
+	// itself cites (see its own doc comment, and data/src/ydk.cpp's
+	// load_ydk(), where the same fix originates and was verified
+	// empirically). Must fail cleanly (ok == false), never silently report
+	// success with empty or truncated data.
+	auto result = load_lflist(std::filesystem::temp_directory_path());
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK(!result.error.empty());
+	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 0u);
+}
