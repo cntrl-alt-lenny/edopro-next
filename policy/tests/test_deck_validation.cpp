@@ -135,15 +135,14 @@ CardDatabase load_database(const std::vector<SyntheticCard>& cards, const std::s
 // silently pick this). Every test still sets every field it actually cares
 // about explicitly.
 ValidationPolicy permissive_policy() {
-	ValidationPolicy policy;
-	policy.deck_sizes = DeckSizePolicy{SectionSizeRange{0, 999}, SectionSizeRange{0, 999},
-										SectionSizeRange{0, 999}};
-	policy.allowed_cards = AllowedCardPool::Any;
-	policy.forbidden_types = 0;
-	policy.rituals_belong_in_extra = false;
-	policy.content_checking_enabled = true;
-	policy.lflist = std::nullopt;
-	return policy;
+	return ValidationPolicy{
+		DeckSizePolicy{SectionSizeRange{0, 999}, SectionSizeRange{0, 999}, SectionSizeRange{0, 999}},
+		AllowedCardPool::Any,
+		0,
+		false,
+		true,
+		std::nullopt,
+	};
 }
 
 } // namespace
