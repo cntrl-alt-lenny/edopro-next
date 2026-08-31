@@ -276,13 +276,17 @@ itself has two distinct file-reading modes, controlled by one caller-supplied bo
   database** to produce a correct split at all.
 - **`separated = true`:** `"#extra"` is functional, so `LoadCardList` itself splits main
   from extra using the file's own markers. `LoadDeck` is still called afterward
-  (`LoadDeckFromFile` always calls it) and **still** reclassifies - notably, a card placed
-  in the file's `#main` section that turns out to be a Fusion/Synchro/Xyz/Link card gets
-  moved to `deck.extra` by `LoadDeck` regardless of which section the file put it in
-  (`is_extra_deck_card`, `gframe/deck_manager.cpp:335-348`). So even upstream's "explicit"
-  mode does not, on its own, fully determine final section membership without a database -
-  it only determines the boundary `LoadCardList` reports back to `LoadDeck` as a starting
-  point.
+  (`LoadDeckFromFile` always calls it) and reclassifies, but only in one direction - notably,
+  a card placed in the file's `#main` section that turns out to be a Fusion/Synchro/Xyz/Link
+  card gets moved to `deck.extra` by `LoadDeck` regardless of which section the file put it in
+  (`is_extra_deck_card`, `gframe/deck_manager.cpp:335-348`, applied to the main-list loop at
+  `:359`). The `#extra`-list loop has no equivalent check at all
+  (`gframe/deck_manager.cpp:365-378`): every code that resolves to real card data is pushed
+  into `deck.extra` unconditionally, even a plain Normal Monster mistakenly listed under
+  `#extra`. So even upstream's "explicit" mode does not, on its own, fully determine final
+  section membership without a database - it only determines the boundary `LoadCardList`
+  reports back to `LoadDeck` as a starting point, and that boundary is corrected main-to-extra
+  but never the other way.
 
 Real callers overwhelmingly use `separated = true`: it is what `DeckManager::LoadDeckFromFile`
 receives from the deck builder's own primary flows (`gframe/deck_con.cpp`'s file-open and
@@ -320,7 +324,7 @@ all (§6).
 
 ## 4. `SaveDeck`: the writer, and the canonical section order
 
-Two overloads (`gframe/deck_manager.cpp:436-451` and `:453-468`) differing only in whether
+Two overloads (`gframe/deck_manager.cpp:436-452` and `:453-468`) differing only in whether
 the source is a `Deck` or three raw code lists; both produce identical output shape:
 
 ```cpp
@@ -337,7 +341,7 @@ corresponding section being non-empty, so a deck with an empty Extra Deck still 
 `"#extra\n"` line immediately followed by `"!side\n"`. `edopro_next::data::serialize_ydk`
 reproduces this exactly (§6), including for a completely empty `Deck`.
 
-`MakeYdkEntryString` (`gframe/deck_manager.cpp:469-472`):
+`MakeYdkEntryString` (`gframe/deck_manager.cpp:469-473`):
 
 ```cpp
 std::string DeckManager::MakeYdkEntryString(uint32_t code) {
@@ -396,13 +400,21 @@ rather than "matching upstream", singular:
   == 0` is never a real loaded `.cdb` row (`docs/architecture/card-database.md`§7 - a `.cdb`
   row with `id = 0` is itself rejected as a load failure), this lookup fails for a code-0
   entry exactly as it would for any other code the catalogue does not recognise, and
-  `LoadDeck` falls back to `GetDummyOrMappedCardData(code)` - constructing a dummy
-  `CardDataC` with `code = 0` regardless of what the *original* requested code was (§4). What
-  happens next is **mode-dependent**, controlled by `loadalways` (`= !!extralist`, i.e. tied
-  to the same `separated` flag as §3): in non-`loadalways` mode the dummy is dropped
-  (`errorcode = code; continue;` - line 352-355); in `loadalways` mode the dummy is *kept* as
-  an untyped placeholder and lands in `deck.main` (the extra/main split at line 359 requires
-  `cd->code != 0`, which a dummy never satisfies).
+  `LoadDeck` falls back to `GetDummyOrMappedCardData(code)` (`gframe/deck_manager.cpp:17-28`).
+  That function is itself conditional on `load_dummies` (`deck_manager.h:44`, defaults `true`,
+  turned off by real call sites `data_handler.cpp:160` and `game.cpp:2682` via
+  `StopDummyLoading()`): when `load_dummies` is true - the common case this section describes -
+  it constructs a dummy `CardDataC` with `code = 0` regardless of what the *original* requested
+  code was (§4); when it is false, the function instead returns `GetMappedCardData(code)` - a
+  genuinely real, catalogue-resolved card if `code` is a known alias mapping, or a plain
+  `nullptr` otherwise, never a code-0 dummy. What happens next when a dummy *is* constructed is
+  **mode-dependent**, controlled by `loadalways` (`= !!extralist`, i.e. tied to the same
+  `separated` flag as §3): in non-`loadalways` mode the dummy is dropped (`errorcode = code;
+  continue;` - line 352-355); in `loadalways` mode the dummy is *kept* as an untyped placeholder
+  and lands in `deck.main` (the extra/main split at line 359 requires `cd->code != 0`, which a
+  dummy never satisfies). A `nullptr` from the `load_dummies = false` path is dropped the same
+  way as any other unresolved code, via the same `!cd` branch, and never reaches this section's
+  code-0 case at all.
 
 Neither of those is "the" correct behaviour for a boundary that has no `CardDatabase` to
 consult in the first place - `LoadDeck`'s entire mechanism is downstream of exactly the
