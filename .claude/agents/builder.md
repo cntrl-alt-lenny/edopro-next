@@ -172,8 +172,10 @@ Any additions to builder.md's standard report for this task.
 
 ## Launching Builder
 
-**Reasoning effort is not a field in this frontmatter** (verified against
-Claude Code 2.1.181; recheck if that changes). Two real mechanisms:
+**Reasoning effort is not known to be settable in this frontmatter** — see
+[`brain.md`](brain.md), "Effort and orchestration mechanics", for what was
+actually established against Claude Code 2.1.181 and what remains open. Two
+mechanisms that definitely work:
 
 1. **Brain dispatches Builder** when orchestration is already appropriate and
    the brief fits in one context without needing its own PR lifecycle.

@@ -74,6 +74,14 @@ This distinction is the single most useful thing in this file.
   fault-injection path proving the failure mode is live.
 - `client/`, `data/` and `policy/` build with no Qt, no Irrlicht, no vcpkg and
   no `ocgcore` — CI would break if that separation broke.
+- The push guard's own behaviour. `tests/test_push_guard.py` drives
+  `.githooks/pre-push` through git's real stdin protocol, including every
+  historical bypass by name, and CI fails if those tests skip. Mutation-tested:
+  emptying the protected list fails 7 of 12, and replacing exact matching with
+  substring matching — the bug class that broke the previous guard — fails 4.
+  Note what this does *not* prove: that git invokes the hook at all. That needs
+  `core.hooksPath` set per clone, and the real guarantee is GitHub branch
+  protection, not a local hook.
 - A `.ydk` written by our own `save_ydk()` loads correctly through the real,
   preserved `DeckManager::LoadDeckFromFile()`, for both of upstream's
   `separated` load modes, against a synthetic committed-safe fixture — with a
@@ -136,13 +144,20 @@ concrete defect.
 `AGENTS.md`, `.claude/agents/`, this file, `docs/briefs/`, `docs/agents/`,
 `.claude/hooks/`. Open, under Verifier review, not merged.
 
-**The first Builder brief is queued** in
-[`briefs/active.md`](briefs/active.md): `UPSTREAM ARCHAEOLOGY` on the
-deck-builder legality boundary — where upstream's deck editor sources its
-legality inputs, how that differs from the duel-entry check, and what each of
-`ValidationPolicy`'s six fields would have to come from. Documentation only,
-ending in a recommended boundary for Brain and the owner to ratify. It branches
-from `meta/agentic-framework` because the framework is not on `master` yet.
+**PR #15**, branch `m3/deck-builder-legality-boundary` — the first Builder
+round, executed against the brief still in [`briefs/active.md`](briefs/active.md):
+`UPSTREAM ARCHAEOLOGY` on the deck-builder legality boundary. Delivered
+`docs/architecture/deck-builder-legality.md`. Open, **not yet Verifier-reviewed**,
+not merged. It branches from `meta/agentic-framework` because the framework is
+not on `master` yet, so #14 merges first.
+
+Round 1's headline finding, which reshapes the implementation round: upstream's
+deck editor **never calls `CheckDeckContent`/`CheckDeckSize`** — those have a
+single call site each, both in `GenericDuel::PlayerReady`. The editor runs three
+weaker, independently-bypassable mechanisms of its own, and `SaveDeck` checks
+nothing at all. So "surface legality in the deck builder" is not one thing:
+reproducing upstream's editor and running `policy::validate_deck()` are
+different products. Brain has not yet independently re-derived this.
 
 ## Known open items
 

@@ -44,13 +44,28 @@ Whatever runs here, record it in
 [`docs/agents/model-notes.md`](../../docs/agents/model-notes.md) with what was
 actually observed — not what was expected.
 
-**Effort and orchestration mechanics** (verified against Claude Code 2.1.181,
-recheck if that changes): reasoning effort is **not** a field in this
-frontmatter. It is a session-level or settings-level concern — `effortLevel`
-(`low`/`medium`/`high`/`xhigh`) and `ultracode` exist in the settings schema,
-and both are settable per-checkout in `.claude/settings.local.json`, which is
-gitignored so each worktree can differ. Do not invent a frontmatter `effort:`
-key; if neither mechanism fits, document the gap rather than guessing.
+**Effort and orchestration mechanics.** Two claims, deliberately separated
+because the evidence behind them is not equally strong. Both were checked
+against Claude Code **2.1.181**; recheck if that version changes.
+
+- **Established.** `effortLevel` (`low`/`medium`/`high`/`xhigh`) and
+  `ultracode` are settings fields. Method: read directly out of the installed
+  binary's own embedded settings schema, which contains verbatim
+  `effortLevel:E.enum(["low","medium","high","xhigh"]).optional()…describe(
+  "Persisted effort level for supported models.")`. Both are settable
+  per-checkout in `.claude/settings.local.json`, which is gitignored so each
+  worktree can differ. Do not check `json.schemastore.org` for this — that
+  third-party schema lags, and omits fields this project already uses.
+- **Not established.** That reasoning effort is *absent* from agent-file
+  frontmatter. That was inferred from finding no such key in the binary, which
+  is absence of evidence, not evidence of absence — and the Agent tool's own
+  description can be read as saying frontmatter carries effort. Treat it as
+  open. To settle it, set an `effort:` key in a role file and observe whether
+  it takes effect; record the result in
+  [`model-notes.md`](../../docs/agents/model-notes.md).
+
+Do not invent mechanics either way. If neither known mechanism fits, document
+the gap rather than guessing.
 
 When multi-agent orchestration is available and the task genuinely warrants
 it — independent research fan-out, or several independent verification angles
@@ -67,6 +82,9 @@ discipline matters more than the tool.
 3. Verify live repository state yourself: `git remote -v` (confirm `upstream`
    still has its push URL disabled), current branch, `git status`,
    `git fetch --all`, and how local `master` compares to `origin/master`.
+   Also check `git config --get core.hooksPath` — if it is not `.githooks`,
+   this clone has **no push guard at all** and nothing warns about it. Say so
+   before doing anything else.
    Run `git worktree list` — a Builder round or a Verifier checkout may be
    sitting under `.worktrees/` with an unmerged branch.
 4. Check open PRs (`gh pr list`) and
@@ -144,6 +162,14 @@ discipline matters more than the tool.
 - **Does not normally implement.** That is what briefs are for. Small, purely
   coordinative file changes — this file, `docs/state.md`, a brief — are the
   exception, not the norm.
+
+  **The framework's own bootstrap (PR #14) was a deliberate, one-time
+  exception**, and Round 1's Verifier was right to flag that it sits oddly
+  beside this rule: it was ~1,900 lines authored by Brain with no brief,
+  because there was no framework yet to brief against. Its follow-up
+  corrections belong to the same exception. That exception is now **closed**.
+  A change of that size again goes through a brief and a Builder, including
+  changes to the framework itself.
 - **Does not accept its own commissioned work as final** on the strength of
   the report. Independent inspection (steps 6-8) is mandatory, not optional
   when time is short.

@@ -201,9 +201,27 @@ evidence: it runs after the claim has already been made.
 - **Protect unrelated work.** Before anything destructive (`reset --hard`,
   force-push, discarding uncommitted changes), check `git status` and whether
   another session has work in flight. Stash or branch; do not clobber.
-- **Never push to `master`.** Every change is a pull request. A `PreToolUse`
-  hook blocks a push whose target is `master`, and blocks a push that would
-  ship generator drift — see [`.claude/hooks/pre_bash.py`](.claude/hooks/pre_bash.py).
+- **Never push to `master`.** Every change is a pull request. This is enforced
+  in layers, and it matters which layer you are relying on:
+
+  | Layer | Strength | Notes |
+  |---|---|---|
+  | GitHub branch protection on `master` | **the actual guarantee** | Server-side. Needs no local setup, survives any tool, any machine, any agent. |
+  | [`.githooks/pre-push`](.githooks/pre-push) | local convenience | Rejects any push whose destination ref is `master`, and any push that would ship generator drift. Requires `git config core.hooksPath .githooks` in each clone; bypassed by `git push --no-verify`; absent on a fresh clone until set up. |
+
+  The pre-push hook lives at git's own layer deliberately. An earlier version
+  was a `PreToolUse` hook that parsed the Bash command string to infer intent,
+  and it failed in **both** directions: seven ways to reach `master` while it
+  reported success (`sh -c '…'`, `bash -c "…"`, `(…)`, `$(…)`, `+master`,
+  `+refs/heads/master`, `git -C . push`), and one harmless command blocked
+  (a heredoc that merely documented a push). Shell has unbounded ways to spell
+  the same push; git, by contrast, resolves every refspec before calling
+  `pre-push` and hands it exactly what will be written. Nothing is left to
+  infer. `tests/test_push_guard.py` pins this, and CI requires those tests to
+  actually run rather than skip.
+
+  **Do not treat any local hook as a control.** It is feedback that arrives
+  early. If the guarantee matters, it belongs on the server.
 - **Do not make one giant commit.** Focused commits, as `CLAUDE.md` requires.
 - **State handoff.** Durable facts that outlive one session go in
   [`docs/state.md`](docs/state.md) (kept short) or a repo doc it points to —

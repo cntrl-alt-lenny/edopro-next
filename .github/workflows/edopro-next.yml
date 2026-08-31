@@ -45,10 +45,27 @@ jobs:
       - name: Protocol constants are derived, not hand-edited
         run: python tools/generate_protocol_constants.py --check
 
-      - name: Structural golden trace regression tests
+      - name: Structural golden traces and the push guard
+        # Two suites, both stdlib-only. The golden traces cover M1; the push
+        # guard (tests/test_push_guard.py) covers .githooks/pre-push, which
+        # exists because an earlier command-string-parsing guard had seven
+        # fail-open bypasses that a one-off manual check had missed.
+        #
         # The semantic suite skips here: it needs a built client/, which the
-        # semantic-client job below provides. This job covers M1 only.
+        # semantic-client job below provides.
         run: python -m unittest discover -s tests -v
+
+      - name: The push guard's own tests must not have skipped
+        # test_push_guard.py skips itself if no sh/bash is on PATH. That is
+        # right for a Windows dev box without Git Bash, and wrong here: a
+        # silently-skipped guard test is worse than no guard test, because it
+        # reports green. ubuntu-latest always has sh, so require it to run.
+        run: |
+          python -m unittest tests.test_push_guard -v 2>&1 | tee guard.log
+          if grep -q "skipped" guard.log; then
+            echo "::error::push-guard tests skipped; they must run in CI"
+            exit 1
+          fi
 
       - name: Traces reproduce byte-for-byte from a clean tree
         # Re-render every fixture and require git to see no change. Guards

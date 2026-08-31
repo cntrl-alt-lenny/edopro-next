@@ -275,9 +275,17 @@ repo-relative paths so the layout is identical on every machine. From the reposi
 on any OS:
 
 ```bash
+git config core.hooksPath .githooks
 git worktree add --detach .worktrees/builder master
 git worktree add --detach .worktrees/verifier master
 ```
+
+The first line installs [`.githooks/pre-push`](.githooks/pre-push), which rejects a push
+to `master` or one that would ship drift in the derived protocol tables. It is a local
+convenience, not a control — it needs that config in every clone, it is bypassed by
+`git push --no-verify`, and a fresh clone has no guard until it is set. The actual
+guarantee that nothing reaches `master` except through a reviewed PR is GitHub branch
+protection on the repository.
 
 `.worktrees/` is gitignored. Rationale, per-role usage and the caveats that come with
 nesting are in [docs/agents/worktree-mechanism.md](docs/agents/worktree-mechanism.md).
