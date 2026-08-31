@@ -16,7 +16,7 @@ git rev-parse origin/master              # the real tip, not the anchor below
 gh pr list --state open                  # what is actually in flight
 ls docs/briefs docs/briefs/delivered docs/briefs/archive
 git config --get core.hooksPath          # empty means this clone has no push guard
-gh api repos/cntrl-alt-lenny/edopro-next/rules/branches/master   # [] means master is unprotected
+gh api repos/cntrl-alt-lenny/edopro-next/branches/master --jq .protected   # NOT rules/branches
 ```
 
 `/status` runs all of these. `tests/test_docs_consistency.py` enforces the
@@ -41,9 +41,11 @@ upstream  DISABLED_use_origin                     (push — do not undo)
 merged. This is an anchor, not a current value — **always derive live HEAD
 from git** (`git rev-parse origin/master`) rather than trusting this string.
 
-Thirteen PRs merged, none open, at the time of writing. Every milestone so far
-landed through a reviewed PR; several used explicit `DO NOT MERGE` review
-gates. That practice is now the framework's rule — see `AGENTS.md`.
+Every milestone so far landed through a reviewed PR; several used explicit
+`DO NOT MERGE` review gates. That practice is now the framework's rule, and
+since 2026-08-31 it is enforced server-side — see `AGENTS.md`. For what is
+merged and open right now, run `gh pr list` (above); do not read a count from
+this file.
 
 ## Milestones (detail and honest status: [`ROADMAP.md`](ROADMAP.md))
 
@@ -96,9 +98,13 @@ This distinction is the single most useful thing in this file.
   emptying the protected list fails 7 of 12, and replacing exact matching with
   substring matching — the bug class that broke the previous guard — fails 4.
   Note what this does *not* prove: that git invokes the hook at all. That needs
-  `core.hooksPath` set per clone. And **GitHub branch protection on `master` is
-  not enabled** (verified 2026-08-31 — `rules/branches/master` returns `[]`),
-  so there is currently no server-side guarantee behind it at all.
+  `core.hooksPath` set per clone.
+- **Server-side protection on `master`** (enabled 2026-08-31): changes only via
+  PR, five required checks, `enforce_admins: true`, `strict: true`, no
+  force-push or deletion. Proven by an admin `--no-verify` push being rejected
+  with `GH006` on a branch carrying the same shape. It enforces the *path*,
+  not the *role* — every agent authenticates as the owner, so "Builder never
+  merges" remains a contract, not something the server can know.
 - A `.ydk` written by our own `save_ydk()` loads correctly through the real,
   preserved `DeckManager::LoadDeckFromFile()`, for both of upstream's
   `separated` load modes, against a synthetic committed-safe fixture — with a

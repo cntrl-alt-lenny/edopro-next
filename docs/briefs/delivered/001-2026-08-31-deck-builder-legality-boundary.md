@@ -14,6 +14,11 @@ is adjudicated. Its presence here is not acceptance.
 
 The brief below is the text Builder actually received, unedited.
 
+> **Note for a later reader:** this brief cites `.claude/agents/builder.md`.
+> The role contracts have since moved to `docs/roles/` and `.claude/` holds
+> only thin adapters. The path is left as Builder received it — a brief is
+> evidence about how a round ran, so it is annotated, never rewritten.
+
 ---
 
 ## MODE: UPSTREAM ARCHAEOLOGY

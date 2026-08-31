@@ -6,7 +6,7 @@ One brief lives here at a time. On delivery it moves to
 [`delivered/`](delivered/), and only on adjudication to
 [`archive/`](archive/) — those are different states for a reason, see
 [`README.md`](README.md). The template and field meanings are in
-[`.claude/agents/builder.md`](../../.claude/agents/builder.md).
+[`docs/roles/builder.md`](../roles/builder.md).
 
 ---
 
@@ -180,7 +180,7 @@ so a reviewer can take them one at a time. Push, open a PR whose body carries
 
 ## Completion-report schema
 
-The standard report in `.claude/agents/builder.md`, plus:
+The standard report in [`docs/roles/builder.md`](../roles/builder.md), plus:
 
 - **The coverage table, up front** — per document: citations checked, held,
   stale, overstated, wrong, unsupported.

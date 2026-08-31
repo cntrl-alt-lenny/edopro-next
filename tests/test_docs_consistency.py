@@ -54,16 +54,22 @@ _STATUS_RE = re.compile(r"^Status:\s*\**\s*([a-z]+)", re.MULTILINE)
 # Markdown links to repo-relative paths. Skips URLs and pure anchors.
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)#]+)(?:#[^)]*)?\)")
 
+ROLES = ("brain", "builder", "verifier")
+
 COORDINATION_DOCS = [
     REPO / "AGENTS.md",
     REPO / "CLAUDE.md",
+    REPO / "README.md",
     REPO / "docs" / "state.md",
     REPO / "docs" / "briefs" / "README.md",
     REPO / "docs" / "briefs" / "active.md",
     REPO / "docs" / "briefs" / "archive" / "README.md",
     REPO / "docs" / "agents" / "model-notes.md",
     REPO / "docs" / "agents" / "worktree-mechanism.md",
+    REPO / "docs" / "agents" / "launching.md",
+    *sorted((REPO / "docs" / "roles").glob("*.md")),
     *sorted((REPO / ".claude" / "agents").glob("*.md")),
+    *sorted((REPO / ".claude" / "commands").glob("*.md")),
 ]
 
 
@@ -150,6 +156,67 @@ class CoordinationLinkTest(unittest.TestCase):
                         (doc.parent / target).resolve().exists(),
                         f"{doc.relative_to(REPO)} links to a path that does not exist",
                     )
+
+
+class RoleContractTest(unittest.TestCase):
+    """Contracts are vendor-neutral; adapters are thin and point at them.
+
+    The separation exists because the owner runs Anthropic, OpenAI and Google
+    models and any seat may be any of them. It is easy to erode by accident --
+    someone adds a Claude-specific instruction to a contract, or copies
+    contract text into an adapter where it then drifts.
+    """
+
+    def test_every_role_has_a_canonical_contract(self):
+        for role in ROLES:
+            with self.subTest(role=role):
+                self.assertTrue((REPO / "docs" / "roles" / f"{role}.md").is_file())
+
+    def test_adapters_point_at_the_contract_and_do_not_restate_it(self):
+        for role in ROLES:
+            adapter = REPO / ".claude" / "agents" / f"{role}.md"
+            if not adapter.is_file():
+                continue
+            with self.subTest(role=role):
+                text = adapter.read_text(encoding="utf-8")
+                self.assertIn(
+                    f"docs/roles/{role}.md", text,
+                    "an adapter must point at its canonical contract",
+                )
+                # A thin adapter. If one grows past this it is probably
+                # restating the contract, which is how the two drift apart.
+                self.assertLess(
+                    len(text.splitlines()), 60,
+                    "adapter looks like it is restating the contract rather than pointing at it",
+                )
+
+    def test_contracts_do_not_depend_on_one_vendors_mechanics(self):
+        """Naming a vendor as an example is fine; requiring one is not."""
+        forbidden = (
+            "subagent_type:",
+            "allowed-tools:",
+            "settings.local.json",
+            "effortLevel",
+            "ultracode",
+            "slash command",
+        )
+        for role in ROLES:
+            contract = (REPO / "docs" / "roles" / f"{role}.md").read_text(encoding="utf-8")
+            for token in forbidden:
+                with self.subTest(role=role, token=token):
+                    self.assertNotIn(
+                        token, contract,
+                        f"vendor-specific mechanic in a role contract; it belongs in "
+                        f"docs/agents/launching.md",
+                    )
+
+    def test_contracts_carry_no_tool_frontmatter(self):
+        for role in ROLES:
+            with self.subTest(role=role):
+                first = (REPO / "docs" / "roles" / f"{role}.md").read_text(
+                    encoding="utf-8").lstrip().splitlines()[0]
+                self.assertNotEqual(first.strip(), "---",
+                                    "a contract must not carry one tool's frontmatter")
 
 
 if __name__ == "__main__":

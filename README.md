@@ -285,8 +285,9 @@ to `master` or one that would ship drift in the derived protocol tables. It is a
 convenience, not a control — it needs that config in every clone, it is bypassed by
 `git push --no-verify`, and a fresh clone has no guard until it is set.
 
-GitHub branch protection on `master` would be the only real guarantee, and as of
-2026-08-31 **it is not enabled** — see [AGENTS.md](AGENTS.md), "Never push to `master`".
+The real guarantee is GitHub branch protection on `master`, **enabled** as of 2026-08-31:
+changes only via PR, required checks green, applied to administrators too, no force-pushes
+or deletions. See [AGENTS.md](AGENTS.md), "Never push to `master`".
 
 `.worktrees/` is gitignored. Rationale, per-role usage and the caveats that come with
 nesting are in [docs/agents/worktree-mechanism.md](docs/agents/worktree-mechanism.md).

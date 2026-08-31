@@ -4,7 +4,7 @@ argument-hint: []
 allowed-tools: Read, Bash, Grep, Glob
 ---
 
-Run Brain's startup sequence (`.claude/agents/brain.md`, "Startup sequence",
+Run Brain's startup sequence (`docs/roles/brain.md`, "Startup sequence",
 has the full rationale) and report back concisely. Synthesize — do not dump
 files.
 
@@ -19,26 +19,28 @@ files.
 
    ```bash
    git config --get core.hooksPath
-   gh api repos/cntrl-alt-lenny/edopro-next/rules/branches/master
    gh api repos/cntrl-alt-lenny/edopro-next/branches/master --jq .protected
+   gh api repos/cntrl-alt-lenny/edopro-next/branches/master/protection --jq      '{admins: .enforce_admins.enabled, strict: .required_status_checks.strict, checks: .required_status_checks.contexts}'
+   gh api repos/cntrl-alt-lenny/edopro-next/rulesets --jq length
    ```
 
    - `core.hooksPath` must be `.githooks`. Unset means this clone has **no
      local push guard** — per-clone config, easy to forget on a new machine,
      fails silently. Give the fix: `git config core.hooksPath .githooks`.
-   - The `rules/branches/master` call is the one that matters, and it must be
-     checked in **both** directions. `[]` means `master` has no server-side
-     protection, which was the state on 2026-08-31 and is what `AGENTS.md`
-     currently documents. If it is now non-empty, say so — the docs are then
-     understating the guarantee and need updating.
-   - Check `rulesets` too if `rules/branches/master` is empty; classic
-     protection and rulesets are separate mechanisms and the classic
-     `branches/master` endpoint does not report rulesets.
+   - **`branches/master --jq .protected` is the reliable yes/no.** Do **not**
+     use `rules/branches/master` for this: that endpoint reports *rulesets*
+     only and returns `[]` even when classic branch protection is fully
+     active. An earlier version of this command made exactly that mistake and
+     would have reported `master` unprotected while it was protected.
+   - Expected as of 2026-08-31: `protected: true`, `enforce_admins: true`,
+     `strict: true`, five required checks. Report any drift from that in
+     either direction — protection weakening is the dangerous direction, but
+     protection strengthening means the docs are understating the guarantee.
+   - The `rulesets` call is only to notice if someone later adds one alongside
+     classic protection.
 
-   Report the live answer either way, as a fact you obtained this session. A
-   guarantee that silently disappears is worse than one that was never
-   claimed, and this check exists because the framework asserted this
-   protection existed when it did not.
+   Report the live answer as a fact obtained this session. This check exists
+   because the framework once asserted a protection that did not exist.
 4. Check `gh pr list` for open PRs, and note for each whether its body still
    carries `DO NOT MERGE`.
 5. Check `docs/briefs/active.md`: is a brief queued, in progress (a branch
