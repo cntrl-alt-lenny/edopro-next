@@ -26,6 +26,6 @@ Then read [`CLAUDE.md`](../../CLAUDE.md) and [`AGENTS.md`](../../AGENTS.md).
 - No `model:` is pinned: this seat inherits whatever was launched. Effort and
   orchestration mechanics are in
   [`launching.md`](../../docs/agents/launching.md).
-- `.git/agent-inbox/` may hold other roles' reports — but only from Claude
-  Code sessions. **Missing or stale means UNKNOWN**, never "nothing happened";
-  go and inspect repository and PR state instead.
+- `.git/agent-inbox/` may hold other roles' reports, but only from Claude
+  Code sessions — see [`launching.md`](../../docs/agents/launching.md) for
+  what a missing or stale one means.
