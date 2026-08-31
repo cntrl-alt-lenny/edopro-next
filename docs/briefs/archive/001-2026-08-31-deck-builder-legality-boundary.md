@@ -1,23 +1,44 @@
 # Brief 001 — deck-builder legality boundary
 
-Status: **delivered**
+Status: accepted
 
-Builder produced PR #15 (`m3/deck-builder-legality-boundary`, head `83d976f0`)
-on 2026-08-31, running Claude Sonnet 5 at High effort. Brain has independently
-re-derived its load-bearing upstream claims and they hold. **Verifier has not
-reviewed it, and Brain has not adjudicated it.**
+Delivered by Builder as PR #15 (`83d976f0`, Claude Sonnet 5 at High effort),
+verified at head `538a685e`, merged 2026-08-31 as `5c5f371f`.
 
-This file lives in `delivered/`, not `archive/`, precisely because those are
-different things — see [`README.md`](../README.md). It moves to `archive/`
-with status `accepted` or `rejected`, and the outcome appended, when the round
-is adjudicated. Its presence here is not acceptance.
+**Outcome: accepted with corrections outstanding.** Verifier returned zero
+BLOCKERs, seven SHOULD FIX and two NOTE. The headline finding — upstream's deck
+editor never calls `CheckDeckContent`/`CheckDeckSize` — was independently
+re-derived twice and holds without qualification, as does the
+upstream-versus-proposal separation throughout.
+
+**One substantive defect is merged and not yet fixed.**
+`docs/architecture/deck-builder-legality.md` §2.4 says `check_limit` is guarded
+by the Shift-inclusive `forceInput` at `deck_con.cpp:641,719,756`. True at
+`:641` and `:756`; **false at `:719`**, which tests
+`gGameConfig->ignoreDeckContents` directly — Shift is read two lines later for
+an unrelated purpose (choosing the target section). Brain re-derived this from
+source. Anyone reading that section before the correction lands should treat
+the three-call-site claim as wrong at one site.
+
+The remaining corrections are citation precision: three ranges overshooting a
+function's closing brace, one two-line packet citation where only one line is
+the mechanism described, two self-references to a "Non-goals" section this
+document does not have (they mean the brief's), one "open question" that ADR
+0007 and `validation_policy.h` already answer, and a closing paragraph that
+narrows a named architectural tension into a scheduling question.
+
+All of these fold into the re-queued citation-audit brief (superseded 002),
+whose scope now includes this document.
+
+**Pass Two was not performed** for this round — Verifier deferred the
+comparison against Builder's own report to keep pass one uncontaminated and
+then did not return to it. Brain had independently verified Builder's
+load-bearing report claims in the previous round (the two `CheckDeck*` call
+sites, `SaveDeck`, `push_main`'s unconditional type gate, the `forceInput`
+bypass, `GetLFList`'s nullptr path), which substantially covers the same
+ground — but not identically, and the gap is recorded rather than papered over.
 
 The brief below is the text Builder actually received, unedited.
-
-> **Note for a later reader:** this brief cites `.claude/agents/builder.md`.
-> The role contracts have since moved to `docs/roles/` and `.claude/` holds
-> only thin adapters. The path is left as Builder received it — a brief is
-> evidence about how a round ran, so it is annotated, never rewritten.
 
 ---
 

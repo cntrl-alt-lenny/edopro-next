@@ -163,58 +163,74 @@ concrete defect.
 
 ## In flight
 
-**The agent framework itself** — PR #14, branch `meta/agentic-framework`:
-`AGENTS.md`, `.claude/agents/`, this file, `docs/briefs/`, `docs/agents/`,
-`.claude/hooks/`. Open, under Verifier review, not merged.
+Derive this from `gh pr list` and `ls docs/briefs*` before trusting it.
 
-**PR #15**, branch `m3/deck-builder-legality-boundary` — the first Builder
-round, executed against the brief still in [`briefs/active.md`](briefs/active.md):
-`UPSTREAM ARCHAEOLOGY` on the deck-builder legality boundary. Delivered
-`docs/architecture/deck-builder-legality.md`. Open, **not yet Verifier-reviewed**,
-not merged. It branches from `meta/agentic-framework` because the framework is
-not on `master` yet, so #14 merges first.
+**PR #14 — merged 2026-08-31** (`c3592a84`). The framework itself: `AGENTS.md`,
+vendor-neutral role contracts in [`roles/`](roles/), thin `.claude/` adapters,
+this file, [`briefs/`](briefs/), [`agents/`](agents/), `.githooks/pre-push`,
+and `tests/test_push_guard.py` + `tests/test_docs_consistency.py`. Verifier
+reviewed the exact head, returned zero BLOCKERs, **seven SHOULD FIX and five
+NOTE** (an earlier version of this line said "nine", which silently dropped
+three NOTEs); Brain reproduced the load-bearing ones and merged under the
+delegated authority described in `AGENTS.md`.
 
-Round 1's headline finding, which reshapes the implementation round: upstream's
-deck editor **never calls `CheckDeckContent`/`CheckDeckSize`** — those have a
-single call site each, both in `GenericDuel::PlayerReady`. The editor runs three
-weaker, independently-bypassable mechanisms of its own, and `SaveDeck` checks
-nothing at all. So "surface legality in the deck builder" is not one thing:
-reproducing upstream's editor and running `policy::validate_deck()` are
-different products.
+**PR #15 — merged 2026-08-31** (`5c5f371f`). Brief 001's deliverable,
+`architecture/deck-builder-legality.md`. Verifier returned zero BLOCKERs, seven
+SHOULD FIX, two NOTE; Brain re-derived the headline finding and the one
+substantive defect below. Brief archived as `accepted`.
 
-**Brain has independently re-derived the load-bearing claims** — the two call
-sites in `GenericDuel::PlayerReady` (`generic_duel.cpp:373,380`) and their
-absence from `deck_con.cpp`; `SaveDeck`'s lack of any check; `push_main`'s
-unconditional type gate versus its `forced`-bypassable count caps;
-`forceInput = ignoreDeckContents || Shift` (`deck_con.cpp:624`); and
-`GetLFList` returning `nullptr` on a hash miss. All hold. Still pending:
-Verifier's independent review of PR #15.
+**Known-wrong, merged, not yet fixed:**
+[`architecture/deck-builder-legality.md`](architecture/deck-builder-legality.md)
+§2.4 claims `check_limit` is guarded by the Shift-inclusive `forceInput` at
+`deck_con.cpp:641,719,756`. True at `:641` and `:756`; **false at `:719`**,
+which tests `gGameConfig->ignoreDeckContents` directly — Shift is read two
+lines later to choose the target section, not to bypass the check. Do not rely
+on that sentence. Six further citation-precision defects are listed in the
+archived brief. All fold into the re-queued citation audit.
+
+**Brief 003 is queued** in [`briefs/active.md`](briefs/active.md): fixing the
+framework defects Round 1's verification surfaced.
+
+**Brief 002 (M3 architecture citation audit) was queued and superseded before
+delivery** — brief 003's findings are more urgent, because the tests meant to
+prevent documentation drift were shown to be checking surface proxies. 002's
+full text is in git history (`202a3494`); re-queue it after 003, **adding
+`deck-builder-legality.md` to its scope** so PR #15's seven citation defects
+are closed by the same pass.
+
+Round 1's headline finding, which still reshapes the eventual implementation
+round: upstream's deck editor **never calls `CheckDeckContent`/`CheckDeckSize`**
+— those have a single call site each, both in `GenericDuel::PlayerReady`. The
+editor runs three weaker, independently-bypassable mechanisms of its own, and
+`SaveDeck` checks nothing. So "surface legality in the deck builder" is not one
+thing. Brain has independently re-derived this; Verifier has not yet reviewed
+it.
 
 **Follow-up found by that round, not yet fixed:**
 [`architecture/deck-builder-ui.md`](architecture/deck-builder-ui.md):35 says
 there is "no upstream function that decides a card's section from its type at
 push time either". `push_main`/`push_extra` do type-gate at push time
-(`deck_con.cpp:1585-1588,1617-1621`). The claim is defensible read narrowly —
-the caller's cascade does the routing, not a dedicated classifier — but it is
-worded more broadly than the source supports. Builder correctly flagged it
-rather than editing an out-of-scope file; it needs its own small brief.
+(`deck_con.cpp:1585-1588,1617-1621`). Defensible read narrowly, broader than
+the source supports as written.
 
 ## Local toolchain constraint — read before writing any brief
 
 **The primary dev machine (Windows) has neither `cmake` nor Qt installed.**
 Verified 2026-08-31. `ninja` and Python 3.12.10 are present.
 
-That means `client/`, `data/`, `policy/` and `ui/` **cannot be built or tested
+`client/`, `data/`, `policy/` and `ui/` therefore **cannot be built or tested
 locally at all**, and no brief touching them can produce the evidence
-`AGENTS.md`'s per-layer table requires. Only Python tooling
-(`tools/`, `tests/`) and documentation work are locally verifiable today.
+`AGENTS.md`'s per-layer table requires. Only Python tooling (`tools/`,
+`tests/`) and documentation work are locally verifiable today.
 
-This is a real constraint on the framework, not a detail: `AGENTS.md` says CI
-is the backstop rather than the primary evidence, and for four of the six
-layers there is currently no primary evidence available. Until cmake and Qt
-are installed, either scope briefs to what is locally verifiable, or accept
-CI-at-an-exact-SHA as the evidence and **say so explicitly** rather than
-letting the gap go unmentioned.
+Until cmake and Qt are installed, either scope briefs to what is locally
+verifiable, or accept CI-at-an-exact-SHA as the evidence and **say so
+explicitly** rather than letting the gap go unmentioned.
+
+*(This section was deleted by accident while fixing an unrelated
+contradiction, and restored after review caught it. It is durable state, not
+commentary on a since-resolved problem — do not fold it into a narrative
+section again.)*
 
 ## Known open items
 
@@ -228,21 +244,21 @@ letting the gap go unmentioned.
 
 ## Recommended next slice
 
-**Surface deck legality in the deck-builder UI** — but read the blocker first.
+**Brief 003, framework hardening** — queued in
+[`briefs/active.md`](briefs/active.md). It is first because two of the guards
+this framework relies on were shown to be checking proxies rather than the
+property they claim to enforce.
 
-It is the natural next M3 step and the one place where `policy/`'s existing
-foundation becomes something a user can see. The risk sits in the Qt adapter
-boundary (ADR 0006), nowhere near duel behaviour, so a bad round is cheap —
-which makes it a good first exercise of this framework. It also carries a
-sharp invariant for Verifier to attack: **the UI must render legality decided
-by `policy/`, and never compute or second-guess it.**
+After that, **re-queue the M3 architecture citation audit** (superseded brief
+002, text at `202a3494`), with `deck-builder-legality.md` added to its scope —
+it now carries seven known citation defects of exactly the kind that audit
+exists to find, including one wrong behavioural claim.
 
-**The known blocker, recorded in ADR 0008's context section:** a prior
-planning round deferred this slice because `policy/`'s `ValidationPolicy` has
-no default, and no session layer supplies one. So the real first question is
-not a QML question at all — it is *where does the active LFList and validation
-policy come from, and who owns that lifetime?* A brief that starts by wiring
-QML will hit this immediately. Answering it may itself be the right slice.
-
-Confirm scope with the owner before briefing it. Brain does not start a new
-direction on its own initiative.
+**Not the deck-builder legality UI, yet** — and note this file previously
+recommended it while also recording, a few sections above, that this machine
+has no cmake or Qt. Both cannot be true: that slice touches `ui/` and cannot
+produce its required evidence here. It also has a real design blocker (ADR
+0008's context: `policy::ValidationPolicy` has no default and no session layer
+supplies one), which brief 001's delivered research is meant to resolve — and
+that research is still unreviewed. Sequence: install the toolchain, land 003,
+adjudicate 001, then brief the UI work.

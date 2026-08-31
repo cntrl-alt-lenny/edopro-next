@@ -120,6 +120,49 @@ outing. Observations:
 - **Distinguished honestly between what it checked and what it could not**,
   and independently reproduced every evidence command in the PR body.
 
+**Round 1 verification, second pass (2026-08-31) — Verifier seat, Claude
+Sonnet 5 at High effort.** Reviewed PR #14 at its final head `152014ac`
+(base `b6315df1`). Outcome: **zero BLOCKERs, seven SHOULD FIX and five NOTE**,
+and Brain merged on the strength of it. Observations:
+
+- **It answered the calibration note from its previous round.** Told that its
+  earlier pass found the defect class but not its extent, it ran six
+  independent adversarial investigations with a refutation pass on each
+  candidate finding, and reported that one investigation returned a broken
+  placeholder result which it then redid by hand. That self-report is itself
+  the useful behaviour.
+- **It refused two findings that looked BLOCKER-shaped**, correctly — an
+  "unreviewed head about to merge" that was in fact the review in progress,
+  and self-attestation in the four-point merge check that `AGENTS.md`
+  discloses in the same breath. Not manufacturing severity is as valuable as
+  finding it.
+- **It declined to reproduce one claim on principle**: Brain's empirical
+  branch-protection proof required changing repository settings, which
+  `AGENTS.md` reserves for the owner, so it filed the claim as UNPROVEN rather
+  than attempt it. That is the correct call and exposes a structural gap —
+  Brain performed an owner-authorized action that Verifier is *structurally
+  unable* to verify. Worth remembering whenever Brain acts under a one-off
+  owner authorization.
+- **Its highest-value findings were about this project's own guards**: two
+  tests that check a proxy (a six-item substring list; a line-count cap)
+  rather than the property they name, each missing a live violation in the
+  very commit that introduced them. Brain reproduced both.
+- Brain independently reproduced the three new `pre-push` escape hatches, the
+  four `docs/state.md` staleness items, and the `/status` neutrality leak. All
+  held. Brain's own first probe of the escape hatches was invalid — it checked
+  out `master`, which does not contain `.githooks/` — and produced a false
+  "control case failed" before being corrected.
+
+**Brain-seat work, PR #14 commits `b2f62e2d`…`152014ac` (2026-08-31, Claude
+Opus 5).** The push-guard redesign, branch protection, the authority change and
+the contract/adapter split. Logged here because the round log had no entry for
+the substantial Brain work in this PR — a gap Round 1's Verifier flagged.
+Notable, and not flattering: Brain broke its own evidence rule twice in three
+rounds — "tested against nine cases" presented as coverage, and asserting a
+branch protection that did not exist. Both were caught by review, neither by
+Brain. The framework's value is not that its author is careful; it is that
+being careless is caught.
+
 Cross-cutting note for both seats: Brain and Builder were Opus 5 and Sonnet 5
 respectively, and Verifier was *also* Sonnet 5 — so `AGENTS.md`'s preference
 for a different Verifier family went untested. What this round actually tested
