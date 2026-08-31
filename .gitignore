@@ -53,3 +53,24 @@ NotoSansJP-Regular.otf
 /data/build/
 __pycache__/
 *.pyc
+/policy/build/
+
+# Agent worktrees (docs/agents/worktree-mechanism.md). Builder and Verifier
+# each get a git worktree of this same clone, nested here so the layout is
+# identical on every machine instead of depending on sibling directories.
+# Ignored so the primary checkout's `git status` stays meaningful -- the
+# framework's working discipline depends on it. Being ignored also keeps
+# ripgrep and other .gitignore-aware tooling from walking duplicate copies
+# of the whole source tree.
+#
+# `git clean -fdx` is safe here: git recognises each as a separate
+# repository and reports "Would skip repository". Only the doubled force,
+# `git clean -ffdx`, would delete them -- and doing so leaves stale
+# metadata in .git/worktrees/. Use `git worktree remove` instead.
+/.worktrees/
+
+# Per-checkout Claude Code settings. Deliberately not shared: each worktree
+# (Brain / Builder / Verifier - docs/agents/worktree-mechanism.md) may pin a
+# different model or effortLevel. The shared, version-controlled settings are
+# in .claude/settings.json.
+.claude/settings.local.json

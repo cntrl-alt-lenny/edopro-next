@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "description": "Project-level Claude Code settings for edopro-next. One hook: Stop captures each session's final reply into .git/agent-inbox/<role>.md so Brain, Builder and Verifier can hand off without the owner copy-pasting reports. See the script's docstring for its limits -- notably that it never fires for a round run in a non-Claude tool, which this project deliberately prefers for Verifier. The push guard is deliberately NOT here: it lives in .githooks/pre-push, because git invokes that after resolving refspecs and a PreToolUse hook can only parse the Bash command text, which was defeated by sh -c, +master, git -C and command substitution while also misfiring on a heredoc that merely mentioned a push. See .githooks/pre-push's own header. Interpreter is `python`: verified as Python 3.12.10 on the primary dev machine (Windows), which is also what tools/ and tests/ are run with there. A macOS/Linux host where only python3 exists needs the `command` string below changed; no single invocation is proven portable across both, so do not assume one direction is universally safer.",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/save_agent_reply.py"
+          }
+        ]
+      }
+    ]
+  }
+}

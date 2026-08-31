@@ -1,0 +1,127 @@
+#!/bin/sh
+# pre-push -- the push guard for edopro-next.
+#
+# WHY THIS LIVES HERE AND NOT IN A PreToolUse HOOK
+#
+# The first version of this guard was a Claude Code PreToolUse hook that read
+# the Bash command string and tried to work out whether it was a push to
+# master. That is unwinnable, and it failed in both directions at once:
+#
+#   fail-open  (reached master, hook reported success):
+#       sh -c 'git push origin master'      -- any quote before `git`
+#       bash -c "git push origin master"
+#       (git push origin master)            -- subshell
+#       $(git push origin master)           -- command substitution
+#       git push origin +master             -- `+` force shorthand
+#       git push origin +refs/heads/master
+#       git -C . push origin master         -- flags before the subcommand
+#
+#   fail-closed (harmless command blocked):
+#       a heredoc that merely *documented* a push to master
+#
+# Shell has unbounded ways to spell the same push, so a text matcher can
+# always be worked around, and the same matcher misfires on text that only
+# mentions a push. Git, by contrast, invokes THIS hook after it has resolved
+# every refspec, and hands us exactly what is about to be written. There is
+# nothing left to infer.
+#
+# STDIN, one line per ref being pushed:
+#   <local ref> <local sha1> <remote ref> <remote sha1>
+#
+# A deletion arrives with an all-zero local sha1 and the same remote ref, so
+# `git push origin --delete master` is caught by the same check.
+#
+# LIMITS -- read these before treating this as a guarantee
+#
+# This is a local convenience, not a control. It only runs where someone has
+# run `git config core.hooksPath .githooks` (see README.md), it is bypassed by
+# `git push --no-verify`, and it does not exist at all on a fresh clone. The
+# actual, non-bypassable guarantee that nothing reaches master except through a
+# reviewed PR is GitHub branch protection on the repository itself. See
+# AGENTS.md, "Never push to master".
+#
+# Exit 0 to allow the push, non-zero to reject it.
+
+set -u
+
+PROTECTED_REFS="refs/heads/master"
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+
+# --- Guard 1: never write a protected branch --------------------------------
+
+blocked_ref=""
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+	[ -z "${remote_ref:-}" ] && continue
+	for protected in $PROTECTED_REFS; do
+		if [ "$remote_ref" = "$protected" ]; then
+			blocked_ref="$remote_ref"
+		fi
+	done
+done
+
+if [ -n "$blocked_ref" ]; then
+	branch=${blocked_ref#refs/heads/}
+	cat >&2 <<EOF
+
+[edopro-next] push REJECTED: it would write \`$branch\`.
+
+AGENTS.md: every change is a pull request, and no agent merges anything.
+Push a task branch and open a PR; the owner merges on GitHub.
+
+Brain fast-forwards its local master from origin after a merge -- it never
+pushes master back, so nothing in the normal loop needs this.
+
+If this really is intended:  git push --no-verify ...
+
+EOF
+	exit 1
+fi
+
+# --- Guard 2: derived tables must not drift ---------------------------------
+#
+# tools/generate_messages.py and tools/generate_protocol_constants.py emit
+# files that are derived, not hand-edited, and CI checks them first. Both run
+# in well under a second, so checking here surfaces the drift while it can
+# still be fixed in the same turn, rather than as a CI failure several steps
+# later.
+#
+# Deliberately NOT checked here: the cmake/ctest cycles. A hook slow enough to
+# be resented is a hook that gets bypassed. Those belong in AGENTS.md's
+# per-layer evidence table, as something an agent runs and pastes.
+
+if command -v python >/dev/null 2>&1; then
+	PY=python
+elif command -v python3 >/dev/null 2>&1; then
+	PY=python3
+else
+	# No interpreter: say so rather than silently skipping a check the docs
+	# claim runs. Not fatal -- CI still enforces it.
+	echo "[edopro-next] warning: no python on PATH; skipped the derived-table check." >&2
+	exit 0
+fi
+
+drift=0
+for script in tools/generate_messages.py tools/generate_protocol_constants.py; do
+	if ! output=$("$PY" "$repo_root/$script" --check 2>&1); then
+		if [ "$drift" -eq 0 ]; then
+			echo "" >&2
+			echo "[edopro-next] push REJECTED: derived tables are out of date." >&2
+			echo "These files are generated, not hand-edited, and CI checks them" >&2
+			echo "first. Regenerate (drop --check) and commit the result." >&2
+			echo "" >&2
+		fi
+		drift=1
+		echo "--- $script --check ---" >&2
+		echo "$output" >&2
+	fi
+done
+
+if [ "$drift" -ne 0 ]; then
+	echo "" >&2
+	echo "Bypass once:  git push --no-verify ..." >&2
+	echo "" >&2
+	exit 1
+fi
+
+exit 0

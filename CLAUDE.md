@@ -3,6 +3,12 @@
 Working agreement for AI agent sessions on this repository. Read this before changing
 anything.
 
+**This file says what the project is and what may not be broken.
+[`AGENTS.md`](AGENTS.md) says who does the work and how a change earns its way in** —
+three roles (Brain, Builder, Verifier), the brief and review loop, and the evidence each
+kind of change must produce. Read both. Where they disagree, this file wins.
+[`docs/state.md`](docs/state.md) is the short rehydration doc for a fresh session.
+
 ## What this project is
 
 **edopro-next** is a long-term effort to give [EDOPro](https://github.com/edo9300/edopro)
@@ -81,7 +87,8 @@ when what happened is that a build succeeded.
 
 ## Validation expected before committing
 
-Proportionate to what changed:
+Proportionate to what changed. `AGENTS.md` has the per-layer table of exact commands
+whose real output must appear in a completion report:
 
 - Touched the build? Prove it still builds, and say on which platform.
 - Touched the client model? Its unit tests must pass.
