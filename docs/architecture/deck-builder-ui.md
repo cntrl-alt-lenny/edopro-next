@@ -31,9 +31,16 @@ base `docs/UPSTREAM.md` records:
   are the file-open paths; `FilterCards()`/`CheckCardProperties()` (`:1059-1340`) implement
   the sigil search grammar `card-search.md`§1.1 already documents in full;
   `push_main`/`push_extra`/`push_side`/`pop_main`/`pop_extra`/`pop_side` (`:1577-1672`) are
-  the section-mutation primitives, each taking an explicit `DeckType` destination - there is
-  no upstream function that decides a card's section from its type at push time either;
-  classification-on-load is a separate, later step (§7, and `deck-model.md`§3).
+  the section-mutation primitives, each taking an explicit `DeckType` destination - none of
+  them *choose* that destination from the card's type. But `push_main` and `push_extra` do
+  gate on type: `push_main` rejects Fusion/Synchro/Xyz and non-Spell Link cards, and
+  `push_extra` rejects anything that is not Ritual/Fusion/Synchro/Xyz/Link
+  (`:1585-1588,1617-1621`) - so a card lands in the right section only because the caller's
+  own cascade tries sections in some order and falls through on rejection (e.g.
+  `push_extra(pointer) || push_main(pointer)`, `:701`), not because any single function
+  classifies it. `LoadDeck`'s reclassification is a genuinely different mechanism from this -
+  it runs at file-load time, not at interactive push time, and can move a card between
+  sections outright rather than only accepting or rejecting one (§7, and `deck-model.md`§3).
 - **`gframe/deck_manager.{h,cpp}`** - `LoadCardList`/`SaveDeck`/`LoadDeck`, already fully
   documented in [deck-model.md](deck-model.md). Nothing here re-derives that; `edopro_next_deck`
   (`data/`) is the only code in this project that parses or writes `.ydk` text, including from
@@ -762,12 +769,16 @@ output.
 A fresh external review of §10.7's own commit found one more instance of the same underlying
 mistake - rendering a raw stored number without checking whether it needs interpreting first.
 `CardRecord::attack`/`defense` document `-1`/`-2` as *real, displayed* "varies" values ("not
-sentinels this module strips"), and upstream's own `Game::ShowCardInfo` (`gframe/game.cpp`) checks
-`cd->attack < 0`/`cd->defense < 0` in both its Link and non-Link branches, rendering a literal `"?"`
-in place of the number whenever either is true. `CardPreview.qml` was instead printing
-`String(entry.attack)`/`String(entry.defense)` directly - a card whose ATK varies would show
-`"-2"` in the preview - and `SearchResultsModel::build_summary()` had the identical bug in the
-search-result summary line (`"ATK -2 / DEF -1"`).
+sentinels this module strips"), and upstream's own `Game::ShowCardInfo` checks this, but not
+symmetrically between its two branches: the Link branch checks only `cd->attack < 0`
+(`gframe/game.cpp:2836-2837`) - there is no `cd->defense` check there at all, because a Link
+monster's real defense is always 0 (`card-database.md`§2.2), never a "varies" `-2`. The
+non-Link branch checks both `cd->attack < 0` and `cd->defense < 0` independently
+(`gframe/game.cpp:2844-2851`), rendering a literal `"?"` in place of whichever one is true.
+`CardPreview.qml` was instead printing `String(entry.attack)`/`String(entry.defense)`
+directly - a card whose ATK varies would show `"-2"` in the preview - and
+`SearchResultsModel::build_summary()` had the identical bug in the search-result summary line
+(`"ATK -2 / DEF -1"`).
 
 Fixed the same way as §10.7: a tiny, cited formatter in `card_entry.cpp` -
 `format_combat_stat(qint32) -> QString`, `value < 0 ? "?" : QString::number(value)`, matching
