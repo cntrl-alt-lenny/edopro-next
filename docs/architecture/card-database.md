@@ -416,8 +416,9 @@ documenting an invariant the loader did not actually check. See
   (`std::filesystem::path`); archive-backed loading, if ever needed, is a caller-side
   concern layered on top, not something this facade's SQLite boundary should know about.
 - **Global SQLite configuration.** `DataManager`'s constructor calls
-  `sqlite3_config(SQLITE_CONFIG_SINGLETHREAD)` and registers a process-wide custom VFS
-  (`gframe/data_manager.cpp:32-36`). This module does neither - mutating SQLite's global
+  `sqlite3_config(SQLITE_CONFIG_SINGLETHREAD)` when `sqlite3_threadsafe()` reports the linked
+  library was built with threading support, and unconditionally registers a process-wide
+  custom VFS (`gframe/data_manager.cpp:32-36`). This module does neither - mutating SQLite's global
   threading mode or VFS registry from a library used by potentially unrelated callers in the
   same process is exactly the kind of global state CLAUDE.md's module boundaries exist to
   avoid, and this module's own tests (which create and read SQLite files directly,
