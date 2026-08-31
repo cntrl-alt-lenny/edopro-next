@@ -70,9 +70,10 @@ the Builder or Verifier seats. Owner's stated intent is to vary Brain's model
 with available capacity rather than pin it.
 
 **Round 1 (2026-08-31) — Builder seat, Claude Sonnet 5 at High effort.**
-Brief: `UPSTREAM ARCHAEOLOGY`, the deck-builder legality boundary (still in
-`docs/briefs/active.md` — the round is not accepted yet, so it has not been
-archived). Produced PR #15, a 523-line source-cited document. Observations:
+Brief 001, `UPSTREAM ARCHAEOLOGY`, the deck-builder legality boundary — see
+[`../briefs/`](../briefs/) for where that brief currently sits and what its
+status is; do not assume from here. Produced PR #15, a 523-line source-cited
+document. Observations:
 
 - **Did not anchor.** The brief deliberately posed "does upstream's deck
   editor validate the whole deck at all?" as an open question while Brain

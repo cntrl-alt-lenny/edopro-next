@@ -1,14 +1,16 @@
-# Archived brief 001 — deck-builder legality boundary
+# Brief 001 — deck-builder legality boundary
 
-**Status: delivered, not yet adjudicated.** Builder produced PR #15
-(`m3/deck-builder-legality-boundary`, head `83d976f0`) on 2026-08-31, running
-Claude Sonnet 5 at High effort. Brain has independently re-derived its
-load-bearing upstream claims and they hold; Verifier has not yet reviewed it.
+Status: **delivered**
 
-Archived at this point, rather than on acceptance, only so that
-`docs/briefs/active.md` can carry the next brief — `AGENTS.md` keeps exactly
-one there. **The outcome is appended below when the round is adjudicated**;
-until then, do not read this file's existence as acceptance.
+Builder produced PR #15 (`m3/deck-builder-legality-boundary`, head `83d976f0`)
+on 2026-08-31, running Claude Sonnet 5 at High effort. Brain has independently
+re-derived its load-bearing upstream claims and they hold. **Verifier has not
+reviewed it, and Brain has not adjudicated it.**
+
+This file lives in `delivered/`, not `archive/`, precisely because those are
+different things — see [`README.md`](../README.md). It moves to `archive/`
+with status `accepted` or `rejected`, and the outcome appended, when the round
+is adjudicated. Its presence here is not acceptance.
 
 The brief below is the text Builder actually received, unedited.
 

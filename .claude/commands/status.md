@@ -14,12 +14,31 @@ files.
    list`. Confirm `upstream`'s push URL is still `DISABLED_use_origin`. If
    `docs/state.md`'s accepted-state anchor is stale, say so plainly rather
    than silently trusting it.
-3. Check `git config --get core.hooksPath`. It must be `.githooks`. If it is
-   unset, this clone has **no push guard** — the setting is per-clone, easy to
-   forget on a new machine, and fails silently. Report that prominently and
-   give the fix (`git config core.hooksPath .githooks`) rather than burying
-   it. Remember that the guard is a convenience either way; the guarantee is
-   GitHub branch protection on `master`.
+3. **Verify both push-guard layers against live state. Do not restate what the
+   docs claim — query it.**
+
+   ```bash
+   git config --get core.hooksPath
+   gh api repos/cntrl-alt-lenny/edopro-next/rules/branches/master
+   gh api repos/cntrl-alt-lenny/edopro-next/branches/master --jq .protected
+   ```
+
+   - `core.hooksPath` must be `.githooks`. Unset means this clone has **no
+     local push guard** — per-clone config, easy to forget on a new machine,
+     fails silently. Give the fix: `git config core.hooksPath .githooks`.
+   - The `rules/branches/master` call is the one that matters, and it must be
+     checked in **both** directions. `[]` means `master` has no server-side
+     protection, which was the state on 2026-08-31 and is what `AGENTS.md`
+     currently documents. If it is now non-empty, say so — the docs are then
+     understating the guarantee and need updating.
+   - Check `rulesets` too if `rules/branches/master` is empty; classic
+     protection and rulesets are separate mechanisms and the classic
+     `branches/master` endpoint does not report rulesets.
+
+   Report the live answer either way, as a fact you obtained this session. A
+   guarantee that silently disappears is worse than one that was never
+   claimed, and this check exists because the framework asserted this
+   protection existed when it did not.
 4. Check `gh pr list` for open PRs, and note for each whether its body still
    carries `DO NOT MERGE`.
 5. Check `docs/briefs/active.md`: is a brief queued, in progress (a branch

@@ -82,9 +82,14 @@ discipline matters more than the tool.
 3. Verify live repository state yourself: `git remote -v` (confirm `upstream`
    still has its push URL disabled), current branch, `git status`,
    `git fetch --all`, and how local `master` compares to `origin/master`.
-   Also check `git config --get core.hooksPath` — if it is not `.githooks`,
-   this clone has **no push guard at all** and nothing warns about it. Say so
-   before doing anything else.
+   Also verify both push-guard layers against live state, rather than
+   restating what the docs say: `git config --get core.hooksPath` (must be
+   `.githooks`, or this clone has no local guard and nothing warns you), and
+   `gh api repos/cntrl-alt-lenny/edopro-next/rules/branches/master` (`[]`
+   means `master` has no server-side protection). Report both as facts
+   obtained this session, in whichever direction they come back — the docs
+   once claimed a protection that did not exist, and this check is what stops
+   that recurring.
    Run `git worktree list` — a Builder round or a Verifier checkout may be
    sitting under `.worktrees/` with an unmerged branch.
 4. Check open PRs (`gh pr list`) and

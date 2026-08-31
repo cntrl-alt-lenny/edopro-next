@@ -216,10 +216,25 @@ evidence: it runs after the claim has already been made.
 - **Never push to `master`.** Every change is a pull request. This is enforced
   in layers, and it matters which layer you are relying on:
 
-  | Layer | Strength | Notes |
+  | Layer | Strength | Status |
   |---|---|---|
-  | GitHub branch protection on `master` | **the actual guarantee** | Server-side. Needs no local setup, survives any tool, any machine, any agent. |
-  | [`.githooks/pre-push`](.githooks/pre-push) | local convenience | Rejects any push whose destination ref is `master`, and any push that would ship generator drift. Requires `git config core.hooksPath .githooks` in each clone; bypassed by `git push --no-verify`; absent on a fresh clone until set up. |
+  | GitHub branch protection on `master` | would be the only real guarantee — server-side, no local setup, survives any tool or machine | **NOT ENABLED.** Verified 2026-08-31: `rules/branches/master` returns `[]`, `rulesets` returns `[]`, `protected: false`. |
+  | [`.githooks/pre-push`](.githooks/pre-push) | local convenience only | Enabled where `git config core.hooksPath .githooks` has been run. Rejects any push whose destination ref is `master`, and any push that would ship generator drift. Bypassed by `git push --no-verify`; absent on a fresh clone until set up. |
+
+  **So the "no agent merges anything" rule is currently enforced by
+  convention and one bypassable local hook, and nothing else.** That is a
+  real gap, not a formality: every agent pushes with the owner's own
+  credentials, so even enabling protection does nothing unless it is
+  configured to apply to administrators too. The earlier version of this
+  table asserted the protection existed. It did not, and an external review
+  caught it — which is precisely the `UNPROVEN CLAIM` failure this framework
+  was written to catch, committed in the document that defines the category.
+
+  Enabling it is the owner's call because it constrains the owner: a rule
+  strong enough to stop the agents also stops the owner direct-pushing
+  `master`, leaving PR merges as the only path in. `/status` now queries the
+  live API every session, so if this changes in either direction the next
+  Brain session finds out rather than repeating the claim.
 
   The pre-push hook lives at git's own layer deliberately. An earlier version
   was a `PreToolUse` hook that parsed the Bash command string to infer intent,
@@ -258,9 +273,23 @@ evidence: it runs after the claim has already been made.
    or **recommends** merge, with a plain-English summary of what changed, why
    it is safe, and what remains unproven.
 6. **The owner merges.**
-7. Brain updates `docs/state.md`, archives the brief to
-   `docs/briefs/archive/<NNN>-<date>-<slug>.md`, and appends what was actually
+7. Brain updates `docs/state.md`, moves the brief to
+   `docs/briefs/archive/` with its outcome, and appends what was actually
    observed to `docs/agents/model-notes.md`.
+
+**Rounds pipeline; they are not a queue of one.** Builder may start round N+1
+while round N is still waiting on Verifier — that is the normal case, not an
+exception, and the brief lifecycle
+([`docs/briefs/README.md`](docs/briefs/README.md)) has a `delivered` state
+between `active` and `archive` precisely to model it. Two constraints come
+with that:
+
+- **`archive/` means adjudicated.** A delivered-but-unreviewed round lives in
+  `delivered/`. Do not park one in `archive/` to free up `active.md`; a cold
+  session reading `ls archive/` would count it as finished.
+- **Never queue a brief whose correctness depends on an unadjudicated round.**
+  If Verifier might overturn round N's finding, round N+1 must not build on
+  it. Rescope, or wait.
 
 ### Verifier finding classes
 

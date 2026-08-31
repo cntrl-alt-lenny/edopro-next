@@ -4,8 +4,24 @@ Fast rehydration for a fresh Brain session. Keep this short — point at the
 detailed doc rather than duplicating it. **Every fact here is a claim to
 spot-check against live repository state, not a fact to relay forward.**
 
-**Last updated:** 2026-08-30, when the Brain/Builder/Verifier framework was
-installed. No Builder round has run under it yet.
+**Last updated:** 2026-08-31.
+
+**Derive these before trusting anything below them.** This file drifted within
+two rounds of being written — it claimed no Builder round had run while
+describing one further down. Anything a command can answer, answer with the
+command:
+
+```bash
+git rev-parse origin/master              # the real tip, not the anchor below
+gh pr list --state open                  # what is actually in flight
+ls docs/briefs docs/briefs/delivered docs/briefs/archive
+git config --get core.hooksPath          # empty means this clone has no push guard
+gh api repos/cntrl-alt-lenny/edopro-next/rules/branches/master   # [] means master is unprotected
+```
+
+`/status` runs all of these. `tests/test_docs_consistency.py` enforces the
+structural half of it. Neither can tell you whether the prose below is still
+true — that stays a judgement call at every session start.
 
 ## Repository
 
@@ -80,8 +96,9 @@ This distinction is the single most useful thing in this file.
   emptying the protected list fails 7 of 12, and replacing exact matching with
   substring matching — the bug class that broke the previous guard — fails 4.
   Note what this does *not* prove: that git invokes the hook at all. That needs
-  `core.hooksPath` set per clone, and the real guarantee is GitHub branch
-  protection, not a local hook.
+  `core.hooksPath` set per clone. And **GitHub branch protection on `master` is
+  not enabled** (verified 2026-08-31 — `rules/branches/master` returns `[]`),
+  so there is currently no server-side guarantee behind it at all.
 - A `.ydk` written by our own `save_ydk()` loads correctly through the real,
   preserved `DeckManager::LoadDeckFromFile()`, for both of upstream's
   `separated` load modes, against a synthetic committed-safe fixture — with a

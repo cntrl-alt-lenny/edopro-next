@@ -1,11 +1,12 @@
-# Active brief
+# Brief 002 — M3 architecture citation audit
 
-Status: **queued, not started.**
+Status: queued
 
-One brief lives here at a time. When a round completes, Brain moves this file
-to `docs/briefs/archive/<NNN>-<date>-<slug>.md` and replaces it with the next
-brief, or with a "no brief queued" placeholder. The template and field
-meanings are in [`.claude/agents/builder.md`](../../.claude/agents/builder.md).
+One brief lives here at a time. On delivery it moves to
+[`delivered/`](delivered/), and only on adjudication to
+[`archive/`](archive/) — those are different states for a reason, see
+[`README.md`](README.md). The template and field meanings are in
+[`.claude/agents/builder.md`](../../.claude/agents/builder.md).
 
 ---
 
