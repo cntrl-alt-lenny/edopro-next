@@ -4,8 +4,24 @@ Fast rehydration for a fresh Brain session. Keep this short — point at the
 detailed doc rather than duplicating it. **Every fact here is a claim to
 spot-check against live repository state, not a fact to relay forward.**
 
-**Last updated:** 2026-08-30, when the Brain/Builder/Verifier framework was
-installed. No Builder round has run under it yet.
+**Last updated:** 2026-08-31.
+
+**Derive these before trusting anything below them.** This file drifted within
+two rounds of being written — it claimed no Builder round had run while
+describing one further down. Anything a command can answer, answer with the
+command:
+
+```bash
+git rev-parse origin/master              # the real tip, not the anchor below
+gh pr list --state open                  # what is actually in flight
+ls docs/briefs docs/briefs/delivered docs/briefs/archive
+git config --get core.hooksPath          # empty means this clone has no push guard
+gh api repos/cntrl-alt-lenny/edopro-next/branches/master --jq .protected   # NOT rules/branches
+```
+
+`/status` runs all of these. `tests/test_docs_consistency.py` enforces the
+structural half of it. Neither can tell you whether the prose below is still
+true — that stays a judgement call at every session start.
 
 ## Repository
 
@@ -25,9 +41,11 @@ upstream  DISABLED_use_origin                     (push — do not undo)
 merged. This is an anchor, not a current value — **always derive live HEAD
 from git** (`git rev-parse origin/master`) rather than trusting this string.
 
-Thirteen PRs merged, none open, at the time of writing. Every milestone so far
-landed through a reviewed PR; several used explicit `DO NOT MERGE` review
-gates. That practice is now the framework's rule — see `AGENTS.md`.
+Every milestone so far landed through a reviewed PR; several used explicit
+`DO NOT MERGE` review gates. That practice is now the framework's rule, and
+since 2026-08-31 it is enforced server-side — see `AGENTS.md`. For what is
+merged and open right now, run `gh pr list` (above); do not read a count from
+this file.
 
 ## Milestones (detail and honest status: [`ROADMAP.md`](ROADMAP.md))
 
@@ -74,6 +92,19 @@ This distinction is the single most useful thing in this file.
   fault-injection path proving the failure mode is live.
 - `client/`, `data/` and `policy/` build with no Qt, no Irrlicht, no vcpkg and
   no `ocgcore` — CI would break if that separation broke.
+- The push guard's own behaviour. `tests/test_push_guard.py` drives
+  `.githooks/pre-push` through git's real stdin protocol, including every
+  historical bypass by name, and CI fails if those tests skip. Mutation-tested:
+  emptying the protected list fails 7 of 12, and replacing exact matching with
+  substring matching — the bug class that broke the previous guard — fails 4.
+  Note what this does *not* prove: that git invokes the hook at all. That needs
+  `core.hooksPath` set per clone.
+- **Server-side protection on `master`** (enabled 2026-08-31): changes only via
+  PR, five required checks, `enforce_admins: true`, `strict: true`, no
+  force-push or deletion. Proven by an admin `--no-verify` push being rejected
+  with `GH006` on a branch carrying the same shape. It enforces the *path*,
+  not the *role* — every agent authenticates as the owner, so "Builder never
+  merges" remains a contract, not something the server can know.
 - A `.ydk` written by our own `save_ydk()` loads correctly through the real,
   preserved `DeckManager::LoadDeckFromFile()`, for both of upstream's
   `separated` load modes, against a synthetic committed-safe fixture — with a
@@ -136,13 +167,54 @@ concrete defect.
 `AGENTS.md`, `.claude/agents/`, this file, `docs/briefs/`, `docs/agents/`,
 `.claude/hooks/`. Open, under Verifier review, not merged.
 
-**The first Builder brief is queued** in
-[`briefs/active.md`](briefs/active.md): `UPSTREAM ARCHAEOLOGY` on the
-deck-builder legality boundary — where upstream's deck editor sources its
-legality inputs, how that differs from the duel-entry check, and what each of
-`ValidationPolicy`'s six fields would have to come from. Documentation only,
-ending in a recommended boundary for Brain and the owner to ratify. It branches
-from `meta/agentic-framework` because the framework is not on `master` yet.
+**PR #15**, branch `m3/deck-builder-legality-boundary` — the first Builder
+round, executed against the brief still in [`briefs/active.md`](briefs/active.md):
+`UPSTREAM ARCHAEOLOGY` on the deck-builder legality boundary. Delivered
+`docs/architecture/deck-builder-legality.md`. Open, **not yet Verifier-reviewed**,
+not merged. It branches from `meta/agentic-framework` because the framework is
+not on `master` yet, so #14 merges first.
+
+Round 1's headline finding, which reshapes the implementation round: upstream's
+deck editor **never calls `CheckDeckContent`/`CheckDeckSize`** — those have a
+single call site each, both in `GenericDuel::PlayerReady`. The editor runs three
+weaker, independently-bypassable mechanisms of its own, and `SaveDeck` checks
+nothing at all. So "surface legality in the deck builder" is not one thing:
+reproducing upstream's editor and running `policy::validate_deck()` are
+different products.
+
+**Brain has independently re-derived the load-bearing claims** — the two call
+sites in `GenericDuel::PlayerReady` (`generic_duel.cpp:373,380`) and their
+absence from `deck_con.cpp`; `SaveDeck`'s lack of any check; `push_main`'s
+unconditional type gate versus its `forced`-bypassable count caps;
+`forceInput = ignoreDeckContents || Shift` (`deck_con.cpp:624`); and
+`GetLFList` returning `nullptr` on a hash miss. All hold. Still pending:
+Verifier's independent review of PR #15.
+
+**Follow-up found by that round, not yet fixed:**
+[`architecture/deck-builder-ui.md`](architecture/deck-builder-ui.md):35 says
+there is "no upstream function that decides a card's section from its type at
+push time either". `push_main`/`push_extra` do type-gate at push time
+(`deck_con.cpp:1585-1588,1617-1621`). The claim is defensible read narrowly —
+the caller's cascade does the routing, not a dedicated classifier — but it is
+worded more broadly than the source supports. Builder correctly flagged it
+rather than editing an out-of-scope file; it needs its own small brief.
+
+## Local toolchain constraint — read before writing any brief
+
+**The primary dev machine (Windows) has neither `cmake` nor Qt installed.**
+Verified 2026-08-31. `ninja` and Python 3.12.10 are present.
+
+That means `client/`, `data/`, `policy/` and `ui/` **cannot be built or tested
+locally at all**, and no brief touching them can produce the evidence
+`AGENTS.md`'s per-layer table requires. Only Python tooling
+(`tools/`, `tests/`) and documentation work are locally verifiable today.
+
+This is a real constraint on the framework, not a detail: `AGENTS.md` says CI
+is the backstop rather than the primary evidence, and for four of the six
+layers there is currently no primary evidence available. Until cmake and Qt
+are installed, either scope briefs to what is locally verifiable, or accept
+CI-at-an-exact-SHA as the evidence and **say so explicitly** rather than
+letting the gap go unmentioned.
 
 ## Known open items
 

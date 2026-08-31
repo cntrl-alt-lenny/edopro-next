@@ -42,13 +42,36 @@ that in Builder's worktree would destroy the very state being reviewed.
 
 ## Setting them up on a new machine
 
-Two commands, run once from the repository root. They are the same on Windows,
-macOS and Linux:
+Three commands, run once from the repository root. They are the same on
+Windows, macOS and Linux:
 
 ```bash
+git config core.hooksPath .githooks
 git worktree add --detach .worktrees/builder master
 git worktree add --detach .worktrees/verifier master
 ```
+
+**The first line is easy to forget and fails silently.** `core.hooksPath` is
+per-clone configuration; without it git finds no hooks and runs none, with no
+warning. `/status` checks it at the start of every Brain session for exactly
+that reason.
+
+Two further wrinkles specific to worktrees:
+
+- A **relative** `core.hooksPath` is resolved per worktree, and the config
+  itself is shared across all of them. So the setting reaches every worktree,
+  but the hook only *exists* in a worktree whose checked-out commit contains
+  `.githooks/`. A worktree parked on an older commit has the config and no
+  hook — again silently.
+- Git does not invoke `pre-push` at all when a push turns out to be a no-op
+  ("Everything up-to-date"), because there are no ref updates to hand it. This
+  is worth knowing before testing the guard by hand: pushing an
+  already-current branch proves nothing, and it is exactly how a first attempt
+  at verifying this hook produced a false pass.
+
+Neither is a reason to distrust the guard for ordinary use, but both are
+reasons not to mistake it for the guarantee. That is GitHub branch protection
+on `master` — see `AGENTS.md`, "Never push to `master`".
 
 Both `--detach`, deliberately. Git refuses to check out a branch another
 worktree already holds, so creating these *on* `master` only works while Brain
