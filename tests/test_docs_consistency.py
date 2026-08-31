@@ -34,6 +34,7 @@ not close it.
 
 import re
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -142,38 +143,104 @@ class BriefLifecycleTest(unittest.TestCase):
                 seen[number] = brief.name
 
 
-def _tracked_paths():
-    """Every path git actually tracks, as repo-relative posix strings.
+def _tracked_paths(repo: Path = REPO):
+    """Every path in the commit at HEAD, as repo-relative posix strings.
 
-    Resolved against git rather than the working tree on purpose. Git does not
-    track empty directories, so a directory that exists locally can be absent
-    from a fresh checkout -- which is exactly what happened when
-    docs/briefs/delivered/ emptied: two documents linked into it, the local
-    run passed because the directory was still on disk, and only CI caught it.
-    Checking the index makes a local run agree with a fresh clone.
+    Resolved against the committed tree rather than the working tree on
+    purpose. Git does not track empty directories, so a directory that exists
+    locally can be absent from a fresh checkout -- which is exactly what
+    happened when docs/briefs/delivered/ emptied: two documents linked into
+    it, the local run passed because the directory was still on disk, and
+    only CI caught it. Reading the tree at HEAD (`git ls-tree -r`), not the
+    index (`git ls-files`), is what actually makes a local run agree with a
+    fresh clone: `ls-files` reflects whatever is staged, so a file that has
+    been `git add`ed but never committed reads as tracked here while being
+    genuinely absent from the pushed commit CI checks out. That gap was live
+    in this exact function -- verified by staging a new file and observing it
+    appear in `git ls-files` but not in `git ls-tree -r HEAD`. See
+    `TrackedPathsTest` below, which pins this against a disposable repo.
+
+    `repo` is injectable so tests can point this at a throwaway repo instead
+    of mutating this checkout's own index.
     """
     out = subprocess.run(
-        ["git", "ls-files"], cwd=str(REPO), text=True, capture_output=True,
+        ["git", "ls-tree", "-r", "--name-only", "HEAD"],
+        cwd=str(repo), text=True, capture_output=True,
     )
     return {line.strip() for line in out.stdout.splitlines() if line.strip()}
+
+
+class TrackedPathsTest(unittest.TestCase):
+    """Regression test for the ls-files-vs-ls-tree bug (brief 003, item (a)).
+
+    Runs against a disposable repo built in a temp directory, never against
+    this checkout -- so the test can freely stage a file without touching the
+    real index.
+    """
+
+    def _git(self, repo: Path, args: list):
+        result = subprocess.run(
+            ["git", *args], cwd=str(repo), text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def test_staged_but_uncommitted_file_is_not_tracked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            self._git(repo, ["init", "-q", "-b", "main"])
+            self._git(repo, ["config", "user.email", "test@example.invalid"])
+            self._git(repo, ["config", "user.name", "test"])
+
+            (repo / "committed.md").write_text("committed", encoding="utf-8")
+            self._git(repo, ["add", "committed.md"])
+            self._git(repo, ["commit", "-q", "-m", "initial"])
+
+            (repo / "staged_only.md").write_text("staged", encoding="utf-8")
+            self._git(repo, ["add", "staged_only.md"])
+
+            tracked = _tracked_paths(repo)
+
+            self.assertIn("committed.md", tracked)
+            self.assertNotIn(
+                "staged_only.md", tracked,
+                "a file staged but never committed must not read as tracked "
+                "-- a fresh clone of the pushed commit would not have it",
+            )
+
+
+def _link_resolves(path: Path, tracked: set, repo: Path = REPO) -> bool:
+    """Whether a coordination-doc link target is present in a fresh checkout.
+
+    Module-level so `LinkResolutionOutOfRepoTest` can exercise the
+    out-of-repo branch directly, not just via whatever links happen to exist
+    today.
+    """
+    try:
+        rel = path.resolve().relative_to(repo).as_posix()
+    except ValueError:
+        # The link resolves outside the repo root. A coordination doc meant
+        # to be read cold in any clone has no business pointing off-repo, so
+        # this is a failure, not a case to fall back on. An earlier version
+        # fell back to a working-tree existence check here -- exactly the
+        # local-disk-vs-committed-tree mechanism that caused the
+        # docs/briefs/delivered/ bug this test exists to catch. No current
+        # link takes this path in this repository (dormant in practice), but
+        # it is now inert by construction rather than a live copy of the
+        # original bug -- see LinkResolutionOutOfRepoTest.
+        return False
+    if rel in tracked:
+        return True
+    # A directory is present in a checkout only if it holds a tracked file.
+    prefix = rel.rstrip("/") + "/"
+    return any(entry.startswith(prefix) for entry in tracked)
 
 
 class CoordinationLinkTest(unittest.TestCase):
     def test_intra_repo_links_resolve(self):
         """A dead link in a rehydration doc sends a cold session nowhere."""
         tracked = _tracked_paths()
-        self.assertTrue(tracked, "git ls-files returned nothing; cannot verify links")
-
-        def resolves(path: Path) -> bool:
-            try:
-                rel = path.resolve().relative_to(REPO).as_posix()
-            except ValueError:
-                return path.resolve().exists()  # outside the repo; fall back
-            if rel in tracked:
-                return True
-            # A directory is present in a checkout only if it holds a tracked file.
-            prefix = rel.rstrip("/") + "/"
-            return any(entry.startswith(prefix) for entry in tracked)
+        self.assertTrue(tracked, "git ls-tree returned nothing; cannot verify links")
 
         for doc in COORDINATION_DOCS:
             if not doc.is_file():
@@ -184,10 +251,27 @@ class CoordinationLinkTest(unittest.TestCase):
                     continue
                 with self.subTest(doc=str(doc.relative_to(REPO)), link=target):
                     self.assertTrue(
-                        resolves(doc.parent / target),
+                        _link_resolves(doc.parent / target, tracked),
                         f"{doc.relative_to(REPO)} links to a path git does not track, "
                         f"so it will be missing from a fresh checkout",
                     )
+
+
+class LinkResolutionOutOfRepoTest(unittest.TestCase):
+    """Regression test for the ValueError fallback (brief 003, item (b)).
+
+    A link that resolves outside the repo root must fail, not fall back to
+    a working-tree existence check -- that fallback is exactly the
+    local-disk-vs-committed-tree mechanism responsible for the original
+    docs/briefs/delivered/ bug this whole test file exists to catch.
+    """
+
+    def test_link_outside_repo_root_does_not_resolve(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            outside = Path(tmp) / "exists_on_disk_but_outside_the_repo.md"
+            outside.write_text("present on disk", encoding="utf-8")
+            self.assertTrue(outside.exists())  # sanity: the old fallback would pass this
+            self.assertFalse(_link_resolves(outside, tracked=set()))
 
 
 class RoleContractTest(unittest.TestCase):
