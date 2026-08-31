@@ -1,11 +1,47 @@
 # Brief 003 — framework hardening: make the guards guard
 
-Status: delivered
+Status: accepted
 
-Delivered by Builder as PR #17, base `a6956f7d`, head `e4424c3e`.
-Carries `DO NOT MERGE — under review`. **Not reviewed, not adjudicated** —
-Verifier has not yet returned findings for this head. The outcome section is
-appended when it moves to `archive/`.
+Delivered by Builder as PR #17, base `a6956f7d`, head `e4424c3e`. Verified at
+that exact head. Merged 2026-08-31 as `ccbf7860`.
+
+**Outcome: accepted, with nothing outstanding.** Verifier returned **zero
+BLOCKERs, zero SHOULD FIX and two NOTEs**, both informational — the first
+round in this project's history to come back with no actionable finding.
+
+Brain did not accept that on the report. Independently reproduced before
+merging:
+
+- All five required contexts `success` at `e4424c3e`, queried from the
+  check-runs API rather than read from the PR body.
+- **The bare-repo bypass, in both directions**, against throwaway repositories
+  built for the purpose and never against `origin`. The pre-fix hook
+  (`a6956f7d`) silently allowed a bare-repo push to write `master`; the
+  post-fix hook rejected it and `master` was not written. This was the round's
+  one security-relevant defect and it is genuinely closed.
+- `tests/test_ci_required_checks.py` is **not tautological**:
+  `REQUIRED_CHECK_CONTEXTS` is a literal pinned from a live branch-protection
+  read, and the other side is parsed from the workflow YAML at test time.
+- **Two mutations Verifier did not run.** Renaming the `Semantic client model`
+  job → caught. Gutting a job's *steps* while keeping its name → **passes**,
+  confirming the limitation stated in that test's own docstring is real and
+  not overstated. That test pins names, not coverage, and says so.
+- Only four assertions were removed anywhere in the diff, and they are exactly
+  the four being replaced — the dead `git ls-files` guard and the three
+  identical tautological `HistoricalBypassTest` lines. 56 → 69 tests.
+
+Two additions beyond the brief's eight items (`git ls-files` → `git ls-tree`
+in the link check, and closing the dead `ValueError` fallback) were real bugs
+found after the brief was written, disclosed in the commit message, the report
+and the PR body rather than folded in silently. Counted consciously here
+rather than absorbed by surprise.
+
+**What this round deliberately did not close**, all stated in the code's own
+docstrings rather than left for a reader to discover: the adapter-restatement
+check is an instance list, not a class detector, and a differently-worded
+future restatement will not be caught; the CI check pins check *names*, not
+what those checks actually verify; and the inbox role-mapping fix cannot be
+retroactive for a worktree detached at a commit predating it.
 
 The text below is the brief exactly as Builder received it in
 `docs/briefs/active.md`; only this header has been added. Lifecycle:
