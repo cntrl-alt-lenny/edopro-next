@@ -157,7 +157,24 @@ single call site each, both in `GenericDuel::PlayerReady`. The editor runs three
 weaker, independently-bypassable mechanisms of its own, and `SaveDeck` checks
 nothing at all. So "surface legality in the deck builder" is not one thing:
 reproducing upstream's editor and running `policy::validate_deck()` are
-different products. Brain has not yet independently re-derived this.
+different products.
+
+**Brain has independently re-derived the load-bearing claims** — the two call
+sites in `GenericDuel::PlayerReady` (`generic_duel.cpp:373,380`) and their
+absence from `deck_con.cpp`; `SaveDeck`'s lack of any check; `push_main`'s
+unconditional type gate versus its `forced`-bypassable count caps;
+`forceInput = ignoreDeckContents || Shift` (`deck_con.cpp:624`); and
+`GetLFList` returning `nullptr` on a hash miss. All hold. Still pending:
+Verifier's independent review of PR #15.
+
+**Follow-up found by that round, not yet fixed:**
+[`architecture/deck-builder-ui.md`](architecture/deck-builder-ui.md):35 says
+there is "no upstream function that decides a card's section from its type at
+push time either". `push_main`/`push_extra` do type-gate at push time
+(`deck_con.cpp:1585-1588,1617-1621`). The claim is defensible read narrowly —
+the caller's cascade does the routing, not a dedicated classifier — but it is
+worded more broadly than the source supports. Builder correctly flagged it
+rather than editing an out-of-scope file; it needs its own small brief.
 
 ## Known open items
 
