@@ -176,6 +176,23 @@ the caller's cascade does the routing, not a dedicated classifier — but it is
 worded more broadly than the source supports. Builder correctly flagged it
 rather than editing an out-of-scope file; it needs its own small brief.
 
+## Local toolchain constraint — read before writing any brief
+
+**The primary dev machine (Windows) has neither `cmake` nor Qt installed.**
+Verified 2026-08-31. `ninja` and Python 3.12.10 are present.
+
+That means `client/`, `data/`, `policy/` and `ui/` **cannot be built or tested
+locally at all**, and no brief touching them can produce the evidence
+`AGENTS.md`'s per-layer table requires. Only Python tooling
+(`tools/`, `tests/`) and documentation work are locally verifiable today.
+
+This is a real constraint on the framework, not a detail: `AGENTS.md` says CI
+is the backstop rather than the primary evidence, and for four of the six
+layers there is currently no primary evidence available. Until cmake and Qt
+are installed, either scope briefs to what is locally verifiable, or accept
+CI-at-an-exact-SHA as the evidence and **say so explicitly** rather than
+letting the gap go unmentioned.
+
 ## Known open items
 
 - **The remaining M3 item**: the deck-builder UI. A functional core exists
