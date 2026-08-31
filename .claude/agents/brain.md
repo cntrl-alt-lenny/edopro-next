@@ -68,7 +68,7 @@ discipline matters more than the tool.
    still has its push URL disabled), current branch, `git status`,
    `git fetch --all`, and how local `master` compares to `origin/master`.
    Run `git worktree list` — a Builder round or a Verifier checkout may be
-   sitting in a sibling worktree with an unmerged branch.
+   sitting under `.worktrees/` with an unmerged branch.
 4. Check open PRs (`gh pr list`) and
    [`docs/briefs/active.md`](../../docs/briefs/active.md). If a brief is
    in flight and unreviewed, that is usually the first thing to deal with, not

@@ -8,7 +8,7 @@ it. Adapted from a pattern used in a sibling project.
 
 # Why this exists
 
-The three roles run in separate sibling worktrees (see
+The three roles run in separate worktrees under .worktrees/ (see
 docs/agents/worktree-mechanism.md). When a Builder or Verifier round ends
 without the human relaying the report, Brain can re-derive the *facts* from the
 diff -- but it loses what the agent said it was unsure of, what it deliberately
@@ -35,10 +35,12 @@ So: check the timestamp, and never read a missing or stale inbox file as
 - `<git-common-dir>/agent-inbox/` sits inside `.git/`, which git never
   version-controls. No .gitignore entry needed; it survives `git clean -fdx`
   and disappears with the clone.
-- Role comes from the worktree directory's basename, matching the fixed layout
-  in docs/agents/worktree-mechanism.md: a name ending `-builder` is `builder`,
-  `-verifier` is `verifier`, anything else is `brain`. Rename the directories
-  and this mapping needs updating too.
+- Role comes from the worktree directory's basename, matching the layout in
+  docs/agents/worktree-mechanism.md: `.worktrees/builder` and
+  `.worktrees/verifier`, with the primary checkout as `brain`. A `-builder` /
+  `-verifier` suffix is also accepted, so a sibling-directory layout (the
+  earlier convention, and still the natural one if someone clones the repo
+  twice instead of using worktrees) keeps working. Anything else is `brain`.
 
 Stop hooks must never block a session from ending, so every failure path here
 returns 0 silently.
@@ -54,7 +56,7 @@ from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[2]
 
-_ROLE_SUFFIXES = (("-builder", "builder"), ("-verifier", "verifier"))
+_ROLES = ("builder", "verifier")
 
 
 def _git(args: list[str]) -> str | None:
@@ -107,9 +109,11 @@ def _last_assistant_text(transcript_path: Path) -> str | None:
 def _role_from_worktree(worktree_root: str | None) -> str:
     if not worktree_root:
         return "unknown"
-    name = Path(worktree_root).name
-    for suffix, role in _ROLE_SUFFIXES:
-        if name.endswith(suffix):
+    name = Path(worktree_root).name.lower()
+    for role in _ROLES:
+        # `.worktrees/builder` (current layout) or `edopro-next-builder`
+        # (sibling-directory layout, still supported).
+        if name == role or name.endswith(f"-{role}"):
             return role
     return "brain"
 

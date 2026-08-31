@@ -1,7 +1,7 @@
 # Worktree mechanism
 
-Brain, Builder and Verifier use **separate sibling git worktrees of the same
-clone** — never the same checkout with branch-switching.
+Brain, Builder and Verifier use **separate git worktrees of the same clone** —
+never the same checkout with branch-switching.
 
 This is not hygiene theatre. It went wrong in a sibling project: a worker
 round ran directly in the coordinating session's checkout, left it on the work
@@ -10,11 +10,24 @@ top. Nothing was lost, but it should not have been possible.
 
 ## Layout
 
+The worktrees live **inside the repository**, at fixed repo-relative paths:
+
 ```
-C:\Users\leona\Dev\edopro-next            <- Brain's worktree, stays on master
-C:\Users\leona\Dev\edopro-next-builder    <- Builder's worktree, its own task branch
-C:\Users\leona\Dev\edopro-next-verifier   <- Verifier's worktree, detached at the SHA under review
+<clone>/                      Brain's worktree, the primary checkout, stays on master
+<clone>/.worktrees/builder    Builder's worktree, its own task branch
+<clone>/.worktrees/verifier   Verifier's worktree, detached at the SHA under review
 ```
+
+`.worktrees/` is gitignored.
+
+**They are nested rather than sibling directories on purpose.** Sibling
+directories (`../edopro-next-builder`) depend on where the clone happens to
+sit, so the layout differs between a Windows machine, a Mac and a CI box, and
+every doc has to name absolute paths that are wrong somewhere. Nested, the
+paths are repo-relative and therefore **identical on every machine** —
+`.worktrees/builder` means the same thing on Windows, macOS and Linux, and a
+fresh clone on a new device reaches the same layout with the same two
+commands. It also keeps the parent directory clean.
 
 All three are worktrees of the same repository (`git worktree list` from any
 of them shows all three). They share one object database and one remote, so a
@@ -27,22 +40,27 @@ Verifier gets its own because reviewing means **checking out an exact SHA** —
 detached, at the head under review — and building and testing there. Doing
 that in Builder's worktree would destroy the very state being reviewed.
 
-## Creating them
+## Setting them up on a new machine
 
-Once per machine, from the primary checkout:
+Two commands, run once from the repository root. They are the same on Windows,
+macOS and Linux:
 
 ```bash
-git worktree add --detach ../edopro-next-builder master
-git worktree add --detach ../edopro-next-verifier master
+git worktree add --detach .worktrees/builder master
+git worktree add --detach .worktrees/verifier master
 ```
 
-Both `--detach`, deliberately. Git refuses to check out a branch that another
+Both `--detach`, deliberately. Git refuses to check out a branch another
 worktree already holds, so creating these *on* `master` only works while Brain
-happens to be somewhere else — which is exactly the sort of setup step that
-works once and then fails confusingly six months later. Detached, they are
-created from any state, and each round checks out what it actually needs.
+happens to be somewhere else — exactly the sort of setup step that works once
+and then fails confusingly six months later. Detached, they can be created
+from any state, and each round checks out what it actually needs.
 
 Both are reusable across rounds. They do not need recreating, only re-syncing.
+
+Nothing else is machine-specific. The worktrees carry the same tree as the
+primary checkout, so the build commands in `AGENTS.md`'s evidence table work
+inside them unchanged.
 
 ## Submodules
 
@@ -55,11 +73,12 @@ A worktree that needs the upstream baseline build, or that must read upstream
 engine source to check a semantic claim, initialises it there:
 
 ```bash
-git -C ../edopro-next-verifier submodule update --init --recursive
+git -C .worktrees/verifier submodule update --init --recursive
 ```
 
 Reading upstream engine source is Verifier's normal job, so its worktree will
-usually want this.
+usually want this. Note that `gframe/` is *not* a submodule — it is in the
+tree already, in every worktree.
 
 ## Using them
 
@@ -70,9 +89,9 @@ merge — the owner does.
 **Builder**, at the start of each round:
 
 ```bash
-cd ../edopro-next-builder
+cd .worktrees/builder
 git fetch origin
-git checkout -b <m3/some-scope> origin/master
+git checkout -b m3/some-scope origin/master
 ```
 
 Builder commits there, pushes the branch, and opens a PR. It does not merge.
@@ -80,7 +99,7 @@ Builder commits there, pushes the branch, and opens a PR. It does not merge.
 **Verifier**, at the start of each review:
 
 ```bash
-cd ../edopro-next-verifier
+cd .worktrees/verifier
 git fetch origin
 git checkout --detach <head-sha>
 ```
@@ -89,25 +108,48 @@ Detached and at the literal SHA, deliberately — reviewing "the branch
 generally" is how a review ends up describing a different tree from the one
 that will be merged.
 
-## Build directories are per-worktree
+## Consequences of nesting, and how they are handled
 
-Each worktree has its own `client/build/`, `data/build/`, `policy/build/` and
-`ui/build/`. They are not shared and must not be pointed at each other: a
-stale build tree from another worktree is exactly the kind of invisible state
-that produces a confidently wrong "tests pass".
+**Searching.** `.worktrees/` holds full copies of the source tree, so a naive
+recursive search from the repository root would return every hit three times.
+Because it is gitignored, `ripgrep` (and anything else that honours
+`.gitignore`, including this project's own agent tooling) skips it
+automatically. Plain `find`, `ls -R` and shell globs do **not** — exclude it
+explicitly if you use them.
+
+**Editing.** Never edit a file under `.worktrees/` from the primary checkout.
+Those paths belong to another session's round. If a sweeping edit ever needs
+to run across the tree, scope it to the tracked paths.
+
+**`git status`.** `.worktrees/` being ignored is what keeps the primary
+checkout's status meaningful. The framework's working discipline requires
+re-checking `git status` at every task boundary, which is useless if status is
+permanently dirty.
+
+**`git clean`.** `git clean -fdx` is **safe**: git recognises each worktree as
+a separate repository and reports `Would skip repository .worktrees/builder`.
+Only the doubled force, `git clean -ffdx`, would delete them — and deleting a
+worktree that way leaves stale metadata behind in `.git/worktrees/`. Use
+`git worktree remove` instead.
+
+**Build directories are per-worktree.** Each has its own `client/build/`,
+`data/build/`, `policy/build/` and `ui/build/`. They are not shared and must
+not be pointed at each other: a stale build tree from another worktree is
+exactly the kind of invisible state that produces a confidently wrong "tests
+pass".
 
 ## Deleting a merged branch that is still checked out
 
 A worktree holds a lock on its checked-out branch, so `git branch -d` refuses
 while Builder still has it. Either detach that worktree first
-(`git -C ../edopro-next-builder checkout --detach master`), or leave the
-merged branch until the next round replaces it. It is clutter, not a
-correctness risk.
+(`git -C .worktrees/builder checkout --detach master`), or leave the merged
+branch until the next round replaces it. It is clutter, not a correctness
+risk.
 
 ## Removing a worktree
 
 ```bash
-git worktree remove ../edopro-next-builder
+git worktree remove .worktrees/builder
 ```
 
 from the primary checkout. Do not `rm -rf` the directory — that leaves stale
@@ -117,9 +159,11 @@ anyway.
 ## The shared inbox
 
 `.claude/hooks/save_agent_reply.py` writes each Claude Code session's final
-reply to `<git-common-dir>/agent-inbox/<role>-latest.md`, where the role is
-inferred from the worktree directory name. That path is inside `.git/`, so it
-is never version-controlled and needs no `.gitignore` entry.
+reply to `<git-common-dir>/agent-inbox/<role>-latest.md`, where the role comes
+from the worktree directory's name: `builder`, `verifier`, or `brain` for the
+primary checkout. A `-builder` / `-verifier` suffix is also accepted, so a
+two-clones-instead-of-worktrees setup keeps working. That path is inside
+`.git/`, so it is never version-controlled and needs no `.gitignore` entry.
 
 Two limits, both important:
 

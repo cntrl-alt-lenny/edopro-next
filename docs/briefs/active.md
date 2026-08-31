@@ -184,10 +184,10 @@ evidence.** Specifically:
 ## Git expectations
 
 Branch `m3/deck-builder-legality-boundary`, in the Builder worktree
-(`C:\Users\leona\Dev\edopro-next-builder` — see
+(`.worktrees/builder`, relative to the repository root — see
 [`docs/agents/worktree-mechanism.md`](../agents/worktree-mechanism.md)). You
 will need `ocgcore` only if you decide you must read engine source; `gframe/`
-is in the worktree already.
+is already present in every worktree.
 
 Commit in focused commits, push the branch, open a PR whose body carries
 `DO NOT MERGE — under review`. **Do not merge.**

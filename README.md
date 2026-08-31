@@ -263,6 +263,25 @@ python -m unittest discover -s tests -v
 **Upstream client** — see [docs/BASELINE.md](docs/BASELINE.md) for the full record,
 environment and the gotchas that cost real time.
 
+## Working on this repository
+
+[CLAUDE.md](CLAUDE.md) is the working agreement — what the project is, and what may not be
+broken. [AGENTS.md](AGENTS.md) is the coordination model: three roles (Brain, Builder,
+Verifier), the brief and review loop, and the evidence each kind of change must produce.
+[docs/state.md](docs/state.md) is the short rehydration doc for a fresh session.
+
+Builder and Verifier each work in a git worktree of this same clone, at fixed
+repo-relative paths so the layout is identical on every machine. From the repository root,
+on any OS:
+
+```bash
+git worktree add --detach .worktrees/builder master
+git worktree add --detach .worktrees/verifier master
+```
+
+`.worktrees/` is gitignored. Rationale, per-role usage and the caveats that come with
+nesting are in [docs/agents/worktree-mechanism.md](docs/agents/worktree-mechanism.md).
+
 ## Credit
 
 Everything that makes this project worth attempting was built by
