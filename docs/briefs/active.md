@@ -56,7 +56,10 @@ which has since merged and been adjudicated.
 
 ## Base SHA
 
-Branch from `origin/master`. Verify with `git log -1` and record the SHA.
+**Branch from `origin/meta/round-2-queue`** — this brief lives on that branch
+(PR #18, Brain's brief-queueing round) and is not on `master` yet. If PR #18
+has merged by the time you start, branch from `origin/master` instead. Either
+way, verify with `git log -1`, record the actual SHA, and say which you used.
 
 Note that PR #17 (brief 003, framework hardening) may still be open and
 unmerged while you work. It touches `tests/`, `.claude/`, `.githooks/`,
