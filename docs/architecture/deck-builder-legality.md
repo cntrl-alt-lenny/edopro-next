@@ -41,9 +41,9 @@ independently-triggered mechanisms, none of which is `CheckDeckContent`/`CheckDe
 
 | Mechanism | What it gates | Where |
 |---|---|---|
-| `push_main`/`push_extra`/`push_side` | Whether one card may be *added* to one section right now | `deck_con.cpp:1577-1652` |
+| `push_main`/`push_extra`/`push_side` | Whether one card may be *added* to one section right now | `deck_con.cpp:1577-1648` |
 | `check_limit` | Whether one more copy of a card would exceed a banlist/hard-3 cap | `deck_con.cpp:1673-1698` |
-| `CheckCardProperties` | Whether a card *appears in the search results at all* | `deck_con.cpp:1191-1323` |
+| `CheckCardProperties` | Whether a card *appears in the search results at all* | `deck_con.cpp:1191-1324` |
 
 None of the three is a whole-deck validator; each fires per-card, per-action, while the deck
 is being edited.
@@ -72,7 +72,7 @@ if(!forced && !mainGame->is_siding) {
 }
 ```
 
-`push_extra` (`:1610-1636`) and `push_side` (`:1637-1652`) mirror this shape with `15`/`15`
+`push_extra` (`:1610-1636`) and `push_side` (`:1637-1648`) mirror this shape with `15`/`15`
 as their own hard caps. Three things this project's own `policy/` behaves differently from,
 by design of upstream's editor, not by omission of ours:
 
@@ -82,7 +82,7 @@ by design of upstream's editor, not by omission of ours:
   section, matching duel entry's shape, not the editor's.
 - **The Legend/Skill counts are cached counters** (`main_and_extra_legend_count_monster`,
   etc.), maintained incrementally by `RefreshLimitationStatusOnAdded`/`OnRemoved`
-  (`deck_con.cpp:1475-1575`) as an optimization over rescanning the whole deck on every push -
+  (`deck_con.cpp:1475-1576`) as an optimization over rescanning the whole deck on every push -
   not a call into `DeckManager::TypeCount`/`CountLegends` at check time, though they wrap the
   same static helpers when initialized (`RefreshLimitationStatus`, `:1456-1474`).
 - **Fusion/Synchro/Xyz/Link-non-spell cards are unconditionally rejected from Main** (and
@@ -98,23 +98,21 @@ by design of upstream's editor, not by omission of ours:
   duel entry: neither - `CheckDeckContent` trusts the caller's Main/Extra split completely;
   this project: two separate, not-yet-connected pieces) rather than a two-way comparison.
 
-**A note against this project's own existing doc.** `deck-builder-ui.md`§1 states: *"there
-is no upstream function that decides a card's section from its type at push time either;
-classification-on-load is a separate, later step."* Read narrowly - no single function
-*reclassifies/redirects* a card to a different section the way `LoadDeck`'s own loader-side
-classification does - that holds. But `push_main`/`push_extra` themselves, quoted above,
-plainly do decide-by-type **at push time**: `push_main` returns `false` outright for any
-Fusion/Synchro/Xyz/non-Spell-Link card, and `push_extra` returns `false` for anything that is
-not a Ritual/Link-non-Spell/Fusion/Synchro/Xyz card. The caller's own cascade
+**A correction this document prompted in this project's own `deck-builder-ui.md`.**
+That document previously stated: *"there is no upstream function that decides a card's
+section from its type at push time either; classification-on-load is a separate, later
+step."* Read narrowly - no single function *reclassifies/redirects* a card to a different
+section the way `LoadDeck`'s own loader-side classification does - that holds. But
+`push_main`/`push_extra` themselves, quoted above, plainly do decide-by-type **at push
+time**: `push_main` returns `false` outright for any Fusion/Synchro/Xyz/non-Spell-Link card,
+and `push_extra` returns `false` for anything that is not a Ritual/Link-non-Spell/Fusion/
+Synchro/Xyz card. The caller's own cascade
 (`if (!push_main(pointer, ...) && !push_extra(pointer, ...)) push_side(pointer);` -
 `deck_con.cpp:725`, similarly at `:665-669,701`) relies on exactly these type gates to land a
-card in its correct section through trial and rejection, not routing. This is a real
-distinction worth being precise about - `deck-builder-ui.md`'s claim is defensible as "no
-*reclassification* function" but is stated broadly enough ("decides a card's section from its
-type") to read as stronger than upstream's source actually supports; a reader relying on it
-alone could wrongly conclude `push_main`/`push_extra` are type-blind gates with placement
-decided entirely by the caller, which `deck_con.cpp:1585-1588,1617-1621`'s own type checks
-contradict.
+card in its correct section through trial and rejection, not routing. `deck-builder-ui.md`§1
+has since been corrected to say precisely this - no single function *chooses* a destination,
+but `push_main`/`push_extra` do gate on type at push time, and the caller's cascade is what
+turns that gating into effective section placement.
 
 ### 2.3 `check_limit`: the editor's own banlist gate, not `CheckCards`
 
@@ -210,13 +208,31 @@ const bool forceInput = gGameConfig->ignoreDeckContents || event.MouseInput.Shif
 (`deck_con.cpp:624`)
 
 and passes `forceInput`/`forced` straight through to `push_*`, and separately guards
-`check_limit` itself the same way (`:641,719,756`). `ignoreDeckContents` is a single,
-persistent, global boolean settings checkbox (`chkIgnoreDeckContents`, "Ignore deck contents
-[for deckbuilding]" - `gDataManager->GetSysString(12119)`, `game.cpp:1561,1669`), defaulting
-to `false` (`game_config.inl:70`) - not a per-deck flag, not scoped to one editing session,
-and not reset between decks. Once a user enables it, every one of §2.2's and §2.3's checks is
-permanently inert for that installation until they disable it again; holding Shift achieves
-the identical bypass ad hoc, per action.
+`check_limit` itself the same way at two of its three call sites (`:641,756`) - but **not**
+at the third. `:719`'s click-to-add path guards `check_limit` with `gGameConfig->
+ignoreDeckContents` alone:
+
+```cpp
+if(!pointer || (!gGameConfig->ignoreDeckContents && !check_limit(pointer)))
+    break;
+if (event.MouseInput.Shift) {
+    push_side(pointer, -1, gGameConfig->ignoreDeckContents);
+} else {
+    ...
+```
+(`:719-725`)
+
+`event.MouseInput.Shift` is read two lines later, but only to choose whether the card goes to
+Side or the Main/Extra cascade - it does not bypass `check_limit` at this call site.
+`ignoreDeckContents` is a single, persistent, global boolean settings checkbox
+(`chkIgnoreDeckContents`, "Ignore deck contents [for deckbuilding]" -
+`gDataManager->GetSysString(12119)`, `game.cpp:1561,1669`), defaulting to `false`
+(`game_config.inl:70`) - not a per-deck flag, not scoped to one editing session, and not reset
+between decks. Once a user enables it, every one of §2.2's and §2.3's checks is permanently
+inert for that installation until they disable it again. Holding Shift achieves the identical
+bypass for `push_*` (§2.2) and for `check_limit` at the drag-based add paths (`:641,756`) -
+but **not** at `:719`'s click-to-add path, where `check_limit` still runs on Shift alone and
+is skipped only when `ignoreDeckContents` is also set.
 
 ### 2.5 Import/Open bypass §2.2 and §2.3 entirely - not merely "forced"
 
@@ -254,7 +270,7 @@ unrelated concern (losing unsaved edits).
 **Nothing, while editing.** None of §2.2-2.4's rejections produce a dialog, a tooltip, or a
 status-bar message - a blocked add is simply a silent no-op (`return false`/`break` with no
 further code run). The only editor-level surface at all is `CheckCardProperties`'s search
-filter (`filter_lm`, `deck_con.cpp:1254-1321`, driven by a `cbLimit` combo,
+filter (`filter_lm`, `deck_con.cpp:1254-1322`, driven by a `cbLimit` combo,
 `:1043,1385`): a user can narrow the *search results pane* to only Banned/Limited/
 Semi-Limited/Unlimited/OCG/TCG/etc. cards relative to whichever `filterList` is currently
 selected - this changes what appears in the list to pick cards from, and has no relationship
@@ -262,12 +278,14 @@ to whether any card **already in the deck** is legal.
 
 **The only place upstream ever renders an actual legality error message to the user at all**
 is `DuelClient::ClientEvent`'s handling of `STOC_ERROR_MSG`/`ERROR_TYPE::DECKERROR`
-(`duelclient.cpp:470-553`) - the client-side reaction to the `STOC_ERROR_MSG` packet
+(`duelclient.cpp:470-554`) - the client-side reaction to the `STOC_ERROR_MSG` packet
 `GenericDuel::PlayerReady` sends when `CheckDeckSize`/`CheckDeckContent` reject a deck
-(`generic_duel.cpp:387-388`). It switches on the returned `DeckError::DERR_TYPE` and builds a
+(`generic_duel.cpp:388`; the preceding line, `:387`, sends a different packet -
+`STOC_HS_PLAYER_CHANGE`, marking the player not-ready - not the error itself). It switches
+on the returned `DeckError::DERR_TYPE` and builds a
 specific localized string per case (`LFLIST` -> sysstring 1407, `OCGONLY` -> 1413,
 `UNKNOWNCARD` -> 1415, `MAINCOUNT` -> 1417 with the actual min/max/current counts
-interpolated, etc.; `duelclient.cpp:487-547`), then calls `mainGame->PopupMessage(text)`
+interpolated, etc.; `duelclient.cpp:487-548`), then calls `mainGame->PopupMessage(text)`
 (`:549`) - a modal popup **in the duel-room/lobby screen**, at the moment a player clicks
 Ready, never in the deck-editor screen the deck was actually built in. A user can spend an
 entire editing session with a deck the editor never once objected to, then only discover it
@@ -367,7 +385,7 @@ already documents about the functions themselves:
 | Copy-count/banlist rule | `check_limit`, live-rescanned per add, against `filterList` = the editor's own persistently-selected `cbDBLFList` item (§2.3). | `CheckCards`'s shared `ccount` map (`deck-legality.md`§3), against `host_info.lflist` resolved via `GetLFList()` - independently selected, on the host dialog's own combo. |
 | Allowed-card scope (`DuelAllowedCards`) | No enforcement at all. `filter_lm`'s OCG/TCG/etc. options only narrow the *search* pane (§2.7); nothing stops mixing scopes already in the deck. | Enforced per card in `CheckCards`, against `host_info.rule` - host-chosen, editor never sees it. |
 | Forbidden types | Only an unconditional "≤1 Skill card" cap baked into `push_main` (§2.2) - not configurable, not the general bitmask. | `host_info.forbiddentypes`, a host-configured, arbitrary `TYPE_*` bitmask (§3). |
-| Ritual placement | Outside `is_siding`: `CardDataC::isRush()`, a static per-card property (§2.4/§3's citation of `deck_con.cpp:1582,1615`). Inside `is_siding` (mid-match side-decking only): a real, live duel's field flag. | Always a negotiated `duel_flag_high` bit, resolved once per room, regardless of card type (§3). |
+| Ritual placement | Outside `is_siding`: `CardDataC::isRush()`, a static per-card property, read in `push_main`/`push_extra`'s own Ritual branch (`deck_con.cpp:1582,1615` - see §2.2's quoted code, not §2.4/§3, which don't cite these lines). Inside `is_siding` (mid-match side-decking only): a real, live duel's field flag. | Always a negotiated `duel_flag_high` bit, resolved once per room, regardless of card type (§3). |
 | Content checking on/off | No such concept; the editor never performs content checking either way. | `host_info.no_check_deck_content`, host-chosen. |
 | Bypassable? | Yes - Shift-held, or the persistent `ignoreDeckContents` setting (§2.4); or entirely sidestepped via file-open/clipboard-import (§2.5). | No caller-facing bypass once `is_ready` fires (`no_check_deck_content` only skips the content half, never the size half). |
 | Can the resulting deck be saved regardless? | Yes, unconditionally (§2.6). | N/A - this is not a save path. |
@@ -419,7 +437,7 @@ never required to agree.
 5. **What does the user see, and when?** Nothing in the editor itself, ever (§2.7) - blocked
    adds are silent no-ops. The only actual error message anywhere is a modal popup rendered in
    the lobby screen, triggered only by `PlayerReady`'s rejection, with per-error-type text
-   (`duelclient.cpp:470-553`) - structurally and temporally disconnected from the screen where
+   (`duelclient.cpp:470-554`) - structurally and temporally disconnected from the screen where
    the deck was built.
 
 ---
@@ -475,7 +493,9 @@ analogue to follow.
      only changes which layer owns the decision. If chosen, the ratifying brief must require
      this choice to be visible and named in the UI, never a hidden default a user cannot see
      or change - and must record it as a documented, deliberate, this-project's-own choice
-     (a candidate ADR, not this document, per its own non-goals in §"Non-goals" above).
+     (a candidate ADR, not this document - recording a decision is not what this document
+     does; see its own opening framing, above, as archaeology plus an input to a future
+     decision).
    - **(c) A fuller session-shaped abstraction that anticipates M4's eventual `HostInfo`
      equivalent now** - considered and not recommended: it asks this project to design a
      shape for a concept (a duel/session ruleset) that does not exist anywhere in this
@@ -497,13 +517,20 @@ analogue to follow.
    accepted at duel entry: ..."), matching how loosely upstream's own two mechanisms actually
    relate, not as a hard gate the editor enforces upstream never did either.
 
-**The single piece of evidence that would most change this recommendation**: how soon M4's
-"Lobby and network screens" item is actually expected to start. If it is imminent, option (a)
-becomes clearly preferable - the ruleset concept option (b) asks this project to invent would
-be built, then almost immediately superseded by a real one. If M4 remains distant, (b)'s cost
-(a small, own, documented ruleset surface) is worth paying to unblock M3's legality item now.
-This document found `docs/ROADMAP.md` places M4 after the remainder of M3 with no closer
-date, but has no further signal either way.
+**Scheduling is one relevant signal for this recommendation, not the only one.** How soon
+M4's "Lobby and network screens" item is actually expected to start affects the calculus: if
+imminent, the ruleset concept option (b) asks this project to invent would be built, then
+almost immediately superseded by a real one, favoring option (a). If M4 remains distant,
+(b)'s cost (a small, own, documented ruleset surface) is easier to justify to unblock M3's
+legality item now. But the deeper tension this document establishes does not dissolve either
+way: for five of `ValidationPolicy`'s six fields, upstream itself has no concept of the value
+at all outside a live host session (§5) - so option (b) is not "read what upstream would do
+and copy it sooner," it is this project originating rules Yu-Gi-Oh's own upstream client
+never had to define outside a duel room, the same category of move CLAUDE.md's "the UI must
+not implement game rules" and ADR 0007 Decision 3 both caution against doing silently.
+`docs/ROADMAP.md` places M4 after the remainder of M3 with no closer date; that timing
+informs the schedule side of the trade-off, but does not by itself resolve which side of it
+this project should be on.
 
 ---
 
@@ -514,10 +541,11 @@ date, but has no further signal either way.
   not resolved by anything read for this document.
 - Whether a future `ui/` ruleset type (if option (b) above is chosen) should live beside
   `DeckController` in `ui/src/deckbuilder/`, or as a new small class of its own - a design
-  question this document deliberately leaves open, per its own scope (§"Non-goals": no QML,
-  no interaction design).
-- Whether `policy::ValidationPolicy` should ever grow a *named preset* factory function
-  (explicitly flagged as future, out-of-scope work in `validation_policy.h`'s own doc comment
-  and ADR 0007 Decision 3) once a concrete ruleset like §7 point 2's "Standard OCG/TCG" is
-  actually chosen - this document takes no position beyond noting the existing header comment
-  already anticipates the question.
+  question this document deliberately leaves open, since no QML or interaction design is
+  in its own scope (see this document's opening framing, above).
+- **Not actually open, on inspection: whether `policy::ValidationPolicy` should ever grow a
+  *named preset* factory function.** Both `validation_policy.h`'s own doc comment and ADR
+  0007 Decision 3 already answer this - a future UI/session layer may define named
+  convenience presets once it has a ruleset selection concept to attach them to, and that is
+  explicitly out of scope for `policy/` itself. Listed here only because a prior draft of
+  this document posed it as unresolved; it is not.
