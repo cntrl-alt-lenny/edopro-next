@@ -173,11 +173,19 @@ reviewed the exact head, returned zero BLOCKERs and nine SHOULD FIX/NOTE
 findings; Brain reproduced the load-bearing ones and merged under the
 delegated authority described in `AGENTS.md`.
 
-**PR #15 — open, awaiting Verifier.** Brief 001's deliverable,
-`architecture/deck-builder-legality.md`. `master` was merged into the branch
-(not rebased, so Builder's commit `83d976f0` is preserved verbatim and no
-force-push was needed); head is now the merge commit, and the deliverable is
-byte-identical to what Builder produced. Verifier has **not** reviewed it.
+**PR #15 — merged 2026-08-31** (`5c5f371f`). Brief 001's deliverable,
+`architecture/deck-builder-legality.md`. Verifier returned zero BLOCKERs, seven
+SHOULD FIX, two NOTE; Brain re-derived the headline finding and the one
+substantive defect below. Brief archived as `accepted`.
+
+**Known-wrong, merged, not yet fixed:**
+[`architecture/deck-builder-legality.md`](architecture/deck-builder-legality.md)
+§2.4 claims `check_limit` is guarded by the Shift-inclusive `forceInput` at
+`deck_con.cpp:641,719,756`. True at `:641` and `:756`; **false at `:719`**,
+which tests `gGameConfig->ignoreDeckContents` directly — Shift is read two
+lines later to choose the target section, not to bypass the check. Do not rely
+on that sentence. Six further citation-precision defects are listed in the
+archived brief. All fold into the re-queued citation audit.
 
 **Brief 003 is queued** in [`briefs/active.md`](briefs/active.md): fixing the
 framework defects Round 1's verification surfaced.
@@ -185,7 +193,9 @@ framework defects Round 1's verification surfaced.
 **Brief 002 (M3 architecture citation audit) was queued and superseded before
 delivery** — brief 003's findings are more urgent, because the tests meant to
 prevent documentation drift were shown to be checking surface proxies. 002's
-full text is in git history (`202a3494`); re-queue it after 003.
+full text is in git history (`202a3494`); re-queue it after 003, **adding
+`deck-builder-legality.md` to its scope** so PR #15's seven citation defects
+are closed by the same pass.
 
 Round 1's headline finding, which still reshapes the eventual implementation
 round: upstream's deck editor **never calls `CheckDeckContent`/`CheckDeckSize`**
@@ -220,7 +230,9 @@ this framework relies on were shown to be checking proxies rather than the
 property they claim to enforce.
 
 After that, **re-queue the M3 architecture citation audit** (superseded brief
-002, text at `202a3494`).
+002, text at `202a3494`), with `deck-builder-legality.md` added to its scope —
+it now carries seven known citation defects of exactly the kind that audit
+exists to find, including one wrong behavioural claim.
 
 **Not the deck-builder legality UI, yet** — and note this file previously
 recommended it while also recording, a few sections above, that this machine
