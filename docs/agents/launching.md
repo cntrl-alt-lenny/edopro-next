@@ -70,6 +70,16 @@ happen." The fallbacks, in order:
 2. **Brain inspects repository and PR state directly** — branch, diff,
    commits, the CI run at that exact SHA. This works on every vendor and is
    what the framework actually relies on. The inbox only ever saves time.
+3. **If (2) cannot settle it, ask — do not infer.** This is the branch that
+   was previously undefined: repository state can confirm Builder's work
+   happened (it leaves a branch and a diff whether or not its report was
+   relayed), but it cannot confirm Verifier's, because a finished Verifier
+   round produces no diff, no commit and no PR — only a report, which a
+   missing inbox entry means is unknown by definition. There is no
+   repository-state proxy that distinguishes "Verifier has not started" from
+   "a non-Claude Verifier finished and nobody pasted the report." Ask the
+   owner directly whether Verifier has run for the exact head SHA, and treat
+   the answer as authoritative rather than guessing from elapsed time.
 
 Check the timestamp before trusting a file that is there, too.
 
