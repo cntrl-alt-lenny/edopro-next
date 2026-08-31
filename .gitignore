@@ -54,6 +54,10 @@ NotoSansJP-Regular.otf
 __pycache__/
 *.pyc
 /policy/build/
+# Configure-time mirror of ui/qml/ used only so qmlcachegen never sees a
+# ".." in test_deckbuilder_screen's QML_FILES paths - see the comment at
+# its definition in ui/tests/CMakeLists.txt. Generated, not authored.
+/ui/tests/.qml_mirror/
 
 # Agent worktrees (docs/agents/worktree-mechanism.md). Builder and Verifier
 # each get a git worktree of this same clone, nested here so the layout is
