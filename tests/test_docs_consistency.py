@@ -56,6 +56,11 @@ _STATUS_RE = re.compile(r"^Status:\s*\**\s*([a-z]+)", re.MULTILINE)
 # Markdown links to repo-relative paths. Skips URLs and pure anchors.
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)#]+)(?:#[^)]*)?\)")
 
+# An inline-code span whose content is a leading slash followed by a bare
+# word -- the shared spelling of "a chat-tool command" across vendors
+# (`/status`, `/code-review`, ...), not one tool's specific vocabulary.
+_SLASH_COMMAND_RE = re.compile(r"`/[a-zA-Z][a-zA-Z0-9_-]*`")
+
 ROLES = ("brain", "builder", "verifier")
 
 COORDINATION_DOCS = [
@@ -307,7 +312,31 @@ class RoleContractTest(unittest.TestCase):
                 )
 
     def test_contracts_do_not_depend_on_one_vendors_mechanics(self):
-        """Naming a vendor as an example is fine; requiring one is not."""
+        """Naming a vendor as an example is fine; requiring one is not.
+
+        Two different shapes of leak, checked two different ways -- this is a
+        deliberately partial generalisation, not a claim that the whole class
+        is now covered:
+
+        - A **slash-command reference** (`/status`, `/code-review`, ...) has
+          a shared syntactic marker across every chat-driven coding tool that
+          has one: an inline-code span whose content is a leading slash
+          followed by a bare word, e.g. `` `/status` ``. That is a structural
+          pattern, not one vendor's vocabulary, so `_SLASH_COMMAND_RE` below
+          detects the *class*: any future slash-command reference, in any
+          contract, on any tool's convention, not just this one. This closes
+          the actual leak Round 1 found (`docs/roles/brain.md:116`, "`/status`
+          runs this sequence") -- the old `forbidden` list below only had the
+          literal phrase "slash command", which that sentence never
+          contained, which is exactly how it slipped through.
+        - The rest of `forbidden` -- a frontmatter key, a config filename, a
+          settings flag name -- shares no common syntax across vendors, so
+          there is no structural pattern to regex on. Each is still checked
+          only as the literal string it is. **This half remains an
+          enumerated list of known instances, not a class detector**: a
+          vendor-specific artifact this list has not seen would still slip
+          past it. Stated plainly rather than left implicit.
+        """
         forbidden = (
             "subagent_type:",
             "allowed-tools:",
@@ -325,6 +354,14 @@ class RoleContractTest(unittest.TestCase):
                         f"vendor-specific mechanic in a role contract; it belongs in "
                         f"docs/agents/launching.md",
                     )
+            with self.subTest(role=role, token="<slash-command reference>"):
+                match = _SLASH_COMMAND_RE.search(contract)
+                self.assertIsNone(
+                    match,
+                    f"{match.group(0) if match else ''!r} in {role}.md looks like a "
+                    f"chat-tool slash-command reference; that mechanic belongs in "
+                    f"docs/agents/launching.md, not a vendor-neutral contract",
+                )
 
     def test_contracts_carry_no_tool_frontmatter(self):
         for role in ROLES:

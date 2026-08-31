@@ -113,7 +113,8 @@ tool.
    or a `docs/architecture/*.md` file as the task requires. Do not re-ingest
    the whole corpus every session.
 
-`/status` runs this sequence.
+A tool that offers a one-shot command for this sequence should provide one;
+see the adapter for whichever tool is running this seat.
 
 ## Standard loop
 
