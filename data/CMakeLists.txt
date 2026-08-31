@@ -186,11 +186,21 @@ if(EDOPRO_NEXT_DATA_TESTS)
     # docs/architecture/card-search.md#performance for why wall-clock
     # numbers do not belong in pass/fail CI. Prints timings to stdout;
     # nothing consumes its exit code as a signal beyond "did it crash".
-    add_executable(bench_card_search tests/bench_card_search.cpp)
-    target_link_libraries(bench_card_search PRIVATE edopro_next_search SQLite::SQLite3)
-    if(MSVC)
-        target_compile_options(bench_card_search PRIVATE /W4 /O2)
-    else()
-        target_compile_options(bench_card_search PRIVATE -Wall -Wextra -O2)
-    endif()
+    # /O2 here is deliberate (see the comment above), and on MSVC that
+    # collides with /RTC1 -- cl rejects the combination outright
+    # ("D8016: '/RTC1' and '/O2' command-line options are incompatible"),
+    # not merely warns. A Debug configure injects /RTC1 into every target in
+    # *this* directory via CMAKE_CXX_FLAGS_DEBUG; weakening that project-wide
+    # to fix one benchmark would drop a real diagnostic (uninitialized
+    # locals, stack corruption) from the whole test suite. CMake has no
+    # per-target way to subtract an inherited directory flag -- the flags
+    # variable is resolved once per directory at generate time, so mutating
+    # and restoring it around one add_executable() call in the same
+    # CMakeLists.txt does not work (confirmed by trying it: the restored
+    # value at end-of-file is what every target in the directory gets,
+    # including the one created while it was temporarily stripped). A
+    # sub-directory is CMake's actual unit of flag-variable isolation, so
+    # bench_card_search gets one, purely for this: see
+    # tests/bench/CMakeLists.txt.
+    add_subdirectory(tests/bench)
 endif()
