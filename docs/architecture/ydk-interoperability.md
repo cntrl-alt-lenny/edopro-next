@@ -38,10 +38,10 @@ before changing `integration/legacy/ydk_interop.cpp`.
 
 | Concept | Upstream source |
 |---|---|
-| File-open entry point (what this harness calls) | `DeckManager::LoadDeckFromFile` (`gframe/deck_manager.cpp:319-328`) |
-| The private `.ydk` grammar reader | `LoadCardList` (`gframe/deck_manager.cpp:272-317`, file-local `static`) |
+| File-open entry point (what this harness calls) | `DeckManager::LoadDeckFromFile` (`gframe/deck_manager.cpp:319-329`) |
+| The private `.ydk` grammar reader | `LoadCardList` (`gframe/deck_manager.cpp:272-318`, file-local `static`) |
 | Classification into Main/Extra | `DeckManager::LoadDeck` (`gframe/deck_manager.cpp:330-392`) |
-| Dummy/unknown-card synthesis | `DeckManager::GetDummyOrMappedCardData` (`gframe/deck_manager.cpp:17-27`) |
+| Dummy/unknown-card synthesis | `DeckManager::GetDummyOrMappedCardData` (`gframe/deck_manager.cpp:17-28`) |
 | Card database load | `DataManager::LoadDB`/`ParseDB` (`gframe/data_manager.h:140-142`, `gframe/data_manager.cpp:98-179`) |
 
 `LoadDeckFromFile` is the same entry point upstream's own deck builder calls
@@ -212,10 +212,10 @@ the original code) in `separated=true`.
 The reverse direction - real upstream `SaveDeck` output, read back by this project's own
 `edopro_next::data::parse_ydk()`/`load_ydk()` - is **not attempted in this slice**, for a
 concrete, source-verified reason, not a hand-wave: `DeckManager::SaveDeck`
-(`gframe/deck_manager.cpp:436-451`) reads live presentation/global state directly -
+(`gframe/deck_manager.cpp:436-452`) reads live presentation/global state directly -
 `mainGame->ebNickName->getText()` for the `"#created by "` line
 (`gframe/deck_manager.cpp:441`) - and `MakeYdkEntryString`
-(`gframe/deck_manager.cpp:469-472`) additionally depends on `gGameConfig-
+(`gframe/deck_manager.cpp:469-473`) additionally depends on `gGameConfig-
 >addCardNamesToDeckList` and, when that option is set, `gDataManager->GetName(code)`.
 Proving this direction headlessly would require substantially more legacy presentation
 scaffolding than the load direction does (at minimum, a real `mainGame`/`Game` instance with
