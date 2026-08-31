@@ -169,8 +169,9 @@ Derive this from `gh pr list` and `ls docs/briefs*` before trusting it.
 vendor-neutral role contracts in [`roles/`](roles/), thin `.claude/` adapters,
 this file, [`briefs/`](briefs/), [`agents/`](agents/), `.githooks/pre-push`,
 and `tests/test_push_guard.py` + `tests/test_docs_consistency.py`. Verifier
-reviewed the exact head, returned zero BLOCKERs and nine SHOULD FIX/NOTE
-findings; Brain reproduced the load-bearing ones and merged under the
+reviewed the exact head, returned zero BLOCKERs, **seven SHOULD FIX and five
+NOTE** (an earlier version of this line said "nine", which silently dropped
+three NOTEs); Brain reproduced the load-bearing ones and merged under the
 delegated authority described in `AGENTS.md`.
 
 **PR #15 — merged 2026-08-31** (`5c5f371f`). Brief 001's deliverable,
@@ -211,6 +212,25 @@ there is "no upstream function that decides a card's section from its type at
 push time either". `push_main`/`push_extra` do type-gate at push time
 (`deck_con.cpp:1585-1588,1617-1621`). Defensible read narrowly, broader than
 the source supports as written.
+
+## Local toolchain constraint — read before writing any brief
+
+**The primary dev machine (Windows) has neither `cmake` nor Qt installed.**
+Verified 2026-08-31. `ninja` and Python 3.12.10 are present.
+
+`client/`, `data/`, `policy/` and `ui/` therefore **cannot be built or tested
+locally at all**, and no brief touching them can produce the evidence
+`AGENTS.md`'s per-layer table requires. Only Python tooling (`tools/`,
+`tests/`) and documentation work are locally verifiable today.
+
+Until cmake and Qt are installed, either scope briefs to what is locally
+verifiable, or accept CI-at-an-exact-SHA as the evidence and **say so
+explicitly** rather than letting the gap go unmentioned.
+
+*(This section was deleted by accident while fixing an unrelated
+contradiction, and restored after review caught it. It is durable state, not
+commentary on a since-resolved problem — do not fold it into a narrative
+section again.)*
 
 ## Known open items
 

@@ -13,8 +13,8 @@ meanings: [`docs/roles/builder.md`](../roles/builder.md).
 
 ## Goal
 
-Round 1's verification of the framework returned zero BLOCKERs and nine
-SHOULD FIX / NOTE findings. The common thread in the most serious ones is
+Round 1's verification of the framework returned zero BLOCKERs, seven
+SHOULD FIX and five NOTE. The common thread in the most serious ones is
 that **two automated guards check a proxy rather than the property they claim
 to enforce**, and both were demonstrated to miss a live violation sitting in
 the same commit that introduced them.
@@ -113,9 +113,23 @@ become true.
    resolution step each is named for. Either make them test what they claim,
    or rename them to say what they actually pin.
 
-8. **`docs/agents/model-notes.md` has no round entry** for the five commits
-   of Brain-seat work that produced most of PR #14, despite that being the
-   file's stated purpose.
+8. **The inbox fallback's non-Claude path is thin, and one branch of it is
+   undefined.** `docs/roles/README.md` and `docs/agents/launching.md` both
+   state the same two steps — the owner pastes the report, or Brain inspects
+   repository and PR state — and no mechanism for posting a report anywhere in
+   the repository is named (grep for `gh pr comment`/`gh pr review`: no hits).
+   "Missing or stale means UNKNOWN" is correctly stated in Brain's numbered
+   startup sequence rather than buried in an aside, so a Brain following the
+   procedure does hit it — but nothing tells it what to do next, so it cannot
+   distinguish "Verifier has not started" from "a non-Claude Verifier finished
+   and nobody pasted the report." Close that branch. This matters more as more
+   seats run on non-Claude tools, which is the stated direction.
+
+   *(This item replaces the original item 8 — "model-notes.md has no round
+   entry" — which PR #16 fixed directly before this brief was dispatched.
+   Verifier flagged that it would have cost Builder a wasted investigation.
+   The dropped NOTE recorded here is the one finding from the PR #14 round
+   that had no disposition anywhere; it now has one.)*
 
 ## Non-goals
 

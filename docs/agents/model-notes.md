@@ -122,7 +122,7 @@ outing. Observations:
 
 **Round 1 verification, second pass (2026-08-31) — Verifier seat, Claude
 Sonnet 5 at High effort.** Reviewed PR #14 at its final head `152014ac`
-(base `b6315df1`). Outcome: **zero BLOCKERs, nine SHOULD FIX/NOTE findings**,
+(base `b6315df1`). Outcome: **zero BLOCKERs, seven SHOULD FIX and five NOTE**,
 and Brain merged on the strength of it. Observations:
 
 - **It answered the calibration note from its previous round.** Told that its

@@ -33,6 +33,7 @@ not close it.
 """
 
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -141,9 +142,39 @@ class BriefLifecycleTest(unittest.TestCase):
                 seen[number] = brief.name
 
 
+def _tracked_paths():
+    """Every path git actually tracks, as repo-relative posix strings.
+
+    Resolved against git rather than the working tree on purpose. Git does not
+    track empty directories, so a directory that exists locally can be absent
+    from a fresh checkout -- which is exactly what happened when
+    docs/briefs/delivered/ emptied: two documents linked into it, the local
+    run passed because the directory was still on disk, and only CI caught it.
+    Checking the index makes a local run agree with a fresh clone.
+    """
+    out = subprocess.run(
+        ["git", "ls-files"], cwd=str(REPO), text=True, capture_output=True,
+    )
+    return {line.strip() for line in out.stdout.splitlines() if line.strip()}
+
+
 class CoordinationLinkTest(unittest.TestCase):
     def test_intra_repo_links_resolve(self):
         """A dead link in a rehydration doc sends a cold session nowhere."""
+        tracked = _tracked_paths()
+        self.assertTrue(tracked, "git ls-files returned nothing; cannot verify links")
+
+        def resolves(path: Path) -> bool:
+            try:
+                rel = path.resolve().relative_to(REPO).as_posix()
+            except ValueError:
+                return path.resolve().exists()  # outside the repo; fall back
+            if rel in tracked:
+                return True
+            # A directory is present in a checkout only if it holds a tracked file.
+            prefix = rel.rstrip("/") + "/"
+            return any(entry.startswith(prefix) for entry in tracked)
+
         for doc in COORDINATION_DOCS:
             if not doc.is_file():
                 continue
@@ -153,8 +184,9 @@ class CoordinationLinkTest(unittest.TestCase):
                     continue
                 with self.subTest(doc=str(doc.relative_to(REPO)), link=target):
                     self.assertTrue(
-                        (doc.parent / target).resolve().exists(),
-                        f"{doc.relative_to(REPO)} links to a path that does not exist",
+                        resolves(doc.parent / target),
+                        f"{doc.relative_to(REPO)} links to a path git does not track, "
+                        f"so it will be missing from a fresh checkout",
                     )
 
 

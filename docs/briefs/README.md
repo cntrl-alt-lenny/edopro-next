@@ -9,7 +9,7 @@ in — so the answer to "what is in flight?" is `ls`, not a careful read.
 | `queued` | `active.md` | Written, not started. |
 | `active` | `active.md` | Builder is executing it now. |
 | `delivered` | `delivered/` | Builder finished and opened a PR. **Not reviewed, not accepted.** |
-| `accepted` | `archive/` | Verifier reviewed, Brain adjudicated, owner merged. |
+| `accepted` | `archive/` | Verifier reviewed, Brain adjudicated, Brain merged (see `AGENTS.md`, "Authority", for what still goes to the owner). |
 | `rejected` | `archive/` | Adjudicated and not merged. The record is kept; rejected rounds are the more informative half of this directory. |
 
 `tests/test_docs_consistency.py` enforces the parts of this a machine can
