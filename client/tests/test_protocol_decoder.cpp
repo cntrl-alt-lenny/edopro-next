@@ -109,9 +109,23 @@ Packet confirm_decktop_packet(std::uint8_t player, const std::vector<std::uint32
 	return builder.packet(proto::MSG_CONFIRM_DECKTOP);
 }
 
+using ConfirmCardsEntry = std::tuple<std::uint32_t, std::uint8_t, std::uint8_t, std::uint32_t>;
+
+// Every element here is already the tuple's own element type, so building one
+// of these is never a narrowing conversion. A braced-list literal directly at
+// a std::tuple<uint32_t, uint8_t, ...> call site is: MSVC's /W4 flags a
+// plain `int` literal (e.g. `0`) landing in a uint8_t slot as C4244, because
+// std::tuple's variadic constructor forwards through a template parameter
+// deduced as `int`, which does not get the "constant literal that fits" pass
+// ordinary scalar initialization does. Typing the arguments here, once,
+// avoids a wall of static_casts at every call site below.
+ConfirmCardsEntry confirm_cards_entry(std::uint32_t code, std::uint8_t controller,
+									   std::uint8_t location, std::uint32_t sequence) {
+	return {code, controller, location, sequence};
+}
+
 Packet confirm_cards_packet(std::uint8_t player,
-							 const std::vector<std::tuple<std::uint32_t, std::uint8_t,
-															 std::uint8_t, std::uint32_t>>& entries,
+							 const std::vector<ConfirmCardsEntry>& entries,
 							 bool compat = false) {
 	PayloadBuilder builder;
 	builder.u8(player);
@@ -921,7 +935,7 @@ EDOPRO_TEST(zero_confirmation_code_preserves_existing_identity) {
 	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
 
 	const auto cards = fixture.run(confirm_cards_packet(0,
-		{{0, 0, proto::LOCATION_DECK, 0}}));
+		{confirm_cards_entry(0, 0, proto::LOCATION_DECK, 0)}));
 	EDOPRO_CHECK_EQ(cards.status, DecodeStatus::Decoded);
 	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
 }
@@ -931,8 +945,8 @@ EDOPRO_TEST(confirm_cards_updates_tracked_cards_and_ignores_temporary_location_z
 	CardInstanceId id = CardInstanceId::None;
 	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
 		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
-	const auto result = fixture.run(confirm_cards_packet(1, {{1234, 0, proto::LOCATION_MZONE, 0},
-		{5678, 0, 0, 0}}));
+	const auto result = fixture.run(confirm_cards_packet(1, {confirm_cards_entry(1234, 0, proto::LOCATION_MZONE, 0),
+		confirm_cards_entry(5678, 0, 0, 0)}));
 	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Decoded);
 	EDOPRO_CHECK_EQ(fixture.state.find(id)->code, static_cast<CardCode>(1234));
 	EDOPRO_CHECK_EQ(fixture.state.cards().size(), std::size_t{1});
@@ -945,7 +959,7 @@ EDOPRO_TEST(confirm_cards_updates_tracked_cards_and_ignores_temporary_location_z
 	EDOPRO_CHECK(!compat_state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
 		CardPosition{proto::POS_FACEUP_ATTACK}, &compat_id));
 	EDOPRO_CHECK_EQ(compat.decode(confirm_cards_packet(0,
-		{{4321, 0, proto::LOCATION_MZONE, 0}}, true), compat_state).status,
+		{confirm_cards_entry(4321, 0, proto::LOCATION_MZONE, 0)}, true), compat_state).status,
 		DecodeStatus::Decoded);
 	EDOPRO_CHECK_EQ(compat_state.find(compat_id)->code, static_cast<CardCode>(4321));
 }
@@ -956,8 +970,8 @@ EDOPRO_TEST(confirm_cards_bad_later_reference_rolls_back_earlier_reveal) {
 	EDOPRO_CHECK(!fixture.state.create_card({0, Zone::MonsterZone, 0, false, 0}, CardCode::None,
 		CardPosition{proto::POS_FACEUP_ATTACK}, &id));
 	const auto before = fixture.state;
-	const auto result = fixture.run(confirm_cards_packet(0, {{1234, 0, proto::LOCATION_MZONE, 0},
-		{5678, 0, proto::LOCATION_MZONE, 4}}));
+	const auto result = fixture.run(confirm_cards_packet(0, {confirm_cards_entry(1234, 0, proto::LOCATION_MZONE, 0),
+		confirm_cards_entry(5678, 0, proto::LOCATION_MZONE, 4)}));
 	EDOPRO_CHECK_EQ(result.status, DecodeStatus::Inconsistent);
 	EDOPRO_CHECK(fixture.state == before);
 }
