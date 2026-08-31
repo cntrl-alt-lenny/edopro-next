@@ -34,11 +34,24 @@
 # LIMITS -- read these before treating this as a guarantee
 #
 # This is a local convenience, not a control. It only runs where someone has
-# run `git config core.hooksPath .githooks` (see README.md), it is bypassed by
-# `git push --no-verify`, and it does not exist at all on a fresh clone. The
-# actual, non-bypassable guarantee that nothing reaches master except through a
-# reviewed PR is GitHub branch protection on the repository itself. See
-# AGENTS.md, "Never push to master".
+# run `git config core.hooksPath .githooks` (see README.md), and it does not
+# exist at all on a fresh clone. The actual, non-bypassable guarantee that
+# nothing reaches master except through a reviewed PR is GitHub branch
+# protection on the repository itself. See AGENTS.md, "Never push to master".
+#
+# Known ways to push past this hook even where it is installed (this is the
+# family as far as it has been established -- see tests/test_push_guard.py
+# and docs/agents/launching.md for how, and what remains unenumerated):
+#   - git push --no-verify              -- documented, intended escape hatch
+#   - git -c core.hooksPath= push ...   -- disables hook lookup for one call
+#   - git send-pack ...                 -- the plumbing command git push's
+#                                          porcelain wraps; hooks are invoked
+#                                          by the porcelain layer, not by
+#                                          send-pack itself
+#   - any git client or library that does not implement client-side hooks at
+#     all -- not enumerable; this is a porcelain-layer convention, not part
+#     of the wire protocol, so nothing here can detect or list every
+#     implementation that skips it
 #
 # Exit 0 to allow the push, non-zero to reject it.
 
@@ -46,9 +59,16 @@ set -u
 
 PROTECTED_REFS="refs/heads/master"
 
-repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
-
 # --- Guard 1: never write a protected branch --------------------------------
+#
+# Deliberately has no repository dependency -- reads only stdin, which git
+# always provides before invoking this hook. It must run and be able to
+# reject a push regardless of whether the working-tree lookup below
+# succeeds: a previous version resolved repo_root first and exited 0 before
+# even reaching this loop when that lookup failed (a push from a bare
+# repository, where `git rev-parse --show-toplevel` has no working tree to
+# report), which silently skipped this entire guard. Reproduced and fixed;
+# see tests/test_push_guard.py's BareRepositoryTest.
 
 blocked_ref=""
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
@@ -89,6 +109,16 @@ fi
 # Deliberately NOT checked here: the cmake/ctest cycles. A hook slow enough to
 # be resented is a hook that gets bypassed. Those belong in AGENTS.md's
 # per-layer evidence table, as something an agent runs and pastes.
+#
+# Needs a working tree to find tools/*.py in and to run python against, so it
+# is skipped -- loudly, unlike Guard 1 above -- when there is none. A bare
+# repository is the case that matters: it has no working tree at all, so
+# `git rev-parse --show-toplevel` fails here every time, not just sometimes.
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
+	echo "[edopro-next] warning: no working tree (bare repository?); skipped the derived-table check." >&2
+	exit 0
+}
 
 if command -v python >/dev/null 2>&1; then
 	PY=python

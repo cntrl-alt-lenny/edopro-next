@@ -258,7 +258,7 @@ evidence: it runs after the claim has already been made.
   | Layer | Strength | Status |
   |---|---|---|
   | GitHub branch protection on `master` | **the guarantee** — server-side, no local setup, survives any tool or machine | **ENABLED** (2026-08-31). PR required; `enforce_admins: true`; `strict: true`; five required checks; force-push and deletion blocked. |
-  | [`.githooks/pre-push`](.githooks/pre-push) | local convenience, early feedback | Enabled where `git config core.hooksPath .githooks` has been run. Bypassed by `--no-verify`; absent on a fresh clone until set up. |
+  | [`.githooks/pre-push`](.githooks/pre-push) | local convenience, early feedback | Enabled where `git config core.hooksPath .githooks` has been run; absent on a fresh clone until set up. Bypassed by `--no-verify`, and by several other ways to push that skip client-side hooks entirely — the hook's own header comment carries the full list as established, and says plainly what is not enumerable. |
 
   Verified empirically, not merely read back from config: an admin push with
   `--no-verify` to a branch carrying this protection shape is rejected
