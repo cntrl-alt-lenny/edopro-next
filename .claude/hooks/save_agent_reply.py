@@ -40,7 +40,12 @@ So: check the timestamp, and never read a missing or stale inbox file as
   `.worktrees/verifier`, with the primary checkout as `brain`. A `-builder` /
   `-verifier` suffix is also accepted, so a sibling-directory layout (the
   earlier convention, and still the natural one if someone clones the repo
-  twice instead of using worktrees) keeps working. Anything else is `brain`.
+  twice instead of using worktrees) keeps working. `brain` is used only when
+  the worktree's toplevel is confirmed to be the primary checkout (compared
+  against `<git-common-dir>/..`, stable across every worktree); anything
+  else unrecognized writes to an `unknown-<name>-latest.md` bucket instead of
+  guessing `brain` -- see `_role_from_worktree`'s own docstring for why that
+  distinction matters.
 
 Stop hooks must never block a session from ending, so every failure path here
 returns 0 silently.
@@ -106,16 +111,47 @@ def _last_assistant_text(transcript_path: Path) -> str | None:
     return "\n".join(parts).strip() or None
 
 
-def _role_from_worktree(worktree_root: str | None) -> str:
+def _role_from_worktree(worktree_root: str | None, primary_root: Path | None) -> str:
+    """Map a worktree path to a role -- "brain" only when confirmed.
+
+    An earlier version returned "brain" for *any* name that did not match a
+    builder/verifier pattern, conflating "this genuinely is the primary
+    checkout" with "this name is unrecognized". That let an unrecognized
+    worktree silently write into brain-latest.md, colliding with Brain's own
+    entries -- reproduced with a Verifier worktree whose checked-out commit
+    predates the `.worktrees/verifier` bare-name match added in fa881423: at
+    that commit this function only recognized a `-verifier` suffix, so
+    `.worktrees/verifier` itself fell through to the "brain" branch.
+
+    This does not retroactively fix that: a worktree detached at a commit
+    before this fix runs whatever version of this file was checked out
+    then, not this one -- a tracked, per-worktree hook cannot be patched
+    after the fact for a commit that predates the patch. What this closes
+    is the failure *mode* going forward: from this commit on, "brain" is
+    returned only when the worktree's toplevel is confirmed to equal the
+    primary checkout's root (computed by the caller from
+    `git rev-parse --git-common-dir`, which is stable across all worktrees).
+    Any other unrecognized name -- including this same function running
+    stale in some future relayout it does not know about -- now falls into
+    a distinctly named "unknown-<name>" bucket instead, which cannot
+    collide with brain-latest.md.
+    """
     if not worktree_root:
-        return "unknown"
-    name = Path(worktree_root).name.lower()
+        return "unknown-no-worktree-root"
+    path = Path(worktree_root)
+    name = path.name.lower()
     for role in _ROLES:
         # `.worktrees/builder` (current layout) or `edopro-next-builder`
         # (sibling-directory layout, still supported).
         if name == role or name.endswith(f"-{role}"):
             return role
-    return "brain"
+    if primary_root is not None:
+        try:
+            if path.resolve() == primary_root.resolve():
+                return "brain"
+        except OSError:
+            pass
+    return f"unknown-{name or 'worktree'}"
 
 
 def _seed_readme(inbox: Path) -> None:
@@ -174,7 +210,10 @@ def main() -> int:
         return 0
     _seed_readme(inbox)
 
-    role = _role_from_worktree(_git(["rev-parse", "--show-toplevel"]))
+    # `common` is the shared .git dir's path -- identical from every
+    # worktree -- so its parent is the primary checkout's root regardless of
+    # which worktree this hook is running in.
+    role = _role_from_worktree(_git(["rev-parse", "--show-toplevel"]), common.parent)
     session_id = event.get("session_id", "")
     stamp = datetime.now().isoformat(timespec="seconds")
     header = (

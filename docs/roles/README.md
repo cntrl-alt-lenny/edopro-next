@@ -57,5 +57,17 @@ fallbacks, in order:
 2. Brain inspects repository and PR state directly — the branch, the diff, the
    commits, the CI run at that SHA. This always works, on every vendor, and is
    the reason the framework does not depend on the convenience.
+3. **If (2) cannot settle it, ask — do not infer.** Repository state answers
+   "has Builder's work happened?", because Builder leaves a branch and a diff
+   behind whether or not anyone relayed its report. It cannot answer the same
+   question for Verifier: a Verifier round that finished produces no diff, no
+   commit and no PR of its own — only a report, which is exactly the thing a
+   missing inbox entry means is unknown. So repository state cannot
+   distinguish "Verifier has not started" from "a non-Claude Verifier
+   finished and nobody pasted the report" — there is no proxy for that
+   distinction to fall back on. Ask the owner directly whether Verifier has
+   run for the exact head SHA in question, and treat the answer as
+   authoritative rather than guessing from elapsed time or session activity.
 
-A missing or stale artifact is a prompt to go and look, not a conclusion.
+A missing or stale artifact is a prompt to go and look, not a conclusion —
+and where looking cannot resolve it, a prompt to ask.

@@ -39,6 +39,7 @@ which is how the first attempt at verifying this hook produced a false pass.
 
 import shutil
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -49,6 +50,60 @@ ZERO = "0" * 40
 SOME = "1111111111111111111111111111111111111111"
 
 _SH = shutil.which("sh") or shutil.which("bash")
+_GIT = shutil.which("git")
+
+
+def _git(args, cwd):
+    result = subprocess.run(
+        ["git", *args], cwd=str(cwd), text=True, capture_output=True,
+    )
+    assert result.returncode == 0, f"git {args} failed: {result.stderr}"
+    return result
+
+
+class _ThrowawayRepos:
+    """A disposable local bare 'remote' plus a working repo with
+    core.hooksPath pointed at the real .githooks/pre-push, for tests that
+    need git to actually invoke the hook rather than being fed synthetic
+    stdin. Everything lives under the caller's temp directory. Never touches
+    `origin` or any real remote -- `git remote add origin` here points at a
+    throwaway local bare repo of the same name, not this project's GitHub
+    remote.
+    """
+
+    def __init__(self, tmp: Path):
+        self.remote = tmp / "remote.git"
+        self.work = tmp / "work"
+        _git(["init", "-q", "--bare", str(self.remote)], cwd=tmp)
+        _git(["init", "-q", "-b", "master", str(self.work)], cwd=tmp)
+        _git(["config", "user.email", "test@example.invalid"], cwd=self.work)
+        _git(["config", "user.name", "test"], cwd=self.work)
+        _git(["config", "core.hooksPath", str(HOOK.parent)], cwd=self.work)
+        (self.work / "file.txt").write_text("x", encoding="utf-8")
+        # Guard 2 (the derived-table check) runs `$repo_root/tools/*.py
+        # --check` unconditionally once it has a working tree. This repo has
+        # no real tools/, so without a stub every push here would be
+        # rejected by Guard 2 regardless of Guard 1's verdict -- confirmed
+        # empirically: a push of a non-master branch was rejected here with
+        # "derived tables are out of date" before this stub was added,
+        # which would have made every test using this fixture pass for the
+        # wrong reason. The stub exits 0 unconditionally so only Guard 1 is
+        # under test.
+        tools_dir = self.work / "tools"
+        tools_dir.mkdir()
+        for name in ("generate_messages.py", "generate_protocol_constants.py"):
+            (tools_dir / name).write_text(
+                "import sys\nsys.exit(0)\n", encoding="utf-8",
+            )
+        _git(["add", "file.txt", "tools"], cwd=self.work)
+        _git(["commit", "-q", "-m", "initial"], cwd=self.work)
+        _git(["remote", "add", "origin", str(self.remote)], cwd=self.work)
+
+    def push(self, *refspec):
+        return subprocess.run(
+            ["git", "push", "origin", *refspec],
+            cwd=str(self.work), text=True, capture_output=True,
+        )
 
 
 def _run(stdin: str):
@@ -130,27 +185,89 @@ class PushGuardTest(unittest.TestCase):
                 self.assertEqual(_run(_line(ref)).returncode, 0)
 
 
-@unittest.skipIf(_SH is None, "no sh/bash on PATH to run the hook with")
+@unittest.skipIf(_GIT is None, "no git on PATH")
 class HistoricalBypassTest(unittest.TestCase):
     """Each case here defeated the previous, command-string-parsing guard.
 
-    They are expressed as ref updates rather than shell strings because that
-    is the entire point: by the time git calls pre-push, `sh -c '...'`,
-    `+master` and `git -C . push` have all resolved to the same ref update,
-    and there is no shell text left to be fooled by.
+    Brief 003, item 7: the previous version of this class was named after
+    three distinct historical bypasses but constructed the identical
+    already-resolved `refs/heads/master` stdin line for all three -- which
+    PushGuardTest.test_rejects_push_to_master already covers, and which
+    proves nothing about the *resolution* step each test claims to pin
+    (`+master`, `+refs/heads/master` and `HEAD:master` all resolving to the
+    same ref update before the hook ever sees them).
+
+    This version exercises real `git push` with each exact refspec spelling
+    against a throwaway local bare remote, so it is git's own refspec
+    resolution feeding the hook, not a hand-rolled stdin line standing in
+    for it. That is the actual claim this class makes, and now it is what
+    gets tested. Nothing here touches `origin` or any real remote --
+    `_ThrowawayRepos` only ever points at a bare repo in a temp directory.
     """
 
     def test_force_shorthand_resolves_to_the_same_ref(self):
         # `git push origin +master` -- the `+` never reaches the hook.
-        self.assertNotEqual(_run(_line("refs/heads/master")).returncode, 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            repos = _ThrowawayRepos(Path(tmp))
+            result = repos.push("+master")
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("REJECTED", result.stderr)
 
-    def test_fully_qualified_ref(self):
+    def test_fully_qualified_force_ref(self):
         # `git push origin +refs/heads/master`
-        self.assertNotEqual(_run(_line("refs/heads/master")).returncode, 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            repos = _ThrowawayRepos(Path(tmp))
+            result = repos.push("+refs/heads/master")
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("REJECTED", result.stderr)
 
     def test_colon_refspec(self):
         # `git push origin HEAD:master`
-        self.assertNotEqual(_run(_line("refs/heads/master")).returncode, 0)
+        with tempfile.TemporaryDirectory() as tmp:
+            repos = _ThrowawayRepos(Path(tmp))
+            result = repos.push("HEAD:master")
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("REJECTED", result.stderr)
+
+
+@unittest.skipIf(_GIT is None, "no git on PATH")
+class BareRepositoryTest(unittest.TestCase):
+    """Regression test for the bare-repo silent-exit defect (brief 003, item 3).
+
+    Reproduces the actual defect end-to-end: pushes to master FROM a bare
+    repository (no working tree at all), which is where
+    `git rev-parse --show-toplevel` has nothing to report. The pre-fix hook
+    resolved `repo_root` first and exited 0 before the stdin loop ran at
+    all when that lookup failed, so Guard 1 -- the actual protected-ref
+    rejection -- never ran. `_run()`'s hand-rolled stdin can't reproduce
+    this; it always runs with a working tree as cwd. Only an actual bare
+    repository as the push source does. Never touches origin; everything
+    here is a throwaway repo in a temp directory.
+    """
+
+    def test_push_to_master_from_a_bare_repository_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repos = _ThrowawayRepos(tmp_path)
+
+            pusher_bare = tmp_path / "pusher.git"
+            _git(["clone", "-q", "--bare", str(repos.work), str(pusher_bare)], cwd=tmp_path)
+            _git(["config", "core.hooksPath", str(HOOK.parent)], cwd=pusher_bare)
+
+            target = tmp_path / "target.git"
+            _git(["init", "-q", "--bare", str(target)], cwd=tmp_path)
+            _git(["remote", "set-url", "origin", str(target)], cwd=pusher_bare)
+
+            result = subprocess.run(
+                ["git", "--git-dir", str(pusher_bare), "push", "origin", "master"],
+                cwd=str(tmp_path), text=True, capture_output=True,
+            )
+            self.assertNotEqual(
+                result.returncode, 0,
+                f"push from a bare repository was silently allowed: "
+                f"{result.stdout}{result.stderr}",
+            )
+            self.assertIn("REJECTED", result.stderr)
 
 
 if __name__ == "__main__":
