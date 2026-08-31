@@ -132,11 +132,17 @@ concrete defect.
 
 ## In flight
 
-**The agent framework itself**, on `meta/agentic-framework` — `AGENTS.md`,
-`.claude/agents/`, this file, `docs/briefs/`, `docs/agents/`. Not yet merged.
+**The agent framework itself** — PR #14, branch `meta/agentic-framework`:
+`AGENTS.md`, `.claude/agents/`, this file, `docs/briefs/`, `docs/agents/`,
+`.claude/hooks/`. Open, under Verifier review, not merged.
 
-No Builder brief is queued; [`briefs/active.md`](briefs/active.md) holds the
-placeholder.
+**The first Builder brief is queued** in
+[`briefs/active.md`](briefs/active.md): `UPSTREAM ARCHAEOLOGY` on the
+deck-builder legality boundary — where upstream's deck editor sources its
+legality inputs, how that differs from the duel-entry check, and what each of
+`ValidationPolicy`'s six fields would have to come from. Documentation only,
+ending in a recommended boundary for Brain and the owner to ratify. It branches
+from `meta/agentic-framework` because the framework is not on `master` yet.
 
 ## Known open items
 
