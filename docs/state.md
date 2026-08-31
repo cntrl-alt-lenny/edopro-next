@@ -208,9 +208,34 @@ Hidden-scope cards are excluded from upstream's own search unconditionally.
 `delivered`, which stopped being true the moment PR #17 merged. Its commits
 are ancestors of PR #19, so nothing was lost.
 
-**Brief 005 is queued** in [`briefs/active.md`](briefs/active.md): make the
-C++ layers build on Windows/MSVC, so the per-layer evidence table can actually
-be satisfied on the dev machine. It blocks the deck-builder legality round.
+**PR #21 — open, delivered, NOT adjudicated.** Brief 005, the Windows/MSVC
+build fix. Base `3a2fea97`, head `84b400c6`. Brain independently reproduced a
+clean `client/` build under `/W4 /WX` (zero warnings, 7/7) and `ui/` building
+100/100 with **both** suites passing, including the previously unbuildable
+`test_deckbuilder_screen`. CI green at that head including both baseline legs.
+Builder's answer to the round's central question: **production code carries no
+narrowing-conversion pattern** — only the one test file did.
+
+**Three PRs are stacked and none can merge.** `master` ← #19 ← #20 ← #21, so
+#20 and #21 both carry #19's commits. Two BLOCKERs:
+
+- **PR #19** — `architecture/card-search.md` §1.4's corrected ordering claim is
+  wrong for `deck_sort_lv`, which compares `get_monster_card_type` *first*.
+  The five comparators do not share one ordering; the document's previous
+  wording was right for `_lv` and wrong for `_atk`/`_def`, and its new wording
+  is the reverse. Found by Verifier, re-derived from
+  `gframe/data_manager.cpp` by Brain.
+- **PR #21** — `ui/tests/.qml_mirror` refreshes only at CMake *configure*
+  time, so editing a QML file and running a plain `cmake --build` leaves
+  `test_deckbuilder_screen` compiling the previous version and reporting
+  green. Reproduced by Brain with a marker probe. **CI cannot catch this**:
+  `file(CREATE_LINK ... SYMBOLIC)` succeeds on Linux, so the pipeline only
+  ever exercises the symlink path; the stale-copy path is Windows-only.
+  Verifier never saw PR #21 — it postdates that review.
+
+**Brief 006 is queued** in [`briefs/active.md`](briefs/active.md): both
+corrections, each onto its own existing branch. It deliberately does not open
+a new branch — a corrective round amends the work it corrects.
 
 **Owner decision, 2026-08-31 — the deck builder gets a visible format/ruleset
 picker.** This resolves brief 001 §7 in favour of its option (b), over

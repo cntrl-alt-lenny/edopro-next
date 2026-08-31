@@ -1,4 +1,4 @@
-# Brief 005 — make the C++ layers build on Windows/MSVC
+# Brief 006 — two corrections holding the merge train
 
 Status: queued
 
@@ -9,193 +9,200 @@ meanings: [`docs/roles/builder.md`](../roles/builder.md).
 
 ---
 
-## MODE: IMPLEMENTATION
+## MODE: CORRECTIVE
 
 ## Goal
 
-`client/`, `data/`, `policy/` and `ui/` must configure, build with
-`-DEDOPRO_NEXT_WERROR=ON`, and pass their CTest suites on Windows with MSVC —
-without weakening a single warning setting, and without changing what any of
-this code does.
+Close two BLOCKERs. Three pull requests are stacked and none of them can merge
+until both are fixed.
 
 ## Why this is next
 
-The primary development machine now has MSVC 19.44, CMake 3.31.6, Qt 6.8.3
-(`msvc2022_64`) and vcpkg-built SQLite3. Brain installed them and then tried
-to run `AGENTS.md`'s per-layer evidence table for real.
-
-**Every test suite passed — 13 of 13, on a compiler this code has never been
-compiled with before.** That is meaningful evidence in its own right and it is
-not what this brief is about.
-
-What this brief is about is that **three things fail to build**, and CI cannot
-see any of them because CI builds only Linux/GCC. Until they are fixed, four
-of the six rows in the evidence table cannot be satisfied on this machine, and
-every future round touching `ui/` is back to "CI is the only proof" — which is
-the exact problem installing the toolchain was meant to solve.
-
-The next round after this one is the deck-builder legality UI, which touches
-`ui/` and is **blocked by defect 3 below**.
+`master` ← PR #19 ← PR #20 ← PR #21. PR #20 and PR #21 each carry PR #19's
+commits, so a defect in #19 blocks all three. One BLOCKER sits in #19 and one
+in #21.
 
 ## Base SHA
 
-**Branch from `origin/meta/round-2-close`** — this brief lives on that branch
-(PR #20) and is not on `master` yet. If PR #20 has merged by the time you
-start, branch from `origin/master` instead. Verify with `git log -1`, record
-the actual SHA, and say which you used.
+**This round does not create a branch.** Both corrections go onto branches
+that already exist and already have open PRs. That is deliberate and it is the
+one place this round departs from "one branch per task" — a corrective round
+amends the work it corrects rather than opening a parallel copy of it.
 
-## The three defects
+This brief itself lives on `meta/round-3-corrections` (PR #22), stacked on
+PR #21. Read it there; do not branch from it.
 
-Brain established each of these by running the real commands on this machine.
-**Reproduce each one yourself before fixing it** — a previous agent's finding
-is evidence, not fact — but you are not expected to rediscover them.
+## Correction A — `docs/architecture/card-search.md`
 
-1. **`client/tests/test_protocol_decoder.cpp` — narrowing conversions.**
-   Under MSVC `/W4 /WX` the build fails with `C4244` inside
-   `std::tuple<uint32_t, uint8_t, uint8_t, uint32_t>` construction. The call
-   sites pass `std::uint32_t` protocol constants (for example
-   `proto::LOCATION_MZONE`, declared `inline constexpr std::uint32_t` in
-   `client/include/edopro_next/client/protocol_constants.h:115`) into the
-   `std::uint8_t` tuple slots — see `confirm_cards_packet` around
-   `test_protocol_decoder.cpp:112` and its call site near `:934`. GCC's
-   `-Wall -Wextra` is silent on this; it is `-Wconversion` territory, which
-   the project does not enable.
+**Branch:** `m3/architecture-citation-audit` (PR #19).
 
-2. **`data/CMakeLists.txt` — incompatible optimisation flags.**
-   `bench_card_search` sets `/O2` unconditionally for MSVC. A Debug configure
-   adds `/RTC1`, and MSVC rejects the combination outright:
-   `cl : Command line error D8016 : '/RTC1' and '/O2' command-line options are
-   incompatible`. This is a hard error, not a warning, so `/WX` is irrelevant
-   to it. Note the `/O2` is deliberate — that target is a performance
-   measurement and `docs/architecture/card-search.md#performance` explains why
-   it is not a CTest case. Preserve the intent.
+`card-search.md` §1.4 currently describes the ordering inside upstream's deck
+sort comparators as a single shared shape: that each function compares the
+stat it is named for first, with `get_monster_card_type` among the later
+tiebreakers.
 
-3. **`ui/tests/CMakeLists.txt` — QML cache path with a `..` segment.**
-   Building the `ui/` test targets fails at:
-   `ninja: error: mkdir(tests/.rcc/qmlcache/test_deckbuilder_screen_../qml):
-   No such file or directory`. The generated cache directory carries a literal
-   `..` in the middle of the path, which Windows cannot create. The
-   `edopro_next_shell` target itself builds and links fine, and
-   `test_deckbuilder` builds and passes; only `test_deckbuilder_screen` is
-   affected.
+**The five comparators do not share one ordering.** Brain re-derived the
+following directly from `gframe/data_manager.cpp`. It is given here rather
+than posed as a question because this round's value is the corrected sentence,
+not the rediscovery — but **read the source and confirm each line yourself
+before you write anything.** A previous agent's finding is evidence, not fact,
+and that principle does not stop applying because the previous agent was
+Brain.
 
-## Two operational facts that are true and written down nowhere
+| Function | Actual comparison order |
+|---|---|
+| `deck_sort_lv` | `get_monster_card_type` **first**, then level, attack, defense, `check_codes` |
+| `deck_sort_atk` | attack, defense, level, then `get_monster_card_type`, `check_codes` |
+| `deck_sort_def` | defense, attack, level, then `get_monster_card_type`, `check_codes` |
+| `deck_sort_name` | `GetUppercaseName()` compare, then `check_codes`. No `card_sorter`, no type check |
+| `deck_sort_passcode_descending` | raw `code` compare only |
 
-Not defects — but a future agent will lose an hour to each. Put them somewhere
-they will actually be found.
+So `deck_sort_lv` is the odd one out, and the document's **previous** wording
+("monster type, then the chosen stat") was correct for it and wrong for the
+other two. The current wording is correct for those two and wrong for
+`deck_sort_lv`. Neither sentence is true of all three.
 
-4. On Windows, `cmake -G Ninja` finds no compiler unless it runs inside the
-   MSVC environment (`vcvars64.bat`). `AGENTS.md`'s evidence-table commands do
-   not mention this and, taken literally, do not work here.
+Write something true of all five. If that means the sentence stops being one
+sentence, let it.
 
-5. Qt-linked test executables do not launch unless Qt's `bin` directory is on
-   `PATH` at runtime. Without it CTest reports `BAD_COMMAND`, which reads as a
-   build failure and is not one.
+While you are in that paragraph, check its cited line range against the actual
+extent of the functions it describes, and note that `card_sorter` itself sits
+outside the cited range — the current text already says so, and that part is
+correct.
 
-Also worth knowing, and not a bug in anything: CTest reported one spurious
-`BAD_COMMAND` for `duel_state` immediately after a parallel link, and passed
-on re-run. Windows file locking, not a defect — do not chase it.
+## Correction B — the QML mirror
+
+**Branch:** `meta/windows-msvc-build` (PR #21).
+
+`ui/tests/CMakeLists.txt` mirrors five QML files into
+`ui/tests/.qml_mirror/` so that `qmlcachegen` never sees a `..` in a path.
+`file(CREATE_LINK ... SYMBOLIC COPY_ON_ERROR)` makes each mirror entry a
+symlink where the host allows it and a plain copy otherwise.
+
+**On a host that falls back to copies, the mirror goes stale, and the test
+passes anyway.** The staleness comparison runs at CMake *configure* time, and
+editing a QML file does not trigger a reconfigure. Brain reproduced this on
+the primary dev machine, where all five mirror entries are copies rather than
+symlinks:
+
+```
+appended "// BRAIN-STALENESS-PROBE-12345" to ui/qml/screens/DeckBuilderScreen.qml
+cmake --build ui/build --parallel        (no explicit reconfigure)
+
+real   contains marker: True
+mirror contains marker: False
+```
+
+`test_deckbuilder_screen` therefore compiled and tested the *previous* version
+of the file and reported green. An explicit `cmake -S ui -B ui/build` does
+refresh it, so the mechanism works — nothing makes it run when it needs to.
+
+Two things make this blocking rather than a rough edge:
+
+- **The next round edits exactly these five files** and cites exactly this
+  test as its evidence. A green run against stale QML is precisely the
+  "a test that reports green while the property it names is violated" failure
+  this project treats as worse than no test at all.
+- **CI cannot catch it.** `file(CREATE_LINK ... SYMBOLIC)` succeeds on Linux,
+  so CI always gets a live symlink and never exercises the copy path. This is
+  Windows-only and invisible to the pipeline — the same shape as the three
+  defects PR #21 exists to fix.
+
+Make the mirror correct under a plain `cmake --build`. How is yours.
 
 ## Non-goals
 
-- **Do not change what any of this code does.** This is a portability round.
-  If a fix would alter behaviour, stop and report rather than proceeding.
-- **Do not touch `gframe/`, `ocgcore/`, or the upstream baseline build.**
-- **Do not change `.github/workflows/`.** CI is owner-reserved, and this round
-  must not "fix" anything by making CI check less.
-- Do not add a dependency. If you believe one is genuinely required, that
-  needs an ADR and it is out of scope here — report it instead.
-- Do not start M6. Windows as a *supported platform* is a milestone this
-  project has not begun; this round makes the existing layers buildable on the
-  development machine so their evidence can be produced, and nothing in
-  `README.md` or `docs/ROADMAP.md` may start claiming otherwise.
+- **Do not redo either round.** Everything else in PR #19 and PR #21 has been
+  independently verified and holds. Two targeted corrections, nothing else.
+- **Do not force-push, rebase or amend existing commits** on either branch.
+  Add new commits. Both branches have open PRs whose earlier heads were
+  reviewed, and rewriting them destroys that record.
+- **Do not remove the `DO NOT MERGE` line** from either PR body. You do not
+  merge.
+- Do not touch `gframe/`, `ocgcore/`, `.github/workflows/`, or any repository
+  setting.
+- Do not change production C++. PR #21 deliberately touched only test code and
+  build files; keep it that way.
 
 ## Protected invariants
 
-- **Never weaken a warning to make a build pass.** `/W4` and `/permissive-`
-  stay; `EDOPRO_NEXT_WERROR=ON` must still mean warnings are errors. The fix
-  for defect 1 belongs in the code, not the flags. If you conclude some
-  warning genuinely must be suppressed, name it, scope it as narrowly as the
-  language allows, and justify it in the report — a blanket `/wd4244` is a
-  rejection.
-- **Linux/GCC must keep working.** CI is the proof, and it is not optional
-  for this round: a fix that trades one platform for the other is worthless.
-- **The module separation holds.** `client/`, `data/` and `policy/` gain no
-  Qt, no Irrlicht and no `ocgcore`. `data/` stays Qt-free.
-- **`edopro_next_deck` must still link neither SQLite nor `edopro_next_data`** —
-  `data/CMakeLists.txt` says that separation is proven by the link graph
-  rather than by a comment, and this round touches that file.
+- **Never weaken a warning, or a test, to make something pass.** `/W4`,
+  `/permissive-` and `EDOPRO_NEXT_WERROR` stay exactly as they are.
+- **Do not trade a build-time failure for a runtime one.** PR #21's report
+  records that moving `qt_add_qml_module` into `ui/`'s own directory broke
+  `edopro_next_shell` at runtime (`Module "EdoproNext" contains no type named
+  "Main"`). That approach was tried and rejected for good reason; if you
+  revisit it, you must show the shell still loads.
+- **Linux must keep working.** CI is the proof and it is not optional here.
+  A fix that repairs the Windows copy path by breaking the symlink path is
+  not a fix.
+- **`card-search.md` describes upstream, not us.** Do not "correct" it toward
+  what `CardSearchIndex` does; ADR 0005 Decision 1 records that our ranking is
+  deliberately a different scheme.
 
 ## Required investigation
 
-1. **Is defect 1 confined to test code?** Brain observed it only in
-   `test_protocol_decoder.cpp`, but only reached that file — the production
-   library linked before the tests were compiled. Build **all four modules**
-   with `/W4 /WX` and find out whether production code has the same pattern.
-   That answer matters more than the fix: a narrowing conversion in a decoder
-   that parses untrusted `.cdb` and network bytes is a different conversation
-   from one in a test fixture.
-2. For defect 1, is the right fix an explicit cast at each call site, a
-   narrower constant type, or a differently-typed tuple? Say why you chose
-   what you chose. An explicit cast that silences a genuine truncation is a
-   defect, not a fix.
-3. For defect 3, establish whether the `..` in the generated path comes from
-   our `CMakeLists.txt` or from Qt's own tooling, and fix it at the layer that
-   actually owns it.
-4. Are there **further** Windows/MSVC failures beyond these three? Brain
-   stopped at the first failure in each module. Enumerate what you find; a
-   partial list presented as complete is this project's recurring defect.
+1. For B: **can the mirror be avoided entirely?** It exists only to keep `..`
+   out of a path `qmlcachegen` computes. If there is a way to satisfy that
+   without duplicating files at all, it is worth more than a better refresh.
+   Say what you considered and why you chose what you chose.
+2. If the mirror stays: what actually makes it refresh for a plain
+   `cmake --build`? A configure-time dependency and a build-time custom
+   command are different mechanisms with different failure modes. Name which
+   you used and what it does when the source file is deleted or renamed.
+3. Does your fix behave correctly on **both** paths — symlink and copy? The
+   copy path is the one that broke; the symlink path is the one CI exercises.
+   Neither may regress.
+4. For A: are there other claims in `card-search.md` §1.4 that assume the
+   three comparators share a shape? Fixing one sentence while an adjacent one
+   makes the same wrong assumption is not a fix.
 
 ## Acceptance criteria
 
-- All four modules configure, build with `-DEDOPRO_NEXT_WERROR=ON`, and pass
-  `ctest` on Windows/MSVC. Real output for each.
-- `ui/`'s **`test_deckbuilder_screen` builds and passes**, since the next
-  round depends on it.
-- CI is green at your head SHA — that is the Linux/GCC half of the proof, and
-  the round is not complete without it.
-- Items 4 and 5 are documented where an agent following the evidence table
-  will encounter them, not in a file nobody opens.
-- No warning suppressed rather than fixed, or a named, narrowly-scoped
-  exception with its justification.
-- The answer to required investigation 1, stated plainly, whichever way it
-  comes out.
+- **The staleness reproduction, run both ways.** Show the marker test failing
+  before your change and passing after it: edit one of the five mirrored QML
+  files, run **only** `cmake --build ui/build`, and demonstrate that what the
+  test compiles reflects the edit. This is the acceptance bar for B and a
+  narrative description of it is not sufficient.
+- `card-search.md`'s ordering description is true for all five comparators,
+  each confirmed against source.
+- Both `ui/` suites still pass, including `test_deckbuilder_screen`.
+- All four configure/build/`ctest` cycles still green on Windows/MSVC.
+- CI green at **both** new head SHAs.
+- Neither PR body's `DO NOT MERGE` line removed; no commit rewritten on either
+  branch.
 
 ## Required evidence
 
-- `git diff --stat <base>..<head>`.
-- **Real output of all four cycles**, configure through `ctest`, on Windows.
-  Not a summary — the actual text.
+- `git diff` for each correction, separately, against the branch's previous
+  head.
+- The staleness reproduction, real output, before and after.
+- The four cycles' real output.
 - `python -m unittest discover -s tests -v`.
-- `python tools/generate_messages.py --check` and
-  `python tools/generate_protocol_constants.py --check`.
-- CI status at the exact head SHA, checked rather than assumed.
-- **State your exact toolchain versions** — MSVC, CMake, Qt, and how you
-  invoked the MSVC environment. The next person to reproduce this needs them.
+- CI check-run status at both new head SHAs, queried rather than assumed.
+- The source lines you read to confirm each of the five comparators.
 
 ## Git expectations
 
-Branch `meta/windows-msvc-build`, in the Builder worktree
-(`.worktrees/builder`).
+Two branches, both existing:
 
-The `meta/` prefix is deliberate and worth understanding: this round exists to
-make the project's **evidence apparatus** work on the development machine, not
-to ship a Windows build of the product. That is M6, it has not started, and
-this brief must not imply otherwise.
+```
+git -C .worktrees/builder fetch origin
+git -C .worktrees/builder checkout m3/architecture-citation-audit   # correction A
+git -C .worktrees/builder checkout meta/windows-msvc-build          # correction B
+```
 
-Focused commits — ideally one per defect, so a reviewer can take them
-separately. Push, open a PR carrying `DO NOT MERGE — under review`.
-**Do not merge.**
+New commits on each. Push both. Do not open new PRs — #19 and #21 already
+exist and will pick the commits up. Do not merge, and do not remove either
+`DO NOT MERGE` line.
 
 ## Completion-report schema
 
 The standard report in [`docs/roles/builder.md`](../roles/builder.md), plus:
 
-- **The answer to required investigation 1 first** — whether production code
-  carries the same narrowing pattern as the test code, and if so where.
-- **The full list of Windows/MSVC failures you found**, including any beyond
-  the three above, and how you established the list is complete — or a plain
-  statement that you could not.
-- **Every warning you suppressed rather than fixed**, if any, with scope and
-  justification. If none, say so.
-- **Your four cycles' real output**, and the toolchain versions.
+- **The staleness reproduction first**, both directions, as real output.
+- **The five comparators as you read them**, with the line you read for each —
+  including any place Brain's table above turned out to be wrong.
+- **What you considered for B and rejected**, particularly whether the mirror
+  could be removed entirely.
+- The two new head SHAs, and CI status at each.
