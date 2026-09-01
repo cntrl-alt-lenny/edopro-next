@@ -50,9 +50,17 @@ It is the same defect class this project keeps producing, and the one
 it names is unverified.** Both instances above were found by accident rather
 than by any mechanism.
 
-It is also entirely Python, shell and documentation, so it is fully verifiable
-on the current macOS machine — unlike anything touching `ui/`, which cannot be
-built here at all (`docs/state.md`).
+It is also entirely Python, shell and documentation, so it is verifiable on
+any of this project's machines.
+
+**Machine note, corrected 2026-09-01.** An earlier draft of this brief said the
+round would run on macOS, where `ui/` "cannot be built at all". Work has moved
+back to the **Windows** host, and that claim does not describe it: MSVC
+19.44.35228, CMake 3.31.6, Ninja 1.13.2, Python 3.12.10, Qt 6.8.3
+`msvc2022_64` and vcpkg are all present, and `ui/` was measured this session to
+configure, build 86/86 and pass `ctest` 2/2. Say which host you actually ran
+on; do not copy either machine's limits from `docs/state.md` without checking
+them.
 
 It does **not** depend on brief 008, which is delivered but unadjudicated
 (PR #24). Keep it that way: if your work starts needing 008's outcome, stop and
@@ -105,11 +113,24 @@ do not branch from it. That is the same arrangement brief 006 used.
 2. **For A: what can actually fail?** Options include a CI check that compares
    figures in the PR body against the real range, a template that forbids
    quoting figures at all in favour of a command a reader can re-run, or a
-   documented discipline with no automation. **A documented discipline is an
-   acceptable answer if you argue it** — `AGENTS.md` is explicit that "a list of
-   cases you tried is not coverage" and that a claim that matters wants a
-   mechanism that can fail. If you conclude no mechanism is worth its cost here,
-   say so plainly and say what that leaves unprotected.
+   documented discipline with no automation.
+
+   **Brain's ruling, 2026-09-01: a mechanism that can fail is REQUIRED.** An
+   earlier draft of this brief also permitted "a documented discipline with no
+   automation, if you argue it". That permission is **withdrawn**, because it
+   contradicted this brief's own acceptance criterion demanding a demonstration
+   against PR #19's historical case — a Builder taking the permitted route
+   could not have satisfied it.
+
+   The reason a mechanism is affordable here is an asymmetry worth stating:
+   *verifying* that a body's figures match the real range means parsing
+   free-form prose and is brittle, but *prohibiting* figures in the body — and
+   requiring instead that it name a command a reader can re-run — is a cheap
+   check that fails loudly. **A prohibition is a mechanism.** That is a hint at
+   a tractable shape, not a specification; if you find a better mechanism,
+   build it and say why it beats the prohibition. `AGENTS.md` is explicit that
+   "a list of cases you tried is not coverage" and that a claim that matters
+   wants a mechanism that can fail.
 3. **Is this class present anywhere else?** Look for other places where a
    recorded number, path or artifact is trusted without being tied to the thing
    it describes. Report what you find; do not fix beyond the two named
@@ -137,8 +158,10 @@ do not branch from it. That is the same arrangement brief 006 used.
   `python3 tools/generate_protocol_constants.py --check`.
 - `git diff` against your base SHA.
 - CI check-run conclusions at the exact head SHA.
-- What you did **not** run, explicitly — including that `ui/` was not built,
-  because Qt is absent on this machine.
+- What you did **not** run, explicitly. Do not assert that `ui/` was skipped
+  "because Qt is absent" without checking — on the Windows host Qt is present
+  and `ui/` builds. State the real reason, which for this brief is simply that
+  `ui/` is out of scope.
 
 ## Completion-report schema
 

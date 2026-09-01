@@ -2,15 +2,77 @@
 
 Status: delivered
 
-Delivered by Builder as PR #24, base `9005f950`, head `ffbb7050`. **Not yet
-adjudicated** — Verifier has not reported, and Brain has not checked the
-load-bearing claims. It lives here, not in `archive/`, precisely because a cold
-session reading `ls archive/` would otherwise count it as finished.
+**Adjudicated 2026-09-01: NOT ACCEPTED — corrections required.** The lifecycle
+status stays `delivered` because that is what it is: delivered, not archived.
+`archive/` means adjudicated *and closed*; this round is adjudicated and
+reopened.
+
+Delivered by Builder as PR #24, base `9005f950`, head `ffbb7050`. Verifier
+reviewed that exact head on Windows/MSVC 19.44.35228.0 on 2026-09-01: **zero
+BLOCKER, four SHOULD FIX, five NOTE**. Brain independently re-derived the
+load-bearing findings and **did not accept the round**. PR #24 stays open with
+`DO NOT MERGE`; the full adjudication is in its PR comment.
+
+## Corrections required before this round can be accepted
+
+Numbered so a corrective round can cite them.
+
+**C1 - the missing-file diagnostic regressed on Linux and Windows.**
+`std::filesystem::is_directory(path, ec)` sets `ec` for a non-existent path, so
+a missing file now short-circuits into the new `status_error` branch and never
+reaches `"failed to open file"`. Re-derived by Brain under MSVC (`ec=3`) and by
+Verifier on Linux (`ec=2`). User-visible via
+`ui/src/deckbuilder/deck_controller.cpp:161`. This breaches the brief's own
+protected invariant *"Behaviour on Linux and Windows must not regress."*
+Fix: test `is_directory` first; treat `status_error` as fatal only when it is
+not a not-found error. Add a test asserting the message, since none does.
+
+**C2 - `ydk.h`'s contract sentence is still false as written.**
+`"ok is false exactly when the path cannot be opened as a readable file or a
+read fails"` is a biconditional, falsified on Windows by `NUL`, which opens and
+reads cleanly yet returns `ok=0`. The brief made this sentence an acceptance
+criterion. Drop `"exactly when"`; enumerate inspect/open/read failure.
+
+**C3 - a stat failure is now fatal where the open would have worked.**
+The `status_error` branch rejects without attempting the open. Demonstrated
+with a momentarily-exhausted named pipe (`ec=231`). Narrow it.
+
+**C4 - the fix closes one member of a class, not the class.**
+`load_ydk()` **never returns** on a POSIX FIFO, a Windows named pipe, or
+`/dev/zero`. An `is_regular_file()` whitelist would close the POSIX cases and
+fail closed by construction, but Verifier measured that MSVC's `fs::status`
+reports a live named pipe as `file_type::regular` with `ec==0`, so it would not
+close the Windows case; only inspecting the opened handle covers both. Decide
+the shape and record it. Do not describe the current fix as *portable by
+construction* - it is portable by enumeration.
+
+## Recorded findings that outlive the corrections
+
+- **`loading_a_directory_fails_cleanly` cannot fail on any platform this
+  project gates on.** Verifier rebuilt the pre-fix code and it passed on both
+  Windows and Linux; every CI job is `ubuntu-latest`. The fix ships with no
+  executable regression guard. This is direct evidence for this brief's own
+  investigation-3 question, and must be weighed when that is finally answered.
+- **A new Linux/Windows divergence on the null device** was introduced by a
+  change whose purpose was removing a divergence: pre-fix both returned `ok=1`;
+  post-fix Windows `NUL` returns `ok=0` while Linux `/dev/null` still returns
+  `ok=1`. It arrives incidentally, via `status_error`, not via the directory
+  check. Record it or remove it; do not leave it silent.
+
+## Still UNKNOWN, and not counted against Builder
+
+This brief had **two** deliverables. The second - the predicate comparison
+table (investigation 1) and the platform-divergence mechanism recommendation
+(investigation 3) - lives in Builder's completion report, which exists only in
+another host's uncommitted `.git/agent-inbox/` and is not reachable from the
+PR, the repository, or this SHA. Neither Verifier nor Brain has seen it.
+**That half of this brief is unreviewed, not failed.** It is precisely the
+class of loss that brief 011 exists to close.
 
 One brief lives here at a time. On delivery it moves to
-[`delivered/`](delivered/), and only on adjudication to
-[`archive/`](archive/) — see [`README.md`](README.md). Template and field
-meanings: [`docs/roles/builder.md`](../roles/builder.md).
+[`delivered/`](../delivered/), and only on adjudication to
+[`archive/`](../archive/) — see [`README.md`](README.md). Template and field
+meanings: [`docs/roles/builder.md`](../../roles/builder.md).
 
 ---
 
@@ -176,7 +238,7 @@ working, and both comments must end up true.
 
 ## Completion-report schema
 
-The standard report in [`docs/roles/builder.md`](../roles/builder.md), plus:
+The standard report in [`docs/roles/builder.md`](../../roles/builder.md), plus:
 
 - **The predicate comparison table** from investigation 1, across platforms.
 - **The mechanism recommendation** from investigation 3, with what it misses.
