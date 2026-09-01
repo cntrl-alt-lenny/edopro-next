@@ -1,4 +1,4 @@
-# Brief 005 — make the C++ layers build on Windows/MSVC
+# Brief 008 — the read-failure predicate, and the platform-divergence pattern
 
 Status: queued
 
@@ -13,189 +13,168 @@ meanings: [`docs/roles/builder.md`](../roles/builder.md).
 
 ## Goal
 
-`client/`, `data/`, `policy/` and `ui/` must configure, build with
-`-DEDOPRO_NEXT_WERROR=ON`, and pass their CTest suites on Windows with MSVC —
-without weakening a single warning setting, and without changing what any of
-this code does.
+Two deliverables, in this order of importance:
+
+1. **Fix a contract violation that is live on `master` today.** Both file
+   readers in this project decide "did the read fail?" with `if(file.bad())`.
+   On macOS that predicate is false when the path is a directory, so both
+   report success on input they cannot have read.
+2. **Answer, with evidence, what mechanism should stop this class** — and
+   `macOS CI` is a candidate to be argued for or against, not the assumed
+   answer. See "Required investigation".
 
 ## Why this is next
 
-The primary development machine now has MSVC 19.44, CMake 3.31.6, Qt 6.8.3
-(`msvc2022_64`) and vcpkg-built SQLite3. Brain installed them and then tried
-to run `AGENTS.md`'s per-layer evidence table for real.
+`master` is currently **red on macOS**: `ctest` in `policy/` fails
+`loadLflistDirectoryPathFailsCleanly`. That is not a flaky environment; it is
+the test correctly reporting that the implementation is wrong on this
+platform.
 
-**Every test suite passed — 13 of 13, on a compiler this code has never been
-compiled with before.** That is meaningful evidence in its own right and it is
-not what this brief is about.
-
-What this brief is about is that **three things fail to build**, and CI cannot
-see any of them because CI builds only Linux/GCC. Until they are fixed, four
-of the six rows in the evidence table cannot be satisfied on this machine, and
-every future round touching `ui/` is back to "CI is the only proof" — which is
-the exact problem installing the toolchain was meant to solve.
-
-The next round after this one is the deck-builder legality UI, which touches
-`ui/` and is **blocked by defect 3 below**.
+The same defect is present, untested and silent, in `data/`. It is the sixth
+instance of "green on Linux CI, divergent on another supported platform" this
+project has hit, and the first where the divergence is a **runtime semantic**
+difference rather than a compiler diagnostic or a build-system quirk. That
+distinction is the reason the mechanism question is genuinely open.
 
 ## Base SHA
 
-**Branch from `origin/meta/round-2-close`** — this brief lives on that branch
-(PR #20) and is not on `master` yet. If PR #20 has merged by the time you
-start, branch from `origin/master` instead. Verify with `git log -1`, record
-the actual SHA, and say which you used.
+Branch from `origin/master`. Record the SHA with `git log -1`.
 
-## The three defects
+## The defect
 
-Brain established each of these by running the real commands on this machine.
-**Reproduce each one yourself before fixing it** — a previous agent's finding
-is evidence, not fact — but you are not expected to rediscover them.
+`policy/src/lf_list.cpp:286` and `data/src/ydk.cpp:180` both read via a sized
+`file.read()` loop and then test `file.bad()`.
 
-1. **`client/tests/test_protocol_decoder.cpp` — narrowing conversions.**
-   Under MSVC `/W4 /WX` the build fails with `C4244` inside
-   `std::tuple<uint32_t, uint8_t, uint8_t, uint32_t>` construction. The call
-   sites pass `std::uint32_t` protocol constants (for example
-   `proto::LOCATION_MZONE`, declared `inline constexpr std::uint32_t` in
-   `client/include/edopro_next/client/protocol_constants.h:115`) into the
-   `std::uint8_t` tuple slots — see `confirm_cards_packet` around
-   `test_protocol_decoder.cpp:112` and its call site near `:934`. GCC's
-   `-Wall -Wextra` is silent on this; it is `-Wconversion` territory, which
-   the project does not enable.
+Brain reproduced the platform difference directly, on macOS/arm64, Apple
+clang 21:
 
-2. **`data/CMakeLists.txt` — incompatible optimisation flags.**
-   `bench_card_search` sets `/O2` unconditionally for MSVC. A Debug configure
-   adds `/RTC1`, and MSVC rejects the combination outright:
-   `cl : Command line error D8016 : '/RTC1' and '/O2' command-line options are
-   incompatible`. This is a hard error, not a warning, so `/WX` is irrelevant
-   to it. Note the `/O2` is deliberate — that target is a performance
-   measurement and `docs/architecture/card-search.md#performance` explains why
-   it is not a CTest case. Preserve the intent.
+```
+ifstream on a directory:  is_open=1  gcount=0  fail=1  eof=1  bad=0
+```
 
-3. **`ui/tests/CMakeLists.txt` — QML cache path with a `..` segment.**
-   Building the `ui/` test targets fails at:
-   `ninja: error: mkdir(tests/.rcc/qmlcache/test_deckbuilder_screen_../qml):
-   No such file or directory`. The generated cache directory carries a literal
-   `..` in the middle of the path, which Windows cannot create. The
-   `edopro_next_shell` target itself builds and links fine, and
-   `test_deckbuilder` builds and passes; only `test_deckbuilder_screen` is
-   affected.
+macOS surfaces a directory as an **empty file (EOF)**; Linux surfaces a read
+**error**. `bad()` catches only the Linux manifestation. Confirmed
+end-to-end against the built library:
 
-## Two operational facts that are true and written down nowhere
+```
+load_ydk(directory): ok=1 error=""
+```
 
-Not defects — but a future agent will lose an hour to each. Put them somewhere
-they will actually be found.
+`data/include/edopro_next/data/ydk.h:56-60` states that `ok` is false
+"exactly when the file could not be opened/read". That sentence is false on
+macOS.
 
-4. On Windows, `cmake -G Ninja` finds no compiler unless it runs inside the
-   MSVC environment (`vcvars64.bat`). `AGENTS.md`'s evidence-table commands do
-   not mention this and, taken literally, do not work here.
+Note the comments at `lf_list.cpp:274` and `ydk.cpp:170` already anticipate
+"a directory" as the motivating case. The reasoning recorded there is about a
+different failure — a streambuf-level read that leaves `good()` true — and the
+predicate chosen for it does not cover this one. Read both comments before
+changing either; whatever you do must keep the case they were written for
+working, and both comments must end up true.
 
-5. Qt-linked test executables do not launch unless Qt's `bin` directory is on
-   `PATH` at runtime. Without it CTest reports `BAD_COMMAND`, which reads as a
-   build failure and is not one.
+## Scope
 
-Also worth knowing, and not a bug in anything: CTest reported one spurious
-`BAD_COMMAND` for `duel_state` immediately after a parallel link, and passed
-on re-run. Windows file locking, not a defect — do not chase it.
+- Both call sites, fixed as one class rather than one at a time.
+- Test coverage for the currently-untested `data/` site, of the same shape as
+  the `policy/` test that caught it.
+- The comments and the `ydk.h` contract sentence made true.
+- A written recommendation on the mechanism question (below). Prose in the
+  completion report and, if you conclude something durable, a proposed
+  paragraph for `docs/architecture/` — do not edit `docs/state.md` or
+  `docs/ROADMAP.md`.
 
-## Non-goals
+## Non-scope
 
-- **Do not change what any of this code does.** This is a portability round.
-  If a fix would alter behaviour, stop and report rather than proceeding.
-- **Do not touch `gframe/`, `ocgcore/`, or the upstream baseline build.**
-- **Do not change `.github/workflows/`.** CI is owner-reserved, and this round
-  must not "fix" anything by making CI check less.
-- Do not add a dependency. If you believe one is genuinely required, that
-  needs an ADR and it is out of scope here — report it instead.
-- Do not start M6. Windows as a *supported platform* is a milestone this
-  project has not begun; this round makes the existing layers buildable on the
-  development machine so their evidence can be produced, and nothing in
-  `README.md` or `docs/ROADMAP.md` may start claiming otherwise.
+- Do **not** add or modify CI workflows. If your recommendation is a new CI
+  leg, that is a proposal for Brain and the owner, not a change to make here.
+  Changing `.github/workflows/` is outside routine authority.
+- Do not touch `gframe/`, `ocgcore/`, or any repository setting.
+- Do not widen this into a general audit of error handling. Two sites.
+- Do not weaken or delete the failing test to make `ctest` green.
 
 ## Protected invariants
 
-- **Never weaken a warning to make a build pass.** `/W4` and `/permissive-`
-  stay; `EDOPRO_NEXT_WERROR=ON` must still mean warnings are errors. The fix
-  for defect 1 belongs in the code, not the flags. If you conclude some
-  warning genuinely must be suppressed, name it, scope it as narrowly as the
-  language allows, and justify it in the report — a blanket `/wd4244` is a
-  rejection.
-- **Linux/GCC must keep working.** CI is the proof, and it is not optional
-  for this round: a fix that trades one platform for the other is worthless.
-- **The module separation holds.** `client/`, `data/` and `policy/` gain no
-  Qt, no Irrlicht and no `ocgcore`. `data/` stays Qt-free.
-- **`edopro_next_deck` must still link neither SQLite nor `edopro_next_data`** —
-  `data/CMakeLists.txt` says that separation is proven by the link graph
-  rather than by a comment, and this round touches that file.
+- **`client/`, `data/` and `policy/` build with no Qt, no Irrlicht, no vcpkg
+  and no `ocgcore`.** Whatever predicate you choose must not add a dependency.
+- The semantic layers stay free of UI types.
+- **Failing closed is correct here.** If a read cannot be shown to have
+  succeeded, the result is a failure with a non-empty `error`. Do not make a
+  case "succeed with empty data" to simplify the predicate.
+- Behaviour on Linux and Windows must not regress. This is a portability fix,
+  not a Linux rewrite.
 
 ## Required investigation
 
-1. **Is defect 1 confined to test code?** Brain observed it only in
-   `test_protocol_decoder.cpp`, but only reached that file — the production
-   library linked before the tests were compiled. Build **all four modules**
-   with `/W4 /WX` and find out whether production code has the same pattern.
-   That answer matters more than the fix: a narrowing conversion in a decoder
-   that parses untrusted `.cdb` and network bytes is a different conversation
-   from one in a test fixture.
-2. For defect 1, is the right fix an explicit cast at each call site, a
-   narrower constant type, or a differently-typed tuple? Say why you chose
-   what you chose. An explicit cast that silences a genuine truncation is a
-   defect, not a fix.
-3. For defect 3, establish whether the `..` in the generated path comes from
-   our `CMakeLists.txt` or from Qt's own tooling, and fix it at the layer that
-   actually owns it.
-4. Are there **further** Windows/MSVC failures beyond these three? Brain
-   stopped at the first failure in each module. Enumerate what you find; a
-   partial list presented as complete is this project's recurring defect.
+1. **What is the right predicate?** `bad()` is one option among several —
+   checking the path's type before opening, checking `!file` after the loop,
+   checking `gcount()`/`eof()` combinations, or not using `ifstream` for the
+   type check at all. Say what you considered, what each one does on all three
+   platforms, and why you chose yours. A predicate that is *portable by
+   construction* is worth more than one that enumerates known platforms.
+2. **Is a directory the only input that diverges?** Check at least: a
+   permission-denied path, a named pipe/FIFO, a symlink to a directory, a
+   device file, and a zero-byte regular file. Say which you tested and on
+   what. If some are untestable here, say so rather than guessing.
+3. **The mechanism question.** Six instances so far, and they are not one
+   kind:
+
+   | # | Defect | Platform | Class |
+   |---|---|---|---|
+   | 1 | narrowing conversions in a test tuple | MSVC | compiler diagnostic |
+   | 2 | `bench_card_search` `/RTC1` vs `/O2` | MSVC | build config |
+   | 3 | QML cache `mkdir` rejects `..` | Windows | build system |
+   | 4 | QML mirror staleness on copy fallback | Windows | build system |
+   | 5 | unused `constexpr` under `-Werror` | Apple clang | compiler diagnostic |
+   | 6 | this one | macOS libc++ | **runtime semantics** |
+
+   Classes 1 and 5 are caught by *any* build on that toolchain. Classes 2–4
+   are caught by a *configure+build*. Class 6 is caught only by *running the
+   tests*, and only if a test for it exists — which is exactly why it is
+   silent in `data/`.
+
+   Argue what actually follows. Candidate mechanisms include, and are not
+   limited to: a macOS CI leg; a Windows CI leg; tightening Linux CI's warning
+   set to cover the diagnostic classes at lower cost; a portability rule in
+   `AGENTS.md` about platform-dependent standard-library semantics; or
+   deciding that some of these classes are acceptable to catch late. Cost and
+   reliability are legitimate arguments — `AGENTS.md` already declines to make
+   the upstream baseline a required check because it depends on a third
+   party's availability, and that reasoning may or may not apply here.
+
+   **Recommend one, and say what it would not catch.** A recommendation that
+   claims to close all six classes is almost certainly wrong.
 
 ## Acceptance criteria
 
-- All four modules configure, build with `-DEDOPRO_NEXT_WERROR=ON`, and pass
-  `ctest` on Windows/MSVC. Real output for each.
-- `ui/`'s **`test_deckbuilder_screen` builds and passes**, since the next
-  round depends on it.
-- CI is green at your head SHA — that is the Linux/GCC half of the proof, and
-  the round is not complete without it.
-- Items 4 and 5 are documented where an agent following the evidence table
-  will encounter them, not in a file nobody opens.
-- No warning suppressed rather than fixed, or a named, narrowly-scoped
-  exception with its justification.
-- The answer to required investigation 1, stated plainly, whichever way it
-  comes out.
+- `policy/` and `data/` each configure, build and pass `ctest` on macOS under
+  `-DEDOPRO_NEXT_WERROR=ON`, including `loadLflistDirectoryPathFailsCleanly`.
+- A new `data/` test covering the directory case, which **fails before your
+  fix and passes after it** — show both.
+- `load_ydk()` and `load_lflist()` agree with each other and with their
+  documented contracts on every input in investigation 2.
+- `ydk.h`'s contract sentence and both source comments are true as written.
+- `client/` still passes 7/7; the Python suite still passes.
+- CI green at the head SHA, queried rather than assumed.
 
 ## Required evidence
 
-- `git diff --stat <base>..<head>`.
-- **Real output of all four cycles**, configure through `ctest`, on Windows.
-  Not a summary — the actual text.
-- `python -m unittest discover -s tests -v`.
-- `python tools/generate_messages.py --check` and
-  `python tools/generate_protocol_constants.py --check`.
-- CI status at the exact head SHA, checked rather than assumed.
-- **State your exact toolchain versions** — MSVC, CMake, Qt, and how you
-  invoked the MSVC environment. The next person to reproduce this needs them.
-
-## Git expectations
-
-Branch `meta/windows-msvc-build`, in the Builder worktree
-(`.worktrees/builder`).
-
-The `meta/` prefix is deliberate and worth understanding: this round exists to
-make the project's **evidence apparatus** work on the development machine, not
-to ship a Windows build of the product. That is M6, it has not started, and
-this brief must not imply otherwise.
-
-Focused commits — ideally one per defect, so a reviewer can take them
-separately. Push, open a PR carrying `DO NOT MERGE — under review`.
-**Do not merge.**
+- The before/after for the new `data/` test, as real output.
+- `ctest` output for `client/`, `data/` and `policy/` on macOS.
+- The platform-behaviour probe for each input in investigation 2, with the
+  actual observed stream state — not a description of it.
+- `python3 -m unittest discover -s tests`. Note: a stale
+  `client/build/edopro_next_semantic_trace` will be silently preferred by
+  `tests/test_semantic_trace.py`; either delete it or set
+  `EDOPRO_NEXT_SEMANTIC_TRACE`, and say which.
+- CI check-run conclusions at the exact head SHA.
+- What you did **not** run — in particular, state plainly that Windows/MSVC
+  was not exercised, if it was not.
 
 ## Completion-report schema
 
 The standard report in [`docs/roles/builder.md`](../roles/builder.md), plus:
 
-- **The answer to required investigation 1 first** — whether production code
-  carries the same narrowing pattern as the test code, and if so where.
-- **The full list of Windows/MSVC failures you found**, including any beyond
-  the three above, and how you established the list is complete — or a plain
-  statement that you could not.
-- **Every warning you suppressed rather than fixed**, if any, with scope and
-  justification. If none, say so.
-- **Your four cycles' real output**, and the toolchain versions.
+- **The predicate comparison table** from investigation 1, across platforms.
+- **The mechanism recommendation** from investigation 3, with what it misses.
+- Anything in the existing comments at `lf_list.cpp:274` / `ydk.cpp:170` that
+  turned out to be wrong, stated plainly — they were written from empirical
+  work and one of them may still be right about the case it describes.

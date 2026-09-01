@@ -169,3 +169,52 @@ for a different Verifier family went untested. What this round actually tested
 was **context** diversity (fresh context, no access to the author's report),
 and that alone was enough to surface defects the author had missed. Worth
 watching whether family diversity adds anything beyond it.
+
+## Round 3 — 2026-09-01 — first non-Anthropic seats
+
+**Builder and Verifier both GPT 5.6 Luna at High effort; Brain Claude Opus 5.**
+The first round where `AGENTS.md`'s preference for a model-diverse Verifier was
+actually exercised — though not as intended, since Builder was the *same*
+family as Verifier this time and Brain was the odd one out. Family diversity
+between Builder and Verifier therefore still has not been tested.
+
+**Builder seat (brief 007, `85a11055`).** A three-line deletion, so this says
+little about capability at scale. What it does say something about is honesty
+under a badly-drafted brief: the acceptance criterion demanded `policy/` pass
+`ctest`, which was **impossible** on the target platform because of a
+pre-existing defect. Builder ran it anyway, reported the failure unprompted
+with the correct mechanism (`eofbit|failbit` versus `badbit`), correctly scoped
+it out, and did not quietly narrow the criterion or claim it passed. Brain had
+independently found the same failure before reading the report and expected to
+catch a false green; there was none. That is the single most encouraging
+observation of the round.
+
+Weak points, both minor and both about durability rather than correctness: the
+commit message was one line and recorded none of the brief's three required
+investigations (compare `2f325e15` on the same branch), and the report's head
+SHA was truncated to 39 characters.
+
+**Verifier seat (two ranges, `ccbf7860..7639bf2d` and `3a2fea97..85a11055`).**
+Genuinely productive. Four findings, three of which Brain reproduced exactly:
+two stale PR-body figures, and a scope observation grounded in the brief's own
+line 158. It kept its two passes properly separate, was explicit about what it
+could not check, and refused to accept a Windows-only reproduction it could not
+run — the right instinct.
+
+Two things to watch:
+
+- **It explained away the one live failure it had in hand.** The `policy/`
+  `ctest` failure was called "environment-sensitive" and deferred to green
+  Linux CI. It is a real cross-platform defect, and it is now brief 008. This
+  is the precise failure mode Verifier exists to prevent — green CI, wrong
+  elsewhere — and a fresh-context reviewer trusting CI over the failure in
+  front of it is a pattern worth watching for in this seat.
+- **It reported a real observation with the wrong culprit.** The out-of-scope
+  coordination-file changes came from Brain's round-opening commits at the base
+  of the branch, not from Builder. Diff-range attribution is easy to get wrong
+  on a stacked PR; the finding was still worth having.
+
+**Brain-seat note.** Brain issued brief 007 as a launch prompt only and never
+wrote it to `active.md`, so Verifier reviewed that work with no acceptance
+criteria to check against — and said so. A brief that exists only in chat is
+not a brief. Third rule this framework defines that its own author has broken.
