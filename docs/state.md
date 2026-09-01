@@ -188,15 +188,20 @@ lines later to choose the target section, not to bypass the check. Do not rely
 on that sentence. Six further citation-precision defects are listed in the
 archived brief. All fold into the re-queued citation audit.
 
-**Brief 003 is queued** in [`briefs/active.md`](briefs/active.md): fixing the
-framework defects Round 1's verification surfaced.
+**PR #17 — open, delivered, NOT adjudicated.** Brief 003's deliverable,
+framework hardening. Base `a6956f7d`, head `e4424c3e`, 13 files, +724/-65.
+All five required checks green at that head (and both non-required upstream
+baseline legs passed). Builder's report is in `.git/agent-inbox/`. **Verifier
+has not reviewed this head** — its inbox entry from 16:01 is an orientation
+pass written before the PR existed, not a review. Brief 003 sits in
+[`briefs/delivered/`](briefs/delivered/) until adjudicated.
 
-**Brief 002 (M3 architecture citation audit) was queued and superseded before
-delivery** — brief 003's findings are more urgent, because the tests meant to
-prevent documentation drift were shown to be checking surface proxies. 002's
-full text is in git history (`202a3494`); re-queue it after 003, **adding
-`deck-builder-legality.md` to its scope** so PR #15's seven citation defects
-are closed by the same pass.
+**Brief 004 is queued** in [`briefs/active.md`](briefs/active.md): the M3
+architecture citation audit. This is the brief formerly numbered 002, which
+was queued on 2026-08-31 and superseded before delivery by 003; its scope now
+also covers `deck-builder-legality.md`, so PR #15's seven citation defects are
+closed by the same pass. Original 002 text is in git history (`202a3494`) if
+the re-queued version needs checking against it.
 
 Round 1's headline finding, which still reshapes the eventual implementation
 round: upstream's deck editor **never calls `CheckDeckContent`/`CheckDeckSize`**

@@ -64,9 +64,19 @@ that both filters on ordinary static card metadata (monster/spell/trap type, rac
 attribute, ATK/DEF/Level/Scale, effect category, Link markers) *and* enforces policy that
 has nothing to do with what a card *is*:
 
-- An unconditional top-of-function gate: `TYPE_TOKEN` cards, `SCOPE_HIDDEN` cards, and any
-  card whose `ot` is not purely `SCOPE_OFFICIAL` are excluded unless "show anime cards" is
-  checked or the active `LFList` is a whitelist.
+- A top-of-function gate, but not uniformly conditional across its three clauses:
+
+  ```cpp
+  if(data._data.type & TYPE_TOKEN || data._data.ot & SCOPE_HIDDEN ||
+     ((data._data.ot & SCOPE_OFFICIAL) != data._data.ot &&
+      (!mainGame->chkAnime->isChecked() && !filterList->whitelist)))
+      return false;
+  ```
+  (`deck_con.cpp:1192`). `&&` binds tighter than `||`, so the "show anime cards"/whitelist
+  exception is scoped to the third disjunct only. `TYPE_TOKEN` cards and `SCOPE_HIDDEN` cards
+  are excluded **unconditionally** - neither "show anime cards" nor a whitelist-mode `LFList`
+  reveals them. Only a card whose `ot` is not purely `SCOPE_OFFICIAL` gets the exception: it is
+  excluded unless "show anime cards" is checked *or* the active `LFList` is a whitelist.
 - A large `switch` on `filter_lm` (`limitation_search_filters`, `gframe/deck_con.h:20-38`)
   that consults `filterList->GetLimitationIterator` - i.e. reads the currently loaded
   `LFList`'s ban/limit/semi-limit counts - and separately branches on `SCOPE_OCG`/
@@ -80,7 +90,7 @@ This module reproduces only the first half. §2 states exactly which pieces of
 `DeckBuilder::CheckCardText` (`gframe/deck_con.cpp:1341-1362`) reads `CardDataM::GetStrings()`
 (`gframe/data_manager.h:111-115`) for `uppercase_name`/`uppercase_text` - **precomputed at
 load time**, once per card, in both `DataManager::ParseDB` and `ParseLocaleDB`
-(`gframe/data_manager.cpp:158-164,198-204`), never recomputed per search. It never reads
+(`gframe/data_manager.cpp:158-166,198-206`), never recomputed per search. It never reads
 `CardString::desc[16]` (the sixteen auxiliary strings) at all - name and rules text are the
 only searchable fields upstream's own deck search uses, which is why `SearchQuery`'s
 `TextScope` only ever offers `Name`/`Text`/`NameOrText` (§4).
@@ -116,11 +126,27 @@ whose *exact* uppercase name is itself one of the active search terms" (moved to
 via `searched_terms.find(GetUppercaseName(...))`) and everything else, then independently
 sorts *each partition* by whichever comparator the sort-type dropdown selected -
 `DataManager::deck_sort_lv`/`_atk`/`_def`/`_name`/`_passcode_descending`
-(`gframe/data_manager.cpp:712-765`), all of which are card-type-aware column comparators
-(monster type, then the chosen stat, then a few more tiebreakers, finally passcode) built
-for a sortable-column grid, not a relevance score. `CardSearchIndex`'s own ranking (§8) is a
-new, independently designed scheme informed by this but not copied from it - see ADR 0005,
-Decision 1.
+(`gframe/data_manager.cpp:712-765`) - not uniformly type-aware, and the three that *are*
+type-aware do not share one ordering either. `deck_sort_lv`, `_atk` and `_def` each route
+through the shared `card_sorter` helper (`:695-706`, itself outside the cited range), which
+groups by Skill, then by monster/spell/trap category, and only falls into the field-specific
+comparator when both cards are monsters - but what runs first *inside* that comparator is not
+the same function three times over:
+
+- `deck_sort_lv` compares `get_monster_card_type` **first**, then level, attack, defense,
+  then passcode.
+- `deck_sort_atk` compares attack, defense, level, **then** `get_monster_card_type`, then
+  passcode.
+- `deck_sort_def` compares defense, attack, level, **then** `get_monster_card_type`, then
+  passcode.
+
+`deck_sort_lv` is the odd one out - type before stat - not a third variation on "stat first,
+type as a tiebreaker": that shape belongs to `_atk`/`_def` alone. `deck_sort_name` and
+`deck_sort_passcode_descending` are not type-aware at all: `_name` compares
+`GetUppercaseName()` directly, and `_passcode_descending` compares raw `code`, with no
+`card_sorter` call and no type check in either. Built for a sortable-column grid, not a
+relevance score. `CardSearchIndex`'s own ranking (§8) is a new, independently designed scheme
+informed by this but not copied from it - see ADR 0005, Decision 1.
 
 ### 1.5 `GetSetCode` and `CardSetcodes`: archetype names vs. numeric setcodes
 
@@ -167,7 +193,7 @@ per card, into `Entry::effective_setcodes` (§6), rather than resolving it per q
 
 | Upstream policy (`CheckCardProperties`/`filter_lm`) | `SearchQuery` equivalent |
 |---|---|
-| `TYPE_TOKEN`/`SCOPE_HIDDEN` auto-exclusion, anime-mode gate | **None.** Not search - visibility policy. `CardSearchIndex` never excludes Token cards (or anything else) automatically. `type`'s `BitmaskFilter` is a positive "must include these bits" predicate - it has no way to express "must *not* include this bit", so it cannot be used to exclude tokens either; a caller/higher layer that wants Token-exclusion has to filter the returned `CardCode`s itself (e.g. against `CardDatabase::find(code)->type`), which is exactly the kind of visibility/policy decision this module deliberately leaves to its caller rather than baking in. |
+| `TYPE_TOKEN`/`SCOPE_HIDDEN` unconditional exclusion, anime-mode/whitelist-scoped `ot` exception | **None.** Not search - visibility policy. `CardSearchIndex` never excludes Token or Hidden-scope cards (or anything else) automatically - upstream's own exclusion of them is unconditional too (§1.2), not something "anime mode" or a whitelist ever reveals. `type`'s `BitmaskFilter` is a positive "must include these bits" predicate - it has no way to express "must *not* include this bit", so it cannot be used to exclude tokens either; a caller/higher layer that wants Token-exclusion has to filter the returned `CardCode`s itself (e.g. against `CardDatabase::find(code)->type`), which is exactly the kind of visibility/policy decision this module deliberately leaves to its caller rather than baking in. |
 | `LFList` ban/limit/semi-limit counts, whitelist | **None.** Legality, explicitly out of scope (§0, CLAUDE.md). |
 | `LIMITATION_FILTER_OCG`/`TCG`/`ANIME`/`ILLEGAL`/etc. named scope categories | **None**, as named categories - `scope` exposes the same underlying bits as a raw filter, with no "this means legal" interpretation attached. |
 
@@ -309,9 +335,12 @@ incidental.
 `edopro_next::data::normalize_search_text` (`text_normalize.h`/`.cpp`) reproduces
 `Utils::ToUpperChar`'s exact `wchar_t` table (`gframe/utils.h:320-358`) codepoint for
 codepoint: the specific Latin-1 accented ranges it folds to `A`/`E`/`I`/`O`/`U`/`N`, the two
-inverted-punctuation special cases (`¡`->`!`, `¿`->`?`), and - critically - **anything else
-is left alone**. A codepoint above 255 (any non-Latin script, emoji, CJK) passes through
-completely unchanged; a Latin-1 codepoint *not* in the explicit table (Æ, ß, Ø, Þ, Ð, Ç, and
+inverted-punctuation special cases (`¡`->`!`, `¿`->`?`), and three explicit non-Latin-1
+codepoints folded into the `A` case alongside the Latin-1 range (`c == 0x2c6f`, `c == 0x250`
+"turned a", `c == 0x2200` "for all" - `gframe/utils.h:327-328`) - and - critically - **any
+codepoint not named by one of those explicit cases is left alone**. A codepoint above 255
+that is *not* one of those three named exceptions (any other non-Latin script, emoji, CJK)
+passes through unchanged; a Latin-1 codepoint *not* in the explicit table (Æ, ß, Ø, Þ, Ð, Ç, and
 their lowercase forms) also passes through unchanged, because upstream's own fallback -
 `std::toupper(static_cast<int>(c))` - only affects those characters when the active C locale
 says so, and the default `"C"` locale (verified empirically, no `setlocale` call anywhere in

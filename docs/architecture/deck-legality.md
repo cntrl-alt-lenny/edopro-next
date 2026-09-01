@@ -33,8 +33,8 @@ for the full module-boundary reasoning.
 | Concept | Upstream source | This module |
 |---|---|---|
 | Deck size | `gframe/deck_manager.cpp:238-258` (`CheckDeckSize`), `gframe/network.h:24-38` (`DeckSizes`) | `DeckSizePolicy`, `SectionSizeRange` (`validation_policy.h`) |
-| Content validation | `gframe/deck_manager.cpp:157-236` (`CheckCards`, `CheckDeckContent`) | `validate_deck()` (`deck_validation.h`/`.cpp`) |
-| Validation sequencing | `gframe/generic_duel.cpp:366-391` (`PlayerReady`) | `validate_deck()`'s own top-level order |
+| Content validation | `gframe/deck_manager.cpp:157-237` (`CheckCards`, `CheckDeckContent`) | `validate_deck()` (`deck_validation.h`/`.cpp`) |
+| Validation sequencing | `gframe/generic_duel.cpp:366-397` (`PlayerReady`) | `validate_deck()`'s own top-level order |
 | Banlist file format | `gframe/deck_manager.cpp:35-108` (`LoadLFListSingle`/`LoadLFList`/`LoadLFListFolder`), `gframe/deck_manager.h:18-31` (`LFList`) | `LfList`, `parse_lflist()`, `load_lflist()` (`lf_list.h`/`.cpp`) |
 | Type/scope bits | `ocgcore/ocgapi_constants.h`, `gframe/data_manager.h` (`SCOPE_*`, `TYPE_SKILL`) | duplicated `constexpr` citations in `deck_validation.cpp` |
 
@@ -48,19 +48,20 @@ decides which runs first:
 1. **Deck size** (`CheckDeckSize`) - Main, then Extra, then Side, first
    failure wins. Skill cards are subtracted from the counted Main size
    (`deck_manager.cpp:240-241`: `sizes.main != (deck.main.size() - skills)`).
-   Comparison is inclusive (`network.h:31-32`'s
-   `operator==(Sizes, size_t)`: `count < min` fails, `count <= max` required)
+   Comparison is inclusive (`network.h:31-32` only declares
+   `operator==(Sizes, size_t)`; the actual comparison is defined in
+   `netserver.cpp:18-22`: `count < min` fails, `count <= max` required)
    - reproduced by `SectionSizeRange::contains()`.
 2. **Unknown-card condition** - only when `content_checking_enabled`. See §7.
 3. **Content validation** (`CheckDeckContent`), in its own exact internal
-   order (`deck_manager.cpp:204-236`):
+   order (`deck_manager.cpp:204-237`):
    1. Forbidden types, tested across Main, Extra, and Side (`:206-207`).
    2. Legend monsters, counted across **Main + Extra combined** (`:208-209`).
    3. Legend spells, Main only (`:210-211`).
    4. Legend traps, Main only (`:212-213`).
    5. Skill count > 1 in Main (`:214-215`).
    6. A null `LFList*` short-circuits here, before any per-card pass runs at
-      all (`:217-218`). See §5.
+      all (`:216-218`). See §5.
    7. Main cards, in file order; then Extra; then Side (`:219-236`). Each
       card, in order: allowed-card/scope check -> section-placement check ->
       shared copy-count cap -> LFList/whitelist limitation
@@ -103,7 +104,7 @@ a `whitelist`, absence is itself illegal (`deck_manager.cpp:199`:
 ```
 
 This is a **magnitude** comparison, not a bitmask test. Applied in the
-`OcgOnly`/`TcgOnly`/`OcgAndTcg` modes (`:166-179`), it means ANY card whose
+`OcgOnly`/`TcgOnly`/`OcgAndTcg` modes (`:166-178`), it means ANY card whose
 scope carries a bit beyond `SCOPE_OCG|SCOPE_TCG` (0x3) - e.g. a Legend
 (`0x400`), a Speed-duel card, or a Prerelease card that is *also* OCG/TCG
 legal - is rejected as "unofficial" in those three modes, even though it is
@@ -119,7 +120,7 @@ wrap-around in `data/src/card_database.cpp`).
 
 ## 5. Null `LFList*` vs. a concrete "N/A" list - two different states
 
-`gframe/deck_manager.cpp:217-218`:
+`gframe/deck_manager.cpp:216-218`:
 
 ```cpp
 banlist_content_t ccount;
