@@ -4,7 +4,7 @@ Fast rehydration for a fresh Brain session. Keep this short — point at the
 detailed doc rather than duplicating it. **Every fact here is a claim to
 spot-check against live repository state, not a fact to relay forward.**
 
-**Last updated:** 2026-08-31.
+**Last updated:** 2026-09-01.
 
 **Derive these before trusting anything below them.** This file drifted within
 two rounds of being written — it claimed no Builder round had run while
@@ -37,8 +37,8 @@ upstream  DISABLED_use_origin                     (push — do not undo)
 ```
 
 **Accepted-state anchor:** `origin/master` was
-`b6315df14a2307e0c3cda17cd8782e7f2d5c517c` when this was written, after PR #13
-merged. This is an anchor, not a current value — **always derive live HEAD
+`f1eb9d66583d3204639fd1ab938605f00ce215df` when this was written, after PRs #19, #20 and #21 merged in that
+order on 2026-09-01. This is an anchor, not a current value — **always derive live HEAD
 from git** (`git rev-parse origin/master`) rather than trusting this string.
 
 Every milestone so far landed through a reviewed PR; several used explicit
@@ -127,6 +127,15 @@ This distinction is the single most useful thing in this file.
   direction — upstream's `SaveDeck` output read back by our parser — is not
   covered either.
 - Semantic coverage beyond the 34 decoded message types.
+- **That our layers behave the same on every platform we support.** Six
+  divergences have been found so far that Linux CI could not see, and the
+  sixth is a *runtime* one rather than a compiler or build-system one:
+  `load_lflist()` and `load_ydk()` both test `file.bad()` to detect a failed
+  read, and on macOS a directory opens, reads as a clean EOF, and is reported
+  as **success**. Confirmed directly: `load_ydk(directory)` returns
+  `ok=1, error=""`, which contradicts `data/include/edopro_next/data/ydk.h:56`
+  in as many words. `policy/` has a test for it and is red on macOS today;
+  `data/` has no such test and is silently wrong. Brief 008.
 
 ## Intentional upstream deltas
 
@@ -196,64 +205,58 @@ check is not tautological, and ran two mutations Verifier had not. Brief
 archived as `accepted`; what the round deliberately did **not** close is
 recorded there.
 
-**PR #19 — open, delivered, NOT adjudicated.** Brief 004, the M3 architecture
-citation audit. Base `90194888`, head `ea55d140` after `master` moved under
-it. Seven documents, +173/-100, `docs/architecture/` only. Its headline claim
-is an operator-precedence finding — that `&&` binding tighter than `||` scopes
-`CheckCardProperties`'s anime/whitelist exception to one disjunct, so Token and
-Hidden-scope cards are excluded from upstream's own search unconditionally.
-**Unverified.** Brief 004 sits in [`briefs/delivered/`](briefs/delivered/).
+**Round 3 merged 2026-09-01 — PRs #19, #20 and #21, in that order.**
+`master` is `f1eb9d66`. All three had been open simultaneously as a stack, and
+one defect in #19 was holding all of them.
 
-**PR #18 was closed, not merged** — superseded. It filed brief 003 as
-`delivered`, which stopped being true the moment PR #17 merged. Its commits
-are ancestors of PR #19, so nothing was lost.
+- **PR #19** (`436f4265`) — brief 004's citation audit across seven M3
+  architecture documents, plus brief 006's Correction A. Verifier reviewed
+  head `7639bf2d`: zero BLOCKERs, one SHOULD FIX, two UNPROVEN CLAIMs. Both
+  UNPROVEN CLAIMs were correct and are closed; the SHOULD FIX was a correct
+  observation misattributed to Builder. See
+  [`briefs/archive/004-…`](briefs/archive/004-2026-08-31-architecture-citation-audit.md).
+- **PR #20** (`6d9cf640`) — Brain's own round-2 close-out. Its single commit
+  `3a2fea97` fell **between** Verifier's two reviewed ranges and was never
+  independently reviewed; it touches `docs/briefs/` and `docs/state.md` only,
+  and the owner explicitly authorised merging the stack. Recorded because
+  "Verifier reviewed this" must not be assumed of it later.
+- **PR #21** (`f1eb9d66`) — briefs 005, 006's Correction B, and 007.
+  Verifier's **first** review of that branch, at `3a2fea97..85a11055`: zero
+  BLOCKERs, two UNPROVEN CLAIMs, both re-derived by Brain and resolved in
+  [`briefs/archive/005-…`](briefs/archive/005-2026-08-31-windows-msvc-build.md).
 
-**Brief 005 is queued** in [`briefs/active.md`](briefs/active.md): make the
-C++ layers build on Windows/MSVC, so the per-layer evidence table can actually
-be satisfied on the dev machine. It blocks the deck-builder legality round.
+**PR #22 was closed, not merged** — it queued brief 006, which had already
+been delivered on the two branches it was meant to correct. Its text is
+preserved as
+[`briefs/archive/006-…`](briefs/archive/006-2026-08-31-merge-train-corrections.md).
 
-**Owner decision, 2026-08-31 — the deck builder gets a visible format/ruleset
-picker.** This resolves brief 001 §7 in favour of its option (b), over
-banlist-only checking and over deferring to M4. Upstream's editor never calls
-`CheckDeckContent`/`CheckDeckSize`, so five of six `policy::ValidationPolicy`
-fields have no editor-time analogue and *something* must originate a ruleset;
-the owner chose to make that choice explicit and visible rather than implicit.
-Accepted risk, taken knowingly: M4 may later want a different mechanism. This
-unblocks the last M3 item and **needs an ADR when the implementing round
-lands.**
+**Two things this round established that outlive it:**
 
-**A count this project has been carrying wrong.** Brief 001's outcome, this
-file, and brief 004 disagree about how many citation defects
-`deck-builder-legality.md` had: "seven SHOULD FIX", "six further", and an
-itemisation that sums to five categories or eight instances. Builder found only
-**two** of the three claimed overshoot ranges and declined to invent a third.
-Brief 004's verification is settling it; do not propagate any of these numbers
-until it does.
+- **`strict: true` rots PR-body evidence.** Every branch update produces a new
+  head, and every figure quoted in the body silently stops describing the
+  range that will merge. `AGENTS.md` says a Verifier review does not survive a
+  new head; it says nothing about the body's own numbers, and both of PR #19's
+  UNPROVEN CLAIMs were exactly this. Worth a framework fix.
+- **A brief issued only as a launch prompt is not a brief.** Brief 007 was
+  never written to `active.md`, so Verifier reviewed it with no acceptance
+  criteria to check against and said so. See
+  [`briefs/archive/007-…`](briefs/archive/007-2026-09-01-apple-clang-build.md).
 
-Round 1's headline finding, which still reshapes the eventual implementation
-round: upstream's deck editor **never calls `CheckDeckContent`/`CheckDeckSize`**
-— those have a single call site each, both in `GenericDuel::PlayerReady`. The
-editor runs three weaker, independently-bypassable mechanisms of its own, and
-`SaveDeck` checks nothing. So "surface legality in the deck builder" is not one
-thing. Brain has independently re-derived this; Verifier has not yet reviewed
-it.
-
-**Follow-up found by that round, not yet fixed:**
-[`architecture/deck-builder-ui.md`](architecture/deck-builder-ui.md):35 says
-there is "no upstream function that decides a card's section from its type at
-push time either". `push_main`/`push_extra` do type-gate at push time
-(`deck_con.cpp:1585-1588,1617-1621`). Defensible read narrowly, broader than
-the source supports as written.
+**Brief 008 is queued** in [`briefs/active.md`](briefs/active.md): the
+read-failure predicate, and what mechanism should catch platform divergence.
 
 ## Local toolchain — state, and what still does not build
 
-**Superseded 2026-08-31.** This section previously said the Windows dev
-machine had neither `cmake` nor Qt, so `client/`, `data/`, `policy/` and `ui/`
-could not be built locally at all. That is **no longer true**, and it was not
-rewritten on the strength of an install — it was rewritten after the four
-cycles were actually run.
+**There are two dev machines, and they do not have the same
+capabilities.** This section has been rewritten twice for that reason. Say
+which machine you are on in every completion report; `AGENTS.md`'s evidence
+table asks for the platform and this is why.
 
-Installed 2026-08-31, with the owner's authorization:
+**Updated 2026-09-01: the primary machine is now a Mac.** Neither entry below
+was written on the strength of an install — each was written after the cycles
+were actually run.
+
+### Windows — installed 2026-08-31, with the owner's authorization
 
 | | |
 |---|---|
@@ -281,11 +284,37 @@ CI can see because CI is Linux/GCC only:
    `..` segment that Windows cannot `mkdir`, killing
    `test_deckbuilder_screen`. `edopro_next_shell` itself builds and links.
 
-So: `policy/` builds clean with `EDOPRO_NEXT_WERROR=ON`; `client/` and
-`data/` build and test once the one offending target or flag is out of the
-way; `ui/`'s screen test does not build at all. **Brief 005 closes all
-three.** Until it lands, a brief touching `ui/` still cannot produce its own
-evidence locally.
+**All three are now closed.** Brief 005 fixed them and merged
+2026-09-01 in `f1eb9d66` (PR #21); brief 006's Correction B replaced the third
+fix's mirror with `NO_CACHEGEN`, removing the mechanism rather than repairing
+it. The list is kept because it is the clearest record of what "green on Linux
+CI" does not cover.
+
+### macOS — the primary machine as of 2026-09-01
+
+Apple clang 21 (`Apple clang 21.0.0`), CMake 4.4.3, Ninja 1.13.2, Python
+3.13 at `/opt/homebrew/bin/python3.13`. **Qt is not installed**, and the
+system Python is 3.9.
+
+| Layer | On this machine |
+|---|---|
+| `client/` | configures, builds, **7/7 `ctest`** |
+| `data/` | configures, builds, **3/3 `ctest`** |
+| `policy/` | configures and builds, **`ctest` FAILS** — see below |
+| `ui/` | **cannot be configured at all**; no Qt |
+| `tools/`, `tests/` | 69/69 pass; both generator `--check`s clean |
+
+Two traps specific to this machine, both of which cost real time:
+
+1. **`policy/` `ctest` fails on `master` right now**, and it is the code that
+   is wrong, not the environment — `loadLflistDirectoryPathFailsCleanly`.
+   Brief 008 is this. Do not "fix" it by re-running.
+2. **A stale `client/build/edopro_next_semantic_trace` is silently preferred**
+   by `tests/test_semantic_trace.py`'s `find_binary()`, which searches fixed
+   paths with no freshness check. A binary four days old made four Python
+   tests fail against a clean tree. Delete the directory or set
+   `EDOPRO_NEXT_SEMANTIC_TRACE`. The dangerous direction is not the failure —
+   it is a C++ edit that never gets compiled and reports green.
 
 Two operational facts, true and previously written down nowhere: on Windows
 `cmake -G Ninja` finds no compiler outside the MSVC environment
@@ -309,21 +338,34 @@ not fold it into a narrative section.)*
 
 ## Recommended next slice
 
-**Brief 003, framework hardening** — queued in
-[`briefs/active.md`](briefs/active.md). It is first because two of the guards
-this framework relies on were shown to be checking proxies rather than the
-property they claim to enforce.
+**Brief 008 — the read-failure predicate**, queued in
+[`briefs/active.md`](briefs/active.md). It is first for a blunt reason:
+`master` is red on macOS today, and the same defect is silently live in
+`data/` where no test looks for it. It is also entirely inside `policy/` and
+`data/`, both of which build and test on the current machine, so it can
+produce its own required evidence here.
 
-After that, **re-queue the M3 architecture citation audit** (superseded brief
-002, text at `202a3494`), with `deck-builder-legality.md` added to its scope —
-it now carries seven known citation defects of exactly the kind that audit
-exists to find, including one wrong behavioural claim.
+It carries a second question deliberately left open rather than pre-answered:
+**what mechanism should catch platform divergence**, given six instances and
+at least three different classes among them. A macOS CI leg is a candidate to
+be argued, not the assumed answer — the classes have different costs and only
+one of them needs tests to be *run* rather than merely compiled.
 
-**Not the deck-builder legality UI, yet** — and note this file previously
-recommended it while also recording, a few sections above, that this machine
-has no cmake or Qt. Both cannot be true: that slice touches `ui/` and cannot
-produce its required evidence here. It also has a real design blocker (ADR
-0008's context: `policy::ValidationPolicy` has no default and no session layer
-supplies one), which brief 001's delivered research is meant to resolve — and
-that research is still unreviewed. Sequence: install the toolchain, land 003,
-adjudicate 001, then brief the UI work.
+**After that, the deck-builder legality UI** — the remaining M3 item, and the
+one the roadmap actually cares about. Two things gate it, and both are now
+tractable:
+
+- It touches `ui/`, which **cannot be built on the current machine**; Qt is
+  not installed. Either install Qt here or run that round on the Windows
+  machine, and say which in the brief. Do not queue it without resolving this
+  — an earlier version of this file recommended a `ui/` round while recording
+  two sections above that `ui/` could not be built, and the contradiction
+  survived several readings.
+- Its design blocker is **resolved**: brief 001's research was adjudicated
+  `accepted` on 2026-08-31, including the headline finding that upstream's
+  deck editor never calls `CheckDeckContent`/`CheckDeckSize`. That reshapes
+  the round — "surface legality in the deck builder" is not one thing — and
+  the corrections outstanding against it are listed in
+  [`briefs/archive/001-…`](briefs/archive/001-2026-08-31-deck-builder-legality-boundary.md).
+
+**Still not the duel field.** Unchanged and not near.
