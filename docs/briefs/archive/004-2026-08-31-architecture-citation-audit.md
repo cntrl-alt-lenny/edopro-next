@@ -1,6 +1,32 @@
 # Brief 004 — M3 architecture citation audit
 
-Status: delivered
+Status: accepted
+
+Delivered by Builder as PR #19, base `ccbf7860`, head `7639bf2d` (which also
+carries brief 006's Correction A). Verifier reviewed that exact head. Merged
+2026-09-01 as `436f4265`.
+
+**Outcome: accepted.** Verifier returned zero BLOCKERs, one SHOULD FIX and two
+UNPROVEN CLAIMs. Brain re-derived all three before merging:
+
+- Both UNPROVEN CLAIMs were **correct**. The PR body's `git diff --stat`
+  figure ("seven files, 173/100") and its test count ("56 ran") were true of
+  `90194888..6d3aadbf` and went stale when the branch merged `master` at
+  `ea55d140`; the reviewed range is 10 files, 620/279, and 69 tests. Closed by
+  correcting the PR body and recording why, rather than overwriting silently.
+- The SHOULD FIX — that this range also changes `docs/state.md` and
+  `docs/briefs/`, which brief 004 line 158 explicitly excludes — was a
+  **correct observation with the wrong attribution**. Those changes come from
+  `c7deff50` and `90194888`, Brain's own round-opening commits at the base of
+  the branch, not from Builder. The brief's exclusion binds Builder. No action
+  taken; splitting them would have meant rewriting reviewed history for no
+  correctness gain.
+
+**Transferable lesson, recorded because it will recur:** `strict: true`
+requires a branch update whenever `master` moves, each update produces a new
+head, and every figure quoted in a PR body silently rots at that moment.
+`AGENTS.md` already says a Verifier review does not survive a new head. It
+says nothing about PR-body evidence, which has the same failure mode.
 
 Delivered by Builder as PR #19, base `90194888`, head `6d3aadbf` (updated to
 `ea55d140` when `master` moved under it). **Not reviewed, not adjudicated** —
