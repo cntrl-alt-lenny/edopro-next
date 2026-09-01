@@ -34,9 +34,7 @@ using namespace edopro_next::data::testing;
 namespace {
 
 constexpr std::uint32_t kTypeMonster = 0x1;
-constexpr std::uint32_t kTypeSpell = 0x2;
 constexpr std::uint32_t kTypeLink = 0x4000000;
-constexpr std::uint32_t kTypePendulum = 0x1000000;
 
 std::vector<CardCode> codes(const std::vector<SearchResult>& results) {
 	std::vector<CardCode> out;

@@ -54,7 +54,6 @@ namespace {
 // everywhere else in this project (CardEntry, CardSearchIndex).
 constexpr std::uint32_t kTypeMonster = 0x1;
 constexpr std::uint32_t kTypeSpell = 0x2;
-constexpr std::uint32_t kTypeTrap = 0x4;
 constexpr std::uint32_t kTypeFusion = 0x40;
 constexpr std::uint32_t kTypeRitual = 0x80;
 constexpr std::uint32_t kTypeSynchro = 0x2000;
