@@ -126,16 +126,25 @@ whose *exact* uppercase name is itself one of the active search terms" (moved to
 via `searched_terms.find(GetUppercaseName(...))`) and everything else, then independently
 sorts *each partition* by whichever comparator the sort-type dropdown selected -
 `DataManager::deck_sort_lv`/`_atk`/`_def`/`_name`/`_passcode_descending`
-(`gframe/data_manager.cpp:712-765`) - not uniformly type-aware. `deck_sort_lv`/`_atk`/`_def`
-each route through the shared `card_sorter` helper (`:695-706`, itself outside the cited
-range), which groups by Skill, then by monster/spell/trap category, and only falls into the
-field-specific comparator when both cards are monsters; within that comparator the *stat*
-named by the function is compared first (level for `deck_sort_lv`, attack for `_atk`, defense
-for `_def`), with the other two stats and finally monster-subtype (`get_monster_card_type`)
-as tiebreakers before passcode - not "monster type, then the chosen stat" as a fixed order.
-`deck_sort_name` and `deck_sort_passcode_descending` are not type-aware at all: `_name`
-compares `GetUppercaseName()` directly, and `_passcode_descending` compares raw `code`, with
-no `card_sorter` call and no type check in either. Built for a sortable-column grid, not a
+(`gframe/data_manager.cpp:712-765`) - not uniformly type-aware, and the three that *are*
+type-aware do not share one ordering either. `deck_sort_lv`, `_atk` and `_def` each route
+through the shared `card_sorter` helper (`:695-706`, itself outside the cited range), which
+groups by Skill, then by monster/spell/trap category, and only falls into the field-specific
+comparator when both cards are monsters - but what runs first *inside* that comparator is not
+the same function three times over:
+
+- `deck_sort_lv` compares `get_monster_card_type` **first**, then level, attack, defense,
+  then passcode.
+- `deck_sort_atk` compares attack, defense, level, **then** `get_monster_card_type`, then
+  passcode.
+- `deck_sort_def` compares defense, attack, level, **then** `get_monster_card_type`, then
+  passcode.
+
+`deck_sort_lv` is the odd one out - type before stat - not a third variation on "stat first,
+type as a tiebreaker": that shape belongs to `_atk`/`_def` alone. `deck_sort_name` and
+`deck_sort_passcode_descending` are not type-aware at all: `_name` compares
+`GetUppercaseName()` directly, and `_passcode_descending` compares raw `code`, with no
+`card_sorter` call and no type check in either. Built for a sortable-column grid, not a
 relevance score. `CardSearchIndex`'s own ranking (§8) is a new, independently designed scheme
 informed by this but not copied from it - see ADR 0005, Decision 1.
 
