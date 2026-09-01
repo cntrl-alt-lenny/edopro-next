@@ -1,6 +1,7 @@
 #include "edopro_next/data/ydk.h"
 
 #include <fstream>
+#include <system_error>
 #include <stdexcept>
 
 namespace edopro_next::data {
@@ -156,6 +157,16 @@ YdkParse parse_ydk(std::string_view text) {
 
 YdkLoadResult load_ydk(const std::filesystem::path& path) {
 	YdkLoadResult result;
+	std::error_code status_error;
+	if(std::filesystem::is_directory(path, status_error)) {
+		result.error = "failed to read file: " + path.string();
+		return result;
+	}
+	if(status_error) {
+		result.error = "failed to inspect file: " + path.string();
+		return result;
+	}
+
 	std::ifstream file(path, std::ios::binary);
 	if(!file) {
 		result.error = "failed to open file: " + path.string();
@@ -168,8 +179,10 @@ YdkLoadResult load_ydk(const std::filesystem::path& path) {
 	// `file` reporting good() with a silently truncated or empty result -
 	// confirmed empirically (a streambuf-backed read of /proc/self/mem,
 	// which opens successfully but fails on read, left file.bad() false
-	// with zero bytes captured). Reading through file.read() in a sized
-	// loop goes through that machinery, so a genuine read failure is
+	// with zero bytes captured). A directory is rejected before opening:
+	// libc++ can otherwise surface it as a clean EOF, indistinguishable
+	// from a valid empty file. Reading through file.read() in a sized loop
+	// goes through that machinery, so a genuine read failure is
 	// distinguishable from a clean EOF via file.bad() below - verified
 	// empirically for exact and non-exact chunk-boundary file sizes, and
 	// for a zero-byte file.

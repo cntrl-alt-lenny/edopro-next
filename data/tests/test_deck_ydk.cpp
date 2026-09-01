@@ -447,6 +447,13 @@ EDOPRO_DATA_TEST(loading_a_missing_file_fails_and_leaves_an_existing_deck_untouc
 	EDOPRO_DATA_CHECK_EQ(existing.main, (std::vector<CardCode>{CardCode{1}, CardCode{2}}));
 }
 
+EDOPRO_DATA_TEST(loading_a_directory_fails_cleanly) {
+	const auto result = edopro_next::data::load_ydk(std::filesystem::temp_directory_path());
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK(!result.error.empty());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+}
+
 // ---------------------------------------------------------------------
 // A failure the stream's own state does not surface for free, without an
 // explicit flush()/a read through file.read() - see

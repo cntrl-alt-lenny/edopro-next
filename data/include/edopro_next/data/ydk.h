@@ -54,8 +54,9 @@ struct YdkParse {
 YdkParse parse_ydk(std::string_view text);
 
 // The result of load_ydk(). Unlike YdkParse, this has a genuine failure
-// state: `ok` is false exactly when the file could not be opened/read, in
-// which case `deck` and `ignored` are both left empty rather than
+// state: `ok` is false exactly when the path cannot be opened as a readable
+// file or a read fails (directories are rejected before opening), in which
+// case `deck` and `ignored` are both left empty rather than
 // partially populated - there is no in-place mutation of a caller-owned
 // Deck for a failed load to leave half done.
 struct YdkLoadResult {

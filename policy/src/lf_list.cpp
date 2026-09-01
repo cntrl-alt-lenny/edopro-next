@@ -3,6 +3,7 @@
 #include "edopro_next/policy/lf_list.h"
 
 #include <fstream>
+#include <system_error>
 
 namespace edopro_next::policy {
 
@@ -261,6 +262,15 @@ LfListParse parse_lflist(std::string_view text) {
 
 LfListLoadResult load_lflist(const std::filesystem::path& path) {
 	LfListLoadResult result;
+	std::error_code status_error;
+	if(std::filesystem::is_directory(path, status_error)) {
+		result.error = "failed to read file: " + path.string();
+		return result;
+	}
+	if(status_error) {
+		result.error = "failed to inspect file: " + path.string();
+		return result;
+	}
 
 	std::ifstream file(path, std::ios::binary);
 	if(!file) {
@@ -275,10 +285,12 @@ LfListLoadResult load_lflist(const std::filesystem::path& path) {
 	// platforms) can leave `file` reporting good() with a silently
 	// truncated or empty result - external review found this exact defect
 	// here; data/src/ydk.cpp's load_ydk() already carries the fix and its
-	// own empirical verification note for the identical operation. Reading
-	// through file.read() in a sized loop goes through that machinery, so
-	// a genuine read failure is distinguishable from a clean EOF via
-	// file.bad() below.
+	// own empirical verification note for the identical operation. A
+	// directory is rejected before opening because libc++ can otherwise
+	// surface it as a clean EOF, indistinguishable from a valid empty file.
+	// Reading through file.read() in a sized loop goes through that
+	// machinery, so a genuine read failure is distinguishable from a clean
+	// EOF via file.bad() below.
 	std::string content;
 	char chunk[4096];
 	while(file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
