@@ -1,6 +1,6 @@
 Brief-ID: 010-2026-09-20-framework-adoption
 
-Status: active (delivered and reopened for corrections C1-C5)
+Status: active (delivered and reopened for corrections C6-C8)
 
 ## MODE: IMPLEMENTATION
 
@@ -10,8 +10,8 @@ Adopt the shared agentic framework in edopro-next so a fresh session can start
 from `AGENTS.md` and `docs/agents/roles/brain.md`, reconstruct the live state,
 and choose the correct first action without conversation history. Resolve the
 known delivered brief queue, install the framework's canonical contracts and
-mechanical guards, preserve this project's stronger local evidence and
-lifecycle rules, and deliver the result as a reviewed-ready Builder branch.
+the report/checkout tooling, preserve this project's stronger local evidence
+and lifecycle rules, and deliver the result as a reviewed-ready Builder branch.
 
 ## Why this is next
 
@@ -41,10 +41,11 @@ and tooling adoption.
 ## Reopened round state
 
 The first delivery of this brief reached head `55a8989f` and was delivered for
-review but was **not accepted**. This brief is therefore delivered and reopened
-in place for the five numbered corrections below; it is not finished. The
-reopened work deliberately completes only the corrections and leaves the
-neutrality guard deferred rather than claiming complete adoption.
+review but was **not accepted**. Corrections C1-C5 were subsequently delivered
+at head `3c212bda` and independently accepted as closed. This brief remains
+delivered and reopened in place for C6-C8; it is not finished. The adoption
+deliberately leaves the neutrality guard uninstalled rather than claiming
+complete adoption.
 
 ## Scope
 
@@ -85,7 +86,9 @@ neutrality guard deferred rather than claiming complete adoption.
 - Do not touch branch protection, repository settings, remotes, or any open
   pull request. Do not merge anything.
 - Do not modify the framework repository or its canonical scanner.
-- Do not delete or weaken existing tests. Historical archive documents remain
+- Do not delete or weaken pre-existing tests. The newly installed neutrality
+  scanner, authority scanner, textblock helper and neutrality test are the
+  explicitly deferred exception; historical archive documents remain
   historical records.
 
 ## Protected invariants
@@ -116,9 +119,11 @@ neutrality guard deferred rather than claiming complete adoption.
    and any project-specific material moved or dropped.
 2. Establish the precise neutrality failure class. Explain why the existing
    `m<N>/` and `meta/` namespaces are retained despite the framework guidance,
-   how the repository-local guard still catches a provider-shaped namespace,
-   and record that the framework adoption guidance and its branch rule
-   contradict each other as an out-of-scope framework finding.
+   confirm that the repository-local neutrality guard is deliberately absent
+   and therefore does not catch provider-shaped namespaces, and record that the
+   framework adoption guidance and its branch rule contradict each other as an
+   out-of-scope framework finding. State what framework change would permit a
+   future installation.
 3. Verify the cold-start path from only `AGENTS.md` and the canonical Brain
    contract, including every named path and the first actionable command.
 
@@ -149,8 +154,9 @@ neutrality guard deferred rather than claiming complete adoption.
 
 ## Required evidence
 
-- `python3 -m unittest discover -s tests -v`, including installed neutrality,
-  checkout, and report tests.
+- `python3 -m unittest discover -s tests -v`, including the installed checkout,
+  report, and project documentation tests. Neutrality tests are deliberately
+  absent because C3 deferred that guard; do not claim they ran.
 - `python3 tools/generate_messages.py --check` and
   `python3 tools/generate_protocol_constants.py --check`.
 - `python3 tools/checkout.py --seat builder` and
@@ -203,7 +209,23 @@ Use the standard Worker report with exact base/head SHAs, changed files,
 commands and output, omissions, sources for external claims, and open
 questions. Add the collision-by-collision reconciliation decisions, the
 project-specific material moved or dropped from `docs/roles/`, the neutrality
-exception and remaining catch surface, the framework branch-rule contradiction,
+deferral and absent catch surface, the framework branch-rule contradiction,
 the cold-start path walk, the unchanged submodule evidence, the renormalize
 result, the mutation red/green evidence, and the PR URL and report-writer
 output.
+
+## Follow-up corrections C6-C8
+
+6. **C6 — reconcile the brief with the deferral.** This brief must say in one
+   voice that the neutrality guard is not installed, must not require its tests
+   or claim that it catches provider-shaped namespaces, and must name the
+   framework change that would close the deferral.
+7. **C7 — repair moved cross-references.** Replace references to the deleted
+   `AGENTS.md` “Authority” section with the canonical constitution, sweep live
+   coordination documents for further stale moved paths or headings, and leave
+   historical archive references unchanged.
+8. **C8 — disclose the parity-guard change.** The report must say that the
+   former non-empty assertion was removed because the canonical Worker
+   confirmation step names no backtick-quoted command. The superset property
+   remains, but is dormant against adapter-only changes until the contract
+   names a command and remains live against future contract drift.

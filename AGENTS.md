@@ -307,7 +307,8 @@ project code to fix.
    Verifier reviewed *this exact head SHA*; Brain independently checked every
    BLOCKER and UNPROVEN CLAIM; the required gates are green at that SHA
    (checked, not assumed); and the change is inside the routine-acceptance
-   scope in "Authority". If any of the four fails, Brain does not merge — it
+   scope in the [constitution](docs/agents/CONSTITUTION.md). If any of the
+   four fails, Brain does not merge — it
    says which one and what would close it.
 7. Brain posts a plain-English summary of what it merged and why, updates
    `docs/state.md`, moves the brief from `docs/briefs/delivered/` to

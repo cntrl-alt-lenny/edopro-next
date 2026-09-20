@@ -107,8 +107,8 @@ tree already, in every worktree.
 
 **Brain** operates from the primary checkout, on `master`. Rehydration,
 independent review, adjudication, and the merge of an accepted round all
-happen here — see `AGENTS.md`, "Authority", for what Brain may merge and what
-still goes to the owner.
+happen here — see the [constitution](CONSTITUTION.md) for what Brain may merge
+and what still goes to the owner.
 
 **Builder**, at the start of each round:
 
