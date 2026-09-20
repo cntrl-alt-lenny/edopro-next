@@ -2,7 +2,10 @@
 
 `CLAUDE.md` says what this project is and what may not be broken. **This file
 says who does the work and how a change earns its way in.** Where the two
-disagree, `CLAUDE.md` wins.
+disagree, `CLAUDE.md` wins. The shared framework's normative authority model is
+in [`docs/agents/CONSTITUTION.md`](docs/agents/CONSTITUTION.md); this file
+declares edopro-next's topology, invariants, evidence and project-specific
+operating details.
 
 This project builds new presentation-independent layers on top of an
 authoritative duel engine it must not disturb. That creates two symmetric
@@ -15,99 +18,31 @@ risks:
 
 This file exists to hold both at once. It should stay around this length.
 
-## Authority
+## Topology
 
-The human project owner is the final authority over direction and scope, and
-retains veto and reversal over everything below.
+The project uses the framework's high-assurance triangle: Owner → Brain →
+Builder and Verifier. Builder and Verifier report independently to Brain; the
+Verifier sees the exact delivered SHA without Builder's report on its first
+pass. Adding or retiring a permanent role is a strategic decision, not a tool
+choice.
 
-The hierarchy is a company, not a committee:
-
-| | Role | Owns |
+| Role | Holds | Scope |
 |---|---|---|
-| 👤 **Owner** | product owner | Direction, priorities, scope. Veto and reversal over anything. Approval for strategic or destructive actions. |
-| 🧠 **Brain** | engineering lead | Project context, sequencing, briefs, technical adjudication, acceptance/rejection, **and the routine merge**. |
-| 🔨 **Builder** | implementer | One bounded brief. |
-| 🔍 **Verifier** | independent QA | Attacks the work. |
+| **Owner** | Direction, priorities, scope. Veto and reversal. | — |
+| **Brain** | Project context, sequencing, briefs, adjudication and routine merge. ([contract](docs/agents/roles/brain.md)) | Coordination and acceptance |
+| **Builder** | One bounded brief at a time; never self-accepts or merges. ([contract](docs/agents/roles/worker.md)) | Implementation, research or documentation explicitly assigned by a brief |
+| **Verifier** | Independent review of an exact SHA; writes findings and never merges. ([contract](docs/agents/roles/verifier.md)) | Read-only review |
 
-**Brain merges rounds it has accepted.** Routine technical acceptance is
-delegated to it: once Verifier has reviewed the exact head SHA, Brain has
-independently adjudicated both reports, and the required gates are green,
-Brain merges and moves to the next brief. The owner does not give per-PR
-technical approval and should not need to read a diff to authorise one.
+Builder is this project's name for the framework's executor seat. Its canonical
+contract remains `docs/agents/roles/worker.md`; do not create a second
+`builder.md` contract. The old `docs/roles/` paths are retired compatibility
+pointers only. Tool-specific launch mechanics are adapters, documented in
+[`docs/agents/adapters.md`](docs/agents/adapters.md) and this project's
+[`docs/agents/launching.md`](docs/agents/launching.md).
 
-This is a deliberate change from the framework's first version, which routed
-every merge back through the owner. That was the wrong shape for how this
-project is actually run, and it made Brain a recommender rather than a lead.
-
-**Builder and Verifier never merge anything.** Unchanged, and not negotiable
-by either of them.
-
-**What still goes to the owner:** merging a round Verifier has not reviewed at
-the exact head SHA; merging with a required gate red or unrun; force-pushing,
-deleting branches or history, rewriting `master`; changing CI, repository
-settings, or branch protection; touching `upstream`'s disabled push URL;
-starting a new milestone or a large redesign; anything trading off against the
-roadmap's stated priorities; and anything touching licensing. When in doubt
-whether something is routine, it is not.
-
-Brain reports plainly, in the same turn, what it merged and why — so oversight
-stays possible without the owner having to ask for it.
-
-## Exactly three permanent roles
-
-There are three, and adding a fourth requires a demonstrated bottleneck, not
-an available capability. Temporary specialists are fine and encouraged — a
-runtime explorer, a second reviewer, a QML/UX pass — but they are dispatched
-for one task and do not get a standing seat.
-
-> **3 permanent roles, unlimited temporary tools.**
-
-| Role | Question it asks | Standing permissions |
-|---|---|---|
-| 🧠 **Brain** | *What should we build, and is this actually done?* | Coordinates, writes briefs, adjudicates, and merges accepted rounds. Does not normally implement. |
-| 🔨 **Builder** | *How do I build it correctly?* | One brief at a time, own worktree and branch, opens a PR. Never self-accepts, never merges. |
-| 🔍 **Verifier** | *How is this wrong?* | Fresh context, read-only by default, reviews an exact SHA range. Writes findings, not production code. |
-
-This is a **triangle, not a chain**. Builder and Verifier both report to
-Brain, independently, and neither sees the other's conclusions before forming
-its own:
-
-```
-                     OWNER  --------------  direction, priorities, veto
-                       |
-                       v
-                     BRAIN  --------------  writes the brief
-                    /      \
-                   v        v
-              BUILDER     VERIFIER      (independent, non-communicating)
-                   \        /
-                    v      v
-                     BRAIN  --------------  adjudicates, then MERGES if accepted
-                       |
-                       v
-                     OWNER  --------------  reads the summary, not the diff
-```
-
-### Roles are contracts, not vendors
-
-A role is defined by what it reads, what it may touch, and the shape of what
-it reports — not by which model runs it. Any of the three may be run on a
-different model or a different tool entirely, and nothing about the review
-standard changes. [`docs/agents/model-notes.md`](docs/agents/model-notes.md)
-records what has actually been observed in each seat; it is a log, not a
-ranking, and not a requirement.
-
-**Role contracts are vendor-neutral and live in
-[`docs/roles/`](docs/roles/)**: [brain](docs/roles/brain.md),
-[builder](docs/roles/builder.md), [verifier](docs/roles/verifier.md). Each is
-written to be read cold, months later, with no chat history, by any model on
-any tool.
-
-Tool-specific launch mechanics are **adapters**, kept strictly separate:
-`.claude/` for Claude Code, and whatever is added for other vendors.
-[`docs/agents/launching.md`](docs/agents/launching.md) is the map. If a role
-contract starts depending on a particular tool's features, that is a defect —
-see [`docs/roles/README.md`](docs/roles/README.md).
+Roles are contracts, not vendors. [`docs/agents/model-notes.md`](docs/agents/model-notes.md)
+records what has actually been observed in each seat, as a log rather than a
+ranking or requirement.
 
 ### Verifier is deliberately model-diverse
 
@@ -372,7 +307,8 @@ project code to fix.
    Verifier reviewed *this exact head SHA*; Brain independently checked every
    BLOCKER and UNPROVEN CLAIM; the required gates are green at that SHA
    (checked, not assumed); and the change is inside the routine-acceptance
-   scope in "Authority". If any of the four fails, Brain does not merge — it
+   scope in the [constitution](docs/agents/CONSTITUTION.md). If any of the
+   four fails, Brain does not merge — it
    says which one and what would close it.
 7. Brain posts a plain-English summary of what it merged and why, updates
    `docs/state.md`, moves the brief from `docs/briefs/delivered/` to

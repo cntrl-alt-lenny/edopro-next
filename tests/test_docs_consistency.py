@@ -74,10 +74,17 @@ COORDINATION_DOCS = [
     REPO / "docs" / "agents" / "model-notes.md",
     REPO / "docs" / "agents" / "worktree-mechanism.md",
     REPO / "docs" / "agents" / "launching.md",
-    *sorted((REPO / "docs" / "roles").glob("*.md")),
+    *sorted((REPO / "docs" / "agents").rglob("*.md")),
     *sorted((REPO / ".claude" / "agents").glob("*.md")),
     *sorted((REPO / ".claude" / "commands").glob("*.md")),
 ]
+
+CONTRACT_PATHS = {
+    "brain": REPO / "docs" / "agents" / "roles" / "brain.md",
+    # Builder is this project's name for the framework Worker contract.
+    "builder": REPO / "docs" / "agents" / "roles" / "worker.md",
+    "verifier": REPO / "docs" / "agents" / "roles" / "verifier.md",
+}
 
 
 def _brief_files(directory: Path):
@@ -254,6 +261,11 @@ class CoordinationLinkTest(unittest.TestCase):
                 target = target.strip()
                 if not target or "://" in target or target.startswith("mailto:"):
                     continue
+                # The framework's adapter specification uses links such as
+                # `[<path>]` in a shape example. They are placeholders, not
+                # repository paths; concrete links remain checked below.
+                if re.fullmatch(r"<[A-Za-z][A-Za-z0-9 _-]*>", target):
+                    continue
                 with self.subTest(doc=str(doc.relative_to(REPO)), link=target):
                     self.assertTrue(
                         _link_resolves(doc.parent / target, tracked),
@@ -291,7 +303,7 @@ class RoleContractTest(unittest.TestCase):
     def test_every_role_has_a_canonical_contract(self):
         for role in ROLES:
             with self.subTest(role=role):
-                self.assertTrue((REPO / "docs" / "roles" / f"{role}.md").is_file())
+                self.assertTrue(CONTRACT_PATHS[role].is_file())
 
     def test_adapters_point_at_the_contract_and_do_not_restate_it(self):
         """Points at the contract, and has not visibly ballooned.
@@ -310,8 +322,9 @@ class RoleContractTest(unittest.TestCase):
                 continue
             with self.subTest(role=role):
                 text = adapter.read_text(encoding="utf-8")
+                expected = CONTRACT_PATHS[role].relative_to(REPO).as_posix()
                 self.assertIn(
-                    f"docs/roles/{role}.md", text,
+                    expected, text,
                     "an adapter must point at its canonical contract",
                 )
                 self.assertLess(
@@ -377,17 +390,32 @@ class RoleContractTest(unittest.TestCase):
                         f"contract rule instead of pointing at it",
                     )
 
-    def test_builder_adapters_confirm_step_matches_contract(self):
-        """The one concrete divergence Round 1 found: the adapter's
-        worktree-confirmation step named fewer commands than the contract's.
+    def test_builder_adapter_points_to_worker_contract_and_preserves_scope(self):
+        """Builder is a specialist name, not a second canonical contract.
 
-        Generalises to the command *list* rather than pinning today's
-        specific gap: extracts every backtick-quoted `git ...` command from
-        the paragraph containing "Confirm" in each file, and requires the
-        adapter's set to be a superset of the contract's. A future brief
-        that adds (or removes) a command from the contract's confirm step
-        without updating the adapter fails this, regardless of which
-        command it is.
+        The framework deliberately keeps the executor contract named
+        `worker.md`; this test pins both halves of that relationship so a
+        future adapter cannot silently revive a stale `builder.md` contract.
+        """
+        contract = CONTRACT_PATHS["builder"].read_text(encoding="utf-8")
+        adapter = (REPO / ".claude" / "agents" / "builder.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "python3 tools/checkout.py --seat <the executor seat named in the prompt>",
+            contract,
+        )
+        self.assertIn("docs/agents/roles/worker.md", adapter)
+        self.assertIn("Builder", adapter)
+        self.assertNotIn("docs/agents/roles/builder.md", adapter)
+
+    def test_builder_adapters_confirm_step_matches_contract(self):
+        """The adapter's confirmation commands must cover the contract's.
+
+        This is intentionally a set-superset check rather than a list of
+        today's commands. If the canonical contract gains or changes a
+        backtick-quoted ``git`` command in its confirmation paragraph, the
+        adapter must follow it. The current Worker contract has no such
+        literal command, so its set is empty; the property remains live for
+        future contract drift.
         """
         git_cmd_re = re.compile(r"`(git [a-zA-Z][a-zA-Z0-9_ -]*)`")
 
@@ -399,10 +427,9 @@ class RoleContractTest(unittest.TestCase):
                     commands.update(git_cmd_re.findall(flat))
             return commands
 
-        contract = (REPO / "docs" / "roles" / "builder.md").read_text(encoding="utf-8")
+        contract = CONTRACT_PATHS["builder"].read_text(encoding="utf-8")
         adapter = (REPO / ".claude" / "agents" / "builder.md").read_text(encoding="utf-8")
         contract_commands = confirm_commands(contract)
-        self.assertTrue(contract_commands, "contract's confirm step named no git commands")
         missing = contract_commands - confirm_commands(adapter)
         self.assertFalse(
             missing,
@@ -445,7 +472,7 @@ class RoleContractTest(unittest.TestCase):
             "slash command",
         )
         for role in ROLES:
-            contract = (REPO / "docs" / "roles" / f"{role}.md").read_text(encoding="utf-8")
+            contract = CONTRACT_PATHS[role].read_text(encoding="utf-8")
             for token in forbidden:
                 with self.subTest(role=role, token=token):
                     self.assertNotIn(
@@ -465,7 +492,7 @@ class RoleContractTest(unittest.TestCase):
     def test_contracts_carry_no_tool_frontmatter(self):
         for role in ROLES:
             with self.subTest(role=role):
-                first = (REPO / "docs" / "roles" / f"{role}.md").read_text(
+                first = CONTRACT_PATHS[role].read_text(
                     encoding="utf-8").lstrip().splitlines()[0]
                 self.assertNotEqual(first.strip(), "---",
                                     "a contract must not carry one tool's frontmatter")

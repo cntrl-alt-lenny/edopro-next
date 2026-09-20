@@ -107,10 +107,16 @@ tree already, in every worktree.
 
 **Brain** operates from the primary checkout, on `master`. Rehydration,
 independent review, adjudication, and the merge of an accepted round all
-happen here — see `AGENTS.md`, "Authority", for what Brain may merge and what
-still goes to the owner.
+happen here — see the [constitution](CONSTITUTION.md) for what Brain may merge
+and what still goes to the owner.
 
 **Builder**, at the start of each round:
+
+This project deliberately keeps its established `m<N>/` milestone and `meta/`
+coordination branch namespaces rather than changing existing project history to
+the framework's generic `<role>/<scope>` example. The convention applies to new
+branches too: milestone work uses `m<N>/<kebab-scope>` and framework or
+coordination work uses `meta/<kebab-scope>`.
 
 ```bash
 cd .worktrees/builder

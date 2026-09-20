@@ -1,27 +1,21 @@
-"""Regression tests for .claude/hooks/save_agent_reply.py's role mapping.
+"""Regression tests for the Claude adapter's report-writing convenience.
 
-# Why this file exists
-
-Brief 003, item 4. `_role_from_worktree` used to return "brain" for *any*
-worktree name it did not recognize as builder/verifier -- conflating "this is
-genuinely the primary checkout" with "this name is unrecognized". A Verifier
-worktree detached at a commit before the bare-name match landed (fa881423)
-ran a version of this function that only matched a `-verifier` suffix, so
-`.worktrees/verifier` itself fell into that unconditional "brain" branch and
-silently overwrote Brain's own inbox entry.
-
-This does not retroactively fix a worktree already detached at a pre-fix
-commit -- that worktree runs whatever this file was at that commit, not this
-one. What it tests is the failure mode going forward: "brain" is returned
-only when the worktree is confirmed to be the primary checkout, and every
-other unrecognized name lands in a distinctly-named "unknown-*" bucket that
-cannot collide with brain-latest.md.
+The framework hook deliberately delegates inbox location, role derivation,
+atomic writes and provenance to ``tools/report.py``. These tests pin the
+adapter-specific work that remains: extracting the final assistant text,
+preserving a current self-written report, and tagging a fallback mirror with
+the Claude session rather than inventing a brief identifier.
 """
 
 import importlib.util
+import io
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parent.parent
 MODULE_PATH = REPO / ".claude" / "hooks" / "save_agent_reply.py"
@@ -31,57 +25,83 @@ _module = importlib.util.module_from_spec(_spec)
 sys.modules[_spec.name] = _module
 _spec.loader.exec_module(_module)
 
-_role_from_worktree = _module._role_from_worktree
 
-PRIMARY = Path("/repo/edopro-next")
+class FakeReport:
+    ReportError = RuntimeError
+
+    def __init__(self, provenance=None):
+        self.provenance = provenance
+        self.writes = []
+
+    def head_sha(self):
+        return "head-sha"
+
+    def latest_report_provenance(self):
+        return self.provenance
+
+    def write_report(self, text, *, task, source):
+        self.writes.append((text, task, source))
 
 
-class RoleFromWorktreeTest(unittest.TestCase):
-    def test_builder_worktree_bare_name(self):
+class SaveAgentReplyTest(unittest.TestCase):
+    def test_last_assistant_text_uses_final_text_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            transcript = Path(tmp) / "session.jsonl"
+            transcript.write_text(
+                "\n".join(
+                    [
+                        json.dumps({"role": "user", "content": "start"}),
+                        json.dumps({"role": "assistant", "content": "first"}),
+                        json.dumps({
+                            "message": {
+                                "role": "assistant",
+                                "content": [
+                                    {"type": "text", "text": "final one"},
+                                    {"type": "tool_use", "id": "ignored"},
+                                    {"type": "text", "text": "final two"},
+                                ],
+                            }
+                        }),
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                _module._last_assistant_text(transcript), "final one\nfinal two"
+            )
+
+    def test_current_self_written_report_is_preserved(self):
+        fake = FakeReport(SimpleNamespace(head="head-sha", source="cli"))
+        with patch.object(_module, "_report", fake):
+            self.assertTrue(_module._agent_already_reported_this_work())
+
+    def test_stale_or_hook_report_does_not_block_fallback(self):
+        for provenance in (
+            SimpleNamespace(head="old-sha", source="cli"),
+            SimpleNamespace(head="head-sha", source="claude-code-stop-hook"),
+            None,
+        ):
+            with self.subTest(provenance=provenance):
+                fake = FakeReport(provenance)
+                with patch.object(_module, "_report", fake):
+                    self.assertFalse(_module._agent_already_reported_this_work())
+
+    def test_main_writes_session_tagged_fallback_through_report_writer(self):
+        fake = FakeReport()
+        with tempfile.TemporaryDirectory() as tmp:
+            transcript = Path(tmp) / "session.jsonl"
+            transcript.write_text(
+                json.dumps({"role": "assistant", "content": "completion"}) + "\n",
+                encoding="utf-8",
+            )
+            event = {"transcript_path": str(transcript), "session_id": "abc123"}
+            with patch.object(_module, "_report", fake), patch.object(
+                sys, "stdin", io.StringIO(json.dumps(event))
+            ):
+                self.assertEqual(_module.main(), 0)
         self.assertEqual(
-            _role_from_worktree("/repo/edopro-next/.worktrees/builder", PRIMARY),
-            "builder",
+            fake.writes, [("completion", "claude-code-session:abc123", "claude-code-stop-hook")]
         )
-
-    def test_verifier_worktree_bare_name(self):
-        self.assertEqual(
-            _role_from_worktree("/repo/edopro-next/.worktrees/verifier", PRIMARY),
-            "verifier",
-        )
-
-    def test_sibling_directory_suffix_layout(self):
-        self.assertEqual(
-            _role_from_worktree("/repo/edopro-next-builder", PRIMARY), "builder",
-        )
-        self.assertEqual(
-            _role_from_worktree("/repo/edopro-next-verifier", PRIMARY), "verifier",
-        )
-
-    def test_confirmed_primary_checkout_is_brain(self):
-        self.assertEqual(_role_from_worktree(str(PRIMARY), PRIMARY), "brain")
-
-    def test_unrecognized_name_that_is_not_the_primary_checkout_is_not_brain(self):
-        """The regression this file exists to pin.
-
-        A worktree that is neither builder nor verifier by name, and is
-        provably *not* the primary checkout, must never fall back to
-        "brain" -- that is exactly the collision the historical defect
-        produced.
-        """
-        role = _role_from_worktree("/repo/edopro-next/.worktrees/scratch", PRIMARY)
-        self.assertNotEqual(role, "brain")
-        self.assertEqual(role, "unknown-scratch")
-
-    def test_unrecognized_name_with_no_primary_root_available_is_not_brain(self):
-        # primary_root is None when git-common-dir couldn't be resolved --
-        # must not default to "brain" just because there is nothing to
-        # compare against.
-        role = _role_from_worktree("/repo/edopro-next/.worktrees/scratch", None)
-        self.assertNotEqual(role, "brain")
-
-    def test_missing_worktree_root_is_not_brain(self):
-        role = _role_from_worktree(None, PRIMARY)
-        self.assertNotEqual(role, "brain")
 
 
 if __name__ == "__main__":

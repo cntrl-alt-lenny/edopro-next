@@ -1,180 +1,231 @@
-# Brief 008 — the read-failure predicate, and the platform-divergence pattern
+Brief-ID: 010-2026-09-20-framework-adoption
 
-Status: queued
-
-One brief lives here at a time. On delivery it moves to
-[`delivered/`](delivered/), and only on adjudication to
-[`archive/`](archive/) — see [`README.md`](README.md). Template and field
-meanings: [`docs/roles/builder.md`](../roles/builder.md).
-
----
+Status: active (delivered and reopened for corrections C6-C8)
 
 ## MODE: IMPLEMENTATION
 
 ## Goal
 
-Two deliverables, in this order of importance:
-
-1. **Fix a contract violation that is live on `master` today.** Both file
-   readers in this project decide "did the read fail?" with `if(file.bad())`.
-   On macOS that predicate is false when the path is a directory, so both
-   report success on input they cannot have read.
-2. **Answer, with evidence, what mechanism should stop this class** — and
-   `macOS CI` is a candidate to be argued for or against, not the assumed
-   answer. See "Required investigation".
+Adopt the shared agentic framework in edopro-next so a fresh session can start
+from `AGENTS.md` and `docs/agents/roles/brain.md`, reconstruct the live state,
+and choose the correct first action without conversation history. Resolve the
+known delivered brief queue, install the framework's canonical contracts and
+the report/checkout tooling, preserve this project's stronger local evidence
+and lifecycle rules, and deliver the result as a reviewed-ready Builder branch.
 
 ## Why this is next
 
-`master` is currently **red on macOS**: `ctest` in `policy/` fails
-`loadLflistDirectoryPathFailsCleanly`. That is not a flaky environment; it is
-the test correctly reporting that the implementation is wrong on this
-platform.
+This repository already has a three-seat brief loop, but its canonical role
+contracts and provider-neutral tooling are absent. Brief 008 is delivered but
+not accepted, and brief 009 was delivered without independent review; both
+must remain visible as distinct, honest queue records before new work proceeds.
+Adoption is the bounded foundation work needed for cold-start continuity and
+for the report and checkout mechanisms required by future rounds.
 
-The same defect is present, untested and silent, in `data/`. It is the sixth
-instance of "green on Linux CI, divergent on another supported platform" this
-project has hit, and the first where the divergence is a **runtime semantic**
-difference rather than a compiler diagnostic or a build-system quirk. That
-distinction is the reason the mechanism question is genuinely open.
+## Base
 
-## Base SHA
+Cut `meta/framework-adoption` from the current local tip of `master`. Confirm
+the exact base SHA with git before the first implementation change. Do not
+modify, rebase, force-push, delete, or merge the existing branches
+`m3/read-failure-predicate`, `meta/round-5-queue`, or `meta/evidence-freshness`.
 
-Branch from `origin/master`. Record the SHA with `git log -1`.
+## Relevant context
 
-## The defect
+Read `CLAUDE.md`, `AGENTS.md`, `docs/state.md`, `docs/briefs/README.md`, the
+archived brief shape, and the shared framework's adoption, constitution,
+role-contract, isolation, brief, report, and topology documents. Inspect the
+source records on `meta/round-5-queue` for briefs 008 and 009. The engine and
+product source tree is out of scope and is not relevant to this documentation
+and tooling adoption.
 
-`policy/src/lf_list.cpp:286` and `data/src/ydk.cpp:180` both read via a sized
-`file.read()` loop and then test `file.bad()`.
+## Reopened round state
 
-Brain reproduced the platform difference directly, on macOS/arm64, Apple
-clang 21:
-
-```
-ifstream on a directory:  is_open=1  gcount=0  fail=1  eof=1  bad=0
-```
-
-macOS surfaces a directory as an **empty file (EOF)**; Linux surfaces a read
-**error**. `bad()` catches only the Linux manifestation. Confirmed
-end-to-end against the built library:
-
-```
-load_ydk(directory): ok=1 error=""
-```
-
-`data/include/edopro_next/data/ydk.h:56-60` states that `ok` is false
-"exactly when the file could not be opened/read". That sentence is false on
-macOS.
-
-Note the comments at `lf_list.cpp:274` and `ydk.cpp:170` already anticipate
-"a directory" as the motivating case. The reasoning recorded there is about a
-different failure — a streambuf-level read that leaves `good()` true — and the
-predicate chosen for it does not cover this one. Read both comments before
-changing either; whatever you do must keep the case they were written for
-working, and both comments must end up true.
+The first delivery of this brief reached head `55a8989f` and was delivered for
+review but was **not accepted**. Corrections C1-C5 were subsequently delivered
+at head `3c212bda` and independently accepted as closed. This brief remains
+delivered and reopened in place for C6-C8; it is not finished. The adoption
+deliberately leaves the neutrality guard uninstalled rather than claiming
+complete adoption.
 
 ## Scope
 
-- Both call sites, fixed as one class rather than one at a time.
-- Test coverage for the currently-untested `data/` site, of the same shape as
-  the `policy/` test that caught it.
-- The comments and the `ydk.h` contract sentence made true.
-- A written recommendation on the mechanism question (below). Prose in the
-  completion report and, if you conclude something durable, a proposed
-  paragraph for `docs/architecture/` — do not edit `docs/state.md` or
-  `docs/ROADMAP.md`.
+- Preserve brief 008's delivered text, including corrections C1-C4 and its
+  delivered-and-not-accepted status, in `docs/briefs/delivered/008-...`, fixing
+  only its three broken relative links and adding its stable `Brief-ID:`.
+- Create a delivered record for brief 009 from the queue branch's active text,
+  recording its delivered-and-unadjudicated state, PR #26, branch
+  `meta/evidence-freshness`, and the path for re-landing it later.
+- Run the shared adoption tool after reading its plan, with Builder and
+  Verifier seats, hooks, and the Claude Code adapter. Reconcile every collision
+  deliberately; no `.framework` sibling may remain.
+- Keep this project's substantive invariants, evidence table, lifecycle, state,
+  mutation-tested push guard, and project-specific rationale. Install the
+  framework's canonical contracts under `docs/agents/roles/`, retire the old
+  `docs/roles/` copies, and keep the executor contract named `worker.md` while
+  declaring the project seat as Builder.
+- Do not install a repository-local neutrality guard while the framework's
+  branch-namespace rule contradicts its adoption guidance. Keep the established
+  `m<N>/` and `meta/` convention plainly, and record that provider-shaped lane
+  names and branch namespaces are not currently enforced here. Revisit only
+  when the framework provides a project-declared namespace mechanism and a
+  scanner whose rule agrees with its adoption guidance.
+- Update only live normative documents and tests whose paths must move; do not
+  rewrite historical archived briefs.
+- Demonstrate both restored docs-consistency guards: a dead angle-bracket link
+  must fail while a genuine framework placeholder still passes, and the
+  adapter's confirmation command set must cover the canonical contract's set.
+- Walk every path named by `AGENTS.md` and `docs/agents/roles/brain.md` and
+  confirm that each resolves to an existing file and that a fresh Brain's first
+  action is possible.
 
-## Non-scope
+## Non-goals
 
-- Do **not** add or modify CI workflows. If your recommendation is a new CI
-  leg, that is a proposal for Brain and the owner, not a change to make here.
-  Changing `.github/workflows/` is outside routine authority.
-- Do not touch `gframe/`, `ocgcore/`, or any repository setting.
-- Do not widen this into a general audit of error handling. Two sites.
-- Do not weaken or delete the failing test to make `ctest` green.
+- Do not change engine behaviour or touch `ocgcore/`, `gframe/`, `client/`,
+  `data/`, `policy/`, `ui/` source, build configuration, or workflows.
+- Do not fix brief 008 corrections C1-C4 or re-land brief 009's work.
+- Do not touch branch protection, repository settings, remotes, or any open
+  pull request. Do not merge anything.
+- Do not modify the framework repository or its canonical scanner.
+- Do not delete or weaken pre-existing tests. The newly installed neutrality
+  scanner, authority scanner, textblock helper and neutrality test are the
+  explicitly deferred exception; historical archive documents remain
+  historical records.
 
 ## Protected invariants
 
-- **`client/`, `data/` and `policy/` build with no Qt, no Irrlicht, no vcpkg
-  and no `ocgcore`.** Whatever predicate you choose must not add a dependency.
-- The semantic layers stay free of UI types.
-- **Failing closed is correct here.** If a read cannot be shown to have
-  succeeded, the result is a failure with a non-empty `error`. Do not make a
-  case "succeed with empty data" to simplify the predicate.
-- Behaviour on Linux and Windows must not regress. This is a portability fix,
-  not a Linux rewrite.
+- `ocgcore` must have the same recorded submodule commit before and after, and
+  no gitlink may appear in this diff.
+- The rules engine remains authoritative and separate from presentation; the
+  client model remains semantic and free of Qt/Irrlicht types.
+- AGPL-3.0-or-later, dynamic Qt linking, upstream ownership boundaries, and the
+  prohibition on committing artwork, databases, or CardScripts remain intact.
+- Builder and Verifier are executor/reviewer seats, never self-accepting or
+  merging seats; Brain remains the routine technical acceptance and merge seat.
+- The local lifecycle must retain its `delivered` state, and evidence claims
+  must remain honest and reproducible.
+- Existing tests, including push-guard, docs-consistency, save-agent-reply,
+  CI-check, replay-trace, semantic-trace, and protocol-generation tests, must
+  continue to run. Path assertions must be updated to the installed layout,
+  never removed or weakened.
+- LF normalization must be installed as `* text=auto eol=lf`; renormalization
+  must be checked and any unexpected diff reported rather than hidden.
 
 ## Required investigation
 
-1. **What is the right predicate?** `bad()` is one option among several —
-   checking the path's type before opening, checking `!file` after the loop,
-   checking `gcount()`/`eof()` combinations, or not using `ifstream` for the
-   type check at all. Say what you considered, what each one does on all three
-   platforms, and why you chose yours. A predicate that is *portable by
-   construction* is worth more than one that enumerates known platforms.
-2. **Is a directory the only input that diverges?** Check at least: a
-   permission-denied path, a named pipe/FIFO, a symlink to a directory, a
-   device file, and a zero-byte regular file. Say which you tested and on
-   what. If some are untestable here, say so rather than guessing.
-3. **The mechanism question.** Six instances so far, and they are not one
-   kind:
-
-   | # | Defect | Platform | Class |
-   |---|---|---|---|
-   | 1 | narrowing conversions in a test tuple | MSVC | compiler diagnostic |
-   | 2 | `bench_card_search` `/RTC1` vs `/O2` | MSVC | build config |
-   | 3 | QML cache `mkdir` rejects `..` | Windows | build system |
-   | 4 | QML mirror staleness on copy fallback | Windows | build system |
-   | 5 | unused `constexpr` under `-Werror` | Apple clang | compiler diagnostic |
-   | 6 | this one | macOS libc++ | **runtime semantics** |
-
-   Classes 1 and 5 are caught by *any* build on that toolchain. Classes 2–4
-   are caught by a *configure+build*. Class 6 is caught only by *running the
-   tests*, and only if a test for it exists — which is exactly why it is
-   silent in `data/`.
-
-   Argue what actually follows. Candidate mechanisms include, and are not
-   limited to: a macOS CI leg; a Windows CI leg; tightening Linux CI's warning
-   set to cover the diagnostic classes at lower cost; a portability rule in
-   `AGENTS.md` about platform-dependent standard-library semantics; or
-   deciding that some of these classes are acceptable to catch late. Cost and
-   reliability are legitimate arguments — `AGENTS.md` already declines to make
-   the upstream baseline a required check because it depends on a third
-   party's availability, and that reasoning may or may not apply here.
-
-   **Recommend one, and say what it would not catch.** A recommendation that
-   claims to close all six classes is almost certainly wrong.
+1. Inspect every adoption collision and compare the project's version with the
+   framework version. For `AGENTS.md`, `docs/roles/`, `docs/state.md`, brief
+   files, the push hook, gitattributes, Claude adapter files, seat files,
+   status command, and launching documentation, record the deliberate outcome
+   and any project-specific material moved or dropped.
+2. Establish the precise neutrality failure class. Explain why the existing
+   `m<N>/` and `meta/` namespaces are retained despite the framework guidance,
+   confirm that the repository-local neutrality guard is deliberately absent
+   and therefore does not catch provider-shaped namespaces, and record that the
+   framework adoption guidance and its branch rule contradict each other as an
+   out-of-scope framework finding. State what framework change would permit a
+   future installation.
+3. Verify the cold-start path from only `AGENTS.md` and the canonical Brain
+   contract, including every named path and the first actionable command.
 
 ## Acceptance criteria
 
-- `policy/` and `data/` each configure, build and pass `ctest` on macOS under
-  `-DEDOPRO_NEXT_WERROR=ON`, including `loadLflistDirectoryPathFailsCleanly`.
-- A new `data/` test covering the directory case, which **fails before your
-  fix and passes after it** — show both.
-- `load_ydk()` and `load_lflist()` agree with each other and with their
-  documented contracts on every input in investigation 2.
-- `ydk.h`'s contract sentence and both source comments are true as written.
-- `client/` still passes 7/7; the Python suite still passes.
-- CI green at the head SHA, queried rather than assumed.
+- The first commit contains this brief at `docs/briefs/active.md` with this
+  exact stable identifier.
+- Briefs 008 and 009 exist under `docs/briefs/delivered/` with honest statuses,
+  stable identifiers, preserved substance, and corrected live links.
+- Adoption ran from the shared framework after its plan was read, installed
+  the requested canonical files and adapter, and every `.framework` collision
+  was deliberately resolved and deleted.
+- The repository contains one canonical contract per declared role under
+  `docs/agents/roles/`: `brain.md`, `worker.md`, and `verifier.md`, with no
+  stale duplicate Builder contract; `docs/roles/` is retired.
+- The installed report/checkout tools are present and project tests refer to
+  their actual paths. The neutrality scanner, authority scanner, textblock
+  helper and their test are explicitly absent pending a framework fix; this
+  adoption is partial, not complete.
+- The two restored docs-consistency guards demonstrably fail on their targeted
+  mutations, pass after the mutations are removed, and the final full suite is
+  green.
+- Every path named by the two cold-start documents resolves, and the first
+  action is a runnable Builder/Brain checkout check as appropriate.
+- The branch is pushed as `meta/framework-adoption` and a non-merged PR against
+  `master` begins with `DO NOT MERGE — under review` and names base and head
+  commits without measured figures.
 
 ## Required evidence
 
-- The before/after for the new `data/` test, as real output.
-- `ctest` output for `client/`, `data/` and `policy/` on macOS.
-- The platform-behaviour probe for each input in investigation 2, with the
-  actual observed stream state — not a description of it.
-- `python3 -m unittest discover -s tests`. Note: a stale
-  `client/build/edopro_next_semantic_trace` will be silently preferred by
-  `tests/test_semantic_trace.py`; either delete it or set
-  `EDOPRO_NEXT_SEMANTIC_TRACE`, and say which.
-- CI check-run conclusions at the exact head SHA.
-- What you did **not** run — in particular, state plainly that Windows/MSVC
-  was not exercised, if it was not.
+- `python3 -m unittest discover -s tests -v`, including the installed checkout,
+  report, and project documentation tests. Neutrality tests are deliberately
+  absent because C3 deferred that guard; do not claim they ran.
+- `python3 tools/generate_messages.py --check` and
+  `python3 tools/generate_protocol_constants.py --check`.
+- `python3 tools/checkout.py --seat builder` and
+  `python3 tools/report.py status`.
+- `git submodule status` before and after, with the unchanged `ocgcore` commit.
+- `git add --renormalize .`, with the real result and whether it changed
+  anything.
+- The real failing and passing output for both restored docs-consistency guard
+  demonstrations.
+- The cold-start path walk and its first-action command.
+- The adoption plan and actual adoption output, plus the final absence of
+  `.framework` files.
+- The final diff, base/head SHAs, push and PR output, and the real output of
+  `python3 tools/report.py write --task 010-2026-09-20-framework-adoption`.
+- State the machine and platform. Do not build a C++ module: no touched file
+  can affect one; say this explicitly. Do not use the replay harness as proof
+  of unchanged duel behaviour.
+
+## Reopened corrections C1-C5
+
+1. **C1 — remove the counterexample block.** Delete the `guard:counterexample`
+   and `guard:violation` markers from the worktree policy and restore the
+   ordinary `m<N>/` and `meta/` branch example.
+2. **C2 — withdraw guard-driven wording edits.** Restore the exact
+   `deck-builder-ui.md` citation, the “deck-builder legality boundary” wording,
+   and the `../edopro-next-builder` example. Keep the corrected canonical role
+   paths in `docs/agents/launching.md`.
+3. **C3 — defer neutrality.** Remove the locally installed neutrality,
+   authority and textblock tools and neutrality test. The project therefore
+   does **not** currently enforce provider-shaped lane or branch namespaces;
+   this closes only when the framework reconciles its scanner with its adoption
+   guidance and supports declared project namespaces.
+4. **C4 — restore both docs guards.** Skip only targets that are entirely a
+   placeholder, and restore the general confirmation-command superset check
+   against `docs/agents/roles/worker.md` while retaining the explicit
+   Builder/Worker adapter assertions.
+5. **C5 — refresh rehydration state.** Update `docs/state.md` so active work,
+   delivered records, closed-but-kept queue branches, rejected PR #24 and the
+   honest next slices are current without weakening its spot-check discipline.
+
+## Git expectations
+
+Use focused commits on `meta/framework-adoption`; never push `master`, merge,
+force-push, rebase, or delete branches. The Builder delivers a branch and a
+report; Brain and the Verifier decide acceptance and merge.
 
 ## Completion-report schema
 
-The standard report in [`docs/roles/builder.md`](../roles/builder.md), plus:
+Use the standard Worker report with exact base/head SHAs, changed files,
+commands and output, omissions, sources for external claims, and open
+questions. Add the collision-by-collision reconciliation decisions, the
+project-specific material moved or dropped from `docs/roles/`, the neutrality
+deferral and absent catch surface, the framework branch-rule contradiction,
+the cold-start path walk, the unchanged submodule evidence, the renormalize
+result, the mutation red/green evidence, and the PR URL and report-writer
+output.
 
-- **The predicate comparison table** from investigation 1, across platforms.
-- **The mechanism recommendation** from investigation 3, with what it misses.
-- Anything in the existing comments at `lf_list.cpp:274` / `ydk.cpp:170` that
-  turned out to be wrong, stated plainly — they were written from empirical
-  work and one of them may still be right about the case it describes.
+## Follow-up corrections C6-C8
+
+6. **C6 — reconcile the brief with the deferral.** This brief must say in one
+   voice that the neutrality guard is not installed, must not require its tests
+   or claim that it catches provider-shaped namespaces, and must name the
+   framework change that would close the deferral.
+7. **C7 — repair moved cross-references.** Replace references to the deleted
+   `AGENTS.md` “Authority” section with the canonical constitution, sweep live
+   coordination documents for further stale moved paths or headings, and leave
+   historical archive references unchanged.
+8. **C8 — disclose the parity-guard change.** The report must say that the
+   former non-empty assertion was removed because the canonical Worker
+   confirmation step names no backtick-quoted command. The superset property
+   remains, but is dormant against adapter-only changes until the contract
+   names a command and remains live against future contract drift.
