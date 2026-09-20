@@ -21,7 +21,7 @@ The worktrees live **inside the repository**, at fixed repo-relative paths:
 `.worktrees/` is gitignored.
 
 **They are nested rather than sibling directories on purpose.** Sibling
-directories (`../edopro-next-worker`) depend on where the clone happens to
+directories (`../edopro-next-builder`) depend on where the clone happens to
 sit, so the layout differs between a Windows machine, a Mac and a CI box, and
 every doc has to name absolute paths that are wrong somewhere. Nested, the
 paths are repo-relative and therefore **identical on every machine** —
@@ -112,20 +112,17 @@ still goes to the owner.
 
 **Builder**, at the start of each round:
 
-<!-- guard:counterexample -->
-<!-- guard:violation branch-namespace roles=builder text="m3/some-scope" -->
 This project deliberately keeps its established `m<N>/` milestone and `meta/`
 coordination branch namespaces rather than changing existing project history to
-the framework's generic `<role>/<scope>` example. The neutrality guard still
-rejects provider-shaped namespaces; this is a narrow, visible project-convention
-exception, not a provider exemption.
+the framework's generic `<role>/<scope>` example. The convention applies to new
+branches too: milestone work uses `m<N>/<kebab-scope>` and framework or
+coordination work uses `meta/<kebab-scope>`.
 
 ```bash
 cd .worktrees/builder
 git fetch origin
 git checkout -b m3/some-scope origin/master
 ```
-<!-- /guard:counterexample -->
 
 Builder commits there, pushes the branch, and opens a PR. It does not merge.
 

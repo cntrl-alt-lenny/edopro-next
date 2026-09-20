@@ -1,6 +1,6 @@
 Brief-ID: 010-2026-09-20-framework-adoption
 
-Status: active
+Status: active (delivered and reopened for corrections C1-C5)
 
 ## MODE: IMPLEMENTATION
 
@@ -38,6 +38,14 @@ source records on `meta/round-5-queue` for briefs 008 and 009. The engine and
 product source tree is out of scope and is not relevant to this documentation
 and tooling adoption.
 
+## Reopened round state
+
+The first delivery of this brief reached head `55a8989f` and was delivered for
+review but was **not accepted**. This brief is therefore delivered and reopened
+in place for the five numbered corrections below; it is not finished. The
+reopened work deliberately completes only the corrections and leaves the
+neutrality guard deferred rather than claiming complete adoption.
+
 ## Scope
 
 - Preserve brief 008's delivered text, including corrections C1-C4 and its
@@ -54,15 +62,17 @@ and tooling adoption.
   framework's canonical contracts under `docs/agents/roles/`, retire the old
   `docs/roles/` copies, and keep the executor contract named `worker.md` while
   declaring the project seat as Builder.
-- Resolve the neutrality guard's known wording and branch-namespace conflict
-  without editing the framework scanner. Keep the established `m<N>/` and
-  `meta/` convention, add a narrow visible counterexample declaration or other
-  documented exception only where justified, and preserve rejection of truly
-  provider-shaped namespaces.
+- Do not install a repository-local neutrality guard while the framework's
+  branch-namespace rule contradicts its adoption guidance. Keep the established
+  `m<N>/` and `meta/` convention plainly, and record that provider-shaped lane
+  names and branch namespaces are not currently enforced here. Revisit only
+  when the framework provides a project-declared namespace mechanism and a
+  scanner whose rule agrees with its adoption guidance.
 - Update only live normative documents and tests whose paths must move; do not
   rewrite historical archived briefs.
-- Demonstrate the neutrality guard failing on a provider-shaped mutation, then
-  remove the mutation and demonstrate a green suite.
+- Demonstrate both restored docs-consistency guards: a dead angle-bracket link
+  must fail while a genuine framework placeholder still passes, and the
+  adapter's confirmation command set must cover the canonical contract's set.
 - Walk every path named by `AGENTS.md` and `docs/agents/roles/brain.md` and
   confirm that each resolves to an existing file and that a fresh Brain's first
   action is possible.
@@ -124,10 +134,13 @@ and tooling adoption.
 - The repository contains one canonical contract per declared role under
   `docs/agents/roles/`: `brain.md`, `worker.md`, and `verifier.md`, with no
   stale duplicate Builder contract; `docs/roles/` is retired.
-- The installed guards and report/checkout tools are present, project tests
-  refer to their actual paths, and no guard is weakened or made provider-blind.
-- The neutrality mutation demonstrably fails, its removal demonstrably passes,
-  and the final full test suite is green.
+- The installed report/checkout tools are present and project tests refer to
+  their actual paths. The neutrality scanner, authority scanner, textblock
+  helper and their test are explicitly absent pending a framework fix; this
+  adoption is partial, not complete.
+- The two restored docs-consistency guards demonstrably fail on their targeted
+  mutations, pass after the mutations are removed, and the final full suite is
+  green.
 - Every path named by the two cold-start documents resolves, and the first
   action is a runnable Builder/Brain checkout check as appropriate.
 - The branch is pushed as `meta/framework-adoption` and a non-merged PR against
@@ -145,8 +158,8 @@ and tooling adoption.
 - `git submodule status` before and after, with the unchanged `ocgcore` commit.
 - `git add --renormalize .`, with the real result and whether it changed
   anything.
-- The neutrality guard's real failing output after a temporary provider-shaped
-  mutation, followed by the real green output after removal.
+- The real failing and passing output for both restored docs-consistency guard
+  demonstrations.
 - The cold-start path walk and its first-action command.
 - The adoption plan and actual adoption output, plus the final absence of
   `.framework` files.
@@ -155,6 +168,28 @@ and tooling adoption.
 - State the machine and platform. Do not build a C++ module: no touched file
   can affect one; say this explicitly. Do not use the replay harness as proof
   of unchanged duel behaviour.
+
+## Reopened corrections C1-C5
+
+1. **C1 — remove the counterexample block.** Delete the `guard:counterexample`
+   and `guard:violation` markers from the worktree policy and restore the
+   ordinary `m<N>/` and `meta/` branch example.
+2. **C2 — withdraw guard-driven wording edits.** Restore the exact
+   `deck-builder-ui.md` citation, the “deck-builder legality boundary” wording,
+   and the `../edopro-next-builder` example. Keep the corrected canonical role
+   paths in `docs/agents/launching.md`.
+3. **C3 — defer neutrality.** Remove the locally installed neutrality,
+   authority and textblock tools and neutrality test. The project therefore
+   does **not** currently enforce provider-shaped lane or branch namespaces;
+   this closes only when the framework reconciles its scanner with its adoption
+   guidance and supports declared project namespaces.
+4. **C4 — restore both docs guards.** Skip only targets that are entirely a
+   placeholder, and restore the general confirmation-command superset check
+   against `docs/agents/roles/worker.md` while retaining the explicit
+   Builder/Worker adapter assertions.
+5. **C5 — refresh rehydration state.** Update `docs/state.md` so active work,
+   delivered records, closed-but-kept queue branches, rejected PR #24 and the
+   honest next slices are current without weakening its spot-check discipline.
 
 ## Git expectations
 
