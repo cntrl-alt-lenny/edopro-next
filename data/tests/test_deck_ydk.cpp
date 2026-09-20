@@ -437,7 +437,7 @@ EDOPRO_DATA_TEST(loading_a_missing_file_fails_and_leaves_an_existing_deck_untouc
 
 	const auto result = edopro_next::data::load_ydk(missing);
 	EDOPRO_DATA_CHECK(!result.ok);
-	EDOPRO_DATA_CHECK(!result.error.empty());
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to open file: " + missing.string());
 	EDOPRO_DATA_CHECK(result.deck.empty());
 
 	// The caller's own guard - not this codec - is what makes a failed
@@ -452,6 +452,33 @@ EDOPRO_DATA_TEST(loading_a_directory_fails_cleanly) {
 	EDOPRO_DATA_CHECK(!result.ok);
 	EDOPRO_DATA_CHECK(!result.error.empty());
 	EDOPRO_DATA_CHECK(result.deck.empty());
+}
+
+EDOPRO_DATA_TEST(a_stat_failure_defers_to_the_open_failure) {
+	const auto directory = std::filesystem::temp_directory_path();
+	const auto link = directory / "edopro_next_deck_test_dangling_link.ydk";
+	const auto target = directory / "edopro_next_deck_test_missing_target.ydk";
+	std::error_code cleanup_error;
+	std::filesystem::remove(link, cleanup_error);
+	std::filesystem::remove(target, cleanup_error);
+	std::error_code create_error;
+	std::filesystem::create_symlink(target, link, create_error);
+	if(create_error)
+		return;
+
+	const auto result = edopro_next::data::load_ydk(link);
+	std::filesystem::remove(link, cleanup_error);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to open file: " + link.string());
+}
+
+EDOPRO_DATA_TEST(a_non_regular_file_is_rejected_before_opening) {
+	const std::filesystem::path device = "/dev/zero";
+	if(!std::filesystem::exists(device))
+		return;
+	const auto result = edopro_next::data::load_ydk(device);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + device.string());
 }
 
 // ---------------------------------------------------------------------

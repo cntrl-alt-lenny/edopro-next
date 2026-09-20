@@ -4,6 +4,10 @@
 #include <system_error>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace edopro_next::data {
 
 namespace {
@@ -77,6 +81,39 @@ std::string sanitize_creator_line(std::string_view creator) {
 			out += c;
 	}
 	return out;
+}
+
+bool is_known_non_regular_path(const std::filesystem::path& path) {
+	std::error_code status_error;
+	const auto status = std::filesystem::status(path, status_error);
+	if(!status_error) {
+		const auto type = status.type();
+		if(type == std::filesystem::file_type::directory)
+			return true;
+		if(type != std::filesystem::file_type::regular &&
+		   type != std::filesystem::file_type::not_found &&
+		   type != std::filesystem::file_type::none)
+			return true;
+	}
+
+#ifdef _WIN32
+	// MSVC's filesystem status can classify a live named pipe as regular.
+	// Open a shared native handle solely to ask Windows what kind of object it
+	// is; a failed probe is deliberately left to ifstream, which preserves the
+	// ordinary open diagnostic for missing and inaccessible paths.
+	const HANDLE handle = CreateFileW(
+		path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
+	if(handle != INVALID_HANDLE_VALUE) {
+		const DWORD type = GetFileType(handle);
+		CloseHandle(handle);
+		return type != FILE_TYPE_DISK;
+	}
+#endif
+
+	// A status error is not itself proof that opening will fail: notably, a
+	// missing path should reach ifstream so it reports "failed to open file".
+	return false;
 }
 
 } // namespace
@@ -157,13 +194,8 @@ YdkParse parse_ydk(std::string_view text) {
 
 YdkLoadResult load_ydk(const std::filesystem::path& path) {
 	YdkLoadResult result;
-	std::error_code status_error;
-	if(std::filesystem::is_directory(path, status_error)) {
+	if(is_known_non_regular_path(path)) {
 		result.error = "failed to read file: " + path.string();
-		return result;
-	}
-	if(status_error) {
-		result.error = "failed to inspect file: " + path.string();
 		return result;
 	}
 
@@ -179,9 +211,12 @@ YdkLoadResult load_ydk(const std::filesystem::path& path) {
 	// `file` reporting good() with a silently truncated or empty result -
 	// confirmed empirically (a streambuf-backed read of /proc/self/mem,
 	// which opens successfully but fails on read, left file.bad() false
-	// with zero bytes captured). A directory is rejected before opening:
+	// with zero bytes captured). A directory or other non-regular path is
+	// rejected before opening:
 	// libc++ can otherwise surface it as a clean EOF, indistinguishable
-	// from a valid empty file. Reading through file.read() in a sized loop
+	// from a valid empty file. A status error is deliberately deferred to
+	// ifstream so the open result remains the authoritative diagnostic.
+	// Reading through file.read() in a sized loop
 	// goes through that machinery, so a genuine read failure is
 	// distinguishable from a clean EOF via file.bad() below - verified
 	// empirically for exact and non-exact chunk-boundary file sizes, and

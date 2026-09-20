@@ -5,6 +5,10 @@
 #include <fstream>
 #include <system_error>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace edopro_next::policy {
 
 namespace {
@@ -47,6 +51,39 @@ constexpr std::uint32_t fixed_rotate_term(std::uint32_t code) {
 // domain; callers check is_hash_safe_count() first.
 constexpr std::int32_t kHashSafeCountMin = -26;
 constexpr std::int32_t kHashSafeCountMax = 4;
+
+bool is_known_non_regular_path(const std::filesystem::path& path) {
+	std::error_code status_error;
+	const auto status = std::filesystem::status(path, status_error);
+	if(!status_error) {
+		const auto type = status.type();
+		if(type == std::filesystem::file_type::directory)
+			return true;
+		if(type != std::filesystem::file_type::regular &&
+		   type != std::filesystem::file_type::not_found &&
+		   type != std::filesystem::file_type::none)
+			return true;
+	}
+
+#ifdef _WIN32
+	// MSVC's filesystem status can classify a live named pipe as regular.
+	// Open a shared native handle solely to ask Windows what kind of object it
+	// is; a failed probe is deliberately left to ifstream, which preserves the
+	// ordinary open diagnostic for missing and inaccessible paths.
+	const HANDLE handle = CreateFileW(
+		path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
+	if(handle != INVALID_HANDLE_VALUE) {
+		const DWORD type = GetFileType(handle);
+		CloseHandle(handle);
+		return type != FILE_TYPE_DISK;
+	}
+#endif
+
+	// A status error is not itself proof that opening will fail: notably, a
+	// missing path should reach ifstream so it reports "failed to open file".
+	return false;
+}
 
 // Takes the NARROWED std::int32_t - the same value upstream's own hash
 // expression operates on (gframe/deck_manager.cpp:78,80) - not the wide
@@ -262,13 +299,8 @@ LfListParse parse_lflist(std::string_view text) {
 
 LfListLoadResult load_lflist(const std::filesystem::path& path) {
 	LfListLoadResult result;
-	std::error_code status_error;
-	if(std::filesystem::is_directory(path, status_error)) {
+	if(is_known_non_regular_path(path)) {
 		result.error = "failed to read file: " + path.string();
-		return result;
-	}
-	if(status_error) {
-		result.error = "failed to inspect file: " + path.string();
 		return result;
 	}
 
@@ -286,9 +318,11 @@ LfListLoadResult load_lflist(const std::filesystem::path& path) {
 	// truncated or empty result - external review found this exact defect
 	// here; data/src/ydk.cpp's load_ydk() already carries the fix and its
 	// own empirical verification note for the identical operation. A
-	// directory is rejected before opening because libc++ can otherwise
-	// surface it as a clean EOF, indistinguishable from a valid empty file.
-	// Reading through file.read() in a sized loop goes through that
+	// directory or other non-regular path is rejected before opening because
+	// libc++ can otherwise surface it as a clean EOF, indistinguishable from
+	// a valid empty file. A status error is deliberately deferred to ifstream
+	// so the open result remains the authoritative diagnostic. Reading through
+	// file.read() in a sized loop goes through that
 	// machinery, so a genuine read failure is distinguishable from a clean
 	// EOF via file.bad() below.
 	std::string content;

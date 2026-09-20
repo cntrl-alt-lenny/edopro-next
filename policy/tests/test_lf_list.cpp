@@ -474,9 +474,10 @@ EDOPRO_POLICY_TEST(loadLflistFileRoundTrips) {
 }
 
 EDOPRO_POLICY_TEST(loadLflistMissingFileFails) {
-	auto result = load_lflist("/definitely/does/not/exist.conf");
+	const std::filesystem::path missing = "/definitely/does/not/exist.conf";
+	auto result = load_lflist(missing);
 	EDOPRO_POLICY_CHECK(!result.ok);
-	EDOPRO_POLICY_CHECK(!result.error.empty());
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to open file: " + missing.string());
 	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 0u);
 }
 
@@ -492,4 +493,31 @@ EDOPRO_POLICY_TEST(loadLflistDirectoryPathFailsCleanly) {
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK(!result.error.empty());
 	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 0u);
+}
+
+EDOPRO_POLICY_TEST(loadLflistStatFailureDefersToOpenFailure) {
+	const auto directory = std::filesystem::temp_directory_path();
+	const auto link = directory / "edopro_next_policy_test_dangling_link.conf";
+	const auto target = directory / "edopro_next_policy_test_missing_target.conf";
+	std::error_code cleanup_error;
+	std::filesystem::remove(link, cleanup_error);
+	std::filesystem::remove(target, cleanup_error);
+	std::error_code create_error;
+	std::filesystem::create_symlink(target, link, create_error);
+	if(create_error)
+		return;
+
+	const auto result = load_lflist(link);
+	std::filesystem::remove(link, cleanup_error);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to open file: " + link.string());
+}
+
+EDOPRO_POLICY_TEST(loadLflistNonRegularFileIsRejectedBeforeOpening) {
+	const std::filesystem::path device = "/dev/zero";
+	if(!std::filesystem::exists(device))
+		return;
+	const auto result = load_lflist(device);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + device.string());
 }
