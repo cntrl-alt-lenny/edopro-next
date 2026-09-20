@@ -128,14 +128,15 @@ This distinction is the single most useful thing in this file.
   covered either.
 - Semantic coverage beyond the 34 decoded message types.
 - **That our layers behave the same on every platform we support.** Six
-  divergences have been found so far that Linux CI could not see, and the
-  sixth is a *runtime* one rather than a compiler or build-system one:
-  `load_lflist()` and `load_ydk()` both test `file.bad()` to detect a failed
-  read, and on macOS a directory opens, reads as a clean EOF, and is reported
-  as **success**. Confirmed directly: `load_ydk(directory)` returns
-  `ok=1, error=""`, which contradicts `data/include/edopro_next/data/ydk.h:56`
-  in as many words. `policy/` has a test for it and is red on macOS today;
-  `data/` has no such test and is silently wrong. Brief 008.
+  divergences have been found so far that Linux CI could not see. Brief 011
+  corrected the sixth runtime case: both loaders now reject directories and
+  other known non-regular inputs before opening, defer status errors to the
+  open diagnostic, and use a Windows native-handle supplement for named
+  pipes. The change was built and tested on this macOS machine, but Windows/
+  MSVC was not exercised here. The decision, limits, and recommended
+  cross-platform matrix are in
+  [`architecture/read-failure-class.md`](architecture/read-failure-class.md)
+  and ADR 0009; platform equality remains unproven until those jobs run.
 
 ## Intentional upstream deltas
 
@@ -252,16 +253,17 @@ reconciles its scanner with its adoption guidance and provides declared project
 namespaces. The archived record notes one wording nit: “newly installed” should
 have said “files adoption would otherwise install.”
 
-Briefs 008 and 009 are delivered records, not active work:
-[`briefs/delivered/008-2026-09-01-read-failure-predicate.md`](briefs/delivered/008-2026-09-01-read-failure-predicate.md)
-is delivered and not accepted, while
+Brief 008's four corrections were closed by Brief 011 and its record is now
+archived with that close-out:
+[`briefs/archive/008-2026-09-01-read-failure-predicate.md`](briefs/archive/008-2026-09-01-read-failure-predicate.md).
+Brief 009 remains a delivered record, not active work:
 [`briefs/delivered/009-2026-09-01-evidence-freshness.md`](briefs/delivered/009-2026-09-01-evidence-freshness.md)
 is delivered and unadjudicated. PR #25 and PR #26 are closed with their
 branches kept; #25's queue record is reflected in the delivered 008/009 files,
 and #26's work remains on `meta/evidence-freshness` to be re-landed as its own
-reviewed round. PR #24 remains open and rejected; Brief 011 is now the active
-round on `m3/read-failure-predicate` and is closing or re-evaluating Brief 008's
-four corrections without assuming Windows/MSVC evidence is available here.
+reviewed round. PR #24 remains open and rejected; Brief 011 is now delivered
+from `m3/read-failure-predicate`, with its implementation awaiting review at
+the new head and without assuming Windows/MSVC evidence is available here.
 
 ## Local toolchain — state, and what still does not build
 
@@ -311,22 +313,23 @@ CI" does not cover.
 ### macOS — the primary machine as of 2026-09-01
 
 Apple clang 21 (`Apple clang 21.0.0`), CMake 4.4.3, Ninja 1.13.2, Python
-3.13 at `/opt/homebrew/bin/python3.13`. **Qt is not installed**, and the
+3.9.6. **Qt is not installed**, and the
 system Python is 3.9.
 
 | Layer | On this machine |
 |---|---|
 | `client/` | configures, builds, **7/7 `ctest`** |
 | `data/` | configures, builds, **3/3 `ctest`** |
-| `policy/` | configures and builds, **`ctest` FAILS** — see below |
+| `policy/` | configures, builds, and passes its 2/2 CTest cases after Brief 011 |
 | `ui/` | **cannot be configured at all**; no Qt |
 | `tools/`, `tests/` | 69/69 pass; both generator `--check`s clean |
 
 Two traps specific to this machine, both of which cost real time:
 
-1. **`policy/` `ctest` fails on `master` right now**, and it is the code that
-   is wrong, not the environment — `loadLflistDirectoryPathFailsCleanly`.
-   Brief 008 is this. Do not "fix" it by re-running.
+1. **`master` carried a macOS policy failure** in
+   `loadLflistDirectoryPathFailsCleanly`; Brief 011 corrected the shared
+   loader class on this branch. Verify the branch's current CTest result rather
+   than relaying the old master state.
 2. **A stale `client/build/edopro_next_semantic_trace` is silently preferred**
    by `tests/test_semantic_trace.py`'s `find_binary()`, which searches fixed
    paths with no freshness check. A binary four days old made four Python
@@ -357,33 +360,34 @@ not fold it into a narrative section.)*
   enforce provider-shaped lane names or branch namespaces. The framework must
   provide a project-declared namespace mechanism and reconcile that scanner
   rule with its adoption guidance before this can close.
-- **Brief 011 / Brief 008** — PR #24 remains open and rejected while this
-  round closes corrections C1-C4 and decides the broader non-terminating-file
-  predicate and platform-divergence mechanism. Do not archive Brief 008 unless
-  all four corrections are actually closed.
+- **Brief 011 / Brief 008** — PR #24 remains open and rejected while the
+  Brief 011 implementation is reviewed. C1-C4 are closed in the working
+  tree; the Windows/MSVC behavior still needs platform evidence. The broader
+  predicate and platform-divergence recommendation are recorded in the new
+  architecture document and ADR, but no CI change was made.
 - **Brief 009** — delivered but unadjudicated; branch `meta/evidence-freshness`
   must be reviewed and re-landed as its own round.
 
 ## Recommended next slice
 
-**Brief 011 — the read-failure class** is active on
-`m3/read-failure-predicate`. It must close Brief 008's C1-C4 only when the
-tests and evidence support doing so, decide the non-terminating-file predicate,
-and answer the platform-divergence mechanism question without changing CI.
+**Review Brief 011 — the read-failure class** on
+`m3/read-failure-predicate`. Verify the C1-C4 close-out, the non-terminating
+file predicate, and the platform-divergence recommendation before Brain
+decides whether PR #24 can be merged. Windows/MSVC evidence remains a known
+gap, and no CI policy change is part of this round.
 
 **After Brief 011, re-land Brief 009** from `meta/evidence-freshness` as its
 own reviewed round. Do not build on its outcome before adjudication.
 
-The read-failure work remains important for a blunt reason: `master` is red on
-macOS today, and the same defect is silently live in `data/` where no test looks
-for it. It is entirely inside `policy/` and `data/`, both of which build and
-test on the current machine, so it can produce its own required evidence.
+The read-failure work was entirely inside `policy/` and `data/`, both of which
+build and test on the current machine. The macOS directory failure and the
+silent `data/` gap are now covered by the branch's tests; the remaining
+platform-evidence gap is Windows/MSVC.
 
-It carries a second question deliberately left open rather than pre-answered:
-**what mechanism should catch platform divergence**, given six instances and
-at least three different classes among them. A macOS CI leg is a candidate to
-be argued, not the assumed answer — the classes have different costs and only
-one of them needs tests to be *run* rather than merely compiled.
+The round's answer to the mechanism question is a recommendation for a
+non-required macOS-and-Windows portability matrix over the data/policy tests;
+the owner decides whether any new check becomes required. It is recorded with
+the predicate decision rather than treated as an implemented CI change.
 
 **After that, the deck-builder legality UI** — the remaining M3 item, and the
 one the roadmap actually cares about. Two things gate it, and both are now

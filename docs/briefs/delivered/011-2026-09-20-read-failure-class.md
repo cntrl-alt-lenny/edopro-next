@@ -1,6 +1,6 @@
 Brief-ID: 011-2026-09-20-read-failure-class
 
-Status: active
+Status: delivered
 
 ## MODE: IMPLEMENTATION
 
@@ -128,3 +128,21 @@ omissions, source and open-question fields. Add the C1-C4 disposition, the
 predicate comparison and decision, the platform-divergence recommendation and
 limits, the pre-existing-test disclosure, submodule/hash evidence, platform
 gap, PR URL, and report-writer output.
+
+## Builder close-out
+
+All four Brief 008 corrections are closed in this delivery. C1 is covered by
+exact missing-file diagnostics in both loaders; C2 by the corrected public
+load contracts; C3 by tests showing a status failure reaches the open; and C4
+by fail-closed preflight for non-regular inputs, including `/dev/zero` on
+POSIX and a Windows `GetFileType()` supplement for named pipes. The decision
+and its limits are recorded in
+[`docs/architecture/read-failure-class.md`](../architecture/read-failure-class.md)
+and [ADR 0009](../adr/0009-file-loader-failure-class.md). The recommended
+cross-platform validation matrix is documented but `.github/workflows/` was
+not changed.
+
+Windows/MSVC was not available on this macOS/arm64 machine, so the native
+Windows path is documented and compiled only conditionally; that platform
+evidence remains for review. No C++ module outside `data/` and `policy/` was
+built, and the replay harness is not evidence about duel behavior.
