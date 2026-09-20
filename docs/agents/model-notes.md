@@ -70,7 +70,7 @@ the Builder or Verifier seats. Owner's stated intent is to vary Brain's model
 with available capacity rather than pin it.
 
 **Round 1 (2026-08-31) — Builder seat, Claude Sonnet 5 at High effort.**
-Brief 001, `UPSTREAM ARCHAEOLOGY`, the deck-builder legality boundary — see
+Brief 001, `UPSTREAM ARCHAEOLOGY`, the deck legality boundary — see
 [`../briefs/`](../briefs/) for where that brief currently sits and what its
 status is; do not assume from here. Produced PR #15, a 523-line source-cited
 document. Observations:
@@ -82,7 +82,7 @@ document. Observations:
   mechanisms, their bypasses, and the total absence of checks on the save and
   import paths. Keeping the answer out of the brief was the right call and is
   worth repeating.
-- **Flagged rather than fixed.** Found that `deck-builder-ui.md` §1 claims
+- **Flagged rather than fixed.** Found that the deck-editor UI document §1 claims
   more than upstream source supports, and recorded it quoted-both-ways in the
   new document instead of silently editing an out-of-scope file. Correct
   discipline.

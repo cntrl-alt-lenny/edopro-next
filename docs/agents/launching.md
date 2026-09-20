@@ -1,6 +1,6 @@
 # Launching a role on any tool
 
-The role contracts in [`../roles/`](../roles/) are vendor-neutral. This file
+The role contracts in [`roles/`](roles/) are vendor-neutral. This file
 holds everything that is not: how to actually start a session, per tool, and
 what each tool does and does not provide.
 
@@ -12,7 +12,8 @@ is the fallback whenever a tool-specific adapter does not exist.
 1. **Put the session in the right worktree.** Brain in the primary checkout,
    Builder in `.worktrees/builder`, Verifier in `.worktrees/verifier` —
    [`worktree-mechanism.md`](worktree-mechanism.md).
-2. **Give it the contract**, in full: `docs/roles/<role>.md`. Paste it if the
+2. **Give it the contract**, in full: the relevant file in
+   `docs/agents/roles/` — `worker.md` is Builder's contract. Paste it if the
    tool has no file access; the contracts are written to survive that.
 3. **Give it `CLAUDE.md` and `AGENTS.md`** — despite its name, `CLAUDE.md` is
    the project's own working agreement and is not vendor-specific.
@@ -33,8 +34,12 @@ Nothing above depends on a vendor. Everything below is convenience on top.
 | Claude Code | `.claude/agents/*.md`, `.claude/commands/status.md`, `.claude/settings.json`, `.claude/hooks/` | Named subagents, a `/status` command, and the shared inbox |
 | Anything else | none yet | Use the universal procedure above |
 
-Adding a vendor means adding an adapter directory and a row here. It must not
-mean editing a role contract.
+The framework's generic adapter rules are in
+[`adapters.md`](adapters.md). This file is kept as edopro-next's operational
+map: it records the worktree, Claude Code and model-observation specifics that
+are not part of the provider-neutral framework contract. Adding a vendor means
+adding an adapter directory and a row here. It must not mean editing a role
+contract.
 
 ### Claude Code specifics
 
