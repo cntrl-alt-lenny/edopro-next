@@ -261,6 +261,11 @@ class CoordinationLinkTest(unittest.TestCase):
                 target = target.strip()
                 if not target or "://" in target or target.startswith("mailto:"):
                     continue
+                # The framework's adapter specification uses links such as
+                # `[<path>]` in a shape example. They are placeholders, not
+                # repository paths; concrete links remain checked below.
+                if "<" in target or ">" in target:
+                    continue
                 with self.subTest(doc=str(doc.relative_to(REPO)), link=target):
                     self.assertTrue(
                         _link_resolves(doc.parent / target, tracked),
