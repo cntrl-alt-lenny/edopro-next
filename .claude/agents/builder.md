@@ -1,23 +1,22 @@
 ---
 name: builder
-description: Single implementation role for edopro-next. Executes exactly one Brain-authored brief per invocation, in the MODE the brief specifies, on its own branch in its own worktree, and opens a PR it never merges. Use for a self-contained brief that fits in one context; for a brief needing its own branch, commits and PR lifecycle, launch a standalone session instead.
+description: Builder executor role — takes one bounded brief, works in the Builder worktree, validates, commits, pushes a branch, and reports. Never accepts or merges its own work.
 ---
 
 # Builder — Claude Code adapter
 
-**Your role contract is [`docs/roles/builder.md`](../../docs/roles/builder.md).
-Read it now, in full, and follow it. It is authoritative.** This file exists
-only to start you on this particular tool; it deliberately does not restate
-the contract, so the two cannot drift apart.
+**Your role contract is [`docs/agents/roles/worker.md`](../../docs/agents/roles/worker.md).
+Read it now, in full, and follow it. It is authoritative.** This file exists only
+to start you on this particular tool; it deliberately does not restate the
+contract, so the two cannot drift apart.
 
-Then read [`CLAUDE.md`](../../CLAUDE.md) and [`AGENTS.md`](../../AGENTS.md),
-and your brief at [`docs/briefs/active.md`](../../docs/briefs/active.md).
+Then read `AGENTS.md` and your brief.
 
-## Claude Code specifics for this seat
+## Specifics for this seat on this tool
 
-- Work in `.worktrees/builder`, **never** in Brain's primary checkout —
-  [`worktree-mechanism.md`](../../docs/agents/worktree-mechanism.md). Confirm
-  with `git worktree list`, `git status` and `git branch` before touching
-  anything.
-- No `model:` is pinned: this seat inherits whatever was launched. Effort is
-  not settable here — see [`launching.md`](../../docs/agents/launching.md).
+- Work in this seat's own checkout, never in the coordinating session's. Two
+  sessions sharing one working directory is how unrelated commits end up
+  stacked on a work branch before review.
+- Start from the brief and the contract in fresh context. The Builder scope is
+  the one assigned in `AGENTS.md`; it does not create a second contract.
+- No model is pinned. This seat inherits whatever was launched.

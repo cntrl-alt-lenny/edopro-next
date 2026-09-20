@@ -1,180 +1,130 @@
-# Brief 008 — the read-failure predicate, and the platform-divergence pattern
+Brief-ID: 011-2026-09-20-read-failure-class
 
-Status: queued
-
-One brief lives here at a time. On delivery it moves to
-[`delivered/`](delivered/), and only on adjudication to
-[`archive/`](archive/) — see [`README.md`](README.md). Template and field
-meanings: [`docs/roles/builder.md`](../roles/builder.md).
-
----
+Status: active
 
 ## MODE: IMPLEMENTATION
 
 ## Goal
 
-Two deliverables, in this order of importance:
-
-1. **Fix a contract violation that is live on `master` today.** Both file
-   readers in this project decide "did the read fail?" with `if(file.bad())`.
-   On macOS that predicate is false when the path is a directory, so both
-   report success on input they cannot have read.
-2. **Answer, with evidence, what mechanism should stop this class** — and
-   `macOS CI` is a candidate to be argued for or against, not the assumed
-   answer. See "Required investigation".
+Close Brief 008's four rejected corrections in `data/` and `policy/`, decide
+and document a safe predicate for the broader non-terminating-file class, and
+answer what validation mechanism should catch platform-dependent runtime
+semantics. Deliver the implementation and the evidence as one reviewed-ready
+Builder round without changing CI policy.
 
 ## Why this is next
 
-`master` is currently **red on macOS**: `ctest` in `policy/` fails
-`loadLflistDirectoryPathFailsCleanly`. That is not a flaky environment; it is
-the test correctly reporting that the implementation is wrong on this
-platform.
+Brief 008's delivered code is rejected and its four corrections remain open.
+Its directory test can pass with the fix reverted on Linux and Windows, while
+`load_ydk()` can never return for inputs such as a POSIX FIFO, a Windows named
+pipe, or `/dev/zero`. The project therefore needs both the concrete correction
+and an honest class-level decision before another round builds on it.
 
-The same defect is present, untested and silent, in `data/`. It is the sixth
-instance of "green on Linux CI, divergent on another supported platform" this
-project has hit, and the first where the divergence is a **runtime semantic**
-difference rather than a compiler diagnostic or a build-system quirk. That
-distinction is the reason the mechanism question is genuinely open.
+## Base and branch
 
-## Base SHA
-
-Branch from `origin/master`. Record the SHA with `git log -1`.
-
-## The defect
-
-`policy/src/lf_list.cpp:286` and `data/src/ydk.cpp:180` both read via a sized
-`file.read()` loop and then test `file.bad()`.
-
-Brain reproduced the platform difference directly, on macOS/arm64, Apple
-clang 21:
-
-```
-ifstream on a directory:  is_open=1  gcount=0  fail=1  eof=1  bad=0
-```
-
-macOS surfaces a directory as an **empty file (EOF)**; Linux surfaces a read
-**error**. `bad()` catches only the Linux manifestation. Confirmed
-end-to-end against the built library:
-
-```
-load_ydk(directory): ok=1 error=""
-```
-
-`data/include/edopro_next/data/ydk.h:56-60` states that `ok` is false
-"exactly when the file could not be opened/read". That sentence is false on
-macOS.
-
-Note the comments at `lf_list.cpp:274` and `ydk.cpp:170` already anticipate
-"a directory" as the motivating case. The reasoning recorded there is about a
-different failure — a streambuf-level read that leaves `good()` true — and the
-predicate chosen for it does not cover this one. Read both comments before
-changing either; whatever you do must keep the case they were written for
-working, and both comments must end up true.
+Continue on the existing `m3/read-failure-predicate` branch, merge
+`origin/master` into it without rebasing or force-pushing, and preserve its
+open PR #24 and recorded rejection. The first commit on this branch after the
+merge contains this brief and the Brief 010 close-out.
 
 ## Scope
 
-- Both call sites, fixed as one class rather than one at a time.
-- Test coverage for the currently-untested `data/` site, of the same shape as
-  the `policy/` test that caught it.
-- The comments and the `ydk.h` contract sentence made true.
-- A written recommendation on the mechanism question (below). Prose in the
-  completion report and, if you conclude something durable, a proposed
-  paragraph for `docs/architecture/` — do not edit `docs/state.md` or
-  `docs/ROADMAP.md`.
+- Close Brief 008 corrections C1-C4 by reading their authoritative text from
+  `docs/briefs/delivered/008-2026-09-01-read-failure-predicate.md` on
+  `master`, implementing only what the corrections require, and adding tests
+  that fail before each relevant fix. C1 must assert the actual missing-file
+  error message.
+- Decide whether the file readers should reject by path type, inspect the
+  opened handle, or use another predicate. Exercise the relevant inputs and
+  record the cross-platform limits honestly; do not claim portability by
+  construction unless the evidence supports it.
+- Record the predicate decision and reasoning in `docs/architecture/` and add
+  an ADR if the decision is durable rather than merely explanatory.
+- Answer the platform-divergence mechanism question in repository
+  documentation or the completion report: distinguish compiler, build,
+  configure/build, and runtime-semantics classes; recommend one mechanism and
+  state what it would not catch. Do not change `.github/workflows/` or required
+  checks.
+- Move Brief 008 to `docs/briefs/archive/` only if the implementation really
+  closes all four corrections, with its outcome stated honestly.
 
-## Non-scope
+## Non-goals
 
-- Do **not** add or modify CI workflows. If your recommendation is a new CI
-  leg, that is a proposal for Brain and the owner, not a change to make here.
-  Changing `.github/workflows/` is outside routine authority.
-- Do not touch `gframe/`, `ocgcore/`, or any repository setting.
-- Do not widen this into a general audit of error handling. Two sites.
-- Do not weaken or delete the failing test to make `ctest` green.
+- Do not re-land Brief 009 from `meta/evidence-freshness`.
+- Do not install or patch the neutrality guard or modify the framework
+  repository.
+- Do not change `.github/workflows/`, branch protection, repository settings,
+  remotes, `ocgcore/`, `gframe/`, or `integration/legacy/`.
+- Do not merge any pull request or change engine/UI behaviour outside the two
+  file-reader sites and their proportionate tests and documentation.
 
 ## Protected invariants
 
-- **`client/`, `data/` and `policy/` build with no Qt, no Irrlicht, no vcpkg
-  and no `ocgcore`.** Whatever predicate you choose must not add a dependency.
-- The semantic layers stay free of UI types.
-- **Failing closed is correct here.** If a read cannot be shown to have
-  succeeded, the result is a failure with a non-empty `error`. Do not make a
-  case "succeed with empty data" to simplify the predicate.
-- Behaviour on Linux and Windows must not regress. This is a portability fix,
-  not a Linux rewrite.
+- Linux and Windows behaviour must not regress; this is the invariant C1
+  explicitly protects and it must be tested rather than assumed.
+- `ocgcore`'s recorded gitlink must remain unchanged, and no gitlink may enter
+  the diff.
+- Every canonical file under `docs/agents/`, `tools/checkout.py`, and
+  `tools/report.py` remains byte-identical to
+  `~/Dev/agentic-framework`.
+- Existing tests survive. Any changed pre-existing test assertion must be
+  named in the completion report with its before/after property.
+- The neutrality guard remains absent and no local exemption is introduced.
 
 ## Required investigation
 
-1. **What is the right predicate?** `bad()` is one option among several —
-   checking the path's type before opening, checking `!file` after the loop,
-   checking `gcount()`/`eof()` combinations, or not using `ifstream` for the
-   type check at all. Say what you considered, what each one does on all three
-   platforms, and why you chose yours. A predicate that is *portable by
-   construction* is worth more than one that enumerates known platforms.
-2. **Is a directory the only input that diverges?** Check at least: a
-   permission-denied path, a named pipe/FIFO, a symlink to a directory, a
-   device file, and a zero-byte regular file. Say which you tested and on
-   what. If some are untestable here, say so rather than guessing.
-3. **The mechanism question.** Six instances so far, and they are not one
-   kind:
-
-   | # | Defect | Platform | Class |
-   |---|---|---|---|
-   | 1 | narrowing conversions in a test tuple | MSVC | compiler diagnostic |
-   | 2 | `bench_card_search` `/RTC1` vs `/O2` | MSVC | build config |
-   | 3 | QML cache `mkdir` rejects `..` | Windows | build system |
-   | 4 | QML mirror staleness on copy fallback | Windows | build system |
-   | 5 | unused `constexpr` under `-Werror` | Apple clang | compiler diagnostic |
-   | 6 | this one | macOS libc++ | **runtime semantics** |
-
-   Classes 1 and 5 are caught by *any* build on that toolchain. Classes 2–4
-   are caught by a *configure+build*. Class 6 is caught only by *running the
-   tests*, and only if a test for it exists — which is exactly why it is
-   silent in `data/`.
-
-   Argue what actually follows. Candidate mechanisms include, and are not
-   limited to: a macOS CI leg; a Windows CI leg; tightening Linux CI's warning
-   set to cover the diagnostic classes at lower cost; a portability rule in
-   `AGENTS.md` about platform-dependent standard-library semantics; or
-   deciding that some of these classes are acceptable to catch late. Cost and
-   reliability are legitimate arguments — `AGENTS.md` already declines to make
-   the upstream baseline a required check because it depends on a third
-   party's availability, and that reasoning may or may not apply here.
-
-   **Recommend one, and say what it would not catch.** A recommendation that
-   claims to close all six classes is almost certainly wrong.
+1. Compare predicates for missing files, directories, permission failures,
+   named pipes/FIFOs, symlinks to directories, device files and zero-byte
+   regular files across the platforms available. Explain what `ifstream` state
+   and filesystem status actually establish, and what cannot be exercised.
+2. Reproduce the existing directory-test weakness: it passes when the previous
+   fix is reverted on both Linux and Windows. Add a regression test that would
+   fail before the correction, especially an assertion on C1's actual error
+   message.
+3. Classify the six known platform divergences by the cheapest mechanism that
+   can catch each. Recommend one mechanism, include its cost and reliability,
+   and state which classes it would still miss. A new or changed required CI
+   check is the owner's decision, not this round's implementation.
 
 ## Acceptance criteria
 
-- `policy/` and `data/` each configure, build and pass `ctest` on macOS under
-  `-DEDOPRO_NEXT_WERROR=ON`, including `loadLflistDirectoryPathFailsCleanly`.
-- A new `data/` test covering the directory case, which **fails before your
-  fix and passes after it** — show both.
-- `load_ydk()` and `load_lflist()` agree with each other and with their
-  documented contracts on every input in investigation 2.
-- `ydk.h`'s contract sentence and both source comments are true as written.
-- `client/` still passes 7/7; the Python suite still passes.
-- CI green at the head SHA, queried rather than assumed.
+- C1-C4 are each closed by code and evidence, or the brief remains delivered
+  and rejected with the unclosed corrections named; do not archive an open
+  correction as accepted.
+- `load_ydk()` and `load_lflist()` have a documented, tested decision for the
+  non-terminating-file class and no claim stronger than the evidence.
+- The predicate decision and platform-divergence recommendation are recorded
+  where future readers will find them.
+- `data/` and `policy/` configure, build with
+  `-DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON`, and pass CTest on this
+  machine; report Windows/MSVC separately if it cannot be exercised here.
+- The full Python suite, both generator checks, and all required identity and
+  submodule checks are green.
+- PR #24 remains open, keeps `DO NOT MERGE — under review`, names the base and
+  new head, and contains rerunnable commands without measured figures.
 
 ## Required evidence
 
-- The before/after for the new `data/` test, as real output.
-- `ctest` output for `client/`, `data/` and `policy/` on macOS.
-- The platform-behaviour probe for each input in investigation 2, with the
-  actual observed stream state — not a description of it.
-- `python3 -m unittest discover -s tests`. Note: a stale
-  `client/build/edopro_next_semantic_trace` will be silently preferred by
-  `tests/test_semantic_trace.py`; either delete it or set
-  `EDOPRO_NEXT_SEMANTIC_TRACE`, and say which.
-- CI check-run conclusions at the exact head SHA.
-- What you did **not** run — in particular, state plainly that Windows/MSVC
-  was not exercised, if it was not.
+- `python3 tools/checkout.py --seat builder`.
+- `python3 -m unittest discover -s tests -v` and both generator `--check`
+  commands.
+- Before/after demonstrations for each correction, including a C1 assertion
+  on the actual missing-file message.
+- Configure/build/CTest output for `data/` and `policy/` under the required
+  Debug/Werror flags, with real counts. State what was not run.
+- `git submodule status` before and after, with no gitlink in the diff.
+- SHA-256 identity output for every remaining canonical framework file and
+  the two installed tools.
+- The predicate/input probe output and the platform-divergence recommendation.
+- Machine/platform, exact base/head SHAs, push and PR output, and the real
+  report-writer output.
+- State explicitly that no replay-harness result is evidence about duel
+  behaviour and that Windows/MSVC was not exercised if that remains true.
 
 ## Completion-report schema
 
-The standard report in [`docs/roles/builder.md`](../roles/builder.md), plus:
-
-- **The predicate comparison table** from investigation 1, across platforms.
-- **The mechanism recommendation** from investigation 3, with what it misses.
-- Anything in the existing comments at `lf_list.cpp:274` / `ydk.cpp:170` that
-  turned out to be wrong, stated plainly — they were written from empirical
-  work and one of them may still be right about the case it describes.
+Use the Worker contract's exact base/head, changed-files, validation,
+omissions, source and open-question fields. Add the C1-C4 disposition, the
+predicate comparison and decision, the platform-divergence recommendation and
+limits, the pre-existing-test disclosure, submodule/hash evidence, platform
+gap, PR URL, and report-writer output.

@@ -4,7 +4,7 @@ Fast rehydration for a fresh Brain session. Keep this short — point at the
 detailed doc rather than duplicating it. **Every fact here is a claim to
 spot-check against live repository state, not a fact to relay forward.**
 
-**Last updated:** 2026-09-01.
+**Last updated:** 2026-09-20.
 
 **Derive these before trusting anything below them.** This file drifted within
 two rounds of being written — it claimed no Builder round had run while
@@ -242,8 +242,26 @@ preserved as
   criteria to check against and said so. See
   [`briefs/archive/007-…`](briefs/archive/007-2026-09-01-apple-clang-build.md).
 
-**Brief 008 is queued** in [`briefs/active.md`](briefs/active.md): the
-read-failure predicate, and what mechanism should catch platform divergence.
+**Brief 010 — framework adoption — was accepted and merged 2026-09-20** in
+`d3b458bb` (PR #27). The adoption installed the canonical contracts,
+report/checkout tools and Claude adapter, but remains deliberately partial:
+the repository-local neutrality scanner, authority scanner, textblock helper
+and neutrality test are absent. Provider-shaped lane and branch namespaces are
+therefore not currently enforced; that stays open until the framework
+reconciles its scanner with its adoption guidance and provides declared project
+namespaces. The archived record notes one wording nit: “newly installed” should
+have said “files adoption would otherwise install.”
+
+Briefs 008 and 009 are delivered records, not active work:
+[`briefs/delivered/008-2026-09-01-read-failure-predicate.md`](briefs/delivered/008-2026-09-01-read-failure-predicate.md)
+is delivered and not accepted, while
+[`briefs/delivered/009-2026-09-01-evidence-freshness.md`](briefs/delivered/009-2026-09-01-evidence-freshness.md)
+is delivered and unadjudicated. PR #25 and PR #26 are closed with their
+branches kept; #25's queue record is reflected in the delivered 008/009 files,
+and #26's work remains on `meta/evidence-freshness` to be re-landed as its own
+reviewed round. PR #24 remains open and rejected; Brief 011 is now the active
+round on `m3/read-failure-predicate` and is closing or re-evaluating Brief 008's
+four corrections without assuming Windows/MSVC evidence is available here.
 
 ## Local toolchain — state, and what still does not build
 
@@ -335,15 +353,31 @@ not fold it into a narrative section.)*
   beyond plain text, and full keyboard/controller parity.
 - **M1 Level 2** — not started, and required before any "duel behaviour is
   unchanged" claim.
+- **Framework neutrality guard deferral** — this repository does not currently
+  enforce provider-shaped lane names or branch namespaces. The framework must
+  provide a project-declared namespace mechanism and reconcile that scanner
+  rule with its adoption guidance before this can close.
+- **Brief 011 / Brief 008** — PR #24 remains open and rejected while this
+  round closes corrections C1-C4 and decides the broader non-terminating-file
+  predicate and platform-divergence mechanism. Do not archive Brief 008 unless
+  all four corrections are actually closed.
+- **Brief 009** — delivered but unadjudicated; branch `meta/evidence-freshness`
+  must be reviewed and re-landed as its own round.
 
 ## Recommended next slice
 
-**Brief 008 — the read-failure predicate**, queued in
-[`briefs/active.md`](briefs/active.md). It is first for a blunt reason:
-`master` is red on macOS today, and the same defect is silently live in
-`data/` where no test looks for it. It is also entirely inside `policy/` and
-`data/`, both of which build and test on the current machine, so it can
-produce its own required evidence here.
+**Brief 011 — the read-failure class** is active on
+`m3/read-failure-predicate`. It must close Brief 008's C1-C4 only when the
+tests and evidence support doing so, decide the non-terminating-file predicate,
+and answer the platform-divergence mechanism question without changing CI.
+
+**After Brief 011, re-land Brief 009** from `meta/evidence-freshness` as its
+own reviewed round. Do not build on its outcome before adjudication.
+
+The read-failure work remains important for a blunt reason: `master` is red on
+macOS today, and the same defect is silently live in `data/` where no test looks
+for it. It is entirely inside `policy/` and `data/`, both of which build and
+test on the current machine, so it can produce its own required evidence.
 
 It carries a second question deliberately left open rather than pre-answered:
 **what mechanism should catch platform divergence**, given six instances and
