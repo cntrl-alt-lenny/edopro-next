@@ -261,9 +261,9 @@ Brief 009 remains a delivered record, not active work:
 is delivered and unadjudicated. PR #25 and PR #26 are closed with their
 branches kept; #25's queue record is reflected in the delivered 008/009 files,
 and #26's work remains on `meta/evidence-freshness` to be re-landed as its own
-reviewed round. PR #24 remains open and rejected; Brief 011 is now delivered
-from `m3/read-failure-predicate`, with its implementation awaiting review at
-the new head and without assuming Windows/MSVC evidence is available here.
+reviewed round. PR #24 remains open and rejected; Brief 011 is active at the
+new head on `m3/read-failure-predicate`, with its implementation awaiting
+review and without assuming Windows/MSVC evidence is available here.
 
 ## Local toolchain — state, and what still does not build
 
