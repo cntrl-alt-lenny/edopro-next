@@ -264,7 +264,7 @@ class CoordinationLinkTest(unittest.TestCase):
                 # The framework's adapter specification uses links such as
                 # `[<path>]` in a shape example. They are placeholders, not
                 # repository paths; concrete links remain checked below.
-                if re.fullmatch(r"<[^<>]+>", target):
+                if re.fullmatch(r"<[A-Za-z][A-Za-z0-9 _-]*>", target):
                     continue
                 with self.subTest(doc=str(doc.relative_to(REPO)), link=target):
                     self.assertTrue(
