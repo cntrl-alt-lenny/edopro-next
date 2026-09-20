@@ -264,7 +264,7 @@ class CoordinationLinkTest(unittest.TestCase):
                 # The framework's adapter specification uses links such as
                 # `[<path>]` in a shape example. They are placeholders, not
                 # repository paths; concrete links remain checked below.
-                if "<" in target or ">" in target:
+                if re.fullmatch(r"<[^<>]+>", target):
                     continue
                 with self.subTest(doc=str(doc.relative_to(REPO)), link=target):
                     self.assertTrue(
@@ -406,6 +406,36 @@ class RoleContractTest(unittest.TestCase):
         self.assertIn("docs/agents/roles/worker.md", adapter)
         self.assertIn("Builder", adapter)
         self.assertNotIn("docs/agents/roles/builder.md", adapter)
+
+    def test_builder_adapters_confirm_step_matches_contract(self):
+        """The adapter's confirmation commands must cover the contract's.
+
+        This is intentionally a set-superset check rather than a list of
+        today's commands. If the canonical contract gains or changes a
+        backtick-quoted ``git`` command in its confirmation paragraph, the
+        adapter must follow it. The current Worker contract has no such
+        literal command, so its set is empty; the property remains live for
+        future contract drift.
+        """
+        git_cmd_re = re.compile(r"`(git [a-zA-Z][a-zA-Z0-9_ -]*)`")
+
+        def confirm_commands(text: str) -> set:
+            commands = set()
+            for paragraph in re.split(r"\n\s*\n", text):
+                flat = " ".join(paragraph.split())
+                if "confirm" in flat.lower():
+                    commands.update(git_cmd_re.findall(flat))
+            return commands
+
+        contract = CONTRACT_PATHS["builder"].read_text(encoding="utf-8")
+        adapter = (REPO / ".claude" / "agents" / "builder.md").read_text(encoding="utf-8")
+        contract_commands = confirm_commands(contract)
+        missing = contract_commands - confirm_commands(adapter)
+        self.assertFalse(
+            missing,
+            f"builder.md's adapter is missing confirm-step commands the "
+            f"contract names: {sorted(missing)}",
+        )
 
     def test_contracts_do_not_depend_on_one_vendors_mechanics(self):
         """Naming a vendor as an example is fine; requiring one is not.
