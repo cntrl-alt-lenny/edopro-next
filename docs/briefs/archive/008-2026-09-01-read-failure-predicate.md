@@ -2,7 +2,7 @@
 
 Brief-ID: 008-2026-09-01-read-failure-predicate
 
-Status: accepted
+Status: rejected
 
 **Adjudicated 2026-09-01: NOT ACCEPTED — corrections required.** The lifecycle
 status stays `delivered` because that is what it is: delivered, not archived.
@@ -250,7 +250,9 @@ The standard report in [`docs/agents/roles/worker.md`](../../agents/roles/worker
 
 ## Brief 011 close-out
 
-**Accepted 2026-09-20:** Brief 011 closed C1 through C4. Both loaders now
+**Corrective round delivered 2026-09-20:** Brief 011 closed C1 through C4 in
+the working tree; the original Brief 008 round remains rejected and PR #24
+remains open pending independent review. Both loaders now
 report missing and dangling-link paths as open failures, the public load
 contracts enumerate inspection/open/read failures without the false
 "exactly when" biconditional, status errors are allowed to reach the open,
