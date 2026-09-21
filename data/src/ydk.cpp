@@ -84,32 +84,11 @@ std::string sanitize_creator_line(std::string_view creator) {
 	return out;
 }
 
+// On POSIX, status is only a preflight: the same path is then opened by
+// ifstream, and a status error is deliberately deferred so missing files keep
+// their authoritative open diagnostic.
+#ifndef _WIN32
 bool is_known_non_regular_path(const std::filesystem::path& path) {
-#ifdef _WIN32
-	// Probe the Windows object without consulting filesystem::status(). That
-	// API can connect to a named pipe as a client, and an alias such as a
-	// GLOBALROOT or UNC spelling is not distinguishable from a regular path by
-	// string prefix alone. A successful native probe tells us the object type
-	// regardless of spelling; ERROR_PIPE_BUSY is the same classification when
-	// the pipe's only instance is already occupied.
-	const HANDLE handle = CreateFileW(
-		path.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
-	if(handle != INVALID_HANDLE_VALUE) {
-		const DWORD type = GetFileType(handle);
-		CloseHandle(handle);
-		return type != FILE_TYPE_DISK;
-	}
-	if(GetLastError() == ERROR_PIPE_BUSY)
-		return true;
-	const auto attributes = GetFileAttributesW(path.c_str());
-	if(attributes != INVALID_FILE_ATTRIBUTES &&
-	   (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
-		return true;
-	// Missing and share-locked regular files must reach ifstream so their
-	// ordinary "failed to open file" diagnostic remains authoritative.
-	return false;
-#else
 	std::error_code status_error;
 	const auto status = std::filesystem::status(path, status_error);
 	if(!status_error) {
@@ -125,8 +104,71 @@ bool is_known_non_regular_path(const std::filesystem::path& path) {
 	// A status error is not itself proof that opening will fail: notably, a
 	// missing path should reach ifstream so it reports "failed to open file".
 	return false;
-#endif
 }
+#else
+enum class WindowsReadOutcome { success, open_failure, read_failure };
+
+struct WindowsReadResult {
+	WindowsReadOutcome outcome;
+	std::string content;
+};
+
+WindowsReadResult read_regular_file_windows(const std::filesystem::path& path) {
+	const auto share_mode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+	HANDLE handle = CreateFileW(path.c_str(), GENERIC_READ, share_mode, nullptr,
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if(handle == INVALID_HANDLE_VALUE) {
+		const auto open_error = GetLastError();
+		const auto attributes = GetFileAttributesW(path.c_str());
+		if(attributes != INVALID_FILE_ATTRIBUTES &&
+		   (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+			return {WindowsReadOutcome::read_failure, {}};
+		if(open_error == ERROR_PIPE_BUSY)
+			return {WindowsReadOutcome::read_failure, {}};
+
+		// An inbound named pipe rejects a GENERIC_READ client even though the
+		// object is valid. A zero-access probe is classification-only: if it
+		// resolves to a non-disk object, no stream or second file handle is
+		// ever used for the load. A regular file that cannot be opened for read
+		// remains an ordinary open failure.
+		if(open_error == ERROR_ACCESS_DENIED) {
+			HANDLE probe = CreateFileW(path.c_str(), 0, share_mode, nullptr,
+				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+			if(probe != INVALID_HANDLE_VALUE) {
+				const auto type = GetFileType(probe);
+				CloseHandle(probe);
+				if(type != FILE_TYPE_DISK)
+					return {WindowsReadOutcome::read_failure, {}};
+			}
+			else if(GetLastError() == ERROR_PIPE_BUSY) {
+				return {WindowsReadOutcome::read_failure, {}};
+			}
+		}
+		return {WindowsReadOutcome::open_failure, {}};
+	}
+
+	const auto type = GetFileType(handle);
+	if(type != FILE_TYPE_DISK) {
+		CloseHandle(handle);
+		return {WindowsReadOutcome::read_failure, {}};
+	}
+
+	std::string content;
+	char chunk[4096];
+	for(;;) {
+		DWORD bytes_read = 0;
+		if(!ReadFile(handle, chunk, sizeof(chunk), &bytes_read, nullptr)) {
+			CloseHandle(handle);
+			return {WindowsReadOutcome::read_failure, {}};
+		}
+		if(bytes_read == 0)
+			break;
+		content.append(chunk, static_cast<std::size_t>(bytes_read));
+	}
+	CloseHandle(handle);
+	return {WindowsReadOutcome::success, std::move(content)};
+}
+#endif
 
 } // namespace
 
@@ -206,6 +248,19 @@ YdkParse parse_ydk(std::string_view text) {
 
 YdkLoadResult load_ydk(const std::filesystem::path& path) {
 	YdkLoadResult result;
+#ifdef _WIN32
+	const auto windows_read = read_regular_file_windows(path);
+	if(windows_read.outcome != WindowsReadOutcome::success) {
+		result.error = (windows_read.outcome == WindowsReadOutcome::open_failure
+			? "failed to open file: " : "failed to read file: ") + path.string();
+		return result;
+	}
+	const auto parsed = parse_ydk(windows_read.content);
+	result.ok = true;
+	result.deck = std::move(parsed.deck);
+	result.ignored = std::move(parsed.ignored);
+	return result;
+#else
 	if(is_known_non_regular_path(path)) {
 		result.error = "failed to read file: " + path.string();
 		return result;
@@ -246,6 +301,7 @@ YdkLoadResult load_ydk(const std::filesystem::path& path) {
 	result.deck = std::move(parsed.deck);
 	result.ignored = std::move(parsed.ignored);
 	return result;
+#endif
 }
 
 std::string serialize_ydk(const Deck& deck, const YdkWriteOptions& options) {
