@@ -93,25 +93,23 @@ bool is_known_non_regular_path(const std::filesystem::path& path) {
 	// regardless of spelling; ERROR_PIPE_BUSY is the same classification when
 	// the pipe's only instance is already occupied.
 	const HANDLE handle = CreateFileW(
-		path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		nullptr, OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+		path.c_str(), 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
 	if(handle != INVALID_HANDLE_VALUE) {
 		const DWORD type = GetFileType(handle);
-		BY_HANDLE_FILE_INFORMATION information{};
-		const bool is_directory =
-			type == FILE_TYPE_DISK && GetFileInformationByHandle(handle, &information) != FALSE &&
-			(information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 		CloseHandle(handle);
-		return type != FILE_TYPE_DISK || is_directory;
+		return type != FILE_TYPE_DISK;
 	}
 	if(GetLastError() == ERROR_PIPE_BUSY)
+		return true;
+	const auto attributes = GetFileAttributesW(path.c_str());
+	if(attributes != INVALID_FILE_ATTRIBUTES &&
+	   (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
 		return true;
 	// Missing and share-locked regular files must reach ifstream so their
 	// ordinary "failed to open file" diagnostic remains authoritative.
 	return false;
-#endif
-
+#else
 	std::error_code status_error;
 	const auto status = std::filesystem::status(path, status_error);
 	if(!status_error) {
@@ -127,6 +125,7 @@ bool is_known_non_regular_path(const std::filesystem::path& path) {
 	// A status error is not itself proof that opening will fail: notably, a
 	// missing path should reach ifstream so it reports "failed to open file".
 	return false;
+#endif
 }
 
 } // namespace

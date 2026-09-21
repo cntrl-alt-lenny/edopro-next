@@ -140,8 +140,8 @@ public:
 	std::vector<std::filesystem::path> alternate_paths() const {
 		return {
 			std::filesystem::path(L"\\\\.\\GLOBALROOT\\Device\\NamedPipe\\" + leaf_),
-			std::filesystem::path(L"\\localhost\\pipe\\" + leaf_),
-			std::filesystem::path(L"\\127.0.0.1\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\localhost\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\127.0.0.1\\pipe\\" + leaf_),
 			std::filesystem::path(L"\\\\?\\UNC\\localhost\\pipe\\" + leaf_),
 		};
 	}
