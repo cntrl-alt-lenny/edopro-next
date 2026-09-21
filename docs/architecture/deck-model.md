@@ -234,9 +234,9 @@ both outcomes rather than assuming the Linux one is universal.** On this baselin
 (64-bit `unsigned long`), `4294967296` fits comfortably in `std::stoul`'s own range and only
 overflows on the subsequent `static_cast<uint32_t>`, which is defined wraparound (§5), not
 an exception - so it parses to `0` and is excluded by the code-0 policy. On a platform where
-`unsigned long` is exactly 32 bits (LLP64 - MSVC/Windows, which `README.md` states as an
-intended future target, not attempted yet), `4294967296` does not fit in `unsigned long` at
-all, so `std::stoul` itself throws `std::out_of_range`, and the line is excluded as
+`unsigned long` is exactly 32 bits (LLP64 - MSVC/Windows, on which this project's `data/`
+suite has since been built and run - see [`../building.md`](../building.md)), `4294967296`
+does not fit in `unsigned long` at all, so `std::stoul` itself throws `std::out_of_range`, and the line is excluded as
 malformed instead - the same `catch(...)`-and-skip path as the 30+-digit case above, not the
 code-0 path. The C++ standard guarantees `unsigned long` is never narrower than 32 bits, so
 these are the only two possible outcomes; `data/tests/test_deck_ydk.cpp`'s
