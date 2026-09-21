@@ -4,7 +4,7 @@ Fast rehydration for a fresh Brain session. Keep this short — point at the
 detailed doc rather than duplicating it. **Every fact here is a claim to
 spot-check against live repository state, not a fact to relay forward.**
 
-**Last updated:** 2026-09-20.
+**Last updated:** 2026-09-21.
 
 **Derive these before trusting anything below them.** This file drifted within
 two rounds of being written — it claimed no Builder round had run while
@@ -128,19 +128,16 @@ This distinction is the single most useful thing in this file.
   covered either.
 - Semantic coverage beyond the 34 decoded message types.
 - **That our layers behave the same on every platform we support.** Six
-  divergences have been found so far that Linux CI could not see. Brief 011's
-  C1-C3 and POSIX half of C4 were previously evidenced on the macOS machine;
-  macOS is unavailable for this corrective pass. This round compiled and ran
-  both loaders on Windows 11/MSVC using a same-handle native read. Canonical
-  free and holding/busy pipes, immediate-disconnect/re-listen servers, and
-  five aliases all returned promptly with `ok == false`; most diagnostics were
-  `failed to read file`, with some alias races reporting `failed to open file`.
-  `CON`, `NUL` and tested peer device names also returned promptly. The Windows
-  tests did not measure unrelated symlink cases or a server denying both native
-  classification attempts. The decision, limits, and recommended
-  cross-platform matrix are in
-  [`architecture/read-failure-class.md`](architecture/read-failure-class.md)
-  and ADR 0009; platform equality remains unproven outside those inputs.
+  divergences have been found so far that Linux CI could not see. Brief 011
+  (merged 2026-09-21) closed the sixth, the read-failure class, in `data/` and
+  `policy/`. Its POSIX half was evidenced on macOS. Its Windows half reads
+  through the same native handle it classifies, and was exercised on
+  Windows 11/MSVC against named pipes in several spellings and server states
+  and against device names. The limits are in
+  [`briefs/archive/011-…`](briefs/archive/011-2026-09-20-read-failure-class.md)
+  and [`architecture/read-failure-class.md`](architecture/read-failure-class.md).
+  Platform equality outside the tested inputs remains unproven, and CI is
+  still Linux-only.
 
 ## Intentional upstream deltas
 
@@ -257,27 +254,66 @@ reconciles its scanner with its adoption guidance and provides declared project
 namespaces. The archived record notes one wording nit: “newly installed” should
 have said “files adoption would otherwise install.”
 
-Brief 008's record remains archived as rejected. Brief 011 was delivered and
-reopened after review at `3b15ad56`; R1-R8 were delivered on PR #24, Brain
-reopened the same round at head `797a1d86` with R9-R10, and reopened it again
-for R11-R13 at `2a3f3e43`. The Builder's corrective pass is now on that
-still-open PR; it has not been accepted or merged. The Windows evidence now
-covers same-handle loading, canonical free and holding/busy cases,
-immediate-disconnect/re-listen, and five non-canonical spellings for both
-loaders, plus Windows device names:
-[`briefs/archive/008-2026-09-01-read-failure-predicate.md`](briefs/archive/008-2026-09-01-read-failure-predicate.md).
-Brief 009 remains a delivered record, not active work:
-[`briefs/delivered/009-2026-09-01-evidence-freshness.md`](briefs/delivered/009-2026-09-01-evidence-freshness.md)
-is delivered and unadjudicated. PR #25 and PR #26 are closed with their
-branches kept; #25's queue record is reflected in the delivered 008/009 files,
-and #26's work remains on `meta/evidence-freshness` to be re-landed as its own
-reviewed round. PR #24 remains open and under review; Brief 011 is active again
-on `m3/read-failure-predicate` pending adjudication of R11-R13. Some immediate
-alias runs report `failed to open file` when the server is between instances;
-the evidence claims prompt unsuccessful results, not one diagnostic string for
-every lifetime race. The evidence does not establish Windows behavior for
-unrelated symlink cases or separately measure a server that denies both native
-classification attempts.
+**Brief 011 — the read-failure class — was accepted and merged 2026-09-21**
+as PR #24 (`823fa679`), after five reviewed heads. Every pass is adjudicated
+in [`briefs/archive/011-…`](briefs/archive/011-2026-09-20-read-failure-class.md).
+Brief 008, which it corrected, is archived as rejected. Two sentences of
+`architecture/read-failure-class.md` are known to be imprecise; the archived
+outcome names them.
+
+**Brief 012 is active**: re-landing Brief 009, which is still a delivered,
+unadjudicated record in
+[`briefs/delivered/009-…`](briefs/delivered/009-2026-09-01-evidence-freshness.md),
+on branch `meta/evidence-freshness-reland`. PR #26's original work stays on
+`meta/evidence-freshness`, unreviewed. PR #25 is closed.
+
+### Operating across machines (recorded 2026-09-21)
+
+The owner moved Brain, Builder and Verifier from the Mac to the Windows
+machine on 2026-09-21, and will say when work returns to the Mac. The two
+clones are separate. Everything pushed is shared; nothing local is:
+
+- **The report inbox is per clone** (`<git-common-dir>/agent-inbox/`). A report
+  written on one machine is invisible on the other, so `report.py delivery`
+  there says "not delivered yet" even though the work was delivered. When work
+  crosses machines, Brain gives the Verifier literal base and head SHAs, and
+  pass two compares against the PR body. The framework documented this path in
+  its PR #10; this repository has not yet installed that version of the tools.
+- **Seat chats open in the clone root**, not in a seat worktree. Every Builder
+  and Verifier prompt tells the seat to move into `.worktrees/builder` or
+  `.worktrees/verifier` before its checkout check. Keep one Verifier chat per
+  project, opened in that project's folder. A shared chat carries the other
+  project's standing instructions, and the checkout check cannot see them.
+- **Line endings.** A clone made before `.gitattributes` pinned `eol=lf`, with
+  `core.autocrlf=true`, keeps CRLF working files in pre-existing worktrees.
+  Measured on Windows with Git for Windows 2.54: a CRLF `.githooks/pre-push`
+  still runs and still blocks a push to `master`. On macOS the same file makes
+  every push fail with "cannot exec". Re-checking-out the affected files fixes
+  both.
+- **`python -m unittest` from PowerShell** fails 8 `test_push_guard` cases,
+  because `bash` there resolves to the WSL launcher. From Git Bash all pass.
+  This is pre-existing and not yet fixed.
+
+### Shared-framework status (as of 2026-09-21)
+
+The provider-neutrality guard is still not installed here. The framework's
+PR #9 (declared branch namespaces) and PR #10 (cross-clone reporting, Windows
+and macOS CI) have merged. Brain decided to install the guard after the
+framework's open PR #11 lands, or against the then-current framework `main`
+if the Builder is free first. Moving the scanner, its helpers, its test and
+the canonical documents must happen together, as the framework's adoption
+guide requires. The read-only trial of PR #9 at `a604ac86` accepted 25 of 26
+real branches with `<!-- guard:branch-namespaces prefixes="m<N>,meta" -->`.
+The one rejected branch is `modern-ui/bootstrap`, whose hyphenated namespace
+is not yet declarable; nothing normative names it. Two further proposals are
+settled with the framework's Brain and should not be re-sent: forbidding a
+role name as the first scope token (deferred, because it would reject
+`meta/builder-contract-update`), and the five neutrality-guard findings
+already accepted.
+
+**Correction lists.** State each correction as a problem, not a solution, and
+check a list for mutual consistency before issuing it. Brief 008's C2 and C3
+contradicted each other, and that produced round 011's false header contract.
 
 ## Local toolchain — state, and what still does not build
 
@@ -286,7 +322,7 @@ capabilities.** This section has been rewritten twice for that reason. Say
 which machine you are on in every completion report; `AGENTS.md`'s evidence
 table asks for the platform and this is why.
 
-**Updated 2026-09-01: the primary machine is now a Mac.** Neither entry below
+**Updated 2026-09-21: the agent loop runs on the Windows machine** (it was the Mac from 2026-09-01). Neither entry below
 was written on the strength of an install — each was written after the cycles
 were actually run.
 
@@ -324,7 +360,7 @@ fix's mirror with `NO_CACHEGEN`, removing the mechanism rather than repairing
 it. The list is kept because it is the clearest record of what "green on Linux
 CI" does not cover.
 
-### macOS — the primary machine as of 2026-09-01
+### macOS — the primary machine from 2026-09-01 to 2026-09-21
 
 Apple clang 21 (`Apple clang 21.0.0`), CMake 4.4.3, Ninja 1.13.2, Python
 3.9.6. **Qt is not installed**, and the
@@ -341,15 +377,16 @@ system Python is 3.9.
 Two traps specific to this machine, both of which cost real time:
 
 1. **`master` carried a macOS policy failure** in
-   `loadLflistDirectoryPathFailsCleanly`; Brief 011 corrected the shared
-   loader class on this branch. Verify the branch's current CTest result rather
-   than relaying the old master state.
-2. **A stale `client/build/edopro_next_semantic_trace` is silently preferred**
-   by `tests/test_semantic_trace.py`'s `find_binary()`, which searches fixed
-   paths with no freshness check. A binary four days old made four Python
-   tests fail against a clean tree. Delete the directory or set
-   `EDOPRO_NEXT_SEMANTIC_TRACE`. The dangerous direction is not the failure —
-   it is a C++ edit that never gets compiled and reports green.
+   `loadLflistDirectoryPathFailsCleanly` until Brief 011 merged. macOS was
+   last exercised at that round's `3b15ad56`, not at the merged head, so
+   re-run `policy/` CTest on the Mac before relying on it.
+2. **Semantic-trace discovery is freshness-checked** by
+   `tests/test_semantic_trace.py`'s `find_binary()`: an explicit or searched
+   binary must be strictly newer than every source file that can be fully
+   enumerated and stat'ed under `client/`, excluding build output. An
+   unreadable source tree fails closed. The residual limit is that a newer
+   binary built from a different commit can still pass because the executable
+   carries no source revision.
 
 Two operational facts, true and previously written down nowhere: on Windows
 `cmake -G Ninja` finds no compiler outside the MSVC environment
@@ -370,56 +407,31 @@ not fold it into a narrative section.)*
   beyond plain text, and full keyboard/controller parity.
 - **M1 Level 2** — not started, and required before any "duel behaviour is
   unchanged" claim.
-- **Framework neutrality guard deferral** — this repository does not currently
-  enforce provider-shaped lane names or branch namespaces. The framework must
-  provide a project-declared namespace mechanism and reconcile that scanner
-  rule with its adoption guidance before this can close.
-- **Brief 011 R11-R13 — Windows handle semantics** — PR #24 remains open and
-  under review while the delivered brief is active again for adjudication. On
-  Windows 11/MSVC, both loaders compile and their real canonical free,
-  holding/busy, immediate-disconnect, and five alias-spelling tests pass with
-  prompt `ok == false` results. `CON`, `NUL` and tested peer device names also
-  return promptly. Diagnostics are usually `failed to read file`, but an alias
-  can report `failed to open file` when no instance exists at classification.
-  The tests do not establish unrelated symlink behavior or a server denying
-  both native classification attempts. The same-handle predicate and
-  platform-divergence recommendation are recorded in the architecture
-  document; no CI change was made.
-- **Brief 009** — delivered but unadjudicated; branch `meta/evidence-freshness`
-  must be reviewed and re-landed as its own round.
+- **Framework neutrality guard** — not installed; see *Shared-framework
+  status* above for the plan.
+- **Brief 012** — re-landing Brief 009 (evidence freshness); active.
+- **`read-failure-class.md` imprecision** — two sentences named in Brief 011's
+  archived outcome. Fold them into a later documentation round.
+- **Push-guard tests under PowerShell** — 8 failures from the WSL `bash`
+  launcher. A test-portability fix, not yet briefed.
+- **Cross-platform CI** — Brief 011 recommends a non-required macOS and
+  Windows matrix over the `data/` and `policy/` tests. Any change to required
+  checks is the owner's decision.
 
 ## Recommended next slice
 
-**Review Brief 011 — the read-failure class** on
-`m3/read-failure-predicate`. Verify R1-R13, the non-terminating-file predicate,
-and the platform-divergence recommendation before Brain decides whether PR
-#24 can be merged. No CI policy change is part of this round.
-
-**After Brief 011, re-land Brief 009** from `meta/evidence-freshness` as its
-own reviewed round. Do not build on its outcome before adjudication.
-
-The read-failure work was entirely inside `policy/` and `data/`, both of which
-build and test on the current Windows/MSVC machine. The earlier macOS
-directory failure and the silent `data/` gap are covered by the branch's tests;
-macOS is unavailable in this pass. Windows named-pipe behavior is covered for
-the tested canonical free/holding/busy and immediate-disconnect states and five
-alias inputs, with the remaining platform gaps stated above.
-
-The round's answer to the mechanism question is a recommendation for a
-non-required macOS-and-Windows portability matrix over the data/policy tests;
-the owner decides whether any new check becomes required. It is recorded with
-the predicate decision rather than treated as an implemented CI change.
+**Finish Brief 012** — the evidence-freshness re-land — as its own reviewed
+round. **Then install the neutrality guard**, per *Shared-framework status*.
 
 **After that, the deck-builder legality UI** — the remaining M3 item, and the
 one the roadmap actually cares about. Two things gate it, and both are now
 tractable:
 
-- It touches `ui/`, which **cannot be built on the current machine**; Qt is
-  not installed. Either install Qt here or run that round on the Windows
-  machine, and say which in the brief. Do not queue it without resolving this
-  — an earlier version of this file recommended a `ui/` round while recording
-  two sections above that `ui/` could not be built, and the contradiction
-  survived several readings.
+- It touches `ui/`. The Windows machine, where the loop now runs, has Qt
+  6.8.3 and has built `ui/`; the Mac has no Qt. Say which machine in the
+  brief. An earlier version of this file recommended a `ui/` round while
+  recording that `ui/` could not be built, and the contradiction survived
+  several readings.
 - Its design blocker is **resolved**: brief 001's research was adjudicated
   `accepted` on 2026-08-31, including the headline finding that upstream's
   deck editor never calls `CheckDeckContent`/`CheckDeckSize`. That reshapes

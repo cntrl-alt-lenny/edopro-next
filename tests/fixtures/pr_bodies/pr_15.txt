@@ -1,0 +1,33 @@
+DO NOT MERGE — under review
+
+## MODE: UPSTREAM ARCHAEOLOGY
+
+Answers the brief in `docs/briefs/active.md`: how upstream's deck editor (`gframe/deck_con.cpp`) actually handles legality, how that differs from duel entry (`GenericDuel::PlayerReady`), and what each `policy::ValidationPolicy` field would need to be sourced from for a future QML deck-builder legality UI.
+
+**Headline finding (investigation question 1):** `gframe/deck_con.cpp`'s `DeckBuilder` never calls `CheckDeckContent`/`CheckDeckSize` anywhere — those are exclusive to `GenericDuel::PlayerReady` at duel entry. The editor has three separate, weaker, independently bypassable mechanisms instead (`push_main`/`push_extra`/`push_side`'s own hardcoded caps, `check_limit`'s live banlist gate, and a search-pool filter) — none of which is a whole-deck validator, and all of which can be sidestepped via Shift-held input, the global "ignore deck contents" setting, or simply opening/pasting a deck file, which bypass every one of them.
+
+No production code changed — this is a documentation-only round. `git diff --stat` against the base shows one new file under `docs/`.
+
+## Deliverable
+
+One new document: [`docs/architecture/deck-builder-legality.md`](../blob/m3/deck-builder-legality-boundary/docs/architecture/deck-builder-legality.md)
+
+Covers, per the brief's required scope:
+1. What upstream's deck editor does about legality, cited file:line
+2. What upstream does at duel entry, and where those inputs come from
+3. A direct comparison table naming every semantic difference
+4. All six `ValidationPolicy` fields, individually, with a real/no-real-counterpart verdict and a sourcing proposal
+5. A **Recommended boundary** section (confidence: medium), with alternatives considered and the one fact that would most change it
+
+Also flags one place `docs/architecture/deck-builder-ui.md`§1 states something upstream source doesn't fully support — quoted both ways in the new doc's §2.2.
+
+## Evidence
+
+Per `AGENTS.md`'s per-layer table, a docs-only round requires very little, and stating that plainly is the evidence itself:
+
+```
+$ git diff --stat fa881423..HEAD
+docs/architecture/deck-builder-legality.md | 523 ++++++++
+```
+
+No cmake/ctest cycles were run — nothing touched could have affected them, and running one would be exactly the false-coverage pattern this project's evidence rules exist to stop.

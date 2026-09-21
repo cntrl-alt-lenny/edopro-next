@@ -1,0 +1,23 @@
+Brain bookkeeping. `docs/briefs/` only — nothing here can affect a build.
+
+## What this now does
+
+- **Brief 008 → `delivered/`, and adjudicated NOT ACCEPTED.** Verifier reviewed PR #24's exact head `ffbb7050` on Windows/MSVC: zero BLOCKER, four SHOULD FIX, five NOTE. Brain independently re-derived the load-bearing findings. The four required corrections are recorded as **C1–C4** in the delivered brief so a corrective round can cite them by number. Lifecycle status stays `delivered` — a rejected round is delivered-and-reopened, not archived.
+- **Three broken relative links fixed** in the delivered brief, which pointed at `delivered/delivered/`, `delivered/archive/` and `docs/briefs/roles/builder.md` after the file moved down a directory.
+- **Brief 009's self-contradiction resolved.** It both permitted "a documented discipline with no automation" and required a demonstration against PR #19's historical case. A Builder taking the permitted route could not satisfy the criterion. A mechanism that can fail is now required; the permission is withdrawn and the reasoning recorded in the brief.
+- **Brief 009's stale macOS machine notes corrected.** Work is back on the Windows host. Qt 6.8.3 is present and `ui/` was measured this session to configure, build and pass its tests — so "Qt is absent, `ui/` cannot be built" does not describe this machine and must not be copied forward.
+
+## Evidence
+
+Deliberately no quoted figures in this body — that is the exact rot brief 009 exists to close, and `strict: true` means any figure written here stops describing the range that merges. Re-run instead:
+
+```
+python -m unittest discover -s tests
+git diff --stat master...meta/round-5-queue
+```
+
+CI check-run conclusions at the head SHA are the authority; query them rather than trusting a number typed here.
+
+## Disclosure
+
+This is **Brain's own bookkeeping, merged without independent Verifier review** — the same shape as PR #20, which `docs/state.md` records as a gap not to repeat silently. It is recorded here rather than left implicit. It touches `docs/briefs/` only.

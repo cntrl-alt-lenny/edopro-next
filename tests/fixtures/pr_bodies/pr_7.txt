@@ -1,0 +1,38 @@
+## What this PR does
+
+This PR keeps M2 under review and adds an opt-in diagnostic verifier for the two committed YRPX fixtures.
+
+The verifier uses the direct production client path:
+
+`Replay::OpenReplay()` -> `Replay::packets_stream` -> `DuelClient::ClientAnalyze()`
+
+It does not invoke `ReplayMode::StartReplay`, `ReplayMode::ReplayThread`, or `ReplayMode::ReplayAnalyze`.
+
+## Correctness boundaries
+
+- Replay verification sets `dInfo.isCatchingUp = false`; catch-up skips real legacy state mutations.
+- Presentation is suppressed through an explicit verification-active seam. The verifier does not create an Irrlicht device, renderer, or fake GUI controls.
+- The legacy handler still performs the state mutations needed by the projection. Ordinary runtime behavior is kept at the upstream baseline, including the restored `MSG_SELECT_UNSELECT_CARD` behavior and legacy cancel/finish rule.
+- `Replay::ReadData` clears the reusable packet buffer before handling zero-length payloads; both fixtures contain zero-length packets.
+- The comparator currently checks only life points, turn, tracked-card occupancy/location/sequence, and material count/topology. It does not compare card code, card position, query statistics, transient UI state, animation, logs, or sounds.
+- This is a scoped legacy-client diagnostic. It is not a claim of complete internal client equivalence and does not run `ocgcore`.
+
+## Fail-closed verification
+
+The CLI reports expected packets, processed packets, decode failures, observer failures, comparison failures, comparisons performed, mismatch count, completion, and result. Success requires all expected packets to be processed and compared, with no failures or mismatches.
+
+CI runs:
+
+- `duel-chains-battle.yrpX` — 990 packets
+- `duel-extended.yrpX` — 1133 packets
+
+The hidden observer-only `--semantic-verify-replay-fault` command is run twice in CI. It must return non-zero, report an LP mismatch, and produce identical diagnostics on both runs.
+
+## Validation
+
+- Windows: 15 structural replay regression tests pass.
+- WSL: five available semantic-model C++ test binaries pass, 62 tests total.
+- `git diff --check` passes.
+- Observer-enabled legacy build and fixture verifier are delegated to the Linux CI workflow because this Windows checkout has no CMake/Premake toolchain.
+
+M2 remains in progress pending external review of the verifier and its scoped equivalence claim. Please do not merge this PR as part of this work.

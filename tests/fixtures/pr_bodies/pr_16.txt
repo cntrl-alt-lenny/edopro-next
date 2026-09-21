@@ -1,0 +1,74 @@
+**Reviewed and accepted.** Head `0d96fc6d`. Verifier reviewed `8766569c` and returned zero BLOCKERs with **three SHOULD FIX and one NOTE** — an earlier version of this line said "four SHOULD FIX", miscounting the classes in a PR whose headline achievement is fixing exactly that, which Verifier caught on the re-review. All four findings are closed here, plus a red merge gate neither review had noticed. The delta was then re-reviewed at `0d96fc6d`: zero BLOCKERs, two SHOULD FIX carried into brief 003.
+
+
+
+Brain's close-the-loop for PR #14 and PR #15, plus the `docs/state.md` staleness Round 1's Verifier found. Coordination docs and one test file — no production code, no repository settings.
+
+
+
+## The merge gate caught what two reviews missed
+
+
+
+Required checks were **red** on `8766569c`. `docs/briefs/delivered/` emptied when brief 001 was archived; git does not track empty directories, so a fresh CI checkout had no such directory and two documents linking into it broke.
+
+
+
+Locally it passed — the empty directory was still on disk. **The `56 tests OK` cited in the previous version of this body was itself a false pass.**
+
+
+
+Fixed twice over: `delivered/` gains a README so the directory survives a checkout, and `test_docs_consistency.py`'s link check now resolves against `git ls-files` rather than the working tree, so a local run agrees with a fresh clone. Verified by untracking that README and watching the suite reproduce CI's exact two failures locally.
+
+
+
+## Verifier's four findings, all closed
+
+
+
+| Finding | Resolution |
+
+|---|---|
+
+| `state.md`'s **Local toolchain constraint section was deleted** by this PR's own In-flight rewrite | Restored. A regression this PR introduced while fixing an unrelated contradiction — the rewrite spanned from one heading to the next and swallowed the section between them. Brief 003 cites it. |
+
+| "nine SHOULD FIX/NOTE" in three places | Real count is **seven SHOULD FIX and five NOTE**. "Nine" silently dropped three NOTEs |
+
+| `briefs/README.md:12` said an accepted round is one the **"owner merged"** | Fixed. Second live instance of the class my broadened sweep claimed had exactly one — it matched `Brain does not merge` and `owner merges`, but not past-tense `owner merged` |
+
+| Brief 003 item 8 was already done by this PR | Replaced with the one dropped NOTE that had no disposition anywhere: the thin non-Claude inbox fallback |
+
+
+
+The sweep miss is worth naming: it is the **same fixed-phrase failure the sweep existed to fix**, one level up. That is now three instances of one pattern across three rounds.
+
+
+
+## Also in this branch
+
+
+
+- Four `docs/state.md` staleness items from the PR #14 round, all verified fixed by Verifier against the current file.
+
+- Brief 001 archived as **accepted**, with its outcome — including one **known-wrong claim merged with PR #15**: `deck-builder-legality.md` §2.4 says `check_limit` is guarded by the Shift-inclusive `forceInput` at `deck_con.cpp:641,719,756`; true at two of three, false at `:719`. Recorded in `state.md` so a cold session hits it.
+
+- Brief 003 queued: framework hardening.
+
+
+
+## Evidence
+
+
+
+- `python -m unittest discover -s tests` — `Ran 56 tests ... OK (skipped=10)`, now meaningfully rather than accidentally.
+
+- Mutation: untracking `docs/briefs/delivered/README.md` reproduces CI's two failures locally.
+
+- Generators `--check` — both up to date.
+
+
+
+**Verified at this head:** all five required checks green, confirmed live by Verifier and by Brain. Two residual SHOULD FIX carried forward rather than fixed here: `git ls-files` reflects the index rather than the committed tree (a narrower version of the same state-vs-reality class this fix closes), and the `resolves()` fallback for out-of-repo links still uses the pre-fix working-tree check. Both fold into brief 003 item 1.
+
+
+

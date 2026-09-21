@@ -34,6 +34,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
@@ -53,15 +54,62 @@ _SEARCH = [
 _NAMES = ["edopro_next_semantic_trace", "edopro_next_semantic_trace.exe"]
 
 
+def _source_mtime_ns(source_root: pathlib.Path) -> int | None:
+    """Return the newest source mtime, or None when it cannot be established.
+
+    The semantic trace executable has no embedded source revision, so the
+    harness uses a deliberately conservative local relation: every file in
+    client/ (apart from ignored build output) must be older than the binary.
+    A missing or unreadable source tree is not evidence of freshness. This
+    uses explicit scandir recursion because Path.rglob can silently omit a
+    directory after an access-denied error on Windows.
+    """
+    try:
+        newest = None
+        pending = [source_root]
+        while pending:
+            directory = pending.pop()
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    path = pathlib.Path(entry.path)
+                    relative = path.relative_to(source_root)
+                    if "build" in relative.parts:
+                        continue
+                    if entry.is_dir(follow_symlinks=False):
+                        pending.append(path)
+                    elif entry.is_file(follow_symlinks=False):
+                        mtime = entry.stat(follow_symlinks=False).st_mtime_ns
+                        newest = mtime if newest is None else max(newest, mtime)
+        return newest
+    except (OSError, ValueError):
+        return None
+
+
+def binary_is_fresh(binary: pathlib.Path,
+                    source_root: pathlib.Path = REPO / "client") -> bool:
+    """Whether *binary* is newer than every readable client source file.
+
+    Strictly newer is intentional: equal timestamps fail closed rather than
+    allowing a filesystem with coarse timestamp resolution to claim freshness.
+    """
+    source_mtime = _source_mtime_ns(source_root)
+    if source_mtime is None:
+        return False
+    try:
+        return binary.is_file() and binary.stat().st_mtime_ns > source_mtime
+    except OSError:
+        return False
+
+
 def find_binary() -> pathlib.Path | None:
-    """Locate the semantic trace tool, or return None if it is not built."""
+    """Locate a semantic trace tool that can be shown to be fresh."""
     if override := os.environ.get("EDOPRO_NEXT_SEMANTIC_TRACE"):
         path = pathlib.Path(override)
-        return path if path.is_file() else None
+        return path if binary_is_fresh(path) else None
     for directory in _SEARCH:
         for name in _NAMES:
             candidate = directory / name
-            if candidate.is_file():
+            if binary_is_fresh(candidate):
                 return candidate
     return None
 
@@ -128,10 +176,127 @@ def scalar(text: str, key: str) -> int:
     raise AssertionError(f"trace has no {key!r} entry")
 
 
+class TestBinaryFreshness(unittest.TestCase):
+    def test_stale_binary_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            source_root = root / "client"
+            source_root.mkdir()
+            source = source_root / "src.cpp"
+            binary = root / "edopro_next_semantic_trace"
+            source.write_text("source", encoding="utf-8")
+            binary.write_text("old binary", encoding="utf-8")
+            now = 2_000_000_000_000_000_000
+            os.utime(source, ns=(now, now))
+            os.utime(binary, ns=(now - 1, now - 1))
+            self.assertFalse(binary_is_fresh(binary, source_root))
+
+    def test_fresh_binary_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            source_root = root / "client"
+            source_root.mkdir()
+            source = source_root / "src.cpp"
+            binary = root / "edopro_next_semantic_trace"
+            source.write_text("source", encoding="utf-8")
+            binary.write_text("fresh binary", encoding="utf-8")
+            now = 2_000_000_000_000_000_000
+            os.utime(source, ns=(now, now))
+            os.utime(binary, ns=(now + 1_000_000, now + 1_000_000))
+            self.assertTrue(binary_is_fresh(binary, source_root))
+
+    def test_build_output_is_not_counted_as_source(self) -> None:
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            source_root = root / "client"
+            build_root = source_root / "build"
+            build_root.mkdir(parents=True)
+            source = source_root / "src.cpp"
+            binary = build_root / "edopro_next_semantic_trace"
+            source.write_text("source", encoding="utf-8")
+            binary.write_text("fresh binary", encoding="utf-8")
+            now = 2_000_000_000_000_000_000
+            os.utime(source, ns=(now, now))
+            os.utime(binary, ns=(now + 1_000_000, now + 1_000_000))
+            self.assertTrue(binary_is_fresh(binary, source_root))
+
+    def test_unreadable_source_tree_fails_closed(self) -> None:
+        if os.name != "nt":
+            self.skipTest("Windows ACL denial is required for this enumeration test")
+
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            source_root = root / "client"
+            blocked = source_root / "blocked"
+            source_root.mkdir()
+            blocked.mkdir()
+            visible = source_root / "visible.cpp"
+            hidden = blocked / "newer.cpp"
+            binary = root / "edopro_next_semantic_trace"
+            visible.write_text("visible", encoding="utf-8")
+            hidden.write_text("hidden", encoding="utf-8")
+            binary.write_text("binary", encoding="utf-8")
+            now = 1_700_000_000_000_000_000
+            os.utime(visible, ns=(now, now))
+            os.utime(hidden, ns=(now + 2_000_000, now + 2_000_000))
+            os.utime(binary, ns=(now + 1_000_000, now + 1_000_000))
+
+            identity_result = subprocess.run(
+                ["whoami"], capture_output=True, text=True, check=False)
+            identity = identity_result.stdout.strip()
+            if identity_result.returncode != 0 or not identity:
+                self.skipTest("could not identify the Windows account for icacls")
+
+            deny = subprocess.run(
+                ["icacls", str(blocked), "/deny",
+                 f"{identity}:(OI)(CI)(RD)"],
+                capture_output=True, text=True, check=False)
+            if deny.returncode != 0:
+                self.skipTest(
+                    "could not establish a Windows read denial with icacls: "
+                    + deny.stderr.strip())
+
+            try:
+                try:
+                    with os.scandir(blocked):
+                        pass
+                except PermissionError:
+                    self.assertFalse(binary_is_fresh(binary, source_root))
+                else:
+                    self.skipTest(
+                        "icacls reported success but the test account can still "
+                        "enumerate the denied directory")
+            finally:
+                subprocess.run(
+                    ["icacls", str(blocked), "/remove:d", identity],
+                    capture_output=True, text=True, check=False)
+
+    def test_find_binary_rejects_stale_search_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            binary = root / "edopro_next_semantic_trace"
+            binary.write_text("old binary", encoding="utf-8")
+            with mock.patch.dict(os.environ, {}, clear=True), \
+                    mock.patch(__name__ + "._SEARCH", [root]), \
+                    mock.patch(__name__ + ".binary_is_fresh", return_value=False):
+                self.assertIsNone(find_binary())
+
+    def test_find_binary_accepts_fresh_search_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            binary = root / "edopro_next_semantic_trace"
+            binary.write_text("fresh binary", encoding="utf-8")
+            with mock.patch.dict(os.environ, {}, clear=True), \
+                    mock.patch(__name__ + "._SEARCH", [root]), \
+                    mock.patch(__name__ + ".binary_is_fresh", return_value=True):
+                self.assertEqual(find_binary(), binary)
+
+
 BINARY = find_binary()
 _SKIP_REASON = (
-    "client/ is not built; configure and build it, or set "
-    "EDOPRO_NEXT_SEMANTIC_TRACE to the binary")
+    "no semantic-trace binary is present and newer than every client source "
+    "file; configure and build client/, or set "
+    "EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary")
 
 
 @unittest.skipIf(BINARY is None, _SKIP_REASON)

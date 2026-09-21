@@ -1,0 +1,20 @@
+Accepted by Brain at head `51a5a993` and merged. Review gate lifted.
+
+Base commit: 9005f950bd5616e64432e4ab589c1efb5134b606
+Head commit: 51a5a993fca1ac63a19763cb98a596254aea6c41
+
+This is the follow-up correction delivery for Brief 010 on meta/framework-adoption. Corrections C1-C5 were independently accepted; this pass addresses C6-C8 and remains under review.
+
+- The active brief now consistently records that the neutrality guard is deliberately not installed, does not require neutrality tests, and does not claim a provider-shaped namespace catch.
+- Live references to the removed AGENTS.md Authority heading now point to docs/agents/CONSTITUTION.md; the additional live brief-lifecycle reference found by the sweep was corrected, while historical archive references remain historical.
+- The completion-report disclosure records that the non-empty confirmation-command assertion was removed because the canonical Worker contract names no backtick-quoted command. The adapter superset property remains and is live against future contract drift, though dormant against adapter-only changes while the contract command set is empty.
+
+No engine or product source, build configuration, workflow, branch protection, remote, or pull-request state was changed. The neutrality guard was not reinstated and no local exemption was added. PR #27 remains open and unmerged.
+
+Commands a reviewer can rerun:
+- python3 -m unittest discover -s tests -v
+- python3 tools/generate_messages.py --check
+- python3 tools/generate_protocol_constants.py --check
+- python3 tools/checkout.py --seat builder
+- python3 tools/report.py status
+- git submodule status

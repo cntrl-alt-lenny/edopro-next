@@ -1,0 +1,35 @@
+
+## Scope and evidence boundary
+
+This PR covers the complete `master..head` range from base `d3b458bb803af6df22a20574a495bd1680b57ebc` through head `45be9de678f0d07a361cdc452f9ca6a4fd50a380`. The range changes `data::load_ydk()` and `policy::load_lflist()` failure classification, their data/policy tests, and the scoped read-failure brief/state/architecture documentation. It does not change CI policy, branch protection, repository settings, the engine, or the PR lifecycle.
+
+R1-R10 remain part of the range and their earlier corrections are preserved. R11 closes the Windows classification/read two-open race by reading accepted disk files through the same native handle whose type was classified. Non-disk handles are rejected before a potentially blocking read; POSIX keeps its existing status-plus-`ifstream` path. The Windows object predicate does not enumerate path prefixes, so it covers the canonical pipe namespace, `\\?\\pipe`, GLOBALROOT, localhost, loopback and extended UNC spellings. A zero-access classification-only fallback is used only when an inbound pipe rejects a read-capable client; a disk result remains an ordinary open failure.
+
+The Windows tests cover both loaders' canonical free and holding/busy single-instance pipes, an immediate-disconnect-and-relisten server, and six spellings: `\\.\\pipe\\<leaf>`, `\\?\\pipe\\<leaf>`, `\\.\\GLOBALROOT\\Device\\NamedPipe\\<leaf>`, `\\localhost\\pipe\\<leaf>`, `\\127.0.0.1\\pipe\\<leaf>`, and `\\?\\UNC\\localhost\\pipe\\<leaf>`. The timeout helper returns a bounded test failure without calling `future.get()` after a timeout. At base `2a3f3e4314f16aa3e77c16446bc841e03c0b2348`, the newly applied device/immediate-disconnect tests fail under that bounded helper instead of hanging the test run. At this head, repeated Windows 11/MSVC runs return promptly with `ok == false` for every tested pipe state and spelling. Most pipe diagnostics are `failed to read file`; an alias can report `failed to open file` when the server is between instances. `CON`, `NUL`, `PRN`, `AUX` and `COM1` also return promptly unsuccessful. Missing and share-locked regular files remain `failed to open file`, directories remain `failed to read file`, and zero-byte regular files load successfully. macOS is unavailable. No replay-harness result is evidence about unchanged duel behaviour.
+
+## Final-head CI conclusions (`45be9de678f0d07a361cdc452f9ca6a4fd50a380`)
+
+PR-triggered run `35605822889` and push run `35605819286` completed successfully. The exact-head check-run conclusions are:
+
+- `Regression harness (3.10)` — SUCCESS
+- `Regression harness (3.12)` — SUCCESS
+- `Semantic client model` — SUCCESS
+- `Card and deck data` — SUCCESS
+- `Qt 6 shell (Linux)` — SUCCESS
+- `Upstream EDOPro baseline (observer=false)` — SUCCESS
+- `Upstream EDOPro baseline (observer=true)` — SUCCESS
+
+These conclusions are for the exact final head. They do not make replay-harness output evidence about unchanged duel behaviour.
+
+## Reproduce
+
+```text
+cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && cmake -S data -B data/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON -DCMAKE_TOOLCHAIN_FILE=C:/Users/leona/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows && cmake --build data/build --parallel && ctest --test-dir data/build --output-on-failure'
+cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && cmake -S policy -B policy/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON -DCMAKE_TOOLCHAIN_FILE=C:/Users/leona/Dev/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows && cmake --build policy/build --parallel && ctest --test-dir policy/build --output-on-failure'
+python -m unittest discover -s tests -v
+python tools/generate_messages.py --check
+python tools/generate_protocol_constants.py --check
+```
+
+The PR remains open and the review guard remains in force.
+

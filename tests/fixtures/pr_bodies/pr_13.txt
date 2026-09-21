@@ -1,0 +1,26 @@
+## Summary
+
+A narrowly-scoped M3D3 proof: a `.ydk` file produced by this project's own, unmodified `edopro_next::data::save_ydk()` is handed to the real, preserved `DeckManager::LoadDeckFromFile()` - the same entry point upstream's own deck builder calls - against a small, synthetic, committed-safe database fixture, and the resulting `ygo::Deck` is compared to independently-derived expected structures for both of upstream's `separated` load modes.
+
+- `integration/legacy/ydk_interop.{h,cpp}`: the harness. Only `gDataManager`/`gdeckManager` are installed (RAII, restored on every exit path); no `GameConfig`/`SoundManager`/`Game`/Irrlicht device, since the load direction needs none of them. `LoadCardList` stays `static`/unmodified - its grammar is exercised only transitively, through the real public `LoadDeckFromFile` entry point.
+- `data/premake5.lua`: a second, logically-equivalent Premake target for `edopro_next_deck` (only `src/ydk.cpp`, no SQLite/search/Qt/gframe/ocgcore), so the integration build can link this project's own real `.ydk` writer without duplicating it or crossing CMake/Premake build systems.
+- Two new CLI options sharing the existing opt-in `EDOPRO_NEXT_SEMANTIC_OBSERVER` build leg for CI-cost reasons only (documented as conceptually unrelated to the semantic observer at every call site): `--verify-ydk-interop`, `--verify-ydk-interop-fault`. Fault injection corrupts one already-observed value after the real load, never the parser input - same principle as M2's own replay-verifier fault injection.
+- CI: two new steps on the existing `observer=true` matrix leg of "Upstream EDOPro baseline" - no new expensive matrix dimension.
+- `docs/architecture/ydk-interoperability.md`: source-verified account, with an explicit PROVEN/NOT-PROVEN boundary list, and the by-hand derivation (from `gframe/deck_manager.cpp` directly, not by running any code) of both modes' expected results.
+- `docs/adr/0008-upstream-ydk-interop-harness.md`: the five decisions that were genuinely debatable.
+- `docs/ROADMAP.md` updated truthfully: M3D3 checked, "Deck builder UI in QML" stays unchecked, exit criterion stays **Pending** (not Met) - proven at the format/loader level, not end-to-end through upstream's GUI.
+
+## Explicit non-goals
+
+No legality of any kind, no `policy/` changes, no `ocgcore`, no upstream `SaveDeck` → our-parser direction (scoped out, not claimed impossible - see doc §6), no GUI/file-picker proof, no real BabelCDB data, no `LoadCardList` visibility change.
+
+## Test plan
+
+- [x] `git diff --check` - clean
+- [x] `data/` CTest suite (card_database, deck_ydk, card_search) - 3/3 pass locally (macOS, CMake+Ninja)
+- [x] `client/` CTest suite - 7/7 pass locally
+- [x] `policy/` CTest suite - `deck_validation` passes; `lf_list` has one pre-existing, unrelated failure (`loadLflistDirectoryPathFailsCleanly`, a macOS-vs-Linux directory-open behavior difference) - confirmed pre-existing via `git diff --stat origin/master -- policy/` (zero policy/ changes in this PR)
+- [x] `clang++ -std=c++20 -fsyntax-only` of `ydk_interop.cpp` against the **real** upstream headers (`gframe/`, `ocgcore/`, `data/include/`) - zero errors, zero warnings under `-Wall -Wextra -Wpedantic` beyond one pre-existing, unrelated upstream `bufferio.h` deprecation notice
+- [ ] Full Premake/vcpkg `ygoprodll` integration build, and the harness binary itself - **not run locally** (this macOS sandbox has no Linux vcpkg toolchain; per `CLAUDE.md` this is a Linux-verified baseline build). CI is authoritative for this.
+
+**DO NOT MERGE** - this PR is for external design review only, per explicit instruction.

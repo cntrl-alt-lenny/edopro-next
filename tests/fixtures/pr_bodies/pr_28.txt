@@ -1,0 +1,13 @@
+DO NOT MERGE — under review
+
+Re-lands the evidence-freshness corrections on the current master line.
+
+The semantic-trace harness now fails closed when it cannot establish that a discovered or explicit binary is newer than every readable client source file. The PR-body checker rejects measured evidence figures and requires commands that a reviewer can rerun at the current head.
+
+Evidence commands:
+- `git diff --check origin/master...HEAD`
+- `python -m unittest discover -s tests -v`
+- `python tools/generate_messages.py --check`
+- `python tools/generate_protocol_constants.py --check`
+- `python tests/test_semantic_trace.py --require -v`
+- `ctest --test-dir client/build --output-on-failure`
