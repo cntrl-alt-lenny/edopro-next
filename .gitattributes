@@ -1,2 +1,14 @@
-# Auto detect text files and perform LF normalization
+# Installed as `.gitattributes`. If this project already had one, adoption
+# wrote this alongside it instead of overwriting — merge the rule below in.
+#
+# This matters because adoption may install `.githooks/pre-push`, a `#!/bin/sh`
+# script. A stale CRLF working file is a portability hazard: the effect
+# depends on the platform and the shell. The framework observed macOS Git
+# refuse such a hook with `cannot exec ... No such file or directory`, while
+# tested Windows Git for Windows plus its bundled GNU bash executed the hook's
+# real logic. Other Windows shells and WSL/Cygwin Git were not tested.
+#
+# `eol=lf`, not bare `text=auto`: `text=auto` alone normalises to LF in the
+# repository but still checks out CRLF on Windows, which is the case that
+# breaks.
 * text=auto eol=lf

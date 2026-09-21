@@ -1,4 +1,4 @@
-Brief-ID: 012-2026-09-21-evidence-freshness-reland
+Brief-ID: 013-2026-09-21-framework-guard-install
 
 Status: active
 
@@ -6,115 +6,136 @@ Status: active
 
 ## Goal
 
-Re-land Brief 009 as its own reviewed round on the current `master`, and
-close the two evidence-freshness defects it names. Brief 009's full problem
-statement, investigation questions and acceptance criteria are in
-[`delivered/009-2026-09-01-evidence-freshness.md`](delivered/009-2026-09-01-evidence-freshness.md)
-and are **incorporated here by reference**. Read that file first; this brief
-states only what has changed since it was written.
+Bring this repository's installed copy of the shared agentic framework up to
+one pinned framework revision, consistently, and install the
+provider-neutrality guard that the adoption round (Brief 010) deliberately
+left out.
 
-The two defects, in one line each:
-
-- **A.** A PR body's quoted evidence figures silently stop describing the
-  range that will merge whenever `strict: true` forces a branch update.
-- **B.** `tests/test_semantic_trace.py`'s `find_binary()` silently prefers a
-  stale `edopro_next_semantic_trace` binary, with no freshness check.
+**Pinned framework revision:**
+`cntrl-alt-lenny/agentic-framework` at
+`fed26f360294baddedc74eeaabbaf2e716572260` (the merge of framework PR #11).
+Every framework file you install comes from that commit, and no other.
 
 ## Why this is next
 
-Brief 011 is merged, and this was queued behind it. Brief 009's work was
-delivered as PR #26 on `meta/evidence-freshness` at `1438f934`, based on
-`9005f950`. It was closed unmerged because it collided with the framework
-adoption (PR #27), and **it was never independently reviewed**. Treat it as
-prior art to evaluate, not as accepted work.
-
-## What changed since Brief 009 was written
-
-- `master` has moved from `9005f950` to the adopted framework and Brief 011.
-  `AGENTS.md` in particular was substantially rewritten by the adoption, so
-  the delivered `AGENTS.md` change cannot be applied as-is.
-- The shared framework's canonical files under `docs/agents/`, and
-  `tools/checkout.py` and `tools/report.py`, are now installed and must stay
-  byte-identical to the framework version this repository adopted.
-  Brief 009's scope permitted documentation changes "in `AGENTS.md` and/or
-  `docs/agents/`". That permission now covers only `AGENTS.md` and the
-  project-owned files under `docs/agents/`: `model-notes.md`, `launching.md`
-  and `worktree-mechanism.md`. If defect A's mechanism needs a change to a
-  canonical framework file, write it as a proposal in your report and do not
-  make it.
-- The agent loop now runs on the owner's Windows 11 machine (MSVC 19.44, Qt
-  6.8.3, vcpkg). macOS is not available.
-- `python` is 3.12 on this machine. From PowerShell, 8 `test_push_guard` cases
-  fail because `bash` resolves to the WSL launcher. That is a known,
-  pre-existing issue and not this round's to fix; run the Python suite from
-  Git Bash, and report the PowerShell result if you run it.
+- Brief 010 installed the framework without its neutrality guard, because the
+  guard then contradicted this project's `m<N>/` and `meta/` branch
+  convention.
+- The framework has since added project-declared branch namespaces (its
+  PR #9), cross-clone delivery reporting and a line-ending tool (PR #10), and
+  a fix so that command-form and prose-form text is matched the same way
+  (PR #11).
+- The read-only trial of PR #9 on this repository (recorded in
+  `docs/state.md`, *Shared-framework status*) accepted 25 of 26 real branches
+  under the declaration `<!-- guard:branch-namespaces prefixes="m<N>,meta" -->`.
+- Our installed framework files are older and partly out of step with each
+  other. `tools/report.py`, for example, matches framework commit `a70c559d`,
+  and no document records which revision was adopted.
 
 ## Base and branch
 
-Work on branch `meta/evidence-freshness-reland`. Its first commit is Brain's
-close-out of round 011, which also queues this brief; it touches only
-`docs/briefs/`, `docs/state.md` and `docs/agents/model-notes.md`. Continue on
-top of it. Do not rebase or force-push. Do not reuse, rebase or delete
-`meta/evidence-freshness`; it stays as the record of what PR #26 delivered.
-Whether you carry any of `1438f934` forward, and how, is your decision.
-Explain it in the report.
+Branch `meta/framework-guard-install`. Its first commit is Brain's close-out
+of round 012; it touches only `docs/briefs/`, `docs/state.md` and
+`docs/agents/model-notes.md`. Continue on top of it. Do not rebase or
+force-push. The close-out commit is part of the reviewed range: report any
+error you find in it, and do not rewrite it.
 
-## Scope, non-scope, invariants
+## Scope
 
-As in Brief 009, with the amendment above to what `docs/agents/` may be
-changed. In particular: no `.github/workflows/` or repository-setting change;
-no production code in `client/`, `data/`, `policy/`, `ui/`, `gframe/` or
-`ocgcore/`; no weakened, skipped or deleted test; archived briefs' recorded
-evidence is not rewritten. The semantic-trace tests must still skip cleanly
-when `client/` is not built, and freshness must fail closed.
+- Follow the pinned revision's `framework/adoption.md`, section *Updating an
+  adopted framework consistently*, and move the whole versioned surface it
+  lists in one change:
+  - every `VERBATIM_DOCS` document under `docs/agents/`;
+  - the baseline tools and their tests;
+  - the four neutrality-guard files;
+  - `.gitattributes`, and `.githooks/pre-push` where applicable.
 
-Also in scope: Brain's close-out commit at the base of this branch is part of
-the reviewed range. If you find an error in it, report it; do not rewrite it.
+  Derive the exact file list from that revision's `tools/adopt.py`; do not
+  copy the list from this brief. Say in the report whether the pinned
+  revision treats the installed Claude Code adapter (`.claude/`) as part of
+  that surface, and act accordingly.
+- Declare this project's branch namespaces in root `AGENTS.md` using the
+  pinned revision's declaration syntax.
+- Record the pinned framework commit where a future session will find it,
+  including in `docs/state.md`'s *Shared-framework status*.
+- Run the pinned revision's `tools/line_endings.py check` in every checkout of
+  this clone: the primary checkout and each linked worktree. Report the
+  output of each run.
+
+## Non-scope
+
+- No change to `.github/workflows/`, branch protection, required checks,
+  repository settings or remotes.
+- No production code (`client/`, `data/`, `policy/`, `ui/`, `gframe/`,
+  `ocgcore/`).
+- Do not edit the canonical framework documents or tools to make them fit.
+  If one does not fit this project, that is a framework finding: report it
+  and do not patch it locally.
+- Do not fix the known double-spaced PR-body fixtures (`pr_10.txt`,
+  `pr_16.txt`); they are a separate open item.
+
+## Protected invariants
+
+- **`.githooks/pre-push` is project-owned in this repository.** It carries
+  project checks and bypass history, pinned by `tests/test_push_guard.py`. If
+  the pinned revision's hook differs, the update must not weaken or drop any
+  behaviour those tests pin. Explain what you did and why.
+- **No exemption that hides a real finding.** Resolve every guard finding in
+  one of two ways: fix the project text, or add a declared counterexample
+  block around text that genuinely quotes a violation. Never widen a
+  declaration just to silence a finding. List every finding and its
+  resolution.
+- **Project-owned files keep their content.** That means `AGENTS.md` apart
+  from the declaration and any genuinely required wording fix, plus
+  `docs/agents/model-notes.md`, `launching.md` and `worktree-mechanism.md`.
+- **Existing tests survive.** Name any pre-existing assertion you change,
+  with its before and after property.
+
+## Required investigation
+
+1. Diff every installed framework file against the pinned revision before
+   changing anything. Report which were already current, which were stale,
+   and which were locally modified. Treat a local modification as something
+   to understand, not something to overwrite silently.
+2. Run the guard across the repository and classify each finding: a real
+   project defect, a legitimate quotation, or a framework defect.
+3. Check the declaration against every branch on `origin`
+   (`git ls-remote --heads origin`). The trial expected `modern-ui/bootstrap`
+   to be the one non-conforming branch. Say whether the pinned revision
+   requires it to be declared (with its tracked witness under
+   `docs/branch-namespaces/`), and why.
 
 ## Acceptance criteria
 
-Brief 009's acceptance criteria, unchanged, plus:
-
-- The round's evidence is produced on this branch and at its final head, on
-  this machine. Figures copied from PR #26 are not evidence.
-- The defect-A mechanism is demonstrated against PR #19's historical case, as
-  Brief 009 requires. It is also demonstrated against this round's own PR
-  after a branch update, if one happens during the round.
+- Every installed framework file is byte-identical to the pinned revision,
+  except those the adoption guide says the project owns or configures. Show
+  SHA-256 for each file on both sides.
+- The neutrality test runs and passes. Then it is **shown to fail**: add a
+  structurally invalid branch example to a normative document, watch the test
+  go red, then remove the example. Real output both ways.
 - `python -m unittest discover -s tests -v` and both generator `--check`
-  commands are green from Git Bash.
-- Canonical framework files and `tools/checkout.py` / `tools/report.py` are
-  unchanged, shown by an empty
-  `git diff origin/master -- tools/checkout.py tools/report.py` together with
-  the list of `docs/agents/` files changed.
-- The PR body carries `DO NOT MERGE — under review`, and the PR is not
-  merged.
+  commands are green from Git Bash. `tests/test_push_guard.py` still passes.
+- `docs/state.md` records the pinned framework commit and no longer says the
+  guard is absent.
+- The PR body begins with `DO NOT MERGE — under review`, passes
+  `python tools/check_pr_evidence.py`, and is not merged.
 
 ## Required evidence
 
-Brief 009's required evidence, produced fresh, plus the platform, exact base
-and head SHAs, and the check-run conclusions at the final head. Say what you
-did not run. Do not cite the replay harness as evidence about duel
-behaviour; this round does not touch it.
+- Checkout check, platform, tool, model and OS (the OS from a command's
+  output, not assumed).
+- The before-diff inventory from investigation 1.
+- Per-file SHA-256 identity against the pinned revision.
+- Guard findings and their resolutions.
+- The mutation red/green.
+- `line_endings.py check` output for every checkout.
+- The suite and generator output.
+- Check-run conclusions at the final head.
+- What you did not run.
 
 ## Completion-report schema
 
 The standard report in
-[`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus Brief 009's
-three additional fields, plus what you did with `1438f934` and why.
-
-## Reopened corrections E1-E3
-
-E1 — the PR-body checker (`tools/check_pr_evidence.py`) misses the forms measured evidence actually takes in this repository's PR bodies, and flags ordinary text. Observed by Brain at 80f8465f, each run as a body alongside a valid command: these passed with exit 0 — prose hard-wrapped as "the unittest run reported 112" / "tests, all green."; a markdown table row "| unittest | 112 |"; "ctest reported 3/3" / "passing."; and "data 3/3, policy 2/2, CI 12 green". "Run the tests with Python 3.12." was rejected with exit 1. The Verifier also got "Evidence: 69" / "tests passed." through. This project hard-wraps its PR bodies, so a line-local check misses its own house style. Required outcome: the mechanism catches measured-evidence figures in the forms this repository's PR bodies actually use, and does not flag commit SHAs, PR, brief or correction identifiers, or version numbers. Use the real bodies of this repository's past PRs (`gh pr view <n> --json body`) as a corpus, and report what the mechanism does on them. Deliberately disguised numerals (Roman numerals, number words such as "dozen", hexadecimal) are out of scope: the risk is honest drift, not evasion. Say so in the documentation as a stated limit. If a line-by-line pattern cannot meet this, change the mechanism's shape rather than growing a pattern list, and explain why. New tests must fail at 80f8465f.
-
-E2 — the semantic-trace freshness check fails open when part of `client/` cannot be enumerated. Observed by Brain at 80f8465f on Windows, with a real permission denial (`icacls /deny (OI)(CI)(RD)`) on a subdirectory holding a newer source file: `binary_is_fresh` returned True. Python's `Path.rglob` skips an unreadable directory without raising. That contradicts Brief 009's protected invariant ("If freshness cannot be established, the answer is 'not fresh'") and the completion report's fail-closed claim. Required outcome: a source tree that cannot be fully enumerated or stat'ed makes the binary not fresh, with a test that fails at 80f8465f. Where the test cannot set up an unreadable directory (for example, running with administrator or root rights), it must skip with a visible reason rather than pass.
-
-E3 — `docs/state.md`'s macOS section still says a stale `client/build/edopro_next_semantic_trace` "is silently preferred" and that `find_binary()` has "no freshness check". After this round that is no longer true. Make it describe the behaviour after your change, including its named residual limit (a newer binary built from a different commit can still pass).
-
-## Reopened corrections E4-E6
-
-E4 — a PR body carrying a measured figure still passes the checker. Observed by Brain at e29ff3d2: PR #15's body passes with exit 0 although it pastes `git diff --stat` output ("docs/architecture/deck-builder-legality.md | 523 ++++++++"). A standalone body of per-file diff-stat lines plus a valid command also passes. Diff-stat output is the exact historical form Brief 009 exists to catch (PR #19's rejected figure was a diff stat). The Verifier also found decimal counts the checker does not flag, in bodies it rejects for other reasons: PR #3 lines 191 and 284, PR #11 lines 113-114, and PR #12 lines 182-183.
-
-E5 — false alarm. Observed by the Verifier and confirmed by Brain: the pasted diagnostic line `load_ydk(directory):      ok=1  error=""` (PR #23 line 50) is rejected as a measured figure. It is a status observation, not a count or timing that goes stale.
-
-E6 — the round's acceptance keeps moving because the checker is judged against examples chosen one review at a time. Required outcome: commit the real bodies of this repository's PRs #1-#28 (from gh pr view <n> --json body) as test fixtures, each with an expected verdict. Add line-level expectations for every figure and false-alarm line named in E4 and E5, and for every other measured figure you find in the corpus. The test must fail at e29ff3d2. The correct outcome is this: no corpus body that contains a measured figure passes; no body fails solely because of a line that is not a measured figure; and the expected verdicts are your judgement, listed in your report so review can challenge them. State in AGENTS.md that the checker is a heuristic, what it is known not to catch (including the declared disguised-numeral limit), and that it runs only when invoked, since no CI change is in scope.
-
+[`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus: the file
+inventory (current, stale, locally modified), how `.githooks/pre-push` was
+handled, the guard findings table, and any framework findings to raise.

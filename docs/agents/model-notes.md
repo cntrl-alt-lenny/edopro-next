@@ -285,3 +285,35 @@ not a ranking.
 because it supplied literal SHAs; the mechanical delivery check could not see
 another clone's inbox. That has since been reported to and fixed by the
 framework (its PR #10).
+
+## Round 012 — 2026-09-21 — evidence freshness re-land (and the first Antigravity seats)
+
+Four reviewed heads before acceptance (PR #28, merged `8bad984e`). This is an
+observation log, not a ranking.
+
+- **Claude Code passes (`80f8465f`, `e29ff3d2`):** Verifier BLOCKERs were
+  real, but twice argued from the wrong cases. The first time it used
+  disguised numerals, which are out of scope because the risk is honest
+  drift. The second time it cited misses in bodies the checker already
+  rejects. Brain's own sweep found the case that mattered: PR #15 passing
+  with a pasted diff-stat. As in round 011, acceptance kept moving while the
+  checker was judged one review's examples at a time. It converged once E6
+  fixed a committed corpus with expected verdicts.
+- **Antigravity pass (`27ec4157`), Builder and Verifier both on Gemini 3.8
+  Flash (High):** both ran their checkout check in the right worktree and
+  wrote their reports with `tools/report.py` under the correct role and
+  Brief-ID (`source=cli`, no hook). Neither touched another checkout. Both
+  reported no permission prompts and no command they could not run; that is
+  their own claim. The Verifier's findings all survived adjudication, and it
+  caught both of the Builder's unsupported claims: fixtures "normalized with
+  LF" (two were double-spaced), and PR #1 figures the checker does not flag.
+  Both seats reported the OS as `10.0.26100`; the machine is
+  `10.0.26200.9457`. Treat self-reported tool, model and OS as claims.
+- **What made Antigravity work:** the prompt's optional tool notes named the
+  worktree for every command. Role tagging is derived from the directory, and
+  that tool's terminal may start in the clone root.
+
+**Brain-seat note.** Brain wrote a full-length base SHA into a Verifier
+prompt from memory, and it did not exist. The prompt's fallback
+(`git rev-parse 823fa679`) caught it. Every SHA in a prompt is now copied
+from command output.

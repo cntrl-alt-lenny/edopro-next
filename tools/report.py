@@ -54,7 +54,8 @@ Guarantees this module is responsible for, and how:
     every other role-per-checkout guarantee in this framework does.
   * **Carries provenance a reader can act on.** Every write is stamped with the
     task/brief this report is for, the exact HEAD SHA of the checkout at write
-    time, and a timestamp. `status` compares that SHA against the checkout's
+    time, the operating system reported by Python, and a timestamp. `status`
+    compares that SHA against the checkout's
     *current* HEAD, so a reader does not have to parse the header by hand to
     tell a fresh report from a stale one.
   * **Finds reports by Brief-ID.** Each role/Brief-ID has an atomically replaced
@@ -75,6 +76,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -239,7 +241,8 @@ def _seed_readme(inbox: Path) -> None:
         _atomic_write(readme, README)
 
 
-def _header(*, role: str, task: str, sha: str, source: str, stamp: str) -> str:
+def _header(*, role: str, task: str, sha: str, source: str, stamp: str,
+            operating_system: str) -> str:
     # Header fields are space-delimited for compatibility with existing
     # reports.  Format 2 makes the task encoding unambiguous: readers decode
     # only headers carrying this marker.  A header without it is a literal
@@ -250,7 +253,7 @@ def _header(*, role: str, task: str, sha: str, source: str, stamp: str) -> str:
     encoded_task = quote(task, safe="-._~:")
     return (
         f"<!-- captured {stamp} format=2 role={role} task={encoded_task} head={sha} "
-        f"source={source} -->\n\n"
+        f"os={operating_system} source={source} -->\n\n"
     )
 
 
@@ -320,7 +323,10 @@ def write_report(
     inbox.mkdir(parents=True, exist_ok=True)
     _seed_readme(inbox)
 
-    header = _header(role=role, task=task, sha=sha, source=source, stamp=stamp)
+    header = _header(
+        role=role, task=task, sha=sha, source=source, stamp=stamp,
+        operating_system=platform.system(),
+    )
     body = header + body_text + "\n"
 
     archive = _archive_path(inbox, role, task)
@@ -352,6 +358,7 @@ class Provenance:
     head: str | None
     source: str | None
     stamp: str | None
+    operating_system: str | None = None
 
 
 def _parse_header(text: str) -> Provenance | None:
@@ -392,6 +399,7 @@ def _parse_header(text: str) -> Provenance | None:
         head=fields.get("head"),
         source=fields.get("source"),
         stamp=stamp,
+        operating_system=fields.get("os"),
     )
 
 
@@ -602,9 +610,11 @@ def delivery_status(
     inbox must contain the named role's report with matching task and HEAD
     provenance. The named branch is fetched from ``origin`` first; a Verifier
     performs this check from a linked worktree, while separate clones remain
-    coordinator-only because their inboxes are private. A missing report, a
-    missing branch, or a branch still at the base all return the same retryable
-    "not delivered yet" state.
+    coordinator-only because their inboxes are private. A missing branch, an
+    unavailable base, or a branch still at the base is retryable. Once the
+    branch is strictly ahead of the base, an absent matching report is a
+    different state: the work may have been delivered in another clone, but
+    delivery is not established from this clone.
     """
     _fetch_branch(branch, cwd)
     head, conflict = _delivery_branch_head(branch, cwd)
@@ -625,7 +635,13 @@ def delivery_status(
 
     report_path = find_report(role=role, task=task, cwd=cwd)
     if report_path is None:
-        return 1, f"not delivered yet: no report for role '{role}'"
+        return 1, (
+            "branch delivered but report unavailable in this clone: no matching "
+            f"report for role '{role}' and task '{task}' at branch head {head}; "
+            "obtain the report from the source clone or have the owner carry its "
+            "exact body, then verify the role, task and head. Delivery is not "
+            "established by this check"
+        )
     provenance = _read_provenance(report_path)
     if provenance is None:
         return 1, f"not delivered yet: report for role '{role}' has no header"

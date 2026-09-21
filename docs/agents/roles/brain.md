@@ -123,7 +123,12 @@ before its first other instruction.
    prompt only after the Builder has finished. The Verifier prompt gives it the
    brief identifier, literal base SHA and Builder branch. The Verifier does not
    wait or poll; once sent, it runs the mechanical delivery check and either
-   reviews exactly the delivered head or stops with **"not delivered yet"**.
+   reviews exactly the delivered head or stops with the delivery check's exact
+   state. A strictly-ahead branch whose report is private to another clone is
+   **"branch delivered but report unavailable in this clone"**, not retryable
+   **"not delivered yet"**; the owner must carry the source clone's complete
+   report body and literal SHAs for the Verifier's documented cross-clone
+   pass-two comparison.
    Do not issue a Verifier prompt at all where the topology has no Verifier
    seat.
 6. **Read every report as evidence, not verdict.** Then independently inspect:
@@ -147,7 +152,9 @@ before its first other instruction.
    whichever reads more confidently.
 10. **Accept, reject, or issue a corrective brief.** A corrective brief goes to a
     *fresh* context with neutral framing. Never hand an agent its own rejected
-    reasoning back to defend.
+    reasoning back to defend. If Brain prescribes wording because a constraint
+    must be preserved, it checks every correction literally and together first
+    and reconciles anything that would leave the result false or contradictory.
 11. **On acceptance, merge it.** Before merging, confirm all four and say so:
     - the work was reviewed at **this exact head SHA**, not an earlier one;
     - Brain independently checked every blocking finding and every unproven
@@ -193,10 +200,13 @@ the *branch* rather than a commit that does not exist yet, and tell the owner
 to send the Verifier prompt only after the Builder has finished. The prompt's
 mechanical delivery check requires the Builder's completion report to match the
 task and branch head, and the branch to be strictly ahead of the base. It then
-records the literal SHA it reviewed. If delivery is not established in its
-session, it stops with **"not delivered yet"** so the owner can send the same
-prompt again once delivery is available. What must never happen is Brain
-inventing a SHA, or the Verifier reviewing "the branch" as a moving target.
+records the literal SHA it reviewed. A missing branch is retryable **"not
+ delivered yet"**; a strictly-ahead branch whose report is private to another
+ clone is the distinct **"branch delivered but report unavailable in this
+ clone"** state. In that case the owner carries the source report body and
+ literal base/head; the Verifier compares those against independently observed
+ state but does not claim mechanical delivery. What must never happen is Brain
+ inventing a SHA, or the Verifier reviewing "the branch" as a moving target.
 
 The owner's side of this loop, including the exact text they paste to start a
 round and to come back from one, is [`../kickoff.md`](../kickoff.md).

@@ -67,9 +67,12 @@ essentials:
   every other role-per-checkout guarantee in this framework does.
 - The write is atomic: a reader never sees a half-written report.
 - The header records the task, the exact HEAD SHA of your checkout at write
-  time, and a timestamp — `python3 tools/report.py status` compares that SHA
-  against the checkout's current HEAD and says whether the report is still
-  fresh, so a reader does not parse the header by hand.
+  time, the operating system reported automatically by the writer, and a
+  timestamp — `python3 tools/report.py status` compares that SHA against the
+  checkout's current HEAD and says whether the report is still fresh, so a
+  reader does not parse the header by hand. It records only the OS name, never
+  a person or a machine identifier. Older headers without this field remain
+  readable.
 - The task identifier is the exact, stable `Brief-ID` value. It must not have
   leading or trailing whitespace. New headers carry `format=2` and
   percent-encode the task in the space-delimited header; readers decode only
@@ -109,6 +112,33 @@ an LLM's next action. That is not a gap unique to this mechanism — it is
 true of "never merges" and "never accept your own work" as well, and this
 framework's answer has always been the same: make the required action small
 and unambiguous, then say plainly what its absence does and does not prove.
+
+### Clone and machine boundary
+
+The baseline assumption is that a project's seats share one clone on one
+machine, unless the report is deliberately carried between clones. Git
+transports commits, branches, and pull-request state; it does not transport
+`<git-common-dir>/agent-inbox/`, which is private to each clone. A linked
+worktree on the same clone sees that inbox, but a new clone on another machine
+does not.
+
+This framework does not turn private reports into Git objects or publish them
+to a remote. That preserves the writer's role derivation, atomic write,
+provenance, and exact task-and-head matching, and avoids making report text
+visible wherever a public remote is visible. The honest cross-clone path is
+manual: retrieve the exact report from the source clone and carry its complete
+body, including its provenance header, to the owner/Verifier. The pull-request
+body may carry that copied text, but it is only a carrier, not provenance.
+
+`tools/report.py delivery` therefore has two different failure states. Before
+the branch is strictly ahead of the literal base, **not delivered yet** is
+retryable. After the branch is ahead but this clone has no matching report, it
+says **branch delivered but report unavailable in this clone** and exits
+non-zero. That does not establish delivery and repeating the same prompt cannot
+fix it. Obtain the report from the source clone or carry it manually; then the
+Verifier compares the carried header and body with the exact role, Brief-ID,
+and branch head and records that mechanical delivery was unavailable in its
+clone. A branch or pull request alone never substitutes for a report.
 
 ## Reading what this produces
 

@@ -2,7 +2,7 @@
 
 Brief-ID: 009-2026-09-01-evidence-freshness
 
-Status: delivered
+Status: rejected
 
 **Delivered-and-unadjudicated.** Builder delivered this brief as pull request
 #26 on branch `meta/evidence-freshness`; it was never independently reviewed
@@ -179,3 +179,18 @@ The standard report in [`docs/agents/roles/worker.md`](../../agents/roles/worker
 - **Your answer to A**, including the case for doing less than automation if
   that is your conclusion.
 - Anything from investigation 3 you found and deliberately left alone.
+
+---
+
+## Outcome — superseded, not accepted (adjudicated 2026-09-21)
+
+This brief's own delivery — PR #26 on `meta/evidence-freshness` at `1438f934`
+— was **never reviewed and never merged**. PR #26 was closed after colliding
+with the framework adoption. The status `rejected` records that the delivery
+was not accepted; it is not a finding against its content, which nobody
+reviewed.
+
+The problem this brief states was closed instead by
+[Brief 012](012-2026-09-21-evidence-freshness-reland.md), which re-landed it on
+the adopted `master` and was accepted and merged as PR #28 (`8bad984e`).
+`meta/evidence-freshness` is kept as the record of what PR #26 delivered.
