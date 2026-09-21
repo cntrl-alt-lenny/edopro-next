@@ -84,41 +84,32 @@ std::string sanitize_creator_line(std::string_view creator) {
 	return out;
 }
 
-#ifdef _WIN32
-bool windows_path_prefix_matches(std::wstring_view value, std::wstring_view prefix) {
-	if(value.size() < prefix.size())
-		return false;
-	for(std::size_t i = 0; i < prefix.size(); ++i) {
-		wchar_t value_char = value[i];
-		wchar_t prefix_char = prefix[i];
-		if(value_char == L'/')
-			value_char = L'\\';
-		if(value_char >= L'A' && value_char <= L'Z')
-			value_char = static_cast<wchar_t>(value_char - L'A' + L'a');
-		if(prefix_char >= L'A' && prefix_char <= L'Z')
-			prefix_char = static_cast<wchar_t>(prefix_char - L'A' + L'a');
-		if(value_char != prefix_char)
-			return false;
-	}
-	return true;
-}
-
-bool is_windows_named_pipe_path(const std::filesystem::path& path) {
-	const auto native = path.native();
-	const std::wstring_view value(native);
-	return windows_path_prefix_matches(value, L"\\\\.\\pipe\\") ||
-		windows_path_prefix_matches(value, L"\\\\?\\pipe\\");
-}
-#endif
-
 bool is_known_non_regular_path(const std::filesystem::path& path) {
 #ifdef _WIN32
-	// A named-pipe path is not safe to probe with filesystem::status() or
-	// CreateFileW(): both APIs can connect as a client and consume an instance.
-	// Reject the documented pipe namespaces before either operation so no
-	// instance state can reach the blocking ifstream read below.
-	if(is_windows_named_pipe_path(path))
+	// Probe the Windows object without consulting filesystem::status(). That
+	// API can connect to a named pipe as a client, and an alias such as a
+	// GLOBALROOT or UNC spelling is not distinguishable from a regular path by
+	// string prefix alone. A successful native probe tells us the object type
+	// regardless of spelling; ERROR_PIPE_BUSY is the same classification when
+	// the pipe's only instance is already occupied.
+	const HANDLE handle = CreateFileW(
+		path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		nullptr, OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+	if(handle != INVALID_HANDLE_VALUE) {
+		const DWORD type = GetFileType(handle);
+		BY_HANDLE_FILE_INFORMATION information{};
+		const bool is_directory =
+			type == FILE_TYPE_DISK && GetFileInformationByHandle(handle, &information) != FALSE &&
+			(information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		CloseHandle(handle);
+		return type != FILE_TYPE_DISK || is_directory;
+	}
+	if(GetLastError() == ERROR_PIPE_BUSY)
 		return true;
+	// Missing and share-locked regular files must reach ifstream so their
+	// ordinary "failed to open file" diagnostic remains authoritative.
+	return false;
 #endif
 
 	std::error_code status_error;
@@ -132,21 +123,6 @@ bool is_known_non_regular_path(const std::filesystem::path& path) {
 		   type != std::filesystem::file_type::none)
 			return true;
 	}
-
-#ifdef _WIN32
-	// MSVC's filesystem status can classify a live named pipe as regular.
-	// Open a shared native handle solely to ask Windows what kind of object it
-	// is; a failed probe is deliberately left to ifstream, which preserves the
-	// ordinary open diagnostic for missing and inaccessible paths.
-	const HANDLE handle = CreateFileW(
-		path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
-	if(handle != INVALID_HANDLE_VALUE) {
-		const DWORD type = GetFileType(handle);
-		CloseHandle(handle);
-		return type != FILE_TYPE_DISK;
-	}
-#endif
 
 	// A status error is not itself proof that opening will fail: notably, a
 	// missing path should reach ifstream so it reports "failed to open file".

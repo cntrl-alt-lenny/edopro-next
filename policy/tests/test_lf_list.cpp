@@ -25,6 +25,8 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <thread>
+#include <vector>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -65,8 +67,9 @@ public:
 
 	bool create(bool occupy) {
 		const auto number = named_pipe_counter.fetch_add(1);
-		name_ = L"\\\\.\\pipe\\edopro_next_policy_test_" +
-			std::to_wstring(GetCurrentProcessId()) + L"_" + std::to_wstring(number);
+		leaf_ = L"edopro_next_policy_test_" + std::to_wstring(GetCurrentProcessId()) + L"_" +
+			std::to_wstring(number);
+		name_ = L"\\\\.\\pipe\\" + leaf_;
 		server_ = CreateNamedPipeW(
 			name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
 			PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
@@ -119,8 +122,18 @@ public:
 
 	std::filesystem::path path() const { return std::filesystem::path(name_); }
 
+	std::vector<std::filesystem::path> alternate_paths() const {
+		return {
+			std::filesystem::path(L"\\\\.\\GLOBALROOT\\Device\\NamedPipe\\" + leaf_),
+			std::filesystem::path(L"\\localhost\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\127.0.0.1\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\?\\UNC\\localhost\\pipe\\" + leaf_),
+		};
+	}
+
 private:
 	std::wstring name_;
+	std::wstring leaf_;
 	HANDLE server_ = INVALID_HANDLE_VALUE;
 	HANDLE client_ = INVALID_HANDLE_VALUE;
 	HANDLE connect_event_ = nullptr;
@@ -128,12 +141,15 @@ private:
 
 edopro_next::policy::LfListLoadResult load_named_pipe_with_timeout(
 	const std::filesystem::path& path, NamedPipe& pipe) {
-	auto future = std::async(std::launch::async, [path] {
+	std::packaged_task<edopro_next::policy::LfListLoadResult()> task([path] {
 		return edopro_next::policy::load_lflist(path);
 	});
+	auto future = task.get_future();
+	std::thread(std::move(task)).detach();
 	if(future.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
 		pipe.close();
 		EDOPRO_POLICY_CHECK(false);
+		return {};
 	}
 	return future.get();
 }
@@ -664,6 +680,27 @@ EDOPRO_POLICY_TEST(loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance) {
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
 	EDOPRO_POLICY_CHECK(result.lists.empty());
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistNamedPipeAliasesFailWithoutHanging) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistNamedPipeAliasesFailWithoutHanging: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	for(std::size_t index = 0; index < 4; ++index) {
+		NamedPipe pipe;
+		if(!pipe.create(false)) {
+			EDOPRO_POLICY_CHECK(false);
+			return;
+		}
+		const auto path = pipe.alternate_paths().at(index);
+		const auto result = load_named_pipe_with_timeout(path, pipe);
+		std::cout << "    " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_POLICY_CHECK(!result.ok);
+		EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + path.string());
+		EDOPRO_POLICY_CHECK(result.lists.empty());
+	}
 #endif
 }
 
