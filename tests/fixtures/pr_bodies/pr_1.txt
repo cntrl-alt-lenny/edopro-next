@@ -1,0 +1,77 @@
+Lands the M0 foundation: architecture research, a verified upstream baseline, the UI stack decision, project documentation, and a compiled Qt 6 / QML shell.
+
+`master` is currently the untouched upstream EDOPro baseline, so a visitor to this repository sees upstream's README rather than this project. This merge fixes that.
+
+## Architecture research
+
+`docs/architecture/current-edopro.md` maps the upstream client by reading the source at `54ea755a`, not the README. The load-bearing findings:
+
+- **The engine boundary is already clean.** The client loads `ocgcore` as a shared library over a C ABI (`--no-core=true`) and communicates via a byte message stream. A new client needs no engine changes at all — this is what makes the project viable.
+- **`gframe/duelclient.cpp` fuses five responsibilities** across 97 `MSG_*` cases in one 4,658-line function: protocol decode, state mutation, animation scheduling, widget driving, and input gating. This is the primary seam.
+- **`ClientCard` interleaves render state with game state** — `matrix4`, `vector3df`, alpha and animation frame sit in the same struct as `code`, `type`, `attack` and `link_marker`. Game state cannot currently be reasoned about without a renderer.
+- **Deck files, networking, replay and sound are already presentation-free** and can be reused unchanged.
+
+A migration order is derived from this, ranked by value ÷ risk, with the duel field deliberately last.
+
+## Baseline verification
+
+`docs/BASELINE.md` records a successful build of untouched upstream, so future regressions have a known-good bisect point.
+
+| | |
+|---|---|
+| Commit | `54ea755a` |
+| Environment | WSL2 Ubuntu 26.04, gcc 15.2.0 |
+| Artifact | `bin/x64/release/ygoprodll`, 117 MB ELF |
+| Runtime self-report | `EDOPro version 41.0.2`, Irrlicht 1.9.0 |
+
+It also documents four gotchas that cost real time — notably that a Windows clone gives `travis/*.sh` CRLF endings and fails with a misleading `exit 127`.
+
+The document is explicit about what it does **not** prove: no Windows or macOS build, no duel played, and no test coverage, because upstream has no test suite.
+
+## UI stack decision
+
+[ADR 0001](docs/adr/0001-ui-runtime-stack.md) evaluates four candidate stacks and accepts **C++20 + Qt 6 / QML**.
+
+The deciding argument is not aesthetic. The engine boundary is a C ABI over a byte protocol, and Qt is the only candidate that puts a modern, animated, accessible, controller-navigable UI directly on top of it **with no FFI and no second protocol implementation**, while letting legacy Irrlicht screens keep running during migration.
+
+Rust as a whole-frontend replacement is rejected on the specific ground that it maximises FFI surface exactly where the protocol is least stable, and forecloses incremental migration. Rust for an isolated subsystem behind a narrow interface is explicitly **deferred, not rejected**.
+
+## Qt 6 / QML shell
+
+Real, compiled code — not a mockup. Builds against Qt 6.8.3 LTS and runs with **zero QML errors**.
+
+- **C++/QML boundary works** — `AppContext` exposes real build metadata (version, git SHA injected at configure time, Qt version, platform) rather than hardcoded QML strings.
+- **Design tokens work** — `ui/qml/Theme.qml` is the single source for colour, spacing, radii, typography, motion and breakpoints. No screen contains a raw hex value or magic pixel number.
+- **Layout is responsive** — driven by width against a breakpoint, not a fixed resolution. The nav rail collapses to icons below it. Default window is 1280×800, the Steam Deck's panel.
+- **Focus is explicit and visible** — a focus ring drawn outside the fill so it never shifts layout, plus `Ctrl+1..5` navigation. Controller support will map onto this same focus model rather than emulating a mouse.
+- **Reduced motion is honoured** — every animation multiplies its duration by `Theme.motionScale`.
+
+## Documentation
+
+`CLAUDE.md`, `docs/VISION.md`, `docs/ROADMAP.md`, `docs/UPSTREAM.md`, `docs/DESIGN_SYSTEM.md`, and a rewritten `README.md`. Upstream's README is preserved verbatim at `docs/upstream-README.md`.
+
+## Explicitly NOT implemented
+
+Stated plainly, and reflected in both the README status table and the shell's own UI:
+
+- ❌ Semantic client model — not started
+- ❌ Deck builder — not started
+- ❌ Duel field — not started, deliberately last
+- ❌ Automated tests — none
+- ❌ CI — none
+- ❌ Windows / macOS builds — never attempted
+- ❌ Light theme — token structure supports it, but it does not exist
+
+The shell renders honest "Not implemented yet" states for every screen that does not exist. There are no placeholder decks, no fake cards, and no mock duel.
+
+## Validation performed for this PR
+
+- Qt shell rebuilt from branch state: **succeeds**, 596 KB binary
+- Qt shell run offscreen: **zero QML errors or warnings**
+- Upstream source (`gframe/`, `ocgcore/`, `travis/`, `premake5.lua`): **zero files touched**
+- `LICENSE`, `COPYING`, `notices/`: **unchanged**
+- No build artifacts added (the `gframe/lzma/lib/*.a` files are upstream's own vendored Android libs, present in `master`)
+
+## Licensing
+
+AGPL-3.0-or-later preserved. No inherited code relicensed. No card artwork, databases or CardScripts committed. Project Ignis and edo9300 credited prominently in the README, with an explicit non-affiliation statement.

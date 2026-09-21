@@ -1,0 +1,48 @@
+**DO NOT MERGE — under review.** Head `152014ac`. Verifier reviewed `fa881423` and filed two BLOCKERs; **everything since is unreviewed** — the push-guard redesign, the branch-protection work, the authority change, and the contract/adapter split.
+
+Adds the coordination layer this repository has been operating without: who does the work, and how a change earns its way in.
+
+## Roles
+
+Three permanent seats forming a triangle rather than a chain: **Brain** (what should we build, and is this actually done), **Builder** (how do I build it correctly), **Verifier** (how is this wrong). Builder and Verifier report to Brain independently, and Verifier does not see Builder's report before forming its own verdict.
+
+**Role contracts are vendor-neutral** (`docs/roles/`), because the owner runs Anthropic, OpenAI and Google models and any seat may be any of them. `.claude/agents/` holds thin adapters that *point at* the contracts rather than restating them, so the two cannot drift. `docs/agents/launching.md` holds the universal procedure plus the Claude-specific extras.
+
+## Authority
+
+The owner is the product owner. **Brain is the engineering lead and merges rounds it accepts**, after confirming — and saying — that Verifier reviewed that exact head SHA, that Brain checked every BLOCKER and UNPROVEN CLAIM itself, that required gates are green at that SHA, and that the change is routine. Force-pushes, history, CI, repository settings, licensing and new milestones still go to the owner. **Builder and Verifier never merge.**
+
+## Why Verifier exists as a standing seat
+
+This project's real defects are not compiler errors. They are semantic mismatches with an authoritative upstream that compile and test clean — locale overlay semantics, search filter operators, LFList integer-conversion order, legacy-build linkage. PR #12 needed five follow-up commits of that kind after being reported complete; PR #13 needed one.
+
+**The framework has already caught two defects in itself.** Verifier found two ways past the original push guard. An independent review then found that this PR claimed branch protection existed when it did not. Both were the `UNPROVEN CLAIM` failure this framework defines, committed in the document that defines it.
+
+## Push guard: moved to git's layer, then to the server
+
+The original guard was a `PreToolUse` hook parsing the Bash command string. It failed both ways: seven routes to `master` while reporting success (`sh -c`, `bash -c`, `(…)`, `$(…)`, `+master`, `+refs/heads/master`, `git -C . push`), and one harmless heredoc blocked. Shell has unbounded spellings; git resolves refspecs *before* calling `pre-push`, so nothing is left to infer. `pre_bash.py` was deleted rather than patched.
+
+**`master` is now protected server-side** (was not, before this): PR required, five deterministic checks, `enforce_admins: true`, `strict: true`, force-push and deletion blocked.
+
+Two honest limits, both documented rather than glossed:
+
+- **The server enforces the path, not the role.** Every agent authenticates as the owner, so GitHub cannot tell Brain from Builder. That Builder never merges is a contract, not something the server knows.
+- The upstream baseline is deliberately **not** a required check — it fetches from an external release URL, and a merge gate should not depend on a third party's availability. It still runs on every PR.
+
+`strict: true` interacts deliberately with exact-SHA review: if `master` moves, updating the branch produces a new head SHA and invalidates the review of the old one. That is correct, not friction.
+
+## Evidence
+
+Docs and tooling only; no C++ touched.
+
+- **Protection proven, not read back:** the same shape applied to a throwaway branch rejected an admin `--no-verify` push (`GH006 … Changes must be made through a pull request`) and rejected deletion. Branch and protection removed afterwards.
+- **`tests/test_push_guard.py`** — 12 tests, every historical bypass by name. Mutation-tested: emptying the protected list fails 7 of 12; substring matching (the old bug class) fails 4. CI fails if these skip.
+- **`tests/test_docs_consistency.py`** — 11 tests covering the brief lifecycle, link resolution, and contract/adapter separation. Mutation-tested: parking a delivered brief in `archive/` fails 2; a dead link fails 1; a missing status fails 2.
+- `python -m unittest discover -s tests` — `Ran 56 tests ... OK (skipped=10)`
+- Generators `--check` — `96 ids`, `187 values`.
+
+**Not verified:** no C++ built, because none was touched. The current head has had no independent review — that is what this PR is waiting on.
+
+## Also included
+
+`/policy/build/` was never gitignored when `policy/` landed in PR #12, so any checkout running its tests carried an untracked directory — which defeats a framework whose discipline is re-checking `git status` at every task boundary.

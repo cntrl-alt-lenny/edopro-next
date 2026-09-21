@@ -1,0 +1,44 @@
+**DO NOT MERGE — under review**
+
+Brain housekeeping only. No production code, no tests changed, no repository settings touched.
+
+## What this does
+
+**Brief 003 → `docs/briefs/delivered/`, not `archive/`.** PR #17 is open at head `e4424c3e` with all five required checks green, but **Verifier has not reviewed that head.** The entry in `.git/agent-inbox/verifier-latest.md` is timestamped 16:01, before PR #17 existed at 15:20→16:21 — it is an orientation pass, not a review. That is precisely the "a stale inbox file means unknown, never nothing happened" case, so 003 is `delivered`, and `archive/` keeps meaning *adjudicated*.
+
+**Brief 004 queued** — the M3 architecture citation audit. This is the brief formerly numbered 002, queued 2026-08-31 and superseded before delivery by 003. Two changes from the original text (`202a3494`):
+
+- **Scope now includes `deck-builder-legality.md`.** It was excluded from 002 because it was then unmerged and unadjudicated. It has since merged and been adjudicated as brief 001, carrying seven known citation defects — including one wrong behavioural claim, that `check_limit` is guarded by the Shift-inclusive `forceInput` at `deck_con.cpp:719` when that site tests `gGameConfig->ignoreDeckContents` directly.
+- **All eight established findings are listed as "close these, do not rediscover them"**, with an instruction to re-verify each against source before writing the correction. A previous agent's finding is evidence, not fact — but rediscovering it is not this round's product.
+
+It also adds an investigation question 002 did not ask: whether seven defects in one freshly written, carefully cited document indicate a *habit* rather than seven accidents. A named class is worth more than seven instances.
+
+`docs/state.md`'s In-flight section is updated to match, and now records PR #17 as delivered-and-unadjudicated rather than describing 003 as queued.
+
+## Evidence
+
+```
+$ git diff --stat a6956f7d..c7deff50
+ docs/briefs/active.md                                 | ...
+ docs/briefs/delivered/003-2026-08-31-framework-hardening.md | (new)
+ docs/state.md                                         | ...
+```
+
+Only `docs/`.
+
+```
+$ python -m unittest discover -s tests
+..............................................ssssssssss
+Ran 56 tests in 2.496s
+OK (skipped=10)
+```
+
+The 10 skips are the semantic-trace suites, which need a built `client/`; that is the standing local-toolchain gap, unrelated to this change.
+
+**Not run, deliberately:** no cmake/ctest cycle. Nothing here touches `client/`, `data/`, `policy/`, `ui/`, `gframe/` or `ocgcore/`, so a green build could not have failed for this change.
+
+## Known wart, deliberately not fixed
+
+The archived body of brief 003 keeps two relative links (`../agents/launching.md`, `../roles/builder.md`) that were correct from `docs/briefs/active.md` and are not from `docs/briefs/delivered/`. `AGENTS.md` says to archive a brief **as Builder actually received it**, and `docs/briefs/archive/001-…` has the same property. Rewriting the body to fix link depth would break that rule for a cosmetic gain. Brief files are not in `COORDINATION_DOCS`, so no test is being worked around.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

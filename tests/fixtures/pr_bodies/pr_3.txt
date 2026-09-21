@@ -1,0 +1,387 @@
+## What this is
+
+The first presentation-independent semantic model of EDOPro's duel protocol.
+
+    raw MSG_* packet -> protocol decoder -> DuelEvent + DuelState
+
+`client/` builds against a C++20 compiler and **nothing else**: no Qt, no QML, no
+Irrlicht, no `ocgcore`, no card database. It is designed to run alongside the legacy
+path, not instead of it, but that integration does not exist yet in this branch —
+`DuelClient::ClientAnalyze` is untouched, and **no file in `gframe/` was modified**. Today
+the model is exercised independently, against recorded duel streams: a standalone CLI tool
+(`client/tools/semantic_trace_main.cpp`) and 69 unit tests.
+
+Research first: [`docs/architecture/semantic-model.md`](docs/architecture/semantic-model.md)
+records what the legacy client actually stores, read from upstream `54ea755a`, with line
+references. [`docs/adr/0002`](docs/adr/0002-semantic-event-model.md) records the decisions.
+
+> **Update (post pre-merge review):** this branch went through a focused review/hardening
+> pass after the section below was first written — see
+> [**Pre-merge review and hardening**](#pre-merge-review-and-hardening) near the bottom for
+> exactly what changed, what the review got right, and the one place I pushed back with
+> evidence rather than complying. The wording above ("presentation-independent semantic
+> model," "designed to run alongside") is itself a correction the review prompted — the
+> original read, in isolation, as claiming a live integration that does not exist.
+
+## Architecture chosen
+
+| Layer | Header | Answers |
+|---|---|---|
+| Identity | `card_identity.h` | `CardInstanceId`, `CardCode` — two strong enums, never interchangeable |
+| Location | `card_location.h` | `Zone`, `CardLocation`, overlay as a modifier not a zone |
+| Card | `card_state.h` | `CardState`, `CardPosition` |
+| State | `duel_state.h` | "What is true now" — zones, life, turn, phase, chain |
+| Events | `duel_event.h` | "What just happened" — a `std::variant` of 25 closed types |
+| Decoder | `protocol_decoder.h` | Bytes in, events out, state mutated |
+| Trace | `semantic_trace.h` | Deterministic golden rendering + honest coverage |
+
+`DuelState` enforces **client-state integrity only** — one instance in one slot, moves
+empty their source, chain links contiguous, material indices dense. Never game rules;
+`ocgcore` owns those. `check_invariants()` re-derives every one of them from scratch, and
+a unit test deliberately corrupts a model to prove the check can fail.
+
+**Decoding is transactional.** `ProtocolDecoder::decode()` runs a handler against a private
+copy of the state and commits it back only when the packet is fully accepted — a refused
+packet (`Malformed`, `Inconsistent`, or either non-decoded status) leaves the real
+`DuelState` exactly as it was, proven via a new whole-value `DuelState::operator==`, not a
+field-by-field spot check. This was **not** true when this section was first written; see
+the hardening section below.
+
+## Semantic state types
+
+Life points, `turn`, `turn_player`, `Phase`, `ChainLink`, and per card: `CardInstanceId`,
+`CardCode` (optional by construction), `CardLocation`, `CardPosition`, optional ATK/DEF,
+material list and back-reference, and a `tracked` flag.
+
+There is deliberately no `matrix4`, no texture, no opacity, no animation frame, no QML
+object. Compare `gframe/client_card.h`, where 21 renderer fields sit in the same struct as
+a card's attack value.
+
+## Event representation
+
+`std::variant` of 25 event types. The set is closed and small, so exhaustive handling is
+worth compile-time checking, and nothing needs polymorphic ownership.
+
+**Events carry facts, never animation instructions.** `CardMoved` says a card went from
+`HAND[p0:2]` to `MZONE[p0:1]`; *how long to animate that* is a presentation decision
+derived from the fact. Two consequences worth naming:
+
+- `CardMoved` reports the **resolved** destination. Piles renumber on insertion
+  (`ClientField::AddCard`), so a UI told the *requested* sequence would animate to the
+  wrong slot.
+- `LifePointsChanged` carries `from`, `to` **and** the stated `amount`. Life clamps at
+  zero, so lethal damage states more than it removes. Both are true.
+
+## CardInstanceId strategy
+
+**The protocol provides no stable instance id.** This was verified, not assumed:
+
+- `loc_info` (`gframe/core_utils.cpp:281`) is `controller, location, sequence, position` —
+  a *coordinate*, not an identity.
+- A passcode is shared by every copy of a card, and is **0** whenever the recipient may not
+  see the card. `MSG_SHUFFLE_DECK` sets every deck card's code back to 0 outright.
+- The legacy client identifies a card by the identity of its `ClientCard` **heap object**,
+  moving the same pointer between `ClientField`'s zone vectors as `MSG_MOVE` arrives.
+
+So `client/` allocates its own: `enum class CardInstanceId : uint32_t`, from 1, never
+reused. It is the legacy pointer identity made explicit and serialisable.
+
+`DuelState` reproduces `AddCard`/`RemoveCard` **including their quirks** — deck sequence 0
+inserts at the front, hand/graveyard/banished ignore the requested sequence, the extra deck
+splits face-up from face-down via `extra_p_count` — so the two models can later be compared
+slot for slot rather than approximately.
+
+**Stated limit:** after `MSG_SHUFFLE_DECK` an instance id no longer denotes the same
+physical card. Upstream does not permute its deck vector because it is not told the
+permutation; it merely forgets every code. Ours does the same. Nothing downstream may
+assume more.
+
+## Hidden information
+
+`CardCode::None` is a first-class, permanent state, not a gap to fill in. The model
+represents known, unknown, face-down-with-known-code, face-up-with-unknown-code, and
+identity arriving or being withdrawn later (`CardIdentityRevealed` /
+`CardIdentityConcealed`).
+
+**Honest caveat, also in the docs:** a `.yrpX` is an *unfiltered* recording. What the model
+guarantees is that it never manufactures identity the stream did not state — not that the
+stream was redacted. In a live duel the server filters, and the same decoder then holds
+strictly less.
+
+## MSG_* types supported (27)
+
+`MSG_START`, `MSG_WIN`, `MSG_SHUFFLE_DECK`, `MSG_SHUFFLE_HAND`, `MSG_NEW_TURN`,
+`MSG_NEW_PHASE`, `MSG_MOVE`, `MSG_POS_CHANGE`, `MSG_SET`, `MSG_SUMMONING`, `MSG_SUMMONED`,
+`MSG_SPSUMMONING`, `MSG_SPSUMMONED`, `MSG_CHAINING`, `MSG_CHAINED`, `MSG_CHAIN_SOLVING`,
+`MSG_CHAIN_SOLVED`, `MSG_CHAIN_END`, `MSG_DRAW`, `MSG_DAMAGE`, `MSG_RECOVER`,
+`MSG_LPUPDATE`, `MSG_PAY_LPCOST`, `MSG_ATTACK`, `MSG_BATTLE`, `MSG_DAMAGE_STEP_START`,
+`MSG_DAMAGE_STEP_END`.
+
+Every layout was read from the corresponding `case` in `duelclient.cpp` and then checked
+against payload lengths recorded in the committed M1 structural traces. Three details that
+are easy to get wrong, and are documented: `MSG_POS_CHANGE` is **not** `loc_info` (all
+single bytes in both revisions); `MSG_DRAW`'s first code belongs to `deck.back()`; and
+`MSG_MOVE` applies a code under different conditions per branch, so returning a card to the
+extra deck with code 0 genuinely conceals it.
+
+Both protocol revisions are handled. `ProtocolVariant{compat}` narrows `loc_info`, counts
+and description ids, as `replay_mode.cpp:86` derives from `REPLAY_LUA64`.
+
+## Packet coverage — reported honestly, not as one percentage
+
+| | duel-chains-battle | duel-extended |
+|---|---|---|
+| total packets | 990 | 1133 |
+| **decoded** | **138** | **245** |
+| known but not implemented | 852 | 888 |
+| unknown ids | **0** | **0** |
+| malformed | **0** | **0** |
+| inconsistent | **0** | **0** |
+| distinct types decoded | 24 | 19 |
+
+Unchanged by the hardening pass: neither fixture ever produced a `Malformed` or
+`Inconsistent` packet, so the transactional fix (which only changes behaviour on those
+paths) altered no observable output for real data — confirmed by re-running the golden
+comparison, byte-for-byte identical.
+
+The large unsupported counts are almost entirely `MSG_UPDATE_DATA` (799 / 649) and
+`MSG_UPDATE_CARD` (30 / 124) — the query stream. That is a deliberate omission, not an
+oversight: it is the single biggest remaining slice and it is where ATK/DEF and card types
+come from. The remainder is `MSG_CONFIRM_*`, `MSG_BECOME_TARGET`, `MSG_CARD_HINT` and
+`MSG_PLAYER_HINT`.
+
+`UnknownMessage`, `UnsupportedMessage`, `Malformed` and `Inconsistent` are four different
+statuses precisely so this table cannot lie. Unsupported messages do not masquerade as
+malformed ones, and every refusal of the latter two kinds is listed individually in the
+trace with its reason.
+
+## Example semantic trace
+
+Real output from `duel-chains-battle.yrpX`:
+
+```
+   13 TurnStarted player=p0 turn=1
+   14 PhaseChanged DRAW
+   21 CardIdentityRevealed instance=35 code=70828912
+   21 CardsDrawn player=p0 cards=[35]
+   46 PhaseChanged MAIN1
+   59 ChainLinkAdded link=1 instance=38 code=504700054 from=HAND[p0:2] trigger=HAND[p0:2] desc=529216363823104
+   60 CardMoved instance=38 HAND[p0:2] -> GRAVE[p0:0] reason=COST|DISCARD
+   77 ChainLinkResolving link=1
+   78 CardIdentityRevealed instance=15 code=504700054
+   78 CardMoved instance=15 DECK[p0:14] -> HAND[p0:5] reason=EFFECT
+   82 HandShuffled player=p0 cards=6
+   85 DeckShuffled player=p0 cards=33
+   86 ChainLinkResolved link=1
+   87 ChainEnded links=1
+  248 AttackDeclared attacker=91 target=direct
+  257 PositionChanged instance=37 FACEDOWN -> FACEUP
+  277 CardCreated instance=111 at=MZONE[p0:0] code=73915052
+  279 SummonAnnounced kind=SPECIAL code=73915052 at=MZONE[p0:0]
+  324 AttackDeclared attacker=91 target=114
+  360 CombatStatsRevealed instance=91 atk=1000 def=600
+  377 CardRemoved instance=114 from=MZONE[p0:3] reason=DESTROY|BATTLE
+```
+
+…followed by a coverage table, the final state (`lp: p0=5800 p1=8000`, `invariants: ok`)
+and every zone's contents.
+
+## Tests
+
+**69 C++ test cases in 6 CTest suites** (no test framework — a small registry-and-macros
+harness, because adding a dependency to a library defined by having none would be a poor
+trade):
+
+- `duel_state` (17) — zone bookkeeping and every legacy quirk, material attach/detach and
+  reindexing, refused moves changing nothing, life clamping, chain ordering, plus a test
+  that deliberately corrupts a model to prove `check_invariants()` can fail. Two of the 17 were added in a second hardening round (see item 6 below).
+- `protocol_decoder` (25) — every message layout, all four refusal statuses, the count
+  guard against an absurd length, the compat variant, and a check that the supported-id
+  list and the dispatch switch cannot drift apart.
+- `hidden_information` (8) — unknown by default, unknown stays unknown, identity arriving
+  late, shuffling withdrawing it, code 0 not erasing what is known, and position/identity
+  being independent.
+- `semantic_trace` (7) — packet framing round-trip and rejection, determinism, coverage
+  arithmetic, no environmental leakage.
+- `transactional_decoding` (9, **added in the hardening pass**) — the all-or-nothing decode
+  guarantee, end to end, using whole-state equality. See the hardening section below.
+- `legacy_perspective` (3, **added in the hardening pass**) — the legacy player-perspective
+  formula, test-only, prep work for the deferred equivalence check.
+
+**16 Python test cases** over real data and tooling: 8 semantic-golden tests (unchanged) and
+8 new tests for `tools/generate_protocol_constants.py`'s drift-detection logic
+(`tests/test_generate_protocol_constants.py`, **added in the hardening pass**).
+
+## What the tests prove — and what they do not
+
+**Prove:** the decoder reads 2,123 real recorded packets with zero malformed, zero unknown
+and zero inconsistent; the model it builds is self-consistent at the end of both duels; the
+events and final state are byte-for-byte reproducible; a refused packet leaves `DuelState`
+provably, structurally unchanged; and the unit tests cover the compat protocol path and the
+overlay/material path, which no committed fixture exercises.
+
+**Do not prove**, and this is the same boundary as
+[replay-regression.md](docs/architecture/replay-regression.md):
+
+- **Nothing here runs `ocgcore`.** The fixtures are frozen recordings, so a green run says
+  nothing about whether a live duel would emit the same messages.
+- **No equivalence with the legacy client is demonstrated.** `gframe/` is untouched, so
+  the two models have never been compared. That claim is not made anywhere in this branch.
+  The normalization rule such a check will need (legacy is screen-relative via
+  `Game::LocalPlayer`, the model is protocol-absolute) is now documented and pinned by a
+  tested, deliberately test-only reference implementation — see the hardening section.
+- The goldens lock in what the decoder *does*, which is why the property assertions above
+  exist alongside them.
+- Two fixtures is a small corpus. No XYZ materials, no tag duel, no compat-era replay.
+
+## Exact gframe files touched
+
+**None.** `git diff --stat master..HEAD -- gframe/ ocgcore/ irrlicht/ premake5.lua travis/`
+is empty. So is `-- ui/`.
+
+Two upstream headers are *read* by the constants generator and recorded in
+`docs/UPSTREAM.md`: `gframe/ocgapi_constants.h` and `gframe/common.h`. The generated
+header lives under `client/`, so an upstream change to a constant surfaces as a CI drift
+failure rather than a merge conflict.
+
+The additive hook in `DuelClient::ClientAnalyze` was deliberately deferred — see below.
+
+## What remains unsupported
+
+- **`MSG_UPDATE_DATA` / `MSG_UPDATE_CARD`** — the query stream (`CoreUtils::QueryStream`).
+  ~75% of packets, and the source of ATK/DEF, level, type, counters and equip links.
+- **Counters, equips, targets** — `MSG_ADD_COUNTER`, `MSG_EQUIP`, `MSG_CARD_TARGET`,
+  `MSG_BECOME_TARGET`.
+- **Every prompt** — `MSG_SELECT_*`. These need a response channel, a larger design
+  question than M2.
+- **`MSG_TAG_SWAP`, `MSG_RELOAD_FIELD`** — wholesale field replacement.
+- **Flip summons, `MSG_SWAP`, `MSG_REVERSE_DECK`, `MSG_SHUFFLE_EXTRA`** — small, but
+  unexercised by any committed fixture, so implementing them would be untested guesswork.
+- **`LOCATION_SKILL`** — maps to `Zone::Unknown`; placement there is refused rather than
+  silently folded into another zone.
+
+## Recommended next M2 slice
+
+1. **The additive hook.** Feed each packet to the semantic model alongside
+   `ClientAnalyze`, behind a flag. Requires wiring `client/` into upstream's premake build
+   — small, but it touches `premake5.lua`, so it deserves its own change.
+2. **Then equivalence.** With the hook in place, assert that `ClientField`'s zones and
+   `DuelState`'s agree after every packet across the fixtures, normalizing player
+   perspective per `client/tests/legacy_perspective.h` / ADR 0002 Decision 7. This is the
+   roadmap item this PR explicitly does **not** deliver.
+3. **Then `MSG_UPDATE_DATA` / `MSG_UPDATE_CARD`.** Biggest coverage win by far, and the
+   point at which the model becomes rich enough for a duel field. `CoreUtils::Query` is a
+   well-specified ~100 lines; the care needed is around `QUERY_IS_HIDDEN` /
+   `QUERY_IS_PUBLIC` and not leaking what the client should not hold. Also the point at
+   which `handle_pos_change`'s strict-previous-position invariant should be re-examined —
+   see the hardening section.
+
+## Validation performed
+
+| Check | Result |
+|---|---|
+| `client/` clean build, `-Wall -Wextra -Wpedantic -Werror` | gcc 15.2, Linux (WSL) — clean |
+| 6 CTest suites / 69 cases | 100% passed |
+| Semantic goldens | 8/8, verified to **fail** with a precise diff when a golden is perturbed |
+| Semantic goldens reproduce byte-for-byte from a clean tree | yes, unchanged by the hardening pass |
+| M1 structural replay tests | 15/15, goldens unchanged |
+| Message-id drift check | 96 ids, up to date |
+| Protocol-constant drift check | 151 values, up to date |
+| Protocol-constant drift *detection* itself | 8/8 new tests, including a forced-failure case |
+| No artwork / scripts / databases committed | confirmed |
+| No `gframe/` churn | zero files, re-confirmed after the hardening pass |
+| `docs/UPSTREAM.md` updated | yes (files read, none modified) |
+
+**Not verified locally, stated plainly:** the Qt shell and the upstream baseline were not
+rebuilt on this machine — no Qt and no vcpkg tree in this WSL environment, and both are
+byte-identical to `master` on this branch. CI covers both on this PR.
+
+---
+
+## Pre-merge review and hardening
+
+This branch went through a focused review/hardening pass before merge. Five concerns were
+raised; each was verified against source (and, where applicable, against both real
+fixtures) before anything was changed, per this project's own standard for that kind of
+claim. Four were confirmed and fixed. **One was investigated and found not to hold** — I
+did not implement the requested change, and explain why below rather than complying by
+default.
+
+**1. Transactional decoding — confirmed, and worse than described.** The claim that a
+refused packet never leaves `DuelState` half-mutated was false for four handlers, not the
+two originally named: `MSG_MOVE` (both the ordinary-move and leaving-play branches),
+`MSG_POS_CHANGE` (found during this audit), and `MSG_BATTLE`. Each applies a mutation
+(identity, position, or combat stats) before a later step in the same handler that can
+still fail. Fixed centrally rather than handler by handler: `ProtocolDecoder::decode()` now
+runs against a private copy of the state and commits it back only once the packet is fully
+accepted. Verified with a new whole-value `DuelState::operator==` and 9 new tests
+(`test_transactional_decoding.cpp`) exercising all four handlers plus the three
+non-`Decoded` statuses. Full writeup: [ADR 0002, Decision 6](docs/adr/0002-semantic-event-model.md).
+
+**2. MSG_POS_CHANGE strictness — investigated, not changed.** The concern: since
+`MSG_UPDATE_DATA`/`MSG_UPDATE_CARD` are undecoded, and legacy `ClientCard::UpdateInfo` *does*
+write position from a bare `QUERY_POSITION` independently of `MSG_POS_CHANGE`, the model's
+strict previous-position check could misfire on a healthy stream. Investigated directly
+rather than weakened on the strength of the argument alone. It does not hold for this
+slice: every position this model can observe already arrives through `MSG_MOVE` (which
+always carries a destination position) or through `MSG_POS_CHANGE` itself —
+`QUERY_POSITION` mirrors state already announced via one of those two decoded channels,
+not an independent source of drift. Corroborated empirically against both real fixtures:
+773 and 799 `MSG_UPDATE_DATA`/`MSG_UPDATE_CARD` packets respectively, heavily interleaved
+with real position changes, **zero** false-positive `Inconsistent` results in either. The
+check is unchanged; a code comment at `handle_pos_change` and a note in
+`semantic-model.md` §7 record the investigation and its forward-looking caveat — this
+reasoning covers the current 27-message slice, and should be re-examined the moment
+`MSG_UPDATE_DATA`/`MSG_UPDATE_CARD` are actually decoded.
+
+**3. Player perspective — confirmed accurate, now pinned by a tested reference.**
+`Game::LocalPlayer` (`gframe/game.cpp`) is exactly `dInfo.isFirst ? player : 1 - player`,
+applied at every `duelclient.cpp` handler before touching `dInfo.lp[]`/`ClientField`'s zone
+arrays, which do no remapping themselves. `client/` stays protocol-absolute, deliberately —
+that claim in `semantic-model.md` §4 was already correct. What was missing: an explicit,
+testable statement of the normalization a future equivalence checker must apply. Added
+`client/tests/legacy_perspective.h` (a small, **test-only** reference implementation, kept
+out of `edopro_next_client` itself so perspective cannot leak into the semantic model) and
+`test_legacy_perspective.cpp` (3 tests: `isFirst` true, `isFirst` false, and the involution
+property). No live hook was implemented, per the review's own instruction not to. Full
+writeup: [ADR 0002, Decision 7](docs/adr/0002-semantic-event-model.md).
+
+**4. Wording — confirmed for this PR body, not for the tracked docs.** An audit of
+README.md, `semantic-model.md`, ADR 0002, and this PR body found the four tracked files
+already carefully hedged (no changes needed beyond one opening-line tightening in ADR 0002
+made for consistency), but this PR body's own "It runs alongside the legacy path" and "the
+first ... representation of a live Yu-Gi-Oh duel" read, in isolation, as claiming an
+already-live integration. Both are corrected at the top of this description.
+
+**5. Constants-generator drift detection — confirmed and fixed.**
+`tools/generate_protocol_constants.py --check` compared only the rendered header text
+against the committed one; a relevant constant `collect()` could not evaluate (e.g. a
+future `#define LOCATION_FOO (1 << 12)`) was silently dropped and never surfaced in
+`--check`'s output, only in the plain-write path CI does not run. Fixed: `--check` now
+fails and names every such constant. 8 new tests
+(`tests/test_generate_protocol_constants.py`) exercise this against scratch copies of the
+real upstream headers — `gframe/` itself is never touched, confirmed via `git status`
+before and after every run — including a positive-control test proving the fix isn't
+merely stricter than necessary.
+
+**6. Material location staleness — found by a separate automated reviewer, confirmed and
+fixed.** After the review above landed, an automated PR reviewer (chatgpt-codex-connector)
+flagged that `place()` finalised a host card's own `location` on every call but never
+refreshed the mirror copy each attached material keeps for `at()`'s O(1) lookup — a host
+that repositioned, or changed controller, while still carrying material left every attached
+material's `CardState::location` naming the host's *previous* slot, and
+`check_invariants()` did not catch it (it checked `overlay_index` but not that the mirrored
+controller/zone/sequence actually matched). Verified against source, fixed in `place()`, and
+`check_invariants()` strengthened to check the mirrored fields directly so this class of
+drift cannot silently regress. Two new tests
+(`moving_a_host_carries_its_material_along`,
+`invariant_check_notices_a_material_naming_a_stale_host_location`). Semantic goldens
+unaffected — the trace renderer never printed a material's location field.
+
+**Not done, deliberately, per explicit instruction:** `MSG_UPDATE_DATA`/`MSG_UPDATE_CARD`,
+prompts, counters, equips, targets, the live `ClientAnalyze` hook, premake integration,
+and legacy/model equivalence. This was a correctness/hardening pass on the existing 27
+messages and tooling, not a scope expansion.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+

@@ -1,0 +1,61 @@
+## Summary
+
+This slice adds an opt-in shadow observer that runs the semantic decoder alongside the real legacy `DuelClient::ClientAnalyze` path. Legacy EDOPro remains authoritative. Semantic decoding, projection, and comparison cannot alter legacy packet bytes, return values, state transitions, legality, rendering decisions, or input decisions. Because the observer is synchronous opt-in instrumentation, it adds diagnostic/runtime overhead and is not performance-transparent; the observer-disabled build has only the compiled-out hook.
+
+## Packet seam
+
+The observer is one RAII scope at the entry of `DuelClient::ClientAnalyze`, after the existing network/replay preamble has established `curMsg` and the payload pointer. Network packets are normalized by copying the first byte as the message id and the remaining bytes as payload. YRPX, old/YRP1, single/puzzle, and hand-test paths already pass `CoreUtils::Packet` payloads while setting `dInfo.curMsg` outside the handler. The complete mode-by-mode research is in `docs/architecture/live-semantic-observer.md`.
+
+The scope decodes a private packet copy before the unchanged legacy switch and projects/comparisons the real legacy state at scope exit, including existing early-return paths. Replay control and response-selection packets intercepted outside `ClientAnalyze` are explicitly outside this seam.
+
+## Build boundary and upstream delta
+
+- `client/` remains a standalone Qt-free/Irrlicht-free C++20 semantic target.
+- `integration/legacy/` contains the C++20 observer/projection implementation.
+- `gframe/` remains C++17 and includes only the small C-linkage, C++17-compatible opaque API in `integration/legacy/semantic_observer.h`.
+- The observer is opt-in through Premake `--semantic-observer`; ordinary legacy builds do not link or run it.
+- CI runs both ordinary and observer-enabled upstream-baseline matrix entries.
+- Intentional upstream-owned changes are recorded in `docs/UPSTREAM.md`. They are limited to `gframe/duelclient.cpp`, `gframe/premake5.lua`, `premake5.lua`, and `travis/build.sh`.
+
+## Observer lifecycle, failure policy, and stale-state protection
+
+The observer owns one semantic session, resets on `MSG_START`, and safely replaces state after replay restart, rematch, or a new duel. `Decoded` packets are candidates for comparison. Query-only `MSG_UPDATE_DATA` and `MSG_UPDATE_CARD` are expected unsupported messages and are silent; they do not taint the structural comparison scope. The first unsupported non-query packet conservatively taints equivalence for the rest of the session and emits one diagnostic; later unsupported packets while tainted are silent. Malformed, inconsistent, and unknown results always emit deterministic diagnostics. Exceptions are caught at the C ABI boundary; no observer failure propagates into legacy handling.
+
+## Equivalence scope
+
+The projection is built from the actual `Game::dInfo`, `ClientField`, and `ClientCard` structures, never from a second fake legacy model. It compares only:
+
+- protocol-absolute life points and turn count;
+- structural occupancy and slot topology for deck, hand, monster, spell, grave, banished, and extra-deck zones;
+- controller, zone, sequence, and overlay locations;
+- attached-material count and indexed topology through structural material locations.
+
+This verifies occupied structural locations and slot/index topology, not card identity. It does not detect a permutation of different cards between already occupied pile slots, or which particular material occupies an overlay index. Card code, card position, attached-material code, query-stream attack/defence/type/attribute/status data, renderer/animation/UI fields, and transient or currently non-equivalent chain/battle/phase state are deliberately excluded. The query stream remains unsupported, so richer comparisons will only be restored when equivalent query information is decoded. This PR does not claim total equality with every `ClientCard` field.
+
+Legacy local-player indices are normalized to protocol players with the existing `isFirst ? player : 1 - player` rule in the adapter. `DuelState` remains protocol-absolute. Both perspective directions are unit-tested.
+
+## Validation and limitations
+
+Final head: `b6532c42ecffa6a0ceb6dd669421eb324893fb31`
+
+Local validation on the final head:
+
+- `generate_messages.py --check`: pass
+- `generate_protocol_constants.py --check`: pass
+- Python unittest discovery: 31/31 pass
+- CMake/Ninja Debug semantic-client build with WERROR: pass
+- CTest: 7/7 pass, including legacy observer projection/comparator, query-scope, perspective, and stale-state tests
+- semantic golden traces: unchanged and reproduced byte-for-byte
+
+The real EDOPro executable was not driven through the M1 `.yrpX` fixtures. The current client has no replay-path CLI argument, autoplay/headless exit host, or small existing runtime setup for this, and doing so would require broad GUI/Irrlicht/runtime asset work. Therefore the fixture-level real-`ClientField` equivalence roadmap item remains intentionally unchecked. This PR proves the live seam, actual-state projection/comparator, and observer-enabled legacy build, but does not claim executed fixture equivalence.
+
+Current-head CI run `33075093362` on `b6532c42ecffa6a0ceb6dd669421eb324893fb31` is green:
+
+- Regression harness 3.10: pass
+- Regression harness 3.12: pass
+- Semantic client model: pass
+- Qt 6 shell (Linux): pass
+- Upstream EDOPro baseline (observer=false): pass
+- Upstream EDOPro baseline (observer=true): pass
+
+This PR remains intentionally limited to the live observer slice. The query stream, replay fixture host, Qt duel UI, and M3 are not included.

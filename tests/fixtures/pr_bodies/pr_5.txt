@@ -1,0 +1,96 @@
+## Summary
+
+This slice adds bounded, presentation-free decoding for `MSG_UPDATE_DATA` and
+`MSG_UPDATE_CARD` and applies the resulting patches to `DuelState`. It does not
+implement a replay host, Qt duel UI, or M3.
+
+## Wire boundary
+
+- `MSG_UPDATE_DATA`: player/location preamble, then modern `u32`-sized
+  `QueryStream` or compatibility repeated length-framed records.
+- `MSG_UPDATE_CARD`: player/location/sequence preamble, then a modern direct
+  query field list or one compatibility length-framed record.
+- `compat` and `legacy_race_size` are independent, matching the legacy client.
+- The existing single RAII hook remains at normalized `ClientAnalyze` entry;
+  semantic decoding is private and legacy handling remains unchanged.
+
+## Model and safety
+
+- Optional `CardQueryPatch` fields preserve omission versus explicit zero
+  concealment. `QUERY_OWNER` is one modern byte, and a compatibility owner is
+  read as a `uint32_t` then narrowed to the upstream `uint8_t` value.
+- Bounds checks reject malformed, truncated, trailing, and count-invalid data;
+  modern unknown fields are safely skipped for coverage but refuse application.
+- Query patches use the actual `ClientCard::UpdateInfo` collection semantics:
+  targets are additive and duplicate-free, counters update only listed types,
+  equip retains the latest target, and overlay codes update only the supplied
+  existing material prefix.
+- Query position patches go through `DuelState::set_position`; an unmodelled
+  extra-deck face-up transition is refused transactionally rather than
+  corrupting the extra-deck split.
+- Observer failures are diagnostic-only. Unsupported query packets are silent
+  and do not taint structural comparison; the first unsupported non-query
+  packet taints once, while malformed/inconsistent/unknown results are reported
+  immediately.
+
+## Equivalence scope
+
+The real `ClientField`/`DuelInfo` projection compares protocol-normalized life
+points, turn count, structural occupancy and zone/sequence slot topology, and
+attached-material count and indexed topology. It deliberately does not compare
+card identity or permutation within an occupied pile, nor material identity at
+an overlay index. Card code, position, attack/defense, and attached-material
+codes are excluded until query-stream freshness is represented equivalently on
+both sides. Renderer/UI state and transient chain/battle staging are also
+excluded. Player indices are normalized with the tested
+`isFirst ? player : 1 - player` adapter rule.
+
+The projection is built from the actual `ClientField`, `ClientCard`, and
+`DuelInfo` structures; it is not a second legacy simulation. Its public
+boundary is a C-linkage, C++17-compatible opaque API. The substantial semantic
+implementation remains in the C++20 `client/` and observer targets; gframe
+continues to compile as C++17. The observer is opt-in through Premake's
+`--semantic-observer` option; observer-disabled builds retain the ordinary
+legacy path.
+
+## Fixture status and golden changes
+
+The M1 `.yrpX` fixtures have NOT been run through real `ClientField`; no
+fixture-level legacy equivalence claim is made. A replay host is intentionally
+out of scope because the current GUI/replay lifecycle has no small headless
+autoplay path.
+
+The semantic goldens intentionally differ from the pre-query M2 goldens:
+
+- `MSG_UPDATE_DATA` / `MSG_UPDATE_CARD` moved from unsupported to decoded;
+- query coverage was added;
+- final card state gained query-derived code, position, and statistics;
+- some `CardIdentityRevealed` events disappeared because query data established
+  identity earlier; and
+- later `CardIdentityConcealed` events appear where shuffle concealed that
+  query-derived knowledge.
+
+Both fixtures decode every query packet with zero unknown query fields,
+malformed query packets, inconsistent query packets, or unsupported query
+packets. The current runs are: `duel-chains-battle.yrpX` 829/829 query packets
+decoded (6153 entries, 4566 skipped), and `duel-extended.yrpX` 773/773 decoded
+(5552 entries, 3411 skipped).
+
+## Validation
+
+- `python3 tools/generate_messages.py --check`: green
+- `python3 tools/generate_protocol_constants.py --check`: green
+- Python unittest discovery: 32 tests green
+- Clean standalone semantic CMake/Ninja Debug build with WERROR: green
+- CTest: 7/7 suites green
+- Semantic golden validation: 9/9 tests green; goldens reproduce exactly and
+  are intentionally changed versus master by the query-stream implementation
+- C++17 syntax check of `integration/legacy/semantic_observer.h`: green
+- Observer-enabled Premake generation: green
+- Local observer target build reaches the separate semantic library, then is
+  blocked by the environment's missing system Irrlicht `matrix4.h`; CI is the
+  full legacy-build validation
+- Final current-head CI run [33087408036](https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/33087408036) for `cefb612d69431d46c818bee8d3a055fefcb1b4e9`: all six jobs green (Regression harness 3.10, Regression harness 3.12, Semantic client model, Qt 6 shell, Upstream EDOPro baseline observer=false, Upstream EDOPro baseline observer=true).
+
+The PR remains open. Fixture-level legacy equivalence remains unproved, and no
+query-stream follow-on work is included here.

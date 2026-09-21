@@ -1,0 +1,136 @@
+## Summary
+
+Adds a functional deck-builder core (M3D1) to the Qt/QML shell: search a
+runtime-supplied card database, build Main/Extra/Side explicitly, and
+open/save a `.ydk` - through a small Qt adapter layer over the reviewed,
+Qt-free `data/` facades from M3A/M3B/M3C (card database, deck model,
+fast search).
+
+**This is not the complete M3 "Deck builder UI" roadmap item, and
+`docs/ROADMAP.md` deliberately leaves it unchecked.** No legality, no
+automatic Main/Extra classification, no artwork, no legacy sigil search
+grammar, no full keyboard/controller parity. See
+`docs/architecture/deck-builder-ui.md` §12 and [ADR 0006](docs/adr/0006-deck-builder-qt-adapter-boundary.md).
+
+## Update: second follow-up correction pass (4 commits)
+
+A second round of external review, after the first correction pass's
+5 findings were fixed, found two more state-ownership bugs plus a
+contract/implementation disagreement - all fixed with regression coverage:
+
+- **Keyboard removal bypassed the screen's own selection contract**:
+  `DeckSectionList`'s Delete/Backspace handlers called
+  `deckController.removeAt()` directly, skipping the cleanup
+  (`clearAllSelection()`) the "Remove selected" button already did -
+  leaving stale selection/preview state after a keyboard removal.
+  `DeckSectionList` now only emits a presentation-level `removeRequested`
+  signal; `DeckBuilderScreen.removeDeckEntry()` is the single owner of
+  both the removal and its cleanup, for mouse and keyboard alike.
+- **A stale search-result selection could survive a model reset**:
+  `SearchResultsModel::refresh()` fully resets on every query change or
+  catalog reload, but Qt Quick's `ListView` does not reliably re-fire
+  `currentIndexChanged` when a reset replaces the *data* at an unchanged
+  index - so a selected result could silently keep showing a stale
+  preview after typing a new query or reloading the catalog. Fixed by
+  connecting to `SearchResultsModel`'s own (already-existing, previously
+  unconnected) `resultsChanged` signal.
+- **`CardCatalog::loaded()`'s doc comment and implementation disagreed**:
+  documented as "true once at least one file loaded successfully," but
+  implemented as `cardCount() > 0` - a legitimately empty but valid `.cdb`
+  reported `loaded() == false`. Now tracked explicitly from each load's
+  own success, independent of `cardCount`.
+- `DeckController::addCard(0, ...)` is now a silent no-op - a small,
+  audited guard keeping `data/`'s "code 0 is never a real card" invariant
+  true from the public API, even though neither real UI path can trigger
+  it today.
+- A small robustness audit found two other items (an invalid `Section`
+  value crossing the QML boundary; catalog replacement while a *deck*
+  entry is selected) already safe by inspection - documented rather than
+  given speculative new code.
+
+## Update: third follow-up correction pass (1 commit)
+
+External review found a source-fidelity bug in the actual `CardPreview`:
+every monster's stored level/rank/link-rating magnitude was labelled
+`"Level"` unconditionally, so an Xyz's Rank and a Link's Link Rating both
+displayed as `"Level"`; a Link's DEF rendered as `"<ATK> / LINK"` text with
+no rating anywhere in it; and although `CardEntry` already carried
+`linkMarker`, nothing ever rendered it.
+
+Fixed entirely in the Qt adapter/QML presentation seam, cited directly
+against `Game::ShowCardInfo` (`gframe/game.cpp`) and
+`DataManager::FormatLinkMarker` (`gframe/data_manager.cpp`) as the source
+of truth - `data/`'s `CardRecord` needed no changes, it already carries
+`type`/`level`/`link_marker` faithfully:
+
+- `CardEntry` gains `isXyz` and `linkMarkerDisplay`, following the existing
+  verified-bit precedent `isMonster`/`isLink`/`isPendulum` already
+  established.
+- `CardPreview.qml`'s monster grid is now independent ATK / DEF /
+  Level-or-Rank-or-Link-Rating / Link Markers rows instead of the old
+  universal `"ATK / DEF"` + `"Level"` pair. DEF is hidden (not shown as a
+  fake `0`) for a Link; the shared magnitude row is labelled `"Level"`,
+  `"Rank"`, or `"Link Rating"` by `isXyz`/`isLink`; link markers render via
+  `linkMarkerDisplay`, in upstream's own fixed positional order.
+- New regression coverage at both layers:
+  `ordinaryMonsterEntryIsNotClassifiedAsXyzOrLink`,
+  `xyzMonsterEntryIsClassifiedAsXyzNotLink`,
+  `linkMonsterEntryHasNoRealDefenseAndFormatsItsMarkers`
+  (`test_deckbuilder.cpp`, adapter-level) and
+  `ordinaryMonsterPreviewLabelsItsLevelCorrectly`,
+  `xyzMonsterPreviewLabelsItsRankNotLevel`,
+  `linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers`
+  (`test_deckbuilder_screen.cpp`, asserting the actual rendered `Text`
+  items in the real `CardPreview.qml`).
+- `docs/architecture/deck-builder-ui.md` §10.7 documents the fix.
+
+Test count at this point: 18 functions in `test_deckbuilder.cpp` + 17 in
+`test_deckbuilder_screen.cpp` = 35, across 2 CTest targets, all passing.
+
+## Update: fourth follow-up correction pass (1 commit)
+
+A fresh Codex review of the third pass's own commit (`281e908c`) found one more
+instance of the same underlying mistake, one field over: `CardRecord::attack`/
+`defense` document `-1`/`-2` as real, displayed "varies" values, and upstream's
+`Game::ShowCardInfo` (`gframe/game.cpp`) renders any negative value as literal
+`"?"` - `CardPreview.qml` and `SearchResultsModel::build_summary()` were both
+printing the raw negative number instead (e.g. `"ATK -2 / DEF -1"`).
+
+Fixed the same way as the third pass: `CardEntry` gains `attackDisplay`/
+`defenseDisplay`, computed once by a tiny formatter matching upstream's `< 0`
+check exactly (not a narrower `== -1`/`== -2` equality test).
+`CardPreview.qml`'s ATK/DEF rows and the search summary line both read these
+instead of the raw numbers, so the two presentations share one computation.
+`attack`/`defense` themselves are untouched.
+
+New coverage: `negativeCombatStatsRenderAsQuestionMarks` (also confirms an
+ordinary positive-stat card is unaffected) and
+`searchSummaryRendersUnknownCombatStatsAsQuestionMarks` (`test_deckbuilder.cpp`),
+`negativeCombatStatsRenderAsQuestionMarksInPreview` against the real rendered
+`CardPreview.qml` (`test_deckbuilder_screen.cpp`).
+`docs/architecture/deck-builder-ui.md` §10.8 documents the fix.
+
+Final test count: **20 functions in `test_deckbuilder.cpp` + 18 in
+`test_deckbuilder_screen.cpp` = 38, across 2 CTest targets**, all passing.
+
+## Test plan
+
+- [x] `data/` WERROR build clean; `card_database`/`deck_ydk`/`card_search`
+      tests pass (3/3) - unchanged by this pass
+- [x] `client/` WERROR build clean; 7/7 CTest suites pass - unchanged by
+      this pass
+- [x] Python generator checks, structural (M1) and semantic (M2) golden
+      traces, both reproducing byte-for-byte
+- [x] `ui/` clean configure+build, zero compiler warnings; 38 Qt Test
+      functions across 2 CTest targets pass 100%
+- [x] Offscreen QML smoke check clean (no stderr diagnostics)
+- [x] Full diff audited against `e56c94fb` base: no `gframe/`/`ocgcore`/
+      `data/`/`client/` changes, no `.cdb`/artwork/CardScripts, no
+      legality logic anywhere in QML
+- [x] CI green on all seven job families on head `302db5ab` (superseded)
+- [x] CI green on all seven job families on head `281e908c` (superseded)
+- [x] CI green on all seven job families on the new final head `49a321ff`
+      (run [33306880279](https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/33306880279))
+
+RECOMMENDATION: READY FOR FINAL EXTERNAL REVIEW — DO NOT MERGE
+

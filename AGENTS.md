@@ -150,13 +150,14 @@ patch.
   without changing the prose. Name commands a reader can rerun at the current
   head instead. Before opening or updating a PR, run
   `python tools/check_pr_evidence.py --file <body>` (or pipe the body on
-  stdin). The checker scans body-level evidence-shaped count and ratio phrases
-  so hard-wrapped repository prose remains visible, while masking commit SHAs,
-  PR/brief/correction identifiers, line citations and version numbers. It
-  deliberately does not attempt brittle arbitrary-prose parsing or compare a
-  claimed range to GitHub's current head. Roman numerals, number words such as
-  "dozen" and hexadecimal numerals are outside its stated limit. It is a local
-  mechanism; changing CI to run it is outside an agent's authority and
+  stdin). The checker is a heuristic: it scans body-level evidence-shaped count,
+  diff-stat, and ratio patterns so hard-wrapped repository prose remains
+  visible, while masking commit SHAs, PR/brief/correction identifiers, line
+  citations and version numbers. It is known not to catch disguised numerals
+  (spelled-out number words such as "dozen", Roman numerals, or hexadecimal),
+  unmodelled metric nouns, or counts separated from units by complex prose,
+  and it does not compare a claimed range to GitHub's current head. It runs
+  only when invoked; changing CI to run it is outside an agent's authority and
   requires an owner/Brain proposal.
 - **Semantic trace binaries must be fresh enough to describe the sources.**
   `tests/test_semantic_trace.py` accepts an explicit or discovered binary only

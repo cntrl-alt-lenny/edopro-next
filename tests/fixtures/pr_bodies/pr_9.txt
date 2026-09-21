@@ -1,0 +1,233 @@
+## Summary
+
+Starting master SHA: `96c6eb0c1a4edf9c92caf47b1e46f3cc69d15402` (M3A, card database facade,
+merged). Branch: `m3/deck-model-ydk`. Final head: `955a1103278448d3bc9fc6f6b1f402ac4447db7b`.
+
+Addresses exactly one M3 roadmap item: **"Deck model reading and writing `.ydk`"**. M3
+remains in progress after this PR - the deck builder UI and fast search are not started.
+
+- `edopro_next::data::Deck` (`data/include/edopro_next/data/deck.h`): three ordered
+  `std::vector<data::CardCode>` - `main`/`extra`/`side`. No `CardDataC` pointers, no
+  `CardDatabase`, no Qt/QML/Irrlicht/`ocgcore`/`gframe`, no legality or deck-size logic of
+  any kind. Order and duplicates preserved exactly - never deduplicated, never sorted.
+- A `.ydk` codec (`data/include/edopro_next/data/ydk.h`, `data/src/ydk.cpp`):
+  `parse_ydk`/`load_ydk` (read) and `serialize_ydk`/`save_ydk` (write), separating pure
+  text-to-value logic from filesystem I/O.
+- A new CMake target, `edopro_next_deck` (`data/CMakeLists.txt`), deliberately separate from
+  `edopro_next_data` - it links **no SQLite**, proven by its own test executable's link
+  graph, not just documented.
+- `docs/architecture/deck-model.md` - full source archaeology of
+  `DeckManager::LoadCardList`/`LoadDeck`/`SaveDeck`/`MakeYdkEntryString`, with exact line
+  citations against upstream `54ea755a`.
+- `docs/adr/0004-deck-model-ydk-codec.md` - the four load-bearing decisions this PR makes.
+- `data/tests/test_deck_ydk.cpp` - 37 tests, all passing.
+- `docs/ROADMAP.md`, `README.md`, `.github/workflows/edopro-next.yml` - status updates and
+  a truthful CI job rename (see below).
+
+## Source archaeology findings (full detail in `docs/architecture/deck-model.md`)
+
+- `LoadCardList` (`gframe/deck_manager.cpp:272-318`) is the actual `.ydk` parser -
+  `static`, private to that file. It never fails on file content, only on failing to open
+  the file at all. CRLF is stripped by hand (`FileStream` is plain `std::fstream` on Linux,
+  no text-mode translation). `#main` is inert - always. `#extra` is functional only
+  when the caller supplies a non-null `extralist` pointer; any `!`-prefixed line (not just
+  literal `"!side"`) permanently latches into the side section - once set, neither flag ever
+  resets. A line is only ever attempted as a number if it contains a digit at all; parsing
+  uses `std::stoul` exactly, whose sign/overflow/trailing-garbage/base-10 semantics were
+  verified empirically against this project's actual Linux/g++ 15.2.0 baseline, not assumed.
+- Upstream has two load modes, both reached from `LoadDeckFromFile`'s `separated` bool: with
+  `separated = false` (the parameter's own default), `#extra` is inert and section
+  membership is decided afterward by `LoadDeck`, which needs a live `CardDatabase` and
+  classifies by card type (Fusion/Synchro/Xyz/Link/Ritual). With `separated = true`,
+  `LoadCardList` itself splits by file markers - but `LoadDeck` still reclassifies
+  afterward, moving an Extra-Deck-typed card out of `#main` regardless of which section the
+  file put it in. Neither mode is fully determined by the file's own text without a
+  database. Real callers overwhelmingly use `separated = true` (the deck builder's own
+  file-open/drag-drop paths, `gframe/deck_con.cpp`).
+- `SaveDeck` (two overloads, `gframe/deck_manager.cpp:436-468`) always writes
+  `#main`/`#extra`/`!side` unconditionally, even for an empty section. `MakeYdkEntryString`
+  optionally prefixes a name comment (`gGameConfig->addCardNamesToDeckList`, needs a
+  database name lookup) and `SaveDeck` sources a `"#created by <nickname>"` line from live UI
+  state (`mainGame->ebNickName`).
+- Card code 0: `LoadCardList` itself has no special case for it - stores it structurally
+  like any other code. The downstream, database-dependent `LoadDeck` step resolves an
+  unrecognized code (0 included, since no real `.cdb` row has id 0) to a dummy `CardDataC`,
+  and is mode-dependent: dropped in non-separated mode, kept as an untyped Main-deck
+  placeholder in separated mode. The two upstream behaviours disagree with each other.
+
+## Decisions this PR makes (ADR 0004)
+
+- **Explicit sections are authoritative, not type-based auto-classification.** This codec
+  always behaves as if `separated = true` were requested - `#extra`/`!` are always
+  functional - and never performs `LoadDeck`'s card-type reclassification. No
+  `CardDatabase` dependency anywhere in `parse_ydk`/`serialize_ydk`. A future,
+  explicitly-reviewed layer with a live database can implement `LoadDeck`'s reclassification
+  as a `Deck -> Deck` transformation on top of this codec.
+- **Card code 0 is excluded during parsing, not stored.** Neither of upstream's two
+  mode-dependent behaviours is reproduced; instead, a line parsing to `0` (including a value
+  that wraps to `0` via `uint32_t` truncation, e.g. `2^32` on a 64-bit `unsigned long`) is
+  dropped from the resulting `Deck` and reported via a non-fatal `YdkIgnoredLine`, consistent
+  with `CardCode::None`'s established "not a real card" meaning from M3A
+  (`data/include/edopro_next/data/card_code.h`). A magnitude that overflows `std::stoul`'s
+  own range - which, depending on `unsigned long`'s width, `2^32` itself may or may not be;
+  see "ABI-dependent parsing" below - is a separate, distinguishable case (`"malformed card
+  code"`, not code 0), pinned by separate tests.
+- **Unknown non-zero codes need no special handling.** Because `Deck` stores `CardCode`
+  values rather than pointers into a catalogue, any syntactically valid code round-trips
+  unchanged whether or not a database recognizes it - no dummy/alias mechanism needed.
+- **The writer never depends on a card database or UI state.** `YdkWriteOptions::creator` is
+  a plain optional string this codec never sources a value for; the legacy name-commented
+  export form (`# CardName` then `<code>`) is deliberately not offered in any form, since it
+  requires a card-name lookup this codec's boundary should not carry.
+
+## Round-trip and failure guarantees
+
+- `parse_ydk(serialize_ydk(deck)) == deck` for any `Deck` this codec produces, or any `Deck`
+  containing only non-zero `CardCode` values - identical order, duplicates, and section
+  membership, including unknown codes and the empty deck. Comments/whitespace are not
+  expected to survive; this is a semantic round-trip, not a lossless text round-trip.
+- **`CardCode::None` is explicitly outside this guarantee, by contract, not by accident.**
+  `Deck`'s vectors are public, so a caller can construct one containing `CardCode::None`
+  directly even though `parse_ydk` never produces one. `serialize_ydk` does not filter it -
+  it is written as a literal `"0"` line like any other code - which `parse_ydk` then excludes
+  under the same code-0 policy, so that specific `Deck` does not round-trip. This is now
+  documented on `Deck` and `serialize_ydk` themselves and pinned by
+  `a_deck_containing_card_code_none_does_not_round_trip`, rather than being an untested edge
+  case a caller could stumble into unknowingly.
+- `load_ydk` has the one genuine failure mode (file open/read); `parse_ydk` (in-memory text)
+  cannot fail on content at all, matching `LoadCardList` itself. A failed `load_ydk` returns
+  an empty `Deck` in a fresh result value - there is no in-place mutation of a caller-owned
+  `Deck`, so a caller that only assigns on `ok == true` gets transactional behaviour for
+  free (pinned by `loading_a_missing_file_fails_and_leaves_an_existing_deck_untouched`).
+- `serialize_ydk`/`save_ydk` are deterministic: same `Deck` plus options produces
+  byte-identical output, always `\n`, and `save_ydk` writes in binary mode.
+- `save_ydk`'s success path is write, then flush, then close, each checked in turn - `ok` is
+  only set once `close()` has itself succeeded, not merely once `write()`/`flush()` have.
+  `load_ydk` reads through `file.read()` in a sized loop rather than direct streambuf
+  insertion, so a genuine mid-read I/O error is detected via `file.bad()` rather than
+  silently producing a truncated or empty `Deck` reported as success.
+
+## ABI-dependent parsing: `std::stoul` on `4294967296` (2³²)
+
+This codec calls `std::stoul` exactly as upstream's `LoadCardList` does, so it inherits
+`std::stoul`'s own platform-dependent behaviour rather than normalizing it away. On this
+project's current Linux baseline (64-bit `unsigned long`), `4294967296` parses successfully
+and then truncates to `0` via `static_cast<uint32_t>`, landing on the code-0 policy above. On
+a platform where `unsigned long` is exactly 32 bits (LLP64 - e.g. Windows, a stated future
+target this project does not yet build for), `4294967296` does not fit in `unsigned long` at
+all, so `std::stoul` itself throws `std::out_of_range` and the line is reported as malformed
+instead. Both are upstream's own genuine per-platform `std::stoul` behaviour for the same
+input; `data/tests/test_deck_ydk.cpp`'s
+`two_to_the_32_is_excluded_one_way_or_another_depending_on_unsigned_long_width` branches on
+`std::numeric_limits<unsigned long>::max()` at compile time and asserts whichever diagnostic
+actually applies, always checking the one invariant that holds regardless: no card is stored.
+
+## Tests: 37 (`data/tests/test_deck_ydk.cpp`), all passing
+
+Canonical three-section parsing; empty-section and fully-empty round trips; duplicate/order
+preservation; an arbitrary unknown non-zero code (no database involved anywhere in this
+binary - it links no SQLite); comments and creator metadata never becoming cards; blank
+lines; CRLF; a file with no trailing newline; a repeated `#extra` marker; any `!`-prefixed
+line latching the side section, including the `!side` before `#extra` ordering that proves
+the latch never resets; cards before any marker defaulting to main; `std::stoul`-relevant
+cases pinned individually (leading-digit-then-garbage, surrounding whitespace, leading `+`,
+leading `-` wrapping via unsigned arithmetic, a decimal point, a hex-looking `"0x1A"` prefix
+parsing as decimal `0`, a magnitude far beyond any native integer width reported as malformed
+on every conforming platform); code 0 excluded in every section; the ABI-portable `2^32`
+boundary test above; the max valid `uint32_t` code; exact byte-for-byte writer output with
+and without creator, and for a fully empty deck; a creator string with embedded newlines
+sanitized byte-for-byte and proven unable to inject a card line end-to-end; `Deck` containing
+`CardCode::None` proven not to round-trip, on purpose; parse-serialize-parse identity; real
+file save/load round-trip; transactional failure on a missing file; deterministic repeated
+serialization; two platform-conditional regression tests (each checks its special file exists
+first, doing nothing on a platform without one) that write to `/dev/full` and read from
+`/proc/self/mem` on Linux to prove the flush-failure and mid-read-failure detection actually
+trigger, not just compile.
+
+`edopro_next_data`'s existing 30 tests are unchanged and still pass (no regression).
+
+## Module dependencies (verified, not just documented)
+
+`edopro_next_deck`'s own test executable (`test_deck_ydk`) links `edopro_next_deck_test_main`
+only - `ldd` on the built binary shows no `libsqlite3` anywhere in its link graph, distinct
+from `edopro_next_data`/`test_card_database`, which do link SQLite.
+
+## No legality, search, QML, or upstream-owned changes
+
+No deck-size/three-copy/banlist/LFList/whitelist logic anywhere. No fast-search
+indexing/filtering. No QML deck builder. No YDKe/Base64 codec (a genuinely separate format,
+confirmed unrelated during archaeology - not needed here). No `gframe/` or `ocgcore/`
+changes of any kind - both were read from, never written to.
+
+## Local validation
+
+All run against this exact branch head, via WSL (this repo's own baseline platform,
+`docs/BASELINE.md`), using a pip-user-installed CMake/SQLite discovered from an earlier
+session's `~/edopro-baseline` vcpkg tree (no apt/root available in this sandbox):
+
+- `data/` configured and built with `-DEDOPRO_NEXT_WERROR=ON`: clean, zero warnings from any
+  code this PR adds (pre-existing `SQLite::SQLite3`-deprecation CMake author warnings are
+  unrelated, unchanged by this PR, and out of scope to fix here).
+- `ctest --test-dir data/build`: 2/2 suites pass - `card_database` (30/30 assertions,
+  unchanged) and `deck_ydk` (37/37).
+- `client/` (with sibling `integration/`) configured and built with
+  `-DEDOPRO_NEXT_WERROR=ON`: `ctest --test-dir client/build`: 7/7 suites pass, entirely
+  unaffected (this PR never touches `client/`).
+- `python tools/generate_messages.py --check` and `generate_protocol_constants.py --check`:
+  both up to date.
+- `python -m unittest discover -s tests -v`: 33 passed (structural M1 harness).
+- Semantic golden-trace verification (`python tests/test_semantic_trace.py --require -v`)
+  against a freshly built `edopro_next_semantic_trace`: 10/10 passed.
+- `git diff --check`: clean.
+- Full diff audited against master: only `data/`, `docs/`, `README.md`, and
+  `.github/workflows/edopro-next.yml` touched. No `.cdb`, no artwork, no CardScripts, no
+  build artifacts, no unrelated files.
+- **Not attempted:** the Qt 6 shell build (`ui/`). This PR does not touch `ui/`, and Qt is
+  not available in this sandbox without root; stated precisely rather than assumed clean.
+  Verified in CI instead (see below).
+
+## CI
+
+The existing `card-database` job (id unchanged) now also builds and runs
+`edopro_next_deck`/`test_deck_ydk`, since both live in the same `data/CMakeLists.txt` and
+`data/build` tree - its display name is changed from "Card database facade" to **"Card and
+deck data"** to stay truthful about what it covers. Expected jobs on this PR: Regression
+harness (3.10, 3.12), Card and deck data, Semantic client model, Qt 6 shell,
+Upstream EDOPro baseline (observer=false, observer=true).
+
+## Review fixes landed since this PR opened
+
+Two rounds of automated/external review, both fully addressed on the current head:
+
+- **Round 1** (buffered-write failure, `rdbuf()`-based read failure, creator newline
+  injection): `save_ydk` originally checked the stream right after `write()`, which can
+  report `good()` even though a full filesystem only fails at flush time; `load_ydk`
+  originally read via `buffer << file.rdbuf()`, which bypasses `basic_istream::read()`'s
+  state-update machinery and can leave a genuine mid-read I/O error undetected; `creator`
+  was emitted verbatim, so an embedded newline could inject a phantom card line into the
+  output. All three confirmed empirically (`/dev/full`, `/proc/self/mem`, and a direct
+  parse-back of injected output) before fixing, and pinned by dedicated tests.
+- **Round 2** (this pass): `save_ydk` also now checks `close()`, not just `flush()`, before
+  reporting success; the `2^32` test is now ABI-portable rather than assuming a 64-bit
+  `unsigned long`; `Deck`'s `CardCode::None` round-trip precondition is now explicit and
+  pinned rather than an implicit, untested consequence of the code-0 policy.
+
+## Known limitations / deliberately deferred work
+
+- `LoadDeck`'s type-based Extra-Deck reclassification is not reproduced anywhere - by
+  design (ADR 0004, Decision 2). A `Deck` parsed from a file whose author put a Fusion
+  monster in `#main` will keep it there; upstream's own loader would move it.
+- No end-to-end proof that upstream EDOPro's actual binary opens a file this codec wrote -
+  the format-level claim is supported by construction (writer matches `SaveDeck`'s section
+  syntax exactly; the writer's own output round-trips through this codec's parser
+  unchanged; `LoadCardList` is `static`/private and cannot be linked directly for a real
+  cross-check without a large legacy harness this PR deliberately does not build), not by a
+  GUI integration test.
+- The legacy name-commented export feature and creator-nickname sourcing are not
+  implemented at all (ADR 0004, Decision 4) - a caller wanting them composes on top.
+- `save_ydk`'s `close()`-failure path has no portable way to be forced in a unit test (the
+  existing `/dev/full` case already fails at the flush step, before `close()` is reached) -
+  the fix is standard-guaranteed (`std::basic_fstream::close()` sets `failbit` on failure)
+  rather than test-proven for that specific step.
+
+RECOMMENDATION: READY FOR FINAL EXTERNAL MERGE REVIEW — DO NOT MERGE

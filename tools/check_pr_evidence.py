@@ -17,7 +17,14 @@ import sys
 
 
 _NUMBER = r"\d[\d,]*(?:\.\d+)?"
-_MEASURE = (
+_MODIFIERS = r"(?:C\+\+|\b(?:CTest|unit|semantic|structural|replay|regression|python3?|new|available|passing|passed|test)\b)"
+_COUNT_METRIC = (
+    r"files?|insertions?|deletions?|tests?|cases?|suites?|functions?|targets?|"
+    r"assertions?|packets?|entries?|rows?|hits?|queries?|benchmarks?|"
+    r"failures?|errors?|warnings?|skips?|skipped|passed|passing|success|"
+    r"seconds?|milliseconds?|ms|timings?|duration|ids?|values?"
+)
+_METRIC_BEFORE_COUNT = (
     r"files?|insertions?|deletions?|tests?|failures?|errors?|warnings?|"
     r"skips?|skipped|passed|passing|seconds?|milliseconds?|ms|timings?|"
     r"duration"
@@ -29,7 +36,7 @@ _IDENTIFIER_RE = re.compile(
     r"\b(?:PR|Brief(?:-ID)?|R|E|C)\s*#?\s*\d+(?:[-–]\s*[A-Z]?\d+)*\b|"
     r"\b\d{4}-\d{2}-\d{2}(?:[Tt][0-9:.+-]+)?\b|"
     r"\b(?:Python|Python3|CMake|Ninja|MSVC|Qt|C\+\+|Visual\s+Studio|"
-    r"Windows|macOS|Ubuntu|v)\s*[^0-9\n]{0,8}\d+(?:\.\d+)*\b|"
+    r"Windows|macOS|Ubuntu|v)\s*[^0-9\n:]{0,8}\d+(?:\.\d+)*\b|"
     r"\b(?:line|lines|L)\s*\d+(?:\s*[-–]\s*\d+)?\b"
     r")",
     re.IGNORECASE,
@@ -40,12 +47,18 @@ _COMMAND_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 _COUNT_BEFORE_METRIC_RE = re.compile(
-    rf"\b{_NUMBER}\b(?:[ \t]+|\n[ \t]*)\b(?:{_MEASURE})\b",
+    rf"(?<![a-zA-Z_]=)\b{_NUMBER}(?:%)?\b(?:[ \t]+|\n[ \t]*)"
+    rf"(?:{_MODIFIERS}(?:[ \t]+|\n[ \t]*))*"
+    rf"\b(?:{_COUNT_METRIC})\b(?![ \t]*=)",
     re.IGNORECASE,
 )
 _METRIC_BEFORE_COUNT_RE = re.compile(
-    rf"\b(?:{_MEASURE})\b[ \t]*(?:[:=][ \t]*)?\b{_NUMBER}\b",
+    rf"\b(?:{_METRIC_BEFORE_COUNT})\b[ \t]*(?:[:=][ \t]*)?\b{_NUMBER}\b",
     re.IGNORECASE,
+)
+_DIFF_STAT_RE = re.compile(
+    r"^[ \t>]*(?:[-*]\s*)?[^|\n]+?[ \t]+\|[ \t]+(?:\d[\d,]*(?:\.\d+)?(?:[ \t]+[+-]+|[ \t]*$)|Bin\b)",
+    re.MULTILINE,
 )
 _SUITE_TABLE_RE = re.compile(
     rf"\|\s*(?:unittest|ctest|pytest)\s*\|\s*{_NUMBER}"
@@ -81,6 +94,7 @@ def _measurement_matches(body: str) -> list[re.Match[str]]:
     for pattern in (
         _COUNT_BEFORE_METRIC_RE,
         _METRIC_BEFORE_COUNT_RE,
+        _DIFF_STAT_RE,
         _SUITE_TABLE_RE,
         _SUITE_RATIO_RE,
         _SUITE_STATUS_RE,

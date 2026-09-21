@@ -1,0 +1,127 @@
+Delivers M1 — *"make change provable"* — plus Linux CI and a redesigned landing page.
+
+The property this project ultimately needs is *"this changed presentation, not duel behaviour"*. That takes two layers, and this PR delivers the first:
+
+> **M1 establishes a deterministic recorded-protocol regression baseline.**
+
+Stated precisely, because the distinction matters: the fixtures are frozen recordings and the harness never loads `ocgcore`, so **no C++ change in this tree can fail this suite.** It proves our reading of the recorded duel protocol is stable, deterministic and drift-free — not that a live duel still behaves the same. The layer that would prove *that* is Level 2 (re-simulating the recorded inputs through a headless `ocgcore`), scoped below and deliberately not claimed here.
+
+## The investigation, and what it found
+
+[`docs/architecture/replay-regression.md`](docs/architecture/replay-regression.md) traces replay execution through upstream at `54ea755a`. The answer to the survey's open question is **yes — and reading the recorded format needs no engine at all**, which is what makes the baseline cheap to stand up and also what bounds it.
+
+The load-bearing finding is that the two replay formats are fundamentally different:
+
+| | `.yrp` (YRP1) | `.yrpX` (YRPX) |
+|---|---|---|
+| Is | an **input** recording — seed, decks, duel flags, ordered responses | an **output** recording — the duel message stream itself |
+| Playback | re-simulate through `ocgcore` | replay stored messages |
+| Needs CardScripts / card DB | yes | **no** |
+
+`ReplayMode::ReplayThread` iterates the stored stream and **never touches `ocgcore`** — its `pduel` member is vestigial, only ever set to `nullptr`. The engine-driven path is `OldReplayThread`, which seeds from the file, registers decks, then alternates `DuelProcess` with responses consumed in fixed order.
+
+Determinism holds by construction: RNG is seeded from the header, responses come from a vector, decks and flags are fixed, and there is no interactive input. **Rendered timing does not affect the message stream** — pause/step/skip gate presentation only.
+
+Modern EDOPro writes `.yrpX` **and embeds the original YRP1 inside it** (pseudo-message `OLD_REPLAY_MODE`, 231). Both fixtures here contain one, carrying a real 256-bit Xoshiro256\*\* seed and `start_lp`/`start_hand`/`draw_count` — so engine-driven re-simulation stays possible later without new fixtures.
+
+## The harness
+
+```
+.yrpX fixture → header + LZMA1 body → packet stream → deterministic trace → golden compare
+```
+
+Python, standard library only, headless, under a second. No `ocgcore`, no CardScripts, no card database, no build, **no network** — so CI has nothing to cache and nothing to flake on. `CLAUDE.md` permits Python for tooling and tests; it is not in the render or input path.
+
+- **`tools/replaytrace/reader.py`** — parses both formats: 32-byte header, optional 40-byte extended tail with the seed, LZMA1-raw body via the header's props, names, parameters, and the `uint8`/`uint32`-framed packet stream. Recurses into an embedded YRP1. Truncation raises rather than silently short-parsing, and unconsumed trailing bytes are reported.
+- **`tools/replaytrace/trace.py`** — the golden representation. Excludes everything environmental: timestamps, the unpopulated hash, LZMA props and compressed size, player names, paths, addresses. Flags render symbolically; a message-count summary precedes the stream because that is where a behavioural change shows first; payloads over 32 bytes become length + truncated sha256.
+- **`tools/generate_messages.py`** — derives the 96-id message table from `gframe/ocgapi_constants.h` and `gframe/common.h` rather than hand-maintaining it. Refuses to emit on an id collision; `--check` fails CI on staleness.
+- **`tools/make_fixture.py`** — sanitises a real replay for committing, verifying the packet stream is byte-identical before and after.
+
+## Fixtures
+
+Three sanitised fixtures, ~5 KB each: two recorded duels (`.yrpX`), plus one in the input format (`.yrp`, extracted from the embedded YRP1) so both parsers are exercised by real data rather than synthesised bytes.
+
+| Coverage | |
+|---|---|
+| Turn / phase progression | `NEW_TURN` ×5, `NEW_PHASE` ×23 |
+| Summons | Normal ×2, Special ×4, Set ×3 |
+| **Chains** | `CHAINING`/`CHAINED`/`SOLVING`/`SOLVED` ×8, `CHAIN_END` ×6 |
+| Targeting | `BECOME_TARGET` ×2 |
+| Card movement | `MOVE` ×32, `POS_CHANGE` ×2 |
+| Battle | `ATTACK` ×3, `BATTLE` ×2, damage step |
+| Draw / damage / reveal | `DRAW` ×8, `DAMAGE`, `CONFIRM_CARDS`, `SHUFFLE_*` |
+| Terminal | `WIN` |
+
+Hygiene is enforced by tests, not intent: names must match `^Player[A-Z]$` including inside the embedded YRP1, and fixtures must stay under 64 KB. No card artwork, no databases, no scripts.
+
+## Proof it actually catches regressions
+
+A harness that only runs is worthless. Perturbing one golden line produced a failing test naming the exact message:
+
+```diff
+-  70 MSG_CHAINING                 7
++  70 MSG_CHAINING                 8
+```
+
+Restoring it returned the suite to green. **15 tests, all passing.**
+
+That establishes the mechanism is live rather than vacuous. It is not a demonstration that engine changes are caught — see the boundary stated at the top.
+
+## CI
+
+Three jobs, cost tiered so documentation commits are not taxed. **None can go green without doing its work** — no `continue-on-error`, no swallowed failures.
+
+| Job | Runs | Status |
+|---|---|---|
+| Regression harness (3.10 + 3.12) | every push | ✅ green |
+| Qt 6 shell (Linux) | every push | ✅ green |
+| Upstream EDOPro baseline | master, PRs, weekly, manual | runs on this PR |
+
+The regression job additionally re-derives the message table with `--check` and re-renders every golden, requiring `git` to report no diff — catching a golden that only reproduces on the machine that made it.
+
+The Qt job makes **two independent assertions**, because either alone passes falsely: the process must survive to the timeout (exit 124), since a crash with empty stderr would look clean; and stderr must be empty, since Qt reports QML errors there while still exiting 0. Both halves were verified locally against a deliberately failing binary.
+
+## README and visual identity
+
+- **`docs/assets/hero.svg`** — original work. Abstract duel-field geometry with the palette taken directly from `ui/qml/Theme.qml`, so repository and application read as one product. No card artwork, no Konami or Master Duel branding.
+- **`docs/assets/shell.png`** — a **genuine screenshot of the compiled binary**, captured via a new `--capture` flag. Not a mockup. It shows four of five subsystems marked *planned*, which is the honest state.
+- A Mermaid diagram colours preserved upstream work grey and the two layers this project builds gold, so "the engine is not being rewritten" lands before any prose.
+- Badges carry real information only — CI status from the actual workflow, licence, language, Qt version, milestone. No download counts, coverage percentages, or untested platform claims.
+
+## Also in this PR
+
+Upstream's `Build EDOPro` workflow was red on every push here. Investigated rather than ignored: **it builds fine** — run `32776508289` shows `Build: success`, `Predeploy: success`, and only `Deploy` failing for want of `DEPLOY_TOKEN` and a Discord webhook that only Project Ignis holds. Disabled at the **repository level** (not by editing the file, so no merge conflict) and documented in `docs/UPSTREAM.md` with the command to re-enable.
+
+## What is explicitly NOT done
+
+- ❌ **Level 2 re-simulation** through `ocgcore` — **this is the layer that would prove live engine equivalence, and it does not exist.** Everything it needs as *input* is already in the fixtures (seed, decks, duel flags, 135 ordered responses). What is missing is a host: a compiled `ocgcore`, an `OCG_DataReader` backed by a pinned card database, an `OCG_ScriptReader` backed by pinned CardScripts, and a driver. Neither the database nor the scripts may be committed here, so both become pinned network fetches. Scoped as its own milestone rather than folded into M1.
+- ❌ **Semantic tracing.** The trace is structural — message ids and payload digests, not decoded fields. A change altering payload *contents* is caught; one altering *interpretation* of unchanged bytes is not. That is the natural M2 extension.
+- ❌ Windows / macOS CI. Linux only.
+- ❌ Semantic client model, deck builder, duel field — all still not started.
+
+Corpus limits are stated in the docs too: no Link or Pendulum summons, no tag or relay duel, no single/hand-test mode, no surrender or timeout paths.
+
+## Review response
+
+An external technical review raised four findings. Each was verified against the code before being acted on; all four were correct.
+
+**1. Level-1 guarantees were overstated.** Confirmed — nothing in `tools/` or `tests/` executes `ocgcore`, and the fixtures are static committed files, so the suite cannot fail because of a C++ change. Reframed throughout as a *recorded-protocol regression baseline*, with a new §0 in the investigation stating the boundary up front, the ROADMAP exit criterion rewritten to the property actually held, and M5's exit criterion no longer citing M1 as proof of duel behaviour. `CLAUDE.md` now warns future contributors that a green harness is not engine evidence, alongside the existing "it compiles" rule. Level 2 was assessed for implementation now and deferred: it needs a compiled `ocgcore` plus two pinned external data sources, which is a milestone, not a hardening pass.
+
+**2. YRP1 parsing was incomplete.** Confirmed empirically — the reader advertised `.yrp` while leaving 1,131 and 997 bytes of the embedded YRP1 bodies unconsumed. Fixed by completing the parse (decks, extra decks, custom rule cards, ordered responses, `script_name`, hand-test/new-replay flags) rather than narrowing the advertised scope. A standalone `.yrp` fixture was extracted via a new `--extract-yrp1` mode, and a test asserts the standalone and embedded copies of the same duel parse identically. `trailing_bytes` is now 0 everywhere, asserted recursively.
+
+**3. The vcpkg cache key could never hit.** Confirmed — it embedded `github.run_id`, so `cache-hit` was never exactly `true`; every run downloaded the bundle and wrote a fresh cache. Now keyed on the upstream dependency release tag, resolved at runtime from `edo9300/edopro-vcpkg-cache` (currently `20260819`), which is stable across runs yet refreshes automatically when upstream republishes — something a content hash cannot do here, because the URL consumed is unversioned. `restore-keys` is deliberately omitted so a stale tree is never silently reused, and the fallback behaviour is documented inline.
+
+**4. "No DPI awareness" was factually wrong.** Confirmed — upstream has `float dpi_scale` (`gframe/game.h:691`) and `Game::Scale()` templates (`game.h:603-615`), used 15× in `game.cpp`, 6× in `image_manager.cpp`, and again in `event_handler.cpp` and `utils_gui.cpp`. Corrected in the README, `docs/VISION.md` and ADR 0001 to the accurate criticism: widgets are *sized by manual DPI scaling rather than laid out by a layout system*. The architectural point stands; it is now stated in terms that survive inspection.
+
+**Also corrected while verifying the above:** the README described "one 4,658-line function" — 4,658 is the size of `duelclient.cpp`; the dispatch function `ClientAnalyze` is 2,977 lines (1286-4262), and the file's 97 `case MSG_*:` branches split 88 in that decode switch and 9 in `SendResponse`, which encodes. Both documents now state what was measured. Added hardening where the review's findings exposed concrete gaps rather than speculative ones: LZMA property-byte and dictionary-size validation, a bounds-checked array reader that rejects an absurd declared count before allocating, golden filenames disambiguated by suffix (`.yrp` and `.yrpX` shared a stem), privacy and trailing-byte assertions applied recursively to embedded replays, and a guard that refuses to *bless* a golden for a fixture failing those same invariants. Dead code in `tools/make_fixture.py` was removed and a duplicated name-layout parse folded into the shared reader; every fixture still regenerates byte-identically from the tooling.
+
+## Validation
+
+- 15/15 tests pass locally and on both CI Pythons
+- Qt shell rebuilt and re-run after the review changes: clean build, exit 124, zero stderr
+- Goldens reproduce byte-for-byte from a clean tree
+- Message table verified derived, not hand-edited
+- Qt shell builds and launches with zero QML diagnostics, locally and in CI
+- **Zero upstream source files touched** (`gframe/`, `ocgcore/`, `travis/`, `premake5.lua`)
+- `LICENSE`, `COPYING`, `notices/` unchanged
+

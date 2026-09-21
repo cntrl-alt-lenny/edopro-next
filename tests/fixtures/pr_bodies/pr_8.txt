@@ -1,0 +1,177 @@
+## Summary
+
+First M3 slice: a small, presentation-independent, well-tested C++20 facade for reading
+Project Ignis `.cdb` card databases, in a new `data/` module. This becomes the authoritative
+card-data boundary for the deck model, card search, and QML deck builder to build on later -
+none of that is implemented yet. It is not part of the duel rules engine and makes no
+legality decisions.
+
+Only "Card database facade" from M3's roadmap list is done in this PR. Deck model, fast
+search, and the QML deck builder are explicitly not started.
+
+**Update (locale correction pass):** external review found a confirmed state-loss bug in the
+original locale design - `load_locale()` wrote translated text directly into the only stored
+record, so a base string a locale had overwritten had no way back, and switching locales (or
+returning to the base language) could not restore it. Fixing it required re-tracing the real
+upstream locale lifecycle end to end (`Game::ApplyLocale`,
+`DataManager::ClearLocaleTexts`/`ParseLocaleDB`, `CardDataM::GetStrings`/`GetDesc`), which also
+surfaced that the original PR's per-field name/text fallback was an invented rule, not
+upstream's actual (asymmetric) one. Both are corrected below; the sections that described the
+old design have been rewritten, not just appended to.
+
+## Architecture
+
+- New top-level `data/` module (own `CMakeLists.txt`, standalone like `client/`/`ui/`),
+  depending on the C++20 standard library and SQLite (via CMake's own `find_package(SQLite3)`
+  against the system package, not the project's vcpkg bundle) - and nothing else. It does not
+  include `client/`, `gframe/`, `ocgcore/`, or the legacy `DataManager`; `sqlite3.h` never
+  appears in `data/include/`.
+- `edopro_next_client` is unchanged and still builds with no SQLite/card-data dependency
+  (verified locally, see Validation).
+- `CardDatabase` keeps three maps internally: `base_text_` (the base text layer - a
+  successful `load_database()` call may replace it for a code, but no locale operation ever
+  touches it), `locale_text_` (the active locale layer, discarded whole by `clear_locale()`), and
+  `records_` (the materialized effective view `find()`/iteration expose). `find()`'s pointer
+  stays valid for the object's lifetime, but is not a snapshot - see the header's own
+  pointer/reference-stability note.
+- Full rationale for the module boundary, the SQLite provisioning choice, load atomicity, the
+  locale layer design, and the card-code-0 invariant is in
+  [`docs/adr/0003-card-database-facade.md`](docs/adr/0003-card-database-facade.md) (5
+  decisions).
+
+## Upstream source research
+
+Read from `gframe/data_manager.h`/`.cpp` (the `.cdb` schema, every field transformation
+`DataManager::ParseDB` applies, and the full locale lifecycle -
+`ParseLocaleDB`/`ClearLocaleTexts`/`GetStrings`/`GetDesc`), `gframe/data_handler.cpp` and
+`gframe/game.cpp` (real database/locale load order, and `Game::ApplyLocale`'s clear-then-load
+sequence), and `gframe/deck_manager.cpp`/`deck.h` (what fields downstream deck logic actually
+consumes, and the code-0 dummy-entry convention) - written up with source citations in
+[`docs/architecture/card-database.md`](docs/architecture/card-database.md).
+
+Key findings baked into the design:
+
+- The base query is an inner join between `datas` and `texts`; a card missing from either
+  table is not loaded at all - reproduced exactly.
+- Loading multiple databases is unconditional last-file-wins per card code, verified against
+  `ParseDB`'s own `cards[code]` overwrite and against real load order
+  (`cards.cdb`, then every `expansions/*.cdb`, then archives).
+- Link monsters store their link-marker bitmask in the `def` column, and their real defense
+  is always 0 - reproduced exactly, using the Link type bit cited from `ocgcore`'s own public
+  header (`ocgcore/ocgapi_constants.h:58`), not copied from `gframe/`.
+- Level and Pendulum scale share one packed, signed int, and the sign of the *whole* value -
+  not just the low byte - determines the decoded intermediate result's sign. But
+  `CardData::level`/`CardDataC::level` (and the engine-facing `OCG_CardData::level` they are
+  memcpy'd into unchanged) are `uint32_t`, not `int32_t` - so `CardRecord::level` is
+  `uint32_t` too, and a negative intermediate result is stored as the wrapped unsigned value,
+  matching upstream's own observable deck-search level filter (`gframe/deck_con.cpp`), which
+  compares this field as `uint32_t`. Traced bit-for-bit and covered by a test with a
+  genuinely negative packed value: `level = -249` gives a signed intermediate of `-7`, stored
+  and exposed as `static_cast<uint32_t>(-7)` == `4294967289` (`0xfffffff9`); scales come out
+  `255`/`255` as a mechanical side effect of sign extension.
+- Race is read as a true 64-bit value in upstream too, not a modern extension this PR
+  invented.
+- **Locale lifecycle** (`Game::ApplyLocale`, `gframe/game.cpp:3987-4020`): `ClearLocaleTexts()`
+  runs unconditionally before loading any newly selected locale, including before returning to
+  the base language, which loads nothing at all.
+  `CardDataM::GetStrings()` links `name`/`text` as a pair - once a locale is linked for a code,
+  both come from the locale layer even if one is empty, never falling back to base
+  field-by-field; only the sixteen auxiliary strings (`CardDataM::GetDesc()`) fall back per
+  slot. `ParseLocaleDB` reuses `locales[code]` across every file loaded into one active locale,
+  and `GetWstring` unconditionally clears a field with no value - so a later file's row for a
+  code an earlier file in the same active locale already touched replaces it completely, even
+  with an empty value.
+- 0 is upstream's own synthesized "not a real card" sentinel
+  (`CardDataC::getRealCode()`, `DeckManager`'s dummy entries), never a real `.cdb` row in
+  practice.
+
+One remaining deliberate, documented divergence (explained with source citations in the ADR,
+Decision 4): a locale row for a card code not already loaded via `load_database()` is ignored,
+rather than queued for order-independent linking - verified that upstream's own real call
+sites never load locale before base, so that upstream capability is real but dead code in
+practice.
+
+## Card record / public API
+
+`CardRecord` (code, alias, scope, setcodes, type, attack, defense, level, left/right scale,
+race, attribute, category, link_marker, name, text, 16 auxiliary strings) - UTF-8
+`std::string` throughout, fixed-width integers, no `std::wstring`/Irrlicht/`epro::*` types,
+no presentation formatting.
+
+`CardDatabase`: `load_database()`/`load_locale()` (read-only, atomic - a file that fails
+partway through leaves the *relevant layer* exactly as it was before the call, for the base
+layer and the active locale layer independently, which is a stronger guarantee than
+`DataManager::ParseDB`/`ParseLocaleDB` themselves give), `clear_locale()` (discards the active
+locale layer and restores base text; harmless when none is active), `find()`, `contains()`,
+`size()`, and deterministic ascending-by-code iteration via `begin()`/`end()`. No fast search
+yet, no SQLite types anywhere in the public API.
+
+## Testing
+
+`data/tests/test_card_database.cpp` builds tiny synthetic SQLite databases at runtime with
+the real `datas`/`texts` table layout - **no committed `.cdb`, artwork, or CardScripts**,
+and no copied card text, per CLAUDE.md. 30 cases, deterministic, no network access:
+
+- ordinary decode, UTF-8 names/text, negative attack/defense, positive and negative packed
+  level with Pendulum scale, the Link monster defense/link-marker swap, a 64-bit race value,
+  packed setcodes (including all-zero and with-gaps), aliases, all 16 auxiliary strings, the
+  inner-join exclusion, missing-card lookup, deterministic enumeration, last-database-wins
+  across a duplicate code, card-code-0 rejection;
+- locale: name/text linked as a pair (not per-field fallback), per-slot auxiliary-string
+  fallback, `clear_locale()` restoring base strings, clearing then switching to a different
+  locale (proving no cross-locale leakage), multiple locale files within *one* active locale
+  taking last-file-wins precedence (kept as a distinct test from switching locales, so the two
+  can't be conflated), a base reload while a locale is active (the overlay stays applied, and
+  an empty auxiliary slot falls back to the *newly* reloaded base value, not a stale one), an
+  unknown-code locale row being ignored, `clear_locale()` as a harmless no-op with nothing
+  active;
+- six failure paths: missing file, non-SQLite file, two shapes of incompatible schema, that a
+  failed `load_database()` leaves a previously-loaded catalogue untouched, and that a failed
+  `load_locale()` leaves the *active locale* untouched.
+
+No test framework dependency, matching `client/`'s own choice and reasoning (ADR 0002,
+Decision 4) - a fresh copy of that tiny harness, not an include of `client/tests/`, since
+`data/` has no other reason to reference `client/` at all.
+
+CI job `card-database`, in the same cheap every-push tier as `semantic-client` (apt-installed
+`libsqlite3-dev`, no vcpkg).
+
+## Validation
+
+- **Card database facade tests:** built and ran locally (WSL, per `docs/BASELINE.md`'s own
+  "copy off `/mnt/c` first" guidance) against the vcpkg-provided SQLite headers/lib already
+  cached from a previous baseline build - `-Wall -Wextra -Wpedantic -Werror`, all 30 cases
+  pass, zero warnings. Current-head CI (`card-database` job) confirms the same on a clean
+  runner.
+- **`client/` unit tests:** built and ran locally (WSL, full-tree sync so `integration/legacy`
+  resolves correctly) - all 7 CTest suites pass, unaffected, confirming `edopro_next_client`
+  still has no SQLite/card-data dependency.
+- **Python regression suite:** `tools/generate_messages.py --check`,
+  `tools/generate_protocol_constants.py --check`, and the full `unittest discover` (33 tests)
+  all pass locally.
+- **Semantic goldens:** re-verified with `test_semantic_trace.py --require` against a
+  freshly-built `edopro_next_semantic_trace` (matches the committed goldens exactly) -
+  confirming this correction pass has zero effect on the M2 semantic decoder.
+- **`git diff --check`:** clean, no whitespace errors.
+- **Qt shell:** not built locally (no local Qt 6 install); relying on the `qt-shell` CI job,
+  which this PR does not touch.
+- **Full diff audit:** confirmed no changes under `ocgcore/` or `gframe/`, no `.cdb`/artwork/
+  script files, no build artifacts, no accidental files.
+
+## Known limitations / deliberately deferred
+
+- No fast search, no deck model, no `.ydk` reading/writing, no QML deck builder, no
+  legality/banlist logic, no card artwork/image handling - all explicitly out of scope for
+  this slice.
+- No locale name, language code, or file-discovery logic in this module - `load_locale()`/
+  `clear_locale()` are a pure data-layer state transition; choosing which files correspond to
+  which language stays a caller's job.
+- Loading from an Irrlicht-packed archive (`DataManager::LoadDB(IReadFile*)`) is not
+  supported; this module reads real filesystem paths only.
+- No global SQLite configuration (threading mode, custom VFS) - deliberately, to avoid
+  mutating process-wide SQLite state from a library other code in the same process might also
+  use.
+- Wiring `edopro_next_data` into the legacy `ygoprodll`/premake build is out of scope here.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+

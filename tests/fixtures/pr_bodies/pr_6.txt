@@ -1,0 +1,38 @@
+## Summary
+
+Closes the five known semantic gaps present in the committed YRPX fixtures. This branch does not implement the replay host or real ClientField equivalence.
+
+## Source-driven decisions
+
+| Message | Modern / compat layout | Semantic result |
+|---|---|---|
+| MSG_CONFIRM_DECKTOP | player u8, count u32/u8, each code u32 plus ignored 6/3 metadata bytes | reveal existing deck instances from vector back; identity state/events, no topology change |
+| MSG_CONFIRM_CARDS | player u8, compat skip-panel u8, count u32/u8, code u32 + controller u8 + location u8 + sequence u32/u8 | reveal tracked location references; location zero is consumed as legacy temporary display state without fabricating an instance |
+| MSG_BECOME_TARGET | count u32/u8 plus modern/narrow loc_info | current-chain target instance state plus deterministic event; no renderer highlighting or query target relationship |
+| MSG_CARD_HINT | loc_info + type u8 + value u64/u32 | raw latest card hint or description-hint delta state plus event; no localized text |
+| MSG_PLAYER_HINT | player u8 + type u8 + value u64/u32 | protocol-absolute player description-hint delta state plus event; reset by MSG_START |
+
+Source trace: docs/architecture/fixture-message-closure.md.
+
+## Fixture coverage
+
+Before: duel-chains-battle 967 decoded / 23 unsupported; duel-extended 1018 decoded / 115 unsupported.
+After: duel-chains-battle 990 decoded / 0 unsupported; duel-extended 1133 decoded / 0 unsupported. Both have zero unknown, malformed, and inconsistent packets; final invariants are clean.
+
+The golden changes are intentional: the five message types move into decoded coverage and add identity, target, and hint events at their packet positions. No query packet is newly malformed or inconsistent.
+
+## Safety and tests
+
+All handlers use the existing transactional trial-state decoder. Multi-entry confirm/target failures roll back. Hidden information is changed only by explicit protocol reveals/conceals; no card database is consulted. The observer therefore does not taint on these messages because they are genuinely decoded, not fixture-special-cased.
+
+Added tests cover modern/compat widths, deck-top ordering, location-zero confirms, multi-entry rollback, current-chain target state, hint overwrite/add/remove/reset behavior, and fixture completeness.
+
+## Scope
+
+No upstream-owned files were modified. `client/` remains Qt/Irrlicht-free and C++20; no gframe or Premake changes are included. Real fixture execution through the actual legacy ClientField is still unproved and remains the next M2 step. The M2 legacy/model equivalence roadmap item remains unchecked.
+
+## Validation
+
+Local generators, Python tests, clean CMake/Ninja semantic build with WERROR, all 7 CTest suites, semantic golden validation, and deterministic fixture completeness all pass.
+
+CI should preserve the existing six jobs: Regression harness 3.10, Regression harness 3.12, Semantic client model, Qt 6 shell, Upstream baseline observer=false, and Upstream baseline observer=true.

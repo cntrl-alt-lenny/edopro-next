@@ -1,0 +1,16 @@
+DO NOT MERGE — under review
+
+Implements the evidence-freshness brief in the permitted test, tooling and coordination-document scope.
+
+A: adds a local PR-body checker that rejects measured evidence figures and requires commands a reader can rerun. It deliberately uses a figure-shaped prohibition instead of trying to parse prose or compare claimed ranges.
+
+B: makes semantic-trace discovery fail closed unless the binary is strictly newer than every readable client source file, excluding build output. An explicit CI path remains supported. The residual limitation of mtime freshness is documented.
+
+Evidence commands:
+- `git diff --check origin/master...HEAD`
+- `python3 -m unittest discover -s tests -v`
+- `python3 tools/generate_messages.py --check`
+- `python3 tools/generate_protocol_constants.py --check`
+- `python3 tests/test_semantic_trace.py --require -v`
+- `ctest --test-dir client/build --output-on-failure`
+

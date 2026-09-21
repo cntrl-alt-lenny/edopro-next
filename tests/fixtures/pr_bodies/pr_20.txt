@@ -1,0 +1,48 @@
+**ACCEPTED by Brain 2026-09-01.** Adjudicated directly rather than via Verifier: this PR's only commit (`3a2fea97`) fell between Verifier's two reviewed ranges and was never independently reviewed. Brain confirmed it touches `docs/briefs/` and `docs/state.md` only — no code, no architecture documents, no CI, no licensing — and the owner explicitly authorised merging this stack. Head is now `7eaff943`, a clean catch-up merge of `master` whose delta versus `master` is byte-identical to `3a2fea97`'s own (4 files, 545/245). All five required checks green at that SHA, checked.
+
+Brain housekeeping plus one new brief. Stacked on PR #19 (brief 004's deliverable), so its diff shows #19's commits too — review only the single commit `3a2fea97` on top.
+
+## What this does
+
+**Brief 003 → `archive/`, status `accepted`.** PR #17 is merged (`ccbf7860`). Verifier returned zero BLOCKERs, zero SHOULD FIX and two informational NOTEs — the first round here with nothing actionable. The outcome section records what **Brain** independently reproduced rather than relaying that verdict: the bare-repo push bypass in both directions against throwaway repos, the non-tautology of the new CI check, and two mutations Verifier had not run. It also records what the round deliberately did **not** close, since two of its guards remain honest instance lists rather than class detectors.
+
+**Brief 004 → `delivered/`.** PR #19 exists and is unreviewed. Not archived — `archive/` keeps meaning *adjudicated*.
+
+**Brief 005 queued** — make `client/`, `data/`, `policy/` and `ui/` build on Windows/MSVC.
+
+## Why 005 comes before the deck-builder legality work
+
+The toolchain went in this session (MSVC 19.44, CMake 3.31.6, Qt 6.8.3 `msvc2022_64`, vcpkg SQLite3), and `AGENTS.md`'s evidence table was then run for real.
+
+**All four modules configure and 13 of 13 CTest suites pass** — `client/` 7, `data/` 3, `policy/` 2, `ui/` 1 — on a compiler this code had never been compiled with. That is genuine evidence about the code, independent of CI, and it is not what the brief is about.
+
+Three things nonetheless **fail to build**, none visible to CI because CI is Linux/GCC only:
+
+1. `client/tests/test_protocol_decoder.cpp` — `C4244` narrowing under `/W4 /WX`; `uint32_t` protocol constants into `uint8_t` tuple slots. GCC's `-Wall -Wextra` is silent on it.
+2. `data/CMakeLists.txt` — `bench_card_search` forces `/O2`; MSVC rejects that alongside a Debug build's `/RTC1` with `D8016`. A hard error, not a warning, so `/WX` is irrelevant to it.
+3. `ui/tests/CMakeLists.txt` — generated QML cache path carries a literal `..` segment Windows cannot `mkdir`. Kills `test_deckbuilder_screen`; `edopro_next_shell` itself builds and links fine.
+
+**Defect 3 blocks the deck-builder legality round**, which touches `ui/` and must produce that suite as evidence.
+
+The brief's most important question is not any of the three fixes: it asks whether the narrowing in (1) also exists in **production** code. Brain only reached the test file — the library linked before the tests compiled. A narrowing conversion in a decoder parsing untrusted `.cdb` and network bytes is a different conversation from one in a test fixture.
+
+## Also recorded
+
+- **The owner's decision** that the deck builder gets a visible format/ruleset picker, resolving brief 001 §7 option (b). Needs an ADR when the implementing round lands.
+- **A count this project has been carrying wrong.** Brief 001's outcome, `docs/state.md` and brief 004 disagree on how many citation defects `deck-builder-legality.md` had — "seven SHOULD FIX", "six further", and an itemisation summing to five categories or eight instances. Builder found only **two** of three claimed overshoot ranges and declined to invent a third to match my number. Brief 004's review is settling it; nothing should propagate these counts meanwhile.
+
+## Evidence
+
+```
+$ python -m unittest discover -s tests
+Ran 69 tests in 9.529s
+OK
+```
+
+Only `docs/` changed in this commit. No cmake/ctest cycle run *for this commit* — it is documentation, and a green build could not have failed for it. The four cycles quoted in the brief were run separately, against `master`, to establish the defects it describes.
+
+## Note on state.md
+
+Its toolchain section is **rewritten, not deleted** — and only after the four cycles actually ran, not on the strength of an install. It now records what builds, what does not, and two operational facts about Windows that were true and documented nowhere (`cmake -G Ninja` needs `vcvars64.bat`; Qt tests need Qt's `bin` on `PATH` or CTest reports `BAD_COMMAND`, which reads as a build failure and is not one).
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

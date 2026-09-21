@@ -1,0 +1,38 @@
+**ACCEPTED by Brain 2026-09-01** — Verifier reviewed this exact head (`7639bf2d`); Brain independently re-derived both UNPROVEN CLAIMs and the scope finding; the five required checks are green at this SHA.
+
+Implements brief 004 (`docs/briefs/active.md` on `meta/round-2-queue` at `90194888`, PR #18). Audits every upstream (`gframe/`/`ocgcore/`) citation across the seven M3 data/deck architecture documents, closes the eight already-established findings (verified against source myself, not re-derived from the prior report), and finds and fixes fourteen more — three of them wrong behavioral claims, not just stale line numbers.
+
+## Coverage table
+
+| Document | Checked | Held | Stale | Overstated | Wrong | Uncited (verified true) |
+|---|---|---|---|---|---|---|
+| `card-database.md` | 28 | 27 | 0 | 1 | 0 | 0 |
+| `deck-model.md` | 23 | 19 | 2 | 1 | 0 | 1 (also inaccurate — fixed) |
+| `card-search.md` | 29 | 24 | 3 | 1 | 3 | 0 |
+| `deck-legality.md` | 45 | 39 | 5 | 0 | 1 | 2 (left uncited — see report) |
+| `deck-builder-ui.md` | 9 | 7 | 0 | 0 | 2 | 0 |
+| `ydk-interoperability.md` | 18 | 13 | 5 | 0 | 0 | 5 (left uncited — see report) |
+| `deck-builder-legality.md` | ~44 | ~35 | 7 | 0 | 3 | 0 |
+
+Every non-"held" row is fixed in place, except the "uncited (verified true)" claims in `deck-legality.md`/`ydk-interoperability.md`, which I checked and confirmed accurate but did not add citations to — see the completion report for why.
+
+## Most serious finding
+
+`card-search.md`§1.2's `CheckCardProperties` gate: claimed the "show anime cards"/whitelist exception applies to all three of `TYPE_TOKEN`, `SCOPE_HIDDEN`, and non-official `ot`. It doesn't — `&&` binds tighter than `||` in the actual condition, so the exception is scoped to the non-official-`ot` clause only. Token and Hidden-scope cards are excluded **unconditionally** by upstream's own search; nothing reveals them. A future implementer reading only the doc would have built a visibility rule upstream doesn't have.
+
+## Systematic cause (required investigation 5)
+
+Two distinct, nameable classes, not seven unrelated slips:
+
+1. **Line-range citations that stop one line short of a function's real closing brace.** Present in 5 of 7 documents, ~15 instances total, all in the same direction (undershoot, never counting the standalone `}` as part of the function). The two *overshoot* instances found in Round 1 (`deck-builder-legality.md`'s `push_side`, extending 4 lines past its own close into `pop_main`) are the outlier — same document, same trio of near-identical sibling functions, looks like scrolling past the right stopping point once and reusing the range. A future automated check is plausible here: given a cited "whole function" range and the function name, a brace-matching scan of the cited file could confirm the range's end line is exactly the closing `}` — this is the kind of check brief 003's framework-hardening work suggests this project is willing to build.
+2. **Claiming a behavior is symmetric across a pair of functions/branches after verifying only one side.** Three separate instances, three separate documents: `deck-model.md`'s `LoadDeck` reclassification (main→extra is type-checked, extra→main is not), `card-search.md`'s `deck_sort_*` comparators (three of five are type-aware, two aren't, and the type-aware ones don't even order the same way as each other), `deck-builder-ui.md`'s `ShowCardInfo` attack/defense check (the Link branch never checks defense at all). Fewer instances than class 1, but higher-value: these are wrong behavioral claims, not stale numbers.
+
+## Evidence
+>
+> **Evidence corrected 2026-09-01 (Brain).** The two figures above originally read “seven files, 173 insertions / 100 deletions” and “56 ran”. Both were accurate when written — of `90194888..6d3aadbf`, before this branch merged `master` at `ea55d140` — and both went stale at that merge, which is also what grew the test count from 56 to 69. Neither was ever true of the range this PR actually merges. Flagged as two UNPROVEN CLAIMs by Verifier and reproduced independently by Brain. Recorded rather than silently overwritten, because `strict: true` makes this failure mode recur: every branch update produces a new head and silently rots every figure in the PR body.
+
+- `git diff --stat ccbf7860..7639bf2d` (the full range this PR merges) — **10 files, 620 insertions, 279 deletions**: the seven `docs/architecture/` documents, plus `docs/state.md`, `docs/briefs/active.md` and `docs/briefs/delivered/003-…`, which this branch carries from its two round-opening commits (`c7deff50`, `90194888`) rather than from the audit itself.
+- `python3 -m unittest discover -s tests` at `7639bf2d` — **69 tests, 0 failures**. The 10 M1/M2 semantic-trace tests skip unless `client/` is built, and pass when it is.
+- Did not run cmake/ctest — documentation-only change, nothing here could affect a build regardless of what's installed on the machine.
+
+Full completion report — every citation checked, mutation... no, this brief has no guards to mutation-test; every fix's source re-read, the two near-misses that turned out to be correctly-described deliberate divergences, and open questions — to follow via the framework's usual handoff.

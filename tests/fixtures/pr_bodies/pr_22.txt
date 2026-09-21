@@ -1,0 +1,69 @@
+**DO NOT MERGE — under review**
+
+Brain housekeeping. Stacked on PR #21, so the diff shows #19/#20/#21's commits too — review only the single commit `9e1d198b` on top.
+
+## Why this exists
+
+`master` ← #19 ← #20 ← #21. #20 and #21 each carry #19's commits, so one defect in #19 blocks all three. There is one BLOCKER in #19 and one in #21, and **nothing merges until both are closed.**
+
+### BLOCKER in PR #19 — `card-search.md` §1.4
+
+Exactly the failure mode that round was told to hunt for: a correction that replaces a wrong claim with a differently wrong one. The five comparators in `gframe/data_manager.cpp` do not share an ordering:
+
+| Function | Actual order |
+|---|---|
+| `deck_sort_lv` | `get_monster_card_type` **first**, then level, attack, defense |
+| `deck_sort_atk` | attack, defense, level, then type |
+| `deck_sort_def` | defense, attack, level, then type |
+| `deck_sort_name` | name compare only — no `card_sorter`, no type check |
+| `deck_sort_passcode_descending` | raw `code` only |
+
+The document's **previous** wording ("monster type, then the chosen stat") was true of `_lv` and false of `_atk`/`_def`. Its **new** wording is exactly the reverse. Neither is true of all three. Verifier found it; Brain re-derived it from source.
+
+### BLOCKER in PR #21 — the QML mirror goes stale
+
+Found by Brain. **Verifier never saw PR #21** — it postdates that review.
+
+`ui/tests/.qml_mirror` refreshes only at CMake *configure* time, and editing a QML file does not trigger a reconfigure. Reproduced with a marker probe on the primary dev machine, where all five mirror entries are copies rather than symlinks:
+
+```
+appended "// BRAIN-STALENESS-PROBE-12345" to ui/qml/screens/DeckBuilderScreen.qml
+cmake --build ui/build --parallel        (no explicit reconfigure)
+
+real   contains marker: True
+mirror contains marker: False
+```
+
+`test_deckbuilder_screen` compiled and tested the *previous* file and reported green.
+
+Blocking rather than untidy for two reasons: the very next round edits exactly those five files and cites exactly that test as its evidence; and **CI cannot catch it**, because `file(CREATE_LINK ... SYMBOLIC)` succeeds on Linux so the pipeline only ever exercises the symlink path. Windows-only and invisible to the pipeline — the same shape as the three defects PR #21 exists to fix.
+
+Builder disclosed this path as un-stress-tested in its own open questions. Honest, and still blocking.
+
+## What PR #21 got right, independently confirmed
+
+Not everything about that round is in question — Brain reproduced these in a clean throwaway worktree, not Builder's:
+
+- `client/` builds under `/W4 /WX` with **zero warnings**, 7/7 tests pass.
+- `ui/` builds 100/100 and both suites pass, including `test_deckbuilder_screen`, which could not be built at all before that round.
+- CI green at `84b400c6` including both non-required upstream-baseline legs.
+- Only test code and build files touched — no production C++, no warning suppressed.
+- Its answer to the round's central question holds: **production code carries no narrowing-conversion pattern.** Only the one test file did.
+
+## Brief 006's shape
+
+It deliberately **does not create a branch**. Both corrections go onto the branches that already carry the work, as new commits, with no rewriting of reviewed heads — a corrective round amends what it corrects rather than opening a parallel copy. That is the one place this round departs from "one branch per task", and the brief says so rather than leaving it to look like a mistake.
+
+Brief 005 moves to `delivered/`, not `archive/` — it is not adjudicated while its correction is outstanding.
+
+## Evidence
+
+```
+$ python -m unittest discover -s tests
+Ran 69 tests in 9.560s
+OK
+```
+
+Only `docs/` changed in this commit. No cmake/ctest cycle for it — it is documentation and a green build could not have failed for it. The builds and the staleness probe quoted above were run separately, against PR #21's head in a throwaway worktree since removed.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

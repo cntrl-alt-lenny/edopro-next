@@ -1,0 +1,255 @@
+## Summary
+
+Adds a presentation-independent deck legality/policy foundation (M3D2) as a
+new sibling module, `policy/` - **not** wired into any UI in this slice.
+Reproduces `gframe/deck_manager.cpp`'s real `DeckManager::CheckDeckSize`/
+`CheckDeckContent`/`CheckCards` and `gframe/generic_duel.cpp`'s
+`PlayerReady` sequencing exactly, read from source and cited line-by-line
+in `docs/architecture/deck-legality.md`.
+
+**This is a foundation only.** No QML/Qt changes. Nothing in `ui/` calls
+this module yet - a deck built in the QML deck-builder still shows no
+legality information at all. See
+`docs/architecture/deck-legality.md`§0/§13 and
+[ADR 0007](docs/adr/0007-deck-legality-policy-module.md).
+
+## What's implemented
+
+- **`LfList` + `parse_lflist()`/`load_lflist()`** (`policy/include/edopro_next/policy/lf_list.h`,
+  `policy/src/lf_list.cpp`) - a from-scratch banlist parser matching
+  `DeckManager::LoadLFListSingle`'s exact grammar: `!Name` sections,
+  a `$whitelist` *prefix* match (not exact equality), the exact hash
+  formula, and the exact quirks (a content line's literal-space parsing
+  behaviour where a second space breaks the count parse; a duplicate code
+  overwrites `content` but still XORs the hash twice).
+- **`validate_deck()`** (`policy/include/edopro_next/policy/deck_validation.h`,
+  `policy/src/deck_validation.cpp`) - the single first-error validator,
+  reproducing upstream's exact precedence: deck size (Main/Extra/Side) ->
+  unknown-card condition -> forbidden types -> Legend monster/spell/trap ->
+  Skill count -> per-card (Main then Extra then Side): scope ->
+  section-placement -> shared three-copy cap -> LFList/whitelist
+  limitation.
+- **Two upstream states kept deliberately distinct**: a null `LFList*`
+  (skips every per-card check entirely) vs. a concrete, empty "N/A" list
+  (still enforces scope/zone/copy-count) - modelled as
+  `std::optional<LfList>`, not collapsed into one.
+- **The `CHECK_UNOFFICIAL` magnitude quirk** (`ot > 0x3`, not a bitmask
+  test) preserved exactly, not "fixed" - matching this project's practice
+  of reproducing observed upstream behaviour faithfully (e.g. the
+  level-magnitude wraparound in `data/src/card_database.cpp`).
+- **`ValidationPolicy` has no default constructor.** Deck sizes, allowed
+  scope, forbidden types, ritual placement, and the LFList to validate
+  against must all be supplied explicitly - this project's UI has no
+  networking/hosting session yet to derive them from, and this module must
+  never author "the" rules of Yu-Gi-Oh (CLAUDE.md's "the UI must not
+  implement game rules", extended to this layer).
+
+## The one deliberate hash-semantic divergence: the LFList hash's undefined-behavior domain
+
+Upstream's own hash expression (`gframe/deck_manager.cpp:80`) computes two
+shift amounts directly from a file-supplied `count`. C++ requires each
+shift amount to be in `[0, 31]` for a 32-bit operand
+([expr.shift]) - solving that constraint gives `count in [-26, 4]` as the
+**only** domain in which upstream's own expression is defined at all
+(derived from the standard, not assumed - see
+`docs/architecture/deck-legality.md`§10). Every real banlist count in
+actual use (0-3) sits comfortably inside this range.
+
+Outside it, this module fails closed: the line is rejected entirely, from
+both `content` and `hash`, exactly like a syntactically malformed line -
+rather than reproducing undefined behaviour or inventing a "safe" hash
+formula upstream itself never defined and calling it source-equivalent.
+`hashUnsafeCountDomainFailsClosed` pins the exact boundary.
+
+## Update: two follow-up correction rounds (2 commits)
+
+A fresh Codex review on the initial head found one real bug; a second fresh
+review on the fix found two more. All three are fixed, with regression
+coverage:
+
+- **`ValidationPolicy` was a plain aggregate**, so `ValidationPolicy
+  policy;` (default-initialization) left `allowed_cards` - a scalar enum
+  with no in-class member initializer - genuinely **indeterminate**,
+  which `validate_deck()`'s own switch over it then reads as undefined
+  behavior; `ValidationPolicy{}` was safer but still silently picked the
+  enum's first value and defaulted `lflist` to null. Fixed by replacing
+  the aggregate with one mandatory constructor requiring every field as a
+  positional argument, with no default arguments - the type is no longer
+  default-constructible at all, so an omitted field is now a compile
+  error.
+- **`load_lflist()` used `buffer << file.rdbuf()`**, which bypasses
+  `basic_istream::read()`'s own sentry/state-update machinery, so a
+  genuine mid-read I/O error (e.g. `path` naming a directory on some
+  platforms) could leave `file` reporting `good()` with silently
+  empty/truncated data - contrary to this function's documented
+  all-or-nothing contract. `data/src/ydk.cpp`'s `load_ydk()` already
+  carries the fix (a sized `file.read()` loop) with its own empirical
+  verification note for the identical operation; `load_lflist()` now
+  reuses it. New test: `loadLflistDirectoryPathFailsCleanly`.
+- **`DeckValidationError::card`'s doc comment omitted `ForbiddenType`**
+  from the list of whole-deck-level error types that leave `card` at
+  `None` (`TypeCount()` only reports whether any card matched, never
+  which one) - corrected, with `forbiddenTypeFailsBeforeLegendAndSkillChecks`
+  now asserting `card` stays `None`.
+
+Test count at this point: 23 functions in `test_lf_list.cpp` + 26 in
+`test_deck_validation.cpp` = 49, across 2 CTest targets, all passing.
+
+## Update: third follow-up correction round (1 commit)
+
+A fresh Codex review on the second head found one more real issue in
+`load_lflist`'s neighbour, `parse_lflist`: `std::stol()` returns a `long`,
+64 bits wide on LP64 platforms (most 64-bit Linux/macOS) - the parsed count
+was narrowed to `int32_t` **before** `is_hash_safe_count()` ran, so an
+adversarial value like `4294967296` (2^32) wrapped to `0` - a value
+**inside** the documented `[-26, 4]` safe domain - silently defeating the
+whole safety net for exactly the input it exists to catch. The same input
+behaves differently on a platform where `long` is only 32 bits (e.g.
+Windows): `std::stol()` itself throws for it there, landing in the
+unrelated "malformed" branch instead - a platform-dependent outcome for
+identical input.
+
+Fixed by comparing the wide, not-yet-narrowed `std::stol()` result directly
+against the safe domain - `[-26, 4]` is a strict subset of `int32_t`'s own
+range, so this single check also guarantees the later narrowing cast is
+safe, and no out-of-domain value is ever narrowed first. New regression:
+`countValueThatWouldWrapToASafeValueIsStillRejected`.
+
+Test count at this point: 24 functions in `test_lf_list.cpp` + 26 in
+`test_deck_validation.cpp` = 50, across 2 CTest targets, all passing.
+
+## Update: fourth follow-up correction round (1 commit)
+
+A fresh Codex review on the third head found the **identical class of bug
+just fixed for the count field, but for the code field**: `std::stoul()`
+also returns a wide, platform-dependent type (`unsigned long`, 64 bits on
+LP64). The parsed code was narrowed to `uint32_t` **before** being
+range-checked, so an adversarial value like `4294967297` (2^32 + 1)
+wrapped to code `1` - silently applying that line's restriction to an
+entirely unrelated, legitimate card - while `4294967296` wrapped to code
+`0` and was silently discarded as if it were the ordinary, deliberate
+code-0 no-op. Both differ by platform depending on `unsigned long`'s width.
+
+Fixed the same way: the wide `std::stoul()` result is range-checked against
+`uint32_t::max()` before any narrowing, so an out-of-range code now falls
+through to the same "malformed code or count" rejection as any other
+unparseable line, on every platform. New regressions:
+`codeValueThatWouldWrapToAnotherCardsCodeIsRejected`,
+`codeValueThatWouldWrapToZeroIsRejectedNotTreatedAsANoOp`.
+
+Test count at this point: 26 functions in `test_lf_list.cpp` + 26 in
+`test_deck_validation.cpp` = 52, across 2 CTest targets, all passing.
+
+## Update: final source-fidelity correction (1 commit)
+
+The last two correction rounds above (the count-field and code-field
+narrowing fixes) **overreached**: they rejected any wide `std::stol()`/
+`std::stoul()` result outside a safe range *before* upstream's own
+narrowing cast ran, instead of scoping the check to the *narrowed* value
+the way this module's own authorized divergence was originally meant to.
+This silently rejected lines upstream's own conversion would have accepted
+- e.g. `4294967296` as a count narrows (via upstream's own
+`static_cast<int32_t>`) to `0`, a value squarely inside the hash-safe
+domain, so upstream would hash it normally; the interim fix rejected it
+outright instead. For the code field there was never an authorized
+divergence at all - a code's own narrowing carries no shift-undefined-
+behavior risk, so `4294967297` narrowing to code `1` (applying this line's
+restriction to a real, if unrelated, card) is upstream's own real,
+faithfully-reproduced behavior, not a bug.
+
+Corrected by restoring upstream's exact parse-then-narrow order
+(`gframe/deck_manager.cpp:75-78`) for both fields, with the hash-safety
+check (the one genuinely authorized divergence) now applied strictly to
+the narrowed `int32_t count` - matching this project's own established
+`.ydk`-codec precedent (`data/src/ydk.cpp`, `docs/architecture/deck-model.md`§2.5)
+for reproducing `std::stoul`'s native-width, ABI-dependent parsing exactly
+rather than normalizing it into a new cross-platform grammar. The three
+tests that encoded the wrong ("reject on wide value") contract were
+replaced with ABI-aware tests mirroring `data/tests/test_deck_ydk.cpp`'s
+own `if constexpr(std::numeric_limits<...>::max() ...)` pattern, plus new
+coverage for `-1` as a code (unsigned wraparound, not ABI-dependent) and a
+value far beyond any native integer width. Docs (`deck-legality.md`,
+ADR 0007) and header comments were corrected to state the divergence's
+true, narrow scope, including the toolchain evidence (GCC's documented
+implementation-defined narrowing under C++17, standardized under C++20)
+this project actually relies on. The malformed-UTF-8 handling of LFList
+section names was also audited and precisely documented as a real, narrow,
+disclosed divergence from `BufferIO::DecodeUTF8` (valid UTF-8 round-trips
+identically; malformed UTF-8 does not, and this module does not attempt to
+reproduce upstream's own NUL-substitution/early-truncation behavior for
+it).
+
+Final test count: **29 functions in `test_lf_list.cpp` + 26 in
+`test_deck_validation.cpp` = 55**, across 2 CTest targets, all passing.
+
+## Explicit non-goals
+
+No QML legality UI, no Qt adapters, no "collect every finding" validator
+mode (deferred - see ADR 0007 Decision 2), no automatic Main/Extra
+classification, no mutation/normalization of a `Deck`, no `.ydke`, no
+artwork, no structured search filters or legacy sigil grammar, no
+controller work, no networking/`HostInfo` integration, no upstream `.ydk`
+interoperability harness, no `gframe/`/`ocgcore/` changes.
+
+## Test plan
+
+- [x] `data/` WERROR build clean; 3/3 tests pass - unchanged by this PR
+- [x] `client/` WERROR build clean; 7/7 CTest suites pass - unchanged by
+      this PR
+- [x] Python generator checks, structural (M1) and semantic (M2) golden
+      traces, both reproducing byte-for-byte - unchanged by this PR
+- [x] `ui/` clean configure+build, zero compiler warnings; existing tests
+      pass 100% - unchanged by this PR
+- [x] New `policy/` module: WERROR-clean build, zero compiler warnings, no
+      Qt/Irrlicht/gframe/ocgcore dependency (proven by what the CMake
+      target actually links, not just a comment)
+- [x] 55 test functions across 2 CTest targets (`lf_list`,
+      `deck_validation`), all passing - including adversarial precedence
+      tests (bad size + unknown card, forbidden type + too-many-Legends,
+      Main-scope-error + later-copy-count-error, Extra-error +
+      Side-error, a fourth copy spread across all three sections, alias
+      copy-sharing, ordinary vs. whitelist LFList alias fallback with and
+      without the artwork-offset exception, null-vs-N/A LFList, the
+      Codex-found regressions above, and the ABI-aware conversion-order
+      tests from the final correction round)
+- [x] Adversarially verified against upstream source by 4 independent
+      review passes (hash-domain math re-derived from the C++ standard
+      independently, not trusted from code comments; full
+      statement-by-statement ordering-fidelity check; alias/scope lookup
+      semantics; scope-creep/API-surface audit) - zero mismatches found
+- [x] `git diff --check` clean
+- [x] Full diff audited against **`0e79030d`, this PR's actual base**
+      (corrected - a stale reference to PR #11's own base, `e56c94fb`, had
+      been carried over into this PR's body by mistake): no
+      `gframe/`/`ocgcore/`/`data/`/`client/`/`ui/` changes, no legality UI,
+      no `.cdb`/artwork/CardScripts
+- [x] CI green on all seven job families on head `423029f4` (superseded)
+- [x] CI green on all seven job families on head `b5649e7a` (superseded)
+- [x] CI green on all seven job families on head `0252b534` (superseded)
+- [x] CI green on all seven job families on head `4bb16f1f` (superseded)
+- [x] CI green on all seven job families on head `296da23e` (superseded)
+- [x] CI green on all seven job families on head `1b640c18` (superseded)
+- [x] CI green on all seven job families on the new final head `ede2f1c2`
+
+## Update: final documentation consistency cleanup (1 commit)
+
+External review found a genuine contradiction left over from the previous
+correction pass's own encoding audit: `deck-legality.md`'s LFList-grammar
+summary (§9) still said `LfList::name`'s bytes were "identical either way"
+to upstream's decoded `std::wstring`, contradicting `LfList::name`'s own
+(already-corrected) doc comment, which documents malformed UTF-8 as a real
+divergence. Fixed to state the equivalence claim applies only to
+well-formed UTF-8, and to name the malformed-UTF-8 divergence explicitly.
+Also corrected "the one deliberate divergence" (now too broad, since the
+encoding behavior is a second, separate divergence) to "the one deliberate
+hash-semantic divergence," with an explicit cross-reference between the
+two. **Documentation and comment wording only** - no implementation, test,
+CMake, CI, or UI file changed, verified by diff.
+
+RECOMMENDATION: READY FOR EXTERNAL REVIEW — DO NOT MERGE
+
+
+
+
+
+
