@@ -128,13 +128,13 @@ This distinction is the single most useful thing in this file.
   covered either.
 - Semantic coverage beyond the 34 decoded message types.
 - **That our layers behave the same on every platform we support.** Six
-  divergences have been found so far that Linux CI could not see. Brief 011
-  corrected the sixth runtime case: both loaders now reject directories and
-  other known non-regular inputs before opening, defer status errors to the
-  open diagnostic, and use a Windows native-handle supplement for named
-  pipes. The change was built and tested on this macOS machine, but Windows/
-  MSVC was not exercised here. The decision, limits, and recommended
-  cross-platform matrix are in
+  divergences have been found so far that Linux CI could not see. Brief 011's
+  C1-C3 and POSIX half of C4 are evidenced on this macOS machine: both
+  loaders reject directories and other known POSIX non-regular inputs before
+  opening and defer status errors to the open diagnostic. The Windows native-
+  handle supplement for named pipes is written but uncompiled and unverified;
+  Windows/MSVC was not exercised here and no Windows named-pipe test exists.
+  The decision, limits, and recommended cross-platform matrix are in
   [`architecture/read-failure-class.md`](architecture/read-failure-class.md)
   and ADR 0009; platform equality remains unproven until those jobs run.
 
@@ -253,17 +253,19 @@ reconciles its scanner with its adoption guidance and provides declared project
 namespaces. The archived record notes one wording nit: “newly installed” should
 have said “files adoption would otherwise install.”
 
-Brief 008's four corrections were closed by Brief 011 and its record is now
-archived with that close-out:
+Brief 008's record remains archived as rejected. Brief 011 was delivered and
+reopened after review at `3b15ad56`; its R1-R4 corrections are being applied
+on PR #24. The POSIX evidence is current, but the Windows handle half remains
+open:
 [`briefs/archive/008-2026-09-01-read-failure-predicate.md`](briefs/archive/008-2026-09-01-read-failure-predicate.md).
 Brief 009 remains a delivered record, not active work:
 [`briefs/delivered/009-2026-09-01-evidence-freshness.md`](briefs/delivered/009-2026-09-01-evidence-freshness.md)
 is delivered and unadjudicated. PR #25 and PR #26 are closed with their
 branches kept; #25's queue record is reflected in the delivered 008/009 files,
 and #26's work remains on `meta/evidence-freshness` to be re-landed as its own
-reviewed round. PR #24 remains open and rejected; Brief 011 is active at the
-new head on `m3/read-failure-predicate`, with its implementation awaiting
-review and without assuming Windows/MSVC evidence is available here.
+reviewed round. PR #24 remains open and rejected; Brief 011 is delivered and
+reopened at the new head on `m3/read-failure-predicate`, without assuming
+Windows/MSVC evidence is available here.
 
 ## Local toolchain — state, and what still does not build
 
@@ -360,21 +362,23 @@ not fold it into a narrative section.)*
   enforce provider-shaped lane names or branch namespaces. The framework must
   provide a project-declared namespace mechanism and reconcile that scanner
   rule with its adoption guidance before this can close.
-- **Brief 011 / Brief 008** — PR #24 remains open and rejected while the
-  Brief 011 implementation is reviewed. C1-C4 are closed in the working
-  tree; the Windows/MSVC behavior still needs platform evidence. The broader
-  predicate and platform-divergence recommendation are recorded in the new
-  architecture document and ADR, but no CI change was made.
+- **Brief 011 R2 — Windows handle semantics** — PR #24 remains open and
+  rejected while the delivered brief is reopened for correction. The
+  `CreateFileW`/`GetFileType` branch is written but has never been compiled or
+  run, and no test exercises a Windows named pipe. C1-C3 and the POSIX half
+  of C4 are evidenced; the Windows half of C4 is an open item. The predicate
+  and platform-divergence recommendation are recorded in the architecture
+  document and ADR, but no CI change was made.
 - **Brief 009** — delivered but unadjudicated; branch `meta/evidence-freshness`
   must be reviewed and re-landed as its own round.
 
 ## Recommended next slice
 
 **Review Brief 011 — the read-failure class** on
-`m3/read-failure-predicate`. Verify the C1-C4 close-out, the non-terminating
-file predicate, and the platform-divergence recommendation before Brain
-decides whether PR #24 can be merged. Windows/MSVC evidence remains a known
-gap, and no CI policy change is part of this round.
+`m3/read-failure-predicate`. Verify R1-R4, the non-terminating-file predicate,
+and the platform-divergence recommendation before Brain decides whether PR
+#24 can be merged. Windows/MSVC evidence remains a named gap, and no CI policy
+change is part of this round.
 
 **After Brief 011, re-land Brief 009** from `meta/evidence-freshness` as its
 own reviewed round. Do not build on its outcome before adjudication.

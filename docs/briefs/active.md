@@ -1,6 +1,34 @@
 Brief-ID: 011-2026-09-20-read-failure-class
 
-Status: active
+Status: active — delivered and reopened
+
+## Reopened corrections R1-R4
+
+This brief was delivered in PR #24 and reopened after review at `3b15ad56`.
+The loader behavior is accepted as unchanged for this correction round; the
+remaining work is to make the contracts, evidence claims, test output, and
+CI report truthful.
+
+- **R1 — public contracts and contract test.** The `ydk.h` and `lf_list.h`
+  sentences must say that opening or reading failure makes `ok` false, while
+  a path inspection/status error alone is deferred and may still produce
+  `ok == true` if opening and reading succeed. The contract test must reject
+  the old false sentence and assert that documented status-error exception.
+  Disclose its property change by name: before, it checked only that the
+  words "path inspection", "opening", and "reading" appeared and that
+  "exactly when" did not; after, it checks the positive predicate, the
+  status-error exception, and absence of the old sentence.
+- **R2 — evidence scope.** Brief 008 C1-C3 and the POSIX half of C4 are
+  closed with evidence. The Windows `CreateFileW`/`GetFileType` half of C4 is
+  written, uncompiled, and unverified because no Windows named-pipe test
+  exists and this round runs on macOS. Rescope PR and architecture claims to
+  that boundary, and record the Windows handle case as an open item in
+  `docs/state.md`.
+- **R3 — visible platform skips.** The dangling-symlink and `/dev/zero`
+  early returns in both the `data/` and `policy/` test suites must print an
+  unambiguous `SKIP` line rather than report an indistinguishable pass.
+- **R4 — exact-head CI.** Query and report the check-run conclusions for the
+  final head SHA; the prior report omitted this evidence.
 
 ## MODE: IMPLEMENTATION
 

@@ -15,6 +15,7 @@
 #include <atomic>
 #include <cstdint>
 #include <filesystem>
+#include <iostream>
 #include <limits>
 #include <string>
 
@@ -463,8 +464,11 @@ EDOPRO_DATA_TEST(a_stat_failure_defers_to_the_open_failure) {
 	std::filesystem::remove(target, cleanup_error);
 	std::error_code create_error;
 	std::filesystem::create_symlink(target, link, create_error);
-	if(create_error)
+	if(create_error) {
+		std::cout << "  SKIP a_stat_failure_defers_to_the_open_failure: cannot create symlink: "
+				  << create_error.message() << "\n";
 		return;
+	}
 
 	const auto result = edopro_next::data::load_ydk(link);
 	std::filesystem::remove(link, cleanup_error);
@@ -474,8 +478,10 @@ EDOPRO_DATA_TEST(a_stat_failure_defers_to_the_open_failure) {
 
 EDOPRO_DATA_TEST(a_non_regular_file_is_rejected_before_opening) {
 	const std::filesystem::path device = "/dev/zero";
-	if(!std::filesystem::exists(device))
+	if(!std::filesystem::exists(device)) {
+		std::cout << "  SKIP a_non_regular_file_is_rejected_before_opening: /dev/zero is unavailable\n";
 		return;
+	}
 	const auto result = edopro_next::data::load_ydk(device);
 	EDOPRO_DATA_CHECK(!result.ok);
 	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + device.string());

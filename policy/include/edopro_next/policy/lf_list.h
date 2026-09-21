@@ -121,9 +121,11 @@ struct LfListParse {
 LfListParse parse_lflist(std::string_view text);
 
 // The result of load_lflist(). Unlike LfListParse, this has a genuine
-// failure state: `ok` is false when path inspection, opening, or reading
-// fails, in which case `lists` and `ignored` are both left empty
-// rather than partially populated.
+// failure state: `ok` is false when opening or reading fails. Directories and
+// other known non-regular files are rejected before opening. A path inspection
+// error alone is not a failure: if the path then opens and reads successfully,
+// `ok` is true. In every failure case, `lists` and `ignored` are both left
+// empty rather than partially populated.
 struct LfListLoadResult {
 	bool ok = false;
 	std::string error;

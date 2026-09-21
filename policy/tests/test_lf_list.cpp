@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <optional>
 
@@ -504,8 +505,11 @@ EDOPRO_POLICY_TEST(loadLflistStatFailureDefersToOpenFailure) {
 	std::filesystem::remove(target, cleanup_error);
 	std::error_code create_error;
 	std::filesystem::create_symlink(target, link, create_error);
-	if(create_error)
+	if(create_error) {
+		std::cout << "  SKIP loadLflistStatFailureDefersToOpenFailure: cannot create symlink: "
+				  << create_error.message() << "\n";
 		return;
+	}
 
 	const auto result = load_lflist(link);
 	std::filesystem::remove(link, cleanup_error);
@@ -515,8 +519,10 @@ EDOPRO_POLICY_TEST(loadLflistStatFailureDefersToOpenFailure) {
 
 EDOPRO_POLICY_TEST(loadLflistNonRegularFileIsRejectedBeforeOpening) {
 	const std::filesystem::path device = "/dev/zero";
-	if(!std::filesystem::exists(device))
+	if(!std::filesystem::exists(device)) {
+		std::cout << "  SKIP loadLflistNonRegularFileIsRejectedBeforeOpening: /dev/zero is unavailable\n";
 		return;
+	}
 	const auto result = load_lflist(device);
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + device.string());

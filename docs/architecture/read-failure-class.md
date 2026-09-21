@@ -27,12 +27,12 @@ This deliberately keeps `ifstream` for the actual portable file read and uses
 native Windows inspection only where the standard filesystem classification is
 known to be insufficient. It is not portable by construction: it is a
 platform-aware preflight whose Windows supplement must be maintained with the
-Windows API contract. It does, however, fail closed for the non-terminating
-classes this round investigated: POSIX FIFOs and devices are rejected by
-`status()`, and Windows named pipes are rejected by `GetFileType()` when a
-native handle can be opened. A path changing type between preflight and the
-subsequent `ifstream` open remains a normal filesystem race and is not claimed
-to be eliminated here.
+Windows API contract. The POSIX half of this decision was compiled and tested
+on macOS; the Windows supplement has not been compiled or exercised here, and
+no test currently opens a Windows named pipe. Its intended result is therefore
+documented below as an open platform item, not claimed as observed evidence.
+A path changing type between preflight and the subsequent `ifstream` open
+remains a normal filesystem race and is not claimed to be eliminated here.
 
 The observable classification is:
 
@@ -42,15 +42,15 @@ The observable classification is:
 | Permission-denied path | status may succeed or fail; open decides | same | open diagnostic |
 | Directory or symlink to directory | directory | directory | `failed to read file` |
 | FIFO | non-regular | not applicable | `failed to read file` before blocking |
-| Named pipe | not applicable | non-disk handle | `failed to read file` before `ifstream` |
-| Device such as `/dev/zero` | non-regular | non-disk handle | `failed to read file` before blocking |
-| Zero-byte regular file | regular | disk handle | successful empty parse |
-| Dangling symlink | status error; open attempted | open attempted | `failed to open file` |
+| Named pipe | not applicable | intended non-disk-handle rejection; uncompiled and untested | expected `failed to read file` before `ifstream`; not evidenced here |
+| Device such as `/dev/zero` | non-regular | intended non-disk-handle rejection; uncompiled and untested | `failed to read file` before blocking on POSIX; Windows not evidenced here |
+| Zero-byte regular file | regular | intended disk-handle path; uncompiled and untested | successful empty parse on POSIX; Windows not evidenced here |
+| Dangling symlink | status error; open attempted | open attempted; Windows not exercised | `failed to open file` on POSIX; Windows not evidenced here |
 
-`NUL` on Windows is intentionally not described as a successful readable
-regular file: its native handle is not `FILE_TYPE_DISK`, so it is rejected by
-the same fail-closed rule. The public headers therefore enumerate inspection,
-opening, and reading failures rather than making a false biconditional claim.
+The Windows code is intended to reject `NUL` because its native handle is not
+`FILE_TYPE_DISK`, but that branch is uncompiled and unverified in this round.
+The public headers therefore enumerate inspection, opening, and reading
+failures rather than making a false biconditional claim.
 
 ## Mechanism recommendation
 
@@ -69,11 +69,14 @@ non-required initially while collecting reliability data; the owner decides
 whether to make any new check required. This is a recommendation only: this
 round does not edit `.github/workflows/` or branch protection.
 
-The matrix would catch Apple libc++ runtime behavior, MSVC diagnostics and
-Windows handle semantics, and the existing Linux leg would remain the cheap
-baseline. It would not prove behavior on platforms absent from the matrix,
-would not catch a runtime class for which no test exists, and would not replace
-the upstream-baseline evidence required when upstream-facing code changes.
+The matrix would catch Apple libc++ runtime behavior and MSVC diagnostics once
+those jobs run. Its Windows handle case would only be covered once a test
+exists that creates or opens a named pipe; a Windows build alone can compile
+the branch but cannot establish that runtime behavior. The existing Linux leg
+would remain the cheap baseline. The matrix would not prove behavior on
+platforms absent from it, would not catch a runtime class for which no test
+exists, and would not replace the upstream-baseline evidence required when
+upstream-facing code changes.
 
 The costs are additional hosted runners, dependency setup, and another source
 of platform-specific flakiness. A documentation rule in `AGENTS.md` is useful

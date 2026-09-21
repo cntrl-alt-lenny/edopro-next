@@ -54,10 +54,11 @@ struct YdkParse {
 YdkParse parse_ydk(std::string_view text);
 
 // The result of load_ydk(). Unlike YdkParse, this has a genuine failure
-// state: `ok` is false when path inspection, opening, or reading fails
-// (directories and other non-regular files are rejected before opening), in
-// which case `deck` and `ignored` are both left empty rather than
-// partially populated - there is no in-place mutation of a caller-owned
+// state: `ok` is false when opening or reading fails. Directories and other
+// known non-regular files are rejected before opening. A path inspection error
+// alone is not a failure: if the path then opens and reads successfully, `ok`
+// is true. In every failure case, `deck` and `ignored` are both left empty
+// rather than partially populated - there is no in-place mutation of a caller-owned
 // Deck for a failed load to leave half done.
 struct YdkLoadResult {
 	bool ok = false;
