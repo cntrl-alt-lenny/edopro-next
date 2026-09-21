@@ -25,9 +25,15 @@ has finished. Where there is no standing Verifier, Brain issues only the
 Builder prompt. The Verifier does not wait or poll for delivery: once its
 prompt is sent, it runs the mechanical check using a completion report whose
 task and head match the branch and a branch strictly advanced beyond the base.
-It never reviews the base. If delivery is not established, it stops and says
-**"not delivered yet"**; the owner sends the Verifier prompt again after the
-Builder has finished and delivery is available.
+It never reviews the base. If the branch is missing or not advanced, it stops
+with **"not delivered yet"** and the owner retries after the Builder has
+finished. If the branch is advanced but the report is private to another clone,
+it stops with **"branch delivered but report unavailable in this clone"**;
+retrying the same prompt cannot change that. The owner must carry the complete
+source report body and literal base/head to the Verifier, as described in
+[`reports.md`](reports.md), and the Verifier must compare that body with the
+exact role, Brief-ID, and reviewed head without calling mechanical delivery
+established.
 
 ## 1. Starting Brain
 
@@ -85,13 +91,14 @@ Builder block.
 
 The Verifier's prompt names the branch and base rather than a commit that may
 not exist yet. Its contract tells it to run the delivery check, which requires
-the Builder's report provenance and a branch strictly advanced beyond the base,
-then resolve the exact head SHA itself. If delivery is not established in that
-session, it stops and says **"not delivered yet"**; the owner sends the same
-Verifier prompt again once the Builder has finished and delivery is available.
-The loop therefore never depends on a session choosing to wait or poll: the
-Verifier reviews one literal delivered commit, never the base merely because
-the branch exists.
+the Builder's report provenance and a branch strictly advanced beyond the
+base, then resolve the exact head SHA itself. If the branch is not advanced,
+it stops with **"not delivered yet"**. If the branch is advanced but the
+report cannot be read in this clone, the owner uses the explicit manual
+cross-clone path: carry the report body and literal base/head, while the
+Verifier records that mechanical delivery was unavailable. The loop therefore
+never depends on polling and never reviews the base merely because the branch
+exists.
 
 ## 3. Coming back to Brain
 

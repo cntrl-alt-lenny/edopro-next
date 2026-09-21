@@ -118,9 +118,10 @@ roles with scopes. Everything else derives from it:
 | Dispatch prompt | role + task + project state |
 
 Because they are derived, changing which provider runs a role changes none of
-them. That property is testable: adoption installs the guard at
-`tests/test_role_neutrality.py`, pointed at this project's own declared role
-set.
+them. If adoption enables the optional neutrality guard, that property is
+checked by `tests/test_role_neutrality.py`, pointed at this project's own
+declared role set. Adoption may explicitly defer that guard, so this document
+does not claim that every adopting tree contains the test.
 
 ## Changing the topology
 

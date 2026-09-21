@@ -140,12 +140,19 @@ Stated positively, so the rules hold for providers that do not exist yet:
 Neutrality is enforced by those positive rules, **not** by a list of banned
 provider names. A blacklist is stale the moment a new provider ships.
 
-The scanner is `tools/neutrality.py`, and a project adopting this framework
-receives it at that path together with `tests/test_role_neutrality.py`, pointed
-at the roles that project declares. The framework repository additionally proves
-the same scanner against a provider name appearing nowhere else in it — see its
-`tests/test_provider_neutrality.py`. That proof belongs to the framework, not to
-any project adopting it, which is why it is not copied.
+The scanner is `tools/neutrality.py`. Adoption installs it, its shared parser,
+authority scanner and `tests/test_role_neutrality.py` by default, unless the
+adopter explicitly defers the optional neutrality guard. When installed, the
+test is pointed at the roles that project declares. The framework repository
+additionally proves the same scanner against a provider name appearing nowhere
+else in it — see its `tests/test_provider_neutrality.py`. That proof belongs to
+the framework, not to any project adopting it, which is why it is not copied.
+
+The namespace part of this check is deliberately limited: the scanner checks
+declaration syntax and the tracked project-structure witness required for a
+custom label. It does not identify providers or prove that a declared label is
+provider-neutral. A custom namespace is a reviewed human decision, not a
+machine-verified guarantee; adopters and reviewers must record that boundary.
 
 Historical text — case studies, round logs, archived briefs, the failure
 catalogue — may name whichever tool actually ran. That is a record of events,

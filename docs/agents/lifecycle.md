@@ -154,3 +154,8 @@ it will defend it.
 
 State what was found, not who found it. The corrective brief is a new problem
 statement, not an appeal hearing.
+
+The problem-not-solution rule applies to adjudication corrections too. If Brain
+must prescribe wording to preserve a constraint, it checks all corrections as
+one set, literally and together, before handing them back; contradictory
+corrections must be reconciled rather than passed to the executor.

@@ -235,6 +235,8 @@ project code to fix.
   `meta/<kebab-scope>` for framework and coordination changes. Do not
   introduce role-prefixed branches; the milestone prefix is more informative
   and matches the merged history.
+
+  <!-- guard:branch-namespaces prefixes="m<N>,meta" -->
 - **Separate worktrees, never a shared checkout.** Brain, Builder and Verifier
   each get their own — see
   [`docs/agents/worktree-mechanism.md`](docs/agents/worktree-mechanism.md).

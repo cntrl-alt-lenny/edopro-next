@@ -47,6 +47,14 @@ You should be given exactly:
    **branch** and the base to compare against.
 3. The repository.
 
+The normal assumption is that the seats share one clone on one machine. The
+completion inbox is inside that clone's private Git directory, so a branch
+pushed from another clone can be visible here while its report is not. The
+branch and pull request prove repository state, not report delivery. See
+[`../reports.md`](../reports.md)'s *Clone and machine boundary* for the
+deliberate manual handoff path; the framework does not publish private reports
+through Git.
+
 **The owner sends your prompt only after the executor has finished.** If you are
 given a branch rather than a head SHA, resolve it yourself and record the
 literal SHA you reviewed. Brain may prepare your prompt in the same response as
@@ -67,11 +75,19 @@ because its completion-report inbox is private and cannot establish delivery
 for another seat. The check requires the executor's shared-inbox completion
 report to name the task and exact branch head, and requires the branch to be
 strictly ahead of an ancestor base. It reads provenance only; do not read the
-executor's report body before pass one. If the check never returns
-`delivered` before your session ends, stop and say exactly **"not delivered
-yet"**. The owner pastes this prompt again later. When it returns `delivered`,
-continue with the exact-SHA
-discipline — you still review one literal commit, you just establish which one:
+executor's report body before pass one. If the branch is missing, unavailable,
+unchanged, or diverged, stop with **"not delivered yet"**: that is retryable.
+If the branch is strictly ahead but the check says **"branch delivered but
+report unavailable in this clone"**, do not call it delivered and do not ask
+the owner to resend the same prompt. Stop with that distinct state and ask the
+owner to retrieve the report from the source clone or carry its complete body
+(the pull-request body may be that carrier), with the literal base and head.
+When a carried report is supplied, pass one still begins independently; pass
+two compares the carried provenance header and body with the exact role,
+Brief-ID, and literal head you independently resolved. If the body or header
+does not match, delivery remains unknown. When the check returns `delivered`,
+continue with the exact-SHA discipline — you still review one literal commit,
+you just establish which one:
 
 When you need the report body after delivery, look up the exact role and
 Brief-ID rather than relying on the role's replaceable latest view:
@@ -83,9 +99,12 @@ python3 tools/report.py find --role <executor role> --task <brief identifier> \
 
 - Resolve the delivered branch to a SHA, confirm the base is genuinely its ancestor, and
   **put the literal SHA in your report**.
-- If delivery is not established, say **"not delivered yet"** and stop. That is
-  a complete, useful result — it means the executor has not delivered — and it
-  is never a reason to review the base, the default branch, or "the latest".
+- If delivery is not established, stop with the exact state the check reported.
+  A missing/unavailable branch is **"not delivered yet"** and is never a
+  reason to review the base, the default branch, or "the latest". A delivered
+  branch with an unreachable report is **"branch delivered but report
+  unavailable in this clone"**; it means repository delivery is visible but
+  report delivery is not established, not that the executor failed.
 - If the branch moves while you are working, your review belongs to the SHA
   you started from. Say which one, and that it may have been superseded.
 

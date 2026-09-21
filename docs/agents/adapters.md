@@ -152,9 +152,11 @@ OPTIONAL — <tool> only. Ignore if you are using something else.
 ```
 
 An optional block may add launch mechanics and nothing else. It may not touch
-the role, the queue, the branch, the gate, the authority, or the merge. A test
-can enforce that: adoption installs one at `tests/test_role_neutrality.py`,
-pointed at this project's own declared roles.
+the role, the queue, the branch, the gate, the authority, or the merge. When
+adoption enables the optional neutrality guard, its installed test at
+`tests/test_role_neutrality.py` checks this boundary against the project's own
+declared roles. Adoption can explicitly defer that guard, so this document
+does not claim that every adopting tree contains that test.
 
 If the tool is unknown, the neutral core is still sufficient. That is the test of
 whether the prompt was written correctly.

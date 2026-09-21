@@ -156,8 +156,23 @@ class TestWriteReportBehaviour(RepoCase):
         self.assertIn("task=007-fix-thing", header)
         self.assertIn(f"head={sha}", header)
         self.assertIn("source=unit-test", header)
+        self.assertIn(f"os={report.platform.system()}", header)
         self.assertIn("format=2", header)
         self.assertRegex(header, r"captured \d{4}-\d{2}-\d{2}T")
+
+    def test_os_provenance_is_tool_derived_and_old_headers_still_parse(self):
+        with mock.patch.object(report.platform, "system", return_value="TestOS"):
+            path = report.write_report("Report body.", task="os-check", cwd=self.repo)
+        header = path.read_text(encoding="utf-8").splitlines()[0]
+        self.assertIn("os=TestOS", header)
+        parsed = report._parse_header(path.read_text(encoding="utf-8"))
+        self.assertEqual(parsed.operating_system, "TestOS")
+
+        old = (
+            "<!-- captured now role=brain task=old-os head="
+            f"{commit_head_sha(self.repo)} source=old -->\n\nLegacy.\n"
+        )
+        self.assertEqual(report._parse_header(old).operating_system, None)
 
     def test_legacy_percent_sequences_are_literal_not_decoded(self):
         """An old writer's ``%20`` is the task text, not an encoded space."""

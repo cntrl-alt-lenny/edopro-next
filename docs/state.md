@@ -320,20 +320,15 @@ clones are separate. Everything pushed is shared; nothing local is:
 
 ### Shared-framework status (as of 2026-09-21)
 
-The provider-neutrality guard is still not installed here; Brief 013
-installs it. The framework's PRs #9, #10 and #11 have all merged. The pinned
-revision is `fed26f360294baddedc74eeaabbaf2e716572260`. Until Brief 013
-lands, no document records which framework revision this repository runs;
-`tools/report.py` matches framework commit `a70c559d`. Moving the scanner, its
-helpers, its test and the canonical documents must happen together, as the
-framework's adoption guide requires. The read-only trial of PR #9 at `a604ac86` accepted 25 of 26
-real branches with `<!-- guard:branch-namespaces prefixes="m<N>,meta" -->`.
-The one rejected branch is `modern-ui/bootstrap`, whose hyphenated namespace
-is not yet declarable; nothing normative names it. Two further proposals are
-settled with the framework's Brain and should not be re-sent: forbidding a
-role name as the first scope token (deferred, because it would reject
-`meta/builder-contract-update`), and the five neutrality-guard findings
-already accepted.
+Brief 013 brought the installed shared agentic framework up to pinned
+revision `fed26f360294baddedc74eeaabbaf2e716572260` (the merge of framework
+PR #11) and installed the provider-neutrality guard (`tools/neutrality.py`,
+`tools/authority.py`, `tools/textblocks.py`, `tests/test_role_neutrality.py`,
+and `tools/line_endings.py`). Milestone and meta branch namespaces are
+declared in `AGENTS.md` via
+`<!-- guard:branch-namespaces prefixes="m<N>,meta" -->`.
+`modern-ui/bootstrap` remains a historical remote branch; nothing normative
+names it.
 
 **Correction lists.** State each correction as a problem, not a solution, and
 check a list for mutual consistency before issuing it. Brief 008's C2 and C3
@@ -431,7 +426,7 @@ not fold it into a narrative section.)*
   beyond plain text, and full keyboard/controller parity.
 - **M1 Level 2** — not started, and required before any "duel behaviour is
   unchanged" claim.
-- **Framework neutrality guard** — Brief 013, active.
+- **Framework neutrality guard** — Brief 013 installed; active and verified at pinned revision fed26f36.
 - **Double-spaced PR-body fixtures** — `tests/fixtures/pr_bodies/pr_10.txt`
   and `pr_16.txt` were committed with every `\r\n` turned into `\n\n`, and
   their tests pin the doubled line numbers. Verdicts are unaffected. Fix in a

@@ -81,10 +81,15 @@ Hand this to the Acme Builder.
 
 The declaration syntax is `guard:violation RULE roles=ROLE[,ROLE...] text="TEXT"`.
 `RULE` is the scanner rule, `roles=` names the roles against which the text is
-invalid, and `text=` names the offending text that must be present and must be
-the text the scanner flags. This is a visible, reviewable claim, not a magic
-exemption: a made-up role can make harmless prose appear to violate a rule, so
-review declarations as carefully as the text they exempt.
+invalid, and `text=` names the scanner's complete `Finding.matched` token. The
+comparison collapses whitespace and removes balanced outer backticks, but then
+requires equality. The exemption is exact at both levels: only a finding from
+that rule whose complete matched text is the same under that normalisation is
+exempt; a partial token, a surrounding sentence, another rule or another
+offending text in the same block remains a finding. This is a visible,
+reviewable claim, not a magic exemption: a made-up role can make harmless prose
+appear to violate a rule, so review declarations as carefully as the text they
+exempt.
 
 - **Test behaviour, not installation.** A hook existing in the tree is not proof
   it blocks anything. A check's name is not proof of what it checks.

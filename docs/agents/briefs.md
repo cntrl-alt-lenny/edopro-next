@@ -17,6 +17,11 @@ Q". If Brain has found a constraint that genuinely must be preserved, that is an
 **invariant with its source**, not an instruction. State the constraint and let
 the executor design around it.
 
+This rule also applies to numbered corrections inside an adjudication. When
+Brain must prescribe wording to preserve a constraint, it first checks that
+carrying out every correction literally and together would leave no statement
+false or contradictory.
+
 ## Template
 
 ```markdown
