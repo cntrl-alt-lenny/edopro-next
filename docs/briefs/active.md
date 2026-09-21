@@ -19,11 +19,13 @@ CI report truthful.
   "exactly when" did not; after, it checks the positive predicate, the
   status-error exception, and absence of the old sentence.
 - **R2 — evidence scope.** Brief 008 C1-C3 and the POSIX half of C4 remain
-  closed with evidence. After R5, the Windows implementation is compiled and
-  exercised on Windows 11/MSVC: both loaders reject real free and connected/
-  busy named pipes promptly with `failed to read file`, while the old head
-  returned `failed to open file`; the Windows tests do not measure a separate
-  freed-mid-load race or unrelated device/symlink cases. Rescope PR and
+  closed with evidence. On Windows 11/MSVC, the R9 implementation is compiled
+  and exercised: both loaders reject canonical free and connected/busy named
+  pipes, plus GLOBALROOT, localhost UNC, loopback UNC and extended UNC
+  spellings, promptly with `failed to read file`; the old head's new alias
+  tests return `failed to open file` instead. The Windows tests do not measure
+  a separate freed-mid-load race, unrelated device/symlink cases, or a pipe
+  server that denies the native probe with another error. Rescope PR and
   architecture claims to those observed inputs and update the former open item
   in `docs/state.md`.
 - **R3 — visible platform skips.** The dangling-symlink and `/dev/zero`
@@ -32,7 +34,7 @@ CI report truthful.
 - **R4 — exact-head CI.** Query and report the check-run conclusions for the
   final head SHA; the prior report omitted this evidence.
 
-- **R5 — Windows named pipes can still reach the ordinary file open.** Observed at 338fe1e8 on Windows 11 / MSVC, independently by the Verifier and by Brain. std::filesystem::status() on \\.\pipe\<name> connects to the pipe server as a client and does not classify the pipe as non-regular. When that connection takes the pipe's only free instance, the native CreateFileW probe fails with ERROR_PIPE_BUSY and the loader falls through to ifstream. Every observed load returned ok=false promptly, but with "failed to open file" rather than the documented rejection. If an instance frees between the probe and the open, ifstream can connect and block on read: the non-terminating-input class this round exists to close. Required outcome: in both load_ydk and load_lflist, loading a named-pipe path returns promptly with ok=false under every instance state (free, busy, taken by the loader's own inspection, freed mid-load), and the documentation explains why no instance state leads to a blocking read. Missing and share-locked regular files must still report "failed to open file" (Brief 008 C1). If loading a path unavoidably connects to a pipe, document that as a known side effect. Add Windows-only tests that create a real named pipe, including at least the busy/taken case, that fail at 338fe1e8, and that print a visible SKIP line on other platforms.
+- **R5 — Windows named pipes can still reach the ordinary file open.** Observed at 338fe1e8 on Windows 11 / MSVC, independently by the Verifier and by Brain. `std::filesystem::status()` on \\.\pipe\<name> connects to the pipe server as a client and does not classify the pipe as non-regular. When that connection takes the pipe's only free instance, the native `CreateFileW` probe fails with `ERROR_PIPE_BUSY` and the loader falls through to `ifstream`. Every observed load returned `ok=false` promptly, but with "failed to open file" rather than the documented rejection. If an instance frees between the probe and the open, `ifstream` can connect and block on read: the non-terminating-input class this round exists to close. R9 closes the observed class by probing the Windows-resolved object before any filesystem status call: a non-disk handle or `ERROR_PIPE_BUSY` returns `ok=false` before `ifstream`, without enumerating spellings. The final tests cover canonical free/busy and the four named aliases listed in R2. Missing and share-locked regular files still report "failed to open file" (Brief 008 C1); the remaining untested native-probe error mode is named in the architecture document.
 - **R6 — Windows evidence now exists, but the documentation still says the Windows code is uncompiled and unverified.** docs/architecture/read-failure-class.md, the open item in docs/state.md, the R2 wording, and the PR body must describe the Windows behaviour actually observed after R5, input by input. They must claim neither more nor less than that evidence.
 - **R7 — tests/test_read_failure_contract.py checks independent substrings, so a contract that contradicts the positive predicate or the status-error exception can still pass it.** Make the test fail for such a contradiction, demonstrate one contradictory contract failing, and name the before/after property in your report.
 - **R8 — the PR body's scope sentence describes only the latest corrective step, but the whole master..head diff is what merges, and it does change loader behaviour.** Rewrite the body to describe the whole range, including R5's change, and add the check-run conclusions at the final head SHA.
