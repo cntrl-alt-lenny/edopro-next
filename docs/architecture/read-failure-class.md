@@ -11,13 +11,14 @@ Both loaders perform a fail-closed preflight before constructing an
 `std::ifstream`:
 
 1. On Windows, a shared native handle is opened first with `CreateFileW()` and
-   classified with `GetFileType()` and `GetFileInformationByHandle()`. This is
+   classified with `GetFileType()`; a failed probe is supplemented with
+   `GetFileAttributesW()` for directory detection. This is
    deliberately an object probe, not a path-prefix list: Windows resolves the
    spelling before returning the handle, so a successful non-disk handle is a
    named pipe or other device regardless of whether the input used `\\.\\pipe\\`,
    GLOBALROOT, a host alias, or an extended UNC spelling. `ERROR_PIPE_BUSY` is
-   also rejected as a non-regular input. Directories are identified through the
-   handle's directory attribute. A failed probe other than `ERROR_PIPE_BUSY`
+   also rejected as a non-regular input. Directories are identified through
+   their Windows file attributes. A failed probe other than `ERROR_PIPE_BUSY`
    falls through to the stream open so missing and share-locked regular files
    retain the authoritative `failed to open file` result.
 2. On POSIX, `std::filesystem::status()` rejects directories and every known
