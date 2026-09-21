@@ -247,3 +247,41 @@ seat ranking.
 The durable lesson is to adjudicate review findings against the literal SHA
 and source bytes before carrying them into project state: a finding can be
 useful to investigate without being a defect after that check.
+
+## Round 011 — 2026-09-20 to 2026-09-21 — the read-failure class
+
+Five delivered heads before acceptance (PR #24, merged `823fa679`). The first
+was reviewed on macOS. The other four were reviewed on Windows 11 / MSVC,
+after the agent loop moved machines mid-round. This is an observation log,
+not a ranking.
+
+- **The Windows passes turned on one repeated failure: fixing the instance,
+  not the class.** A preflight status check, then a two-prefix string guard,
+  then a separate classification probe. Each fixed exactly the cases it had
+  been shown and missed the next spelling or server behaviour. The round
+  converged only when the correction named the underlying constraint (the
+  object classified must be the object read) instead of the observed cases.
+  That is `AGENTS.md`'s "fix the class" rule, and in this round it also
+  applied to how Brain wrote corrections.
+- **Verifier, pass `338fe1e8`:** correctly found the busy-pipe fall-through
+  and the first-ever MSVC compile evidence. It over-read one PR sentence
+  that described only the latest corrective step, and was overruled on that.
+- **Verifier, pass `797a1d86`:** returned no BLOCKER, having tested only the
+  two spellings the guard recognised. Brain found an indefinite hang on
+  `\.\GLOBALROOT\Device\NamedPipe\…`. A review that tests the inputs the
+  change names inherits the change's blind spot; after this, Verifier prompts
+  asked for a sweep of the input class rather than a list.
+- **Verifier, passes `2a3f3e43` and `45be9de6`:** given a class-sweep
+  instruction, it found both real defects in the third pass (a pipe loaded as
+  an empty deck, a `CON` hang) and extended its own probe beyond the
+  requested spellings in the fourth. Brain reproduced every BLOCKER it
+  raised. In the final pass it upheld two documentation-precision claims,
+  and overruled one misreading of a starting-state line in the Builder
+  report.
+- **Builder:** its completion reports twice carried small figure errors
+  (test counts one low). Figures in a report are claims like any other.
+
+**Brain-seat note.** Brain's first cross-machine Verifier prompt worked only
+because it supplied literal SHAs; the mechanical delivery check could not see
+another clone's inbox. That has since been reported to and fixed by the
+framework (its PR #10).
