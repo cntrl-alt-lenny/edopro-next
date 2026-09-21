@@ -22,7 +22,8 @@ longer true. Among them, found by Brain on 2026-09-21:
 
 - It says Windows and macOS builds were "not attempted, Linux only". All four
   C++ modules have since been built and tested under MSVC (Brief 005), and
-  the C++ layers under Apple clang (Brief 007).
+  `client/`, `data/` and `policy/` under Apple clang (Brief 007; `ui/`
+  could not be configured on the Mac, which has no Qt).
 - Its architecture list omits `data/` and `policy/`.
 - The screenshot caption says four of five subsystems are "planned".
 
@@ -97,7 +98,7 @@ differ from the standard, they win.
 - **Badges.** Every badge image URL returns HTTP 200, and every badge link
   resolves. Show the output of the command you used.
 - **Generated status.** The "What works" check fails at base
-  `d035c66d4b5ede5edcac92ea7ba4cad7d42c98d4` and passes at your head. Show
+  `d035c66d05ec06419a41415162c6dca5f186e3d0` and passes at your head. Show
   it failing when a status fact changes in the source of truth but not in
   the README.
 - **Social preview.** The PNG exists and is exactly 1280×640.
