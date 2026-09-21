@@ -1,231 +1,198 @@
-Brief-ID: 010-2026-09-20-framework-adoption
+Brief-ID: 011-2026-09-20-read-failure-class
 
-Status: active (delivered and reopened for corrections C6-C8)
+Status: active — delivered and reopened
+
+## Reopened corrections R1-R4
+
+This brief was delivered in PR #24 and reopened after review at `3b15ad56`.
+The loader behavior is accepted as unchanged for this correction round; the
+remaining work is to make the contracts, evidence claims, test output, and
+CI report truthful.
+
+- **R1 — public contracts and contract test.** The `ydk.h` and `lf_list.h`
+  sentences must say that opening or reading failure makes `ok` false, while
+  a path inspection/status error alone is deferred and may still produce
+  `ok == true` if opening and reading succeed. The contract test must reject
+  the old false sentence and assert that documented status-error exception.
+  Disclose its property change by name: before, it checked only that the
+  words "path inspection", "opening", and "reading" appeared and that
+  "exactly when" did not; after, it checks the positive predicate, the
+  status-error exception, and absence of the old sentence.
+- **R2 — evidence scope.** Brief 008 C1-C3 and the POSIX half of C4 remain
+  closed with evidence. On Windows 11/MSVC, the corrective implementation is
+  compiled and exercised: both loaders reject canonical free and holding/busy
+  named pipes, the immediate-disconnect/re-listen state, and five aliases
+  (`\\?\pipe`, GLOBALROOT, localhost UNC, loopback UNC and extended UNC)
+  promptly with `ok == false`. The observed diagnostic is usually `failed to
+  read file`; an alias can report `failed to open file` when the server is
+  between instances. The Windows tests do not measure unrelated
+  symlink cases or a pipe server that denies both classification attempts.
+  Rescope PR and architecture claims to those observed inputs and update the
+  former open item in `docs/state.md`.
+- **R3 — visible platform skips.** The dangling-symlink and `/dev/zero`
+  early returns in both the `data/` and `policy/` test suites must print an
+  unambiguous `SKIP` line rather than report an indistinguishable pass.
+- **R4 — exact-head CI.** Query and report the check-run conclusions for the
+  final head SHA; the prior report omitted this evidence.
+
+- **R5 — Windows named pipes can still reach the ordinary file open.** Observed at 338fe1e8 on Windows 11 / MSVC, independently by the Verifier and by Brain. `std::filesystem::status()` on \\.\pipe\<name> connects to the pipe server as a client and does not classify the pipe as non-regular. When that connection takes the pipe's only free instance, the native `CreateFileW` probe fails with `ERROR_PIPE_BUSY` and the loader falls through to `ifstream`. Every observed load returned `ok=false` promptly, but with "failed to open file" rather than the documented rejection. If an instance frees between the probe and the open, `ifstream` can connect and block on read: the non-terminating-input class this round exists to close. The corrective implementation now reads an accepted disk handle directly after classifying it, and rejects a non-disk handle before any blocking read; it does not enumerate spellings. The final tests cover canonical free/holding/busy and immediate-disconnect states plus the five aliases listed in R2. Missing and share-locked regular files still report "failed to open file" (Brief 008 C1); the remaining unmeasured case is a server that denies both native classification attempts, which still returns promptly unsuccessful but is not separately asserted.
+- **R6 — Windows evidence now exists, but the documentation still says the Windows code is uncompiled and unverified.** docs/architecture/read-failure-class.md, the open item in docs/state.md, the R2 wording, and the PR body must describe the Windows behaviour actually observed after R5, input by input. They must claim neither more nor less than that evidence.
+- **R7 — tests/test_read_failure_contract.py checks independent substrings, so a contract that contradicts the positive predicate or the status-error exception can still pass it.** Make the test fail for such a contradiction, demonstrate one contradictory contract failing, and name the before/after property in your report.
+- **R8 — the PR body's scope sentence describes only the latest corrective step, but the whole master..head diff is what merges, and it does change loader behaviour.** Rewrite the body to describe the whole range, including R5's change, and add the check-run conclusions at the final head SHA.
+
+## Reopened corrections R9-R10
+
+R9 — the Windows non-terminating-input class is still open for named-pipe paths spelled outside the two recognised prefixes. Observed by Brain at 797a1d86 on Windows 11 / MSVC. A single-instance server listens at \\.\pipe\<leaf> and re-listens after each client. With it running, load\_ydk("\\.\GLOBALROOT\Device\NamedPipe\<leaf>") never returned: more than 5 seconds, in 3 of 3 runs, with two loader-side client connections. load\_ydk on "\localhost\pipe\<leaf>", "\127.0.0.1\pipe\<leaf>" and "\\?\UNC\localhost\pipe\<leaf>" each connected once and returned "failed to open file", which is the busy fall-through R5 described. Required outcome: R5's outcome, applied to any path Windows resolves to a named pipe however it is spelled, not only to an enumerated list of spellings. Both load\_ydk and load\_lflist must return promptly with ok=false under every instance state. The documentation must explain why spellings you did not test are also covered; if some case genuinely cannot be covered, name it and give the evidence. Add Windows tests that fail at 797a1d86, including the GLOBALROOT case. Every pipe test must fail rather than hang if the loader blocks; the current timeout helpers call future.get() after a timeout and can wait indefinitely. Preserve: missing and share-locked regular files report "failed to open file" (Brief 008 C1); NUL, CON, a directory and a zero-byte file keep their current results; POSIX behaviour is unchanged.
+
+R10 — docs/architecture/read-failure-class.md says the named-pipe guard closes the non-terminating-input class "by construction", which R9 contradicts. Make it, the R2/R5 evidence wording in active.md, docs/state.md and the PR body match what R9 actually establishes, claiming neither more nor less. docs/state.md also still says R1-R8 "are being applied" and that PR #24 "remains open and rejected"; describe the round's lifecycle as it actually stands.
+
+## Reopened corrections R11-R13
+
+R11 — on Windows, classification and reading are two separate opens of the path, so an object can be classified by one open and read by another. Observed at 2a3f3e43 on Windows 11 / MSVC, independently by the Verifier and by Brain. A single-instance server at \\.\pipe\<leaf> accepts each client, disconnects it immediately without writing, and re-listens. Against it, load\_ydk on "\localhost\pipe\<leaf>", "\127.0.0.1\pipe\<leaf>" and "\\?\UNC\localhost\pipe\<leaf>" returned ok=true with an empty error after three server connections, in most runs. A named pipe was reported as a successfully loaded empty deck, which is the original defect class of Brief 008. load\_lflist showed the same. Constraint the fix must satisfy (the source is this observation): on Windows, the object whose type decides whether a load proceeds must be the same object that is then read. Required outcome: for any path Windows resolves to a named pipe, however spelled, and whatever the server does (holds the client, disconnects it immediately and re-listens, is busy, is free), both loaders return promptly with ok=false. State in the documentation why the constraint holds. Preserve: missing and share-locked regular files report "failed to open file" (Brief 008 C1); a directory reports "failed to read file"; a zero-byte regular file loads with ok=true; POSIX behaviour is unchanged. If the constraint cannot be met by changing only the two loaders, stop and report that, with evidence, instead of widening scope.
+
+R12 — regression: at 2a3f3e43, load\_ydk("CON") and load\_lflist("CON") block indefinitely waiting for console input when the process has a console. Brain saw it under cmd (killed by a watchdog after 4 s), and the Verifier saw both loaders time out. At 797a1d86 both returned promptly with ok=false, "failed to read file". Required outcome: CON, NUL and other Windows device names return promptly with ok=false, and a test catches this regression without being able to hang the test run.
+
+R13 — the checked-in pipe tests exercise only a server that holds its client, so they pass while R11's immediate-disconnect-and-re-listen state fails. Tests must cover that state for every tested spelling, in both loaders, and must fail rather than hang at 2a3f3e43. The PR body and docs/architecture/read-failure-class.md currently claim every listed spelling fails promptly with "failed to read file", which R11 contradicts; make them, active.md's evidence wording and docs/state.md claim exactly what your final evidence shows.
+
+## Current evidence for the reopened corrections
+
+At the current head, both loaders classify and read accepted Windows disk
+handles as one object and reject non-disk handles before a path-based second
+open. The Windows tests cover the canonical spelling and five aliases under
+free, holding/busy, and immediate-disconnect/re-listen servers. Across
+repeated Windows 11/MSVC direct runs, every result was prompt and `ok ==
+false`; most pipe cases reported `failed to read file`, while some alias runs
+reported `failed to open file` when no instance was available at the native
+classification attempt. `CON`, `NUL`, and the tested peer device names also
+returned promptly unsuccessful. Missing and share-locked regular files still
+reported `failed to open file`, directories reported `failed to read file`,
+and zero-byte regular files loaded successfully. The old head's newly applied
+tests failed on device handling, with the bounded harness returning instead of
+hanging the test run.
 
 ## MODE: IMPLEMENTATION
 
 ## Goal
 
-Adopt the shared agentic framework in edopro-next so a fresh session can start
-from `AGENTS.md` and `docs/agents/roles/brain.md`, reconstruct the live state,
-and choose the correct first action without conversation history. Resolve the
-known delivered brief queue, install the framework's canonical contracts and
-the report/checkout tooling, preserve this project's stronger local evidence
-and lifecycle rules, and deliver the result as a reviewed-ready Builder branch.
+Close Brief 008's four rejected corrections in `data/` and `policy/`, decide
+and document a safe predicate for the broader non-terminating-file class, and
+answer what validation mechanism should catch platform-dependent runtime
+semantics. Deliver the implementation and the evidence as one reviewed-ready
+Builder round without changing CI policy.
 
 ## Why this is next
 
-This repository already has a three-seat brief loop, but its canonical role
-contracts and provider-neutral tooling are absent. Brief 008 is delivered but
-not accepted, and brief 009 was delivered without independent review; both
-must remain visible as distinct, honest queue records before new work proceeds.
-Adoption is the bounded foundation work needed for cold-start continuity and
-for the report and checkout mechanisms required by future rounds.
+Brief 008's delivered code is rejected and its four corrections remain open.
+Its directory test can pass with the fix reverted on Linux and Windows, while
+`load_ydk()` can never return for inputs such as a POSIX FIFO, a Windows named
+pipe, or `/dev/zero`. The project therefore needs both the concrete correction
+and an honest class-level decision before another round builds on it.
 
-## Base
+## Base and branch
 
-Cut `meta/framework-adoption` from the current local tip of `master`. Confirm
-the exact base SHA with git before the first implementation change. Do not
-modify, rebase, force-push, delete, or merge the existing branches
-`m3/read-failure-predicate`, `meta/round-5-queue`, or `meta/evidence-freshness`.
-
-## Relevant context
-
-Read `CLAUDE.md`, `AGENTS.md`, `docs/state.md`, `docs/briefs/README.md`, the
-archived brief shape, and the shared framework's adoption, constitution,
-role-contract, isolation, brief, report, and topology documents. Inspect the
-source records on `meta/round-5-queue` for briefs 008 and 009. The engine and
-product source tree is out of scope and is not relevant to this documentation
-and tooling adoption.
-
-## Reopened round state
-
-The first delivery of this brief reached head `55a8989f` and was delivered for
-review but was **not accepted**. Corrections C1-C5 were subsequently delivered
-at head `3c212bda` and independently accepted as closed. This brief remains
-delivered and reopened in place for C6-C8; it is not finished. The adoption
-deliberately leaves the neutrality guard uninstalled rather than claiming
-complete adoption.
+Continue on the existing `m3/read-failure-predicate` branch, merge
+`origin/master` into it without rebasing or force-pushing, and preserve its
+open PR #24 and recorded rejection. The first commit on this branch after the
+merge contains this brief and the Brief 010 close-out.
 
 ## Scope
 
-- Preserve brief 008's delivered text, including corrections C1-C4 and its
-  delivered-and-not-accepted status, in `docs/briefs/delivered/008-...`, fixing
-  only its three broken relative links and adding its stable `Brief-ID:`.
-- Create a delivered record for brief 009 from the queue branch's active text,
-  recording its delivered-and-unadjudicated state, PR #26, branch
-  `meta/evidence-freshness`, and the path for re-landing it later.
-- Run the shared adoption tool after reading its plan, with Builder and
-  Verifier seats, hooks, and the Claude Code adapter. Reconcile every collision
-  deliberately; no `.framework` sibling may remain.
-- Keep this project's substantive invariants, evidence table, lifecycle, state,
-  mutation-tested push guard, and project-specific rationale. Install the
-  framework's canonical contracts under `docs/agents/roles/`, retire the old
-  `docs/roles/` copies, and keep the executor contract named `worker.md` while
-  declaring the project seat as Builder.
-- Do not install a repository-local neutrality guard while the framework's
-  branch-namespace rule contradicts its adoption guidance. Keep the established
-  `m<N>/` and `meta/` convention plainly, and record that provider-shaped lane
-  names and branch namespaces are not currently enforced here. Revisit only
-  when the framework provides a project-declared namespace mechanism and a
-  scanner whose rule agrees with its adoption guidance.
-- Update only live normative documents and tests whose paths must move; do not
-  rewrite historical archived briefs.
-- Demonstrate both restored docs-consistency guards: a dead angle-bracket link
-  must fail while a genuine framework placeholder still passes, and the
-  adapter's confirmation command set must cover the canonical contract's set.
-- Walk every path named by `AGENTS.md` and `docs/agents/roles/brain.md` and
-  confirm that each resolves to an existing file and that a fresh Brain's first
-  action is possible.
+- Close Brief 008 corrections C1-C4 by reading their authoritative text from
+  `docs/briefs/delivered/008-2026-09-01-read-failure-predicate.md` on
+  `master`, implementing only what the corrections require, and adding tests
+  that fail before each relevant fix. C1 must assert the actual missing-file
+  error message.
+- Decide whether the file readers should reject by path type, inspect the
+  opened handle, or use another predicate. Exercise the relevant inputs and
+  record the cross-platform limits honestly; do not claim portability by
+  construction unless the evidence supports it.
+- Record the predicate decision and reasoning in `docs/architecture/` and add
+  an ADR if the decision is durable rather than merely explanatory.
+- Answer the platform-divergence mechanism question in repository
+  documentation or the completion report: distinguish compiler, build,
+  configure/build, and runtime-semantics classes; recommend one mechanism and
+  state what it would not catch. Do not change `.github/workflows/` or required
+  checks.
+- Move Brief 008 to `docs/briefs/archive/` only if the implementation really
+  closes all four corrections, with its outcome stated honestly.
 
 ## Non-goals
 
-- Do not change engine behaviour or touch `ocgcore/`, `gframe/`, `client/`,
-  `data/`, `policy/`, `ui/` source, build configuration, or workflows.
-- Do not fix brief 008 corrections C1-C4 or re-land brief 009's work.
-- Do not touch branch protection, repository settings, remotes, or any open
-  pull request. Do not merge anything.
-- Do not modify the framework repository or its canonical scanner.
-- Do not delete or weaken pre-existing tests. The newly installed neutrality
-  scanner, authority scanner, textblock helper and neutrality test are the
-  explicitly deferred exception; historical archive documents remain
-  historical records.
+- Do not re-land Brief 009 from `meta/evidence-freshness`.
+- Do not install or patch the neutrality guard or modify the framework
+  repository.
+- Do not change `.github/workflows/`, branch protection, repository settings,
+  remotes, `ocgcore/`, `gframe/`, or `integration/legacy/`.
+- Do not merge any pull request or change engine/UI behaviour outside the two
+  file-reader sites and their proportionate tests and documentation.
 
 ## Protected invariants
 
-- `ocgcore` must have the same recorded submodule commit before and after, and
-  no gitlink may appear in this diff.
-- The rules engine remains authoritative and separate from presentation; the
-  client model remains semantic and free of Qt/Irrlicht types.
-- AGPL-3.0-or-later, dynamic Qt linking, upstream ownership boundaries, and the
-  prohibition on committing artwork, databases, or CardScripts remain intact.
-- Builder and Verifier are executor/reviewer seats, never self-accepting or
-  merging seats; Brain remains the routine technical acceptance and merge seat.
-- The local lifecycle must retain its `delivered` state, and evidence claims
-  must remain honest and reproducible.
-- Existing tests, including push-guard, docs-consistency, save-agent-reply,
-  CI-check, replay-trace, semantic-trace, and protocol-generation tests, must
-  continue to run. Path assertions must be updated to the installed layout,
-  never removed or weakened.
-- LF normalization must be installed as `* text=auto eol=lf`; renormalization
-  must be checked and any unexpected diff reported rather than hidden.
+- Linux and Windows behaviour must not regress; this is the invariant C1
+  explicitly protects and it must be tested rather than assumed.
+- `ocgcore`'s recorded gitlink must remain unchanged, and no gitlink may enter
+  the diff.
+- Every canonical file under `docs/agents/`, `tools/checkout.py`, and
+  `tools/report.py` remains byte-identical to
+  `~/Dev/agentic-framework`.
+- Existing tests survive. Any changed pre-existing test assertion must be
+  named in the completion report with its before/after property.
+- The neutrality guard remains absent and no local exemption is introduced.
 
 ## Required investigation
 
-1. Inspect every adoption collision and compare the project's version with the
-   framework version. For `AGENTS.md`, `docs/roles/`, `docs/state.md`, brief
-   files, the push hook, gitattributes, Claude adapter files, seat files,
-   status command, and launching documentation, record the deliberate outcome
-   and any project-specific material moved or dropped.
-2. Establish the precise neutrality failure class. Explain why the existing
-   `m<N>/` and `meta/` namespaces are retained despite the framework guidance,
-   confirm that the repository-local neutrality guard is deliberately absent
-   and therefore does not catch provider-shaped namespaces, and record that the
-   framework adoption guidance and its branch rule contradict each other as an
-   out-of-scope framework finding. State what framework change would permit a
-   future installation.
-3. Verify the cold-start path from only `AGENTS.md` and the canonical Brain
-   contract, including every named path and the first actionable command.
+1. Compare predicates for missing files, directories, permission failures,
+   named pipes/FIFOs, symlinks to directories, device files and zero-byte
+   regular files across the platforms available. Explain what `ifstream` state
+   and filesystem status actually establish, and what cannot be exercised.
+2. Reproduce the existing directory-test weakness: it passes when the previous
+   fix is reverted on both Linux and Windows. Add a regression test that would
+   fail before the correction, especially an assertion on C1's actual error
+   message.
+3. Classify the six known platform divergences by the cheapest mechanism that
+   can catch each. Recommend one mechanism, include its cost and reliability,
+   and state which classes it would still miss. A new or changed required CI
+   check is the owner's decision, not this round's implementation.
 
 ## Acceptance criteria
 
-- The first commit contains this brief at `docs/briefs/active.md` with this
-  exact stable identifier.
-- Briefs 008 and 009 exist under `docs/briefs/delivered/` with honest statuses,
-  stable identifiers, preserved substance, and corrected live links.
-- Adoption ran from the shared framework after its plan was read, installed
-  the requested canonical files and adapter, and every `.framework` collision
-  was deliberately resolved and deleted.
-- The repository contains one canonical contract per declared role under
-  `docs/agents/roles/`: `brain.md`, `worker.md`, and `verifier.md`, with no
-  stale duplicate Builder contract; `docs/roles/` is retired.
-- The installed report/checkout tools are present and project tests refer to
-  their actual paths. The neutrality scanner, authority scanner, textblock
-  helper and their test are explicitly absent pending a framework fix; this
-  adoption is partial, not complete.
-- The two restored docs-consistency guards demonstrably fail on their targeted
-  mutations, pass after the mutations are removed, and the final full suite is
-  green.
-- Every path named by the two cold-start documents resolves, and the first
-  action is a runnable Builder/Brain checkout check as appropriate.
-- The branch is pushed as `meta/framework-adoption` and a non-merged PR against
-  `master` begins with `DO NOT MERGE — under review` and names base and head
-  commits without measured figures.
+- C1-C4 are each closed by code and evidence, or the brief remains delivered
+  and rejected with the unclosed corrections named; do not archive an open
+  correction as accepted.
+- `load_ydk()` and `load_lflist()` have a documented, tested decision for the
+  non-terminating-file class and no claim stronger than the evidence.
+- The predicate decision and platform-divergence recommendation are recorded
+  where future readers will find them.
+- `data/` and `policy/` configure, build with
+  `-DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON`, and pass CTest on this
+  machine; report Windows/MSVC separately if it cannot be exercised here.
+- The full Python suite, both generator checks, and all required identity and
+  submodule checks are green.
+- PR #24 remains open, keeps `DO NOT MERGE — under review`, names the base and
+  new head, and contains rerunnable commands without measured figures.
 
 ## Required evidence
 
-- `python3 -m unittest discover -s tests -v`, including the installed checkout,
-  report, and project documentation tests. Neutrality tests are deliberately
-  absent because C3 deferred that guard; do not claim they ran.
-- `python3 tools/generate_messages.py --check` and
-  `python3 tools/generate_protocol_constants.py --check`.
-- `python3 tools/checkout.py --seat builder` and
-  `python3 tools/report.py status`.
-- `git submodule status` before and after, with the unchanged `ocgcore` commit.
-- `git add --renormalize .`, with the real result and whether it changed
-  anything.
-- The real failing and passing output for both restored docs-consistency guard
-  demonstrations.
-- The cold-start path walk and its first-action command.
-- The adoption plan and actual adoption output, plus the final absence of
-  `.framework` files.
-- The final diff, base/head SHAs, push and PR output, and the real output of
-  `python3 tools/report.py write --task 010-2026-09-20-framework-adoption`.
-- State the machine and platform. Do not build a C++ module: no touched file
-  can affect one; say this explicitly. Do not use the replay harness as proof
-  of unchanged duel behaviour.
-
-## Reopened corrections C1-C5
-
-1. **C1 — remove the counterexample block.** Delete the `guard:counterexample`
-   and `guard:violation` markers from the worktree policy and restore the
-   ordinary `m<N>/` and `meta/` branch example.
-2. **C2 — withdraw guard-driven wording edits.** Restore the exact
-   `deck-builder-ui.md` citation, the “deck-builder legality boundary” wording,
-   and the `../edopro-next-builder` example. Keep the corrected canonical role
-   paths in `docs/agents/launching.md`.
-3. **C3 — defer neutrality.** Remove the locally installed neutrality,
-   authority and textblock tools and neutrality test. The project therefore
-   does **not** currently enforce provider-shaped lane or branch namespaces;
-   this closes only when the framework reconciles its scanner with its adoption
-   guidance and supports declared project namespaces.
-4. **C4 — restore both docs guards.** Skip only targets that are entirely a
-   placeholder, and restore the general confirmation-command superset check
-   against `docs/agents/roles/worker.md` while retaining the explicit
-   Builder/Worker adapter assertions.
-5. **C5 — refresh rehydration state.** Update `docs/state.md` so active work,
-   delivered records, closed-but-kept queue branches, rejected PR #24 and the
-   honest next slices are current without weakening its spot-check discipline.
-
-## Git expectations
-
-Use focused commits on `meta/framework-adoption`; never push `master`, merge,
-force-push, rebase, or delete branches. The Builder delivers a branch and a
-report; Brain and the Verifier decide acceptance and merge.
+- `python3 tools/checkout.py --seat builder`.
+- `python3 -m unittest discover -s tests -v` and both generator `--check`
+  commands.
+- Before/after demonstrations for each correction, including a C1 assertion
+  on the actual missing-file message.
+- Configure/build/CTest output for `data/` and `policy/` under the required
+  Debug/Werror flags, with real counts. State what was not run.
+- `git submodule status` before and after, with no gitlink in the diff.
+- SHA-256 identity output for every remaining canonical framework file and
+  the two installed tools.
+- The predicate/input probe output and the platform-divergence recommendation.
+- Machine/platform, exact base/head SHAs, push and PR output, and the real
+  report-writer output.
+- State explicitly that no replay-harness result is evidence about duel
+  behaviour and that Windows/MSVC was not exercised if that remains true.
 
 ## Completion-report schema
 
-Use the standard Worker report with exact base/head SHAs, changed files,
-commands and output, omissions, sources for external claims, and open
-questions. Add the collision-by-collision reconciliation decisions, the
-project-specific material moved or dropped from `docs/roles/`, the neutrality
-deferral and absent catch surface, the framework branch-rule contradiction,
-the cold-start path walk, the unchanged submodule evidence, the renormalize
-result, the mutation red/green evidence, and the PR URL and report-writer
-output.
-
-## Follow-up corrections C6-C8
-
-6. **C6 — reconcile the brief with the deferral.** This brief must say in one
-   voice that the neutrality guard is not installed, must not require its tests
-   or claim that it catches provider-shaped namespaces, and must name the
-   framework change that would close the deferral.
-7. **C7 — repair moved cross-references.** Replace references to the deleted
-   `AGENTS.md` “Authority” section with the canonical constitution, sweep live
-   coordination documents for further stale moved paths or headings, and leave
-   historical archive references unchanged.
-8. **C8 — disclose the parity-guard change.** The report must say that the
-   former non-empty assertion was removed because the canonical Worker
-   confirmation step names no backtick-quoted command. The superset property
-   remains, but is dormant against adapter-only changes until the contract
-   names a command and remains live against future contract drift.
+Use the Worker contract's exact base/head, changed-files, validation,
+omissions, source and open-question fields. Add the C1-C4 disposition, the
+predicate comparison and decision, the platform-divergence recommendation and
+limits, the pre-existing-test disclosure, submodule/hash evidence, platform
+gap, PR URL, and report-writer output.

@@ -216,5 +216,34 @@ Two things to watch:
 
 **Brain-seat note.** Brain issued brief 007 as a launch prompt only and never
 wrote it to `active.md`, so Verifier reviewed that work with no acceptance
-criteria to check against — and said so. A brief that exists only in chat is
-not a brief. Third rule this framework defines that its own author has broken.
+criteria to check against — and said so. A brief that exists only as a launch
+prompt is not a brief. Third rule this framework defines that its own author
+has broken.
+
+## Round 010 — 2026-09-20 — framework adoption
+
+Round 010 ran through three Builder/review passes before Brain accepted and
+merged it at `d3b458bb` (PR #27). This is an observation log, not a model or
+seat ranking.
+
+- **Pass 1, head `55a8989f`:** the adoption delivered canonical contracts,
+  report/checkout tooling and the Claude adapter, but review rejected the
+  round. The neutrality scanner contradicted the project's established branch
+  namespaces, and the round also exposed path, wording, test and state
+  reconciliation defects.
+- **Pass 2, head `3c212bda`:** C1-C5 removed the local neutrality stack,
+  restored the project wording, repaired the two documentation guards and
+  refreshed state. The reviewing seat returned findings that did not survive
+  adjudication: it reported leftover marker blocks inside files required to
+  remain byte-identical, although the canonical files were hash-identical to
+  the framework, and called a citation incomplete although the cited file was
+  character-for-character identical to `master`.
+- **Pass 3, head `51a5a993`:** C6-C8 reconciled the active brief with the
+  deliberate neutrality deferral, repaired the remaining live Authority
+  cross-reference, and disclosed the intentionally removed non-empty parity
+  assertion. The same two categories of reviewing findings again did not
+  survive adjudication. Brain accepted the corrected round and merged it.
+
+The durable lesson is to adjudicate review findings against the literal SHA
+and source bytes before carrying them into project state: a finding can be
+useful to investigate without being a defect after that check.

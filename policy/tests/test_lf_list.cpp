@@ -8,13 +8,35 @@
 // itself (gframe/deck_manager.cpp:80) is not something a reader should have
 // to re-derive by hand to trust these tests.
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+
 #include "edopro_next/policy/lf_list.h"
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <future>
+#include <iostream>
 #include <limits>
 #include <optional>
+#include <thread>
+#include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#ifdef max
+#undef max
+#endif
+#ifdef small
+#undef small
+#endif
+#endif
 
 #include "test_support.h"
 
@@ -32,6 +54,173 @@ std::optional<LfList> only_list(const std::string& text) {
 		return std::nullopt;
 	return result.lists.front();
 }
+
+#ifdef _WIN32
+std::atomic<unsigned> named_pipe_counter{0};
+
+class NamedPipe {
+public:
+	NamedPipe() = default;
+	~NamedPipe() { close(); }
+	NamedPipe(const NamedPipe&) = delete;
+	NamedPipe& operator=(const NamedPipe&) = delete;
+
+	bool create(bool occupy) {
+		const auto number = named_pipe_counter.fetch_add(1);
+		leaf_ = L"edopro_next_policy_test_" + std::to_wstring(GetCurrentProcessId()) + L"_" +
+			std::to_wstring(number);
+		name_ = L"\\\\.\\pipe\\" + leaf_;
+		server_ = CreateNamedPipeW(
+			name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+			PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
+		if(server_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(!occupy)
+			return true;
+
+		connect_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		if(connect_event_ == nullptr)
+			return false;
+		OVERLAPPED overlapped{};
+		overlapped.hEvent = connect_event_;
+		bool already_connected = ConnectNamedPipe(server_, &overlapped) != FALSE;
+		if(!already_connected) {
+			const auto error = GetLastError();
+			if(error == ERROR_PIPE_CONNECTED)
+				already_connected = true;
+			else if(error != ERROR_IO_PENDING)
+				return false;
+		}
+		if(already_connected)
+			return true;
+
+		client_ = CreateFileW(name_.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+		if(client_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(WaitForSingleObject(connect_event_, 5000) != WAIT_OBJECT_0)
+			return false;
+		DWORD transferred = 0;
+		return GetOverlappedResult(server_, &overlapped, &transferred, FALSE) != FALSE;
+	}
+
+	void close() {
+		if(immediate_thread_.joinable()) {
+			SetEvent(stop_event_);
+			immediate_thread_.join();
+		}
+		if(stop_event_ != nullptr) {
+			CloseHandle(stop_event_);
+			stop_event_ = nullptr;
+		}
+		if(ready_event_ != nullptr) {
+			CloseHandle(ready_event_);
+			ready_event_ = nullptr;
+		}
+		if(client_ != INVALID_HANDLE_VALUE) {
+			CloseHandle(client_);
+			client_ = INVALID_HANDLE_VALUE;
+		}
+		if(server_ != INVALID_HANDLE_VALUE) {
+			CancelIoEx(server_, nullptr);
+			DisconnectNamedPipe(server_);
+			CloseHandle(server_);
+			server_ = INVALID_HANDLE_VALUE;
+		}
+		if(connect_event_ != nullptr) {
+			CloseHandle(connect_event_);
+			connect_event_ = nullptr;
+		}
+	}
+
+	std::filesystem::path path() const { return std::filesystem::path(name_); }
+
+	std::vector<std::filesystem::path> alternate_paths() const {
+		return {
+			std::filesystem::path(L"\\\\?\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\.\\GLOBALROOT\\Device\\NamedPipe\\" + leaf_),
+			std::filesystem::path(L"\\\\localhost\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\127.0.0.1\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\?\\UNC\\localhost\\pipe\\" + leaf_),
+		};
+	}
+
+	bool create_immediate_disconnect() {
+		const auto number = named_pipe_counter.fetch_add(1);
+		leaf_ = L"edopro_next_policy_test_" + std::to_wstring(GetCurrentProcessId()) + L"_" +
+			std::to_wstring(number);
+		name_ = L"\\\\.\\pipe\\" + leaf_;
+		ready_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		stop_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		if(ready_event_ == nullptr || stop_event_ == nullptr)
+			return false;
+		immediate_thread_ = std::thread([this] {
+			for(;;) {
+				if(WaitForSingleObject(stop_event_, 0) == WAIT_OBJECT_0)
+					return;
+				HANDLE server = CreateNamedPipeW(
+					name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+					PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
+				if(server == INVALID_HANDLE_VALUE)
+					return;
+				SetEvent(ready_event_);
+
+				HANDLE connect_event = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+				if(connect_event == nullptr) {
+					CloseHandle(server);
+					return;
+				}
+				OVERLAPPED overlapped{};
+				overlapped.hEvent = connect_event;
+				bool connected = ConnectNamedPipe(server, &overlapped) != FALSE;
+				if(!connected) {
+					const auto error = GetLastError();
+					if(error == ERROR_PIPE_CONNECTED) {
+						connected = true;
+					} else if(error == ERROR_IO_PENDING) {
+						HANDLE events[] = {connect_event, stop_event_};
+						const auto wait = WaitForMultipleObjects(2, events, FALSE, INFINITE);
+						if(wait == WAIT_OBJECT_0) {
+							DWORD transferred = 0;
+							connected = GetOverlappedResult(server, &overlapped, &transferred, FALSE) != FALSE;
+						}
+					}
+				}
+				if(connected)
+					DisconnectNamedPipe(server);
+				CloseHandle(connect_event);
+				CloseHandle(server);
+			}
+		});
+		return WaitForSingleObject(ready_event_, 5000) == WAIT_OBJECT_0;
+	}
+
+private:
+	std::wstring name_;
+	std::wstring leaf_;
+	HANDLE server_ = INVALID_HANDLE_VALUE;
+	HANDLE client_ = INVALID_HANDLE_VALUE;
+	HANDLE connect_event_ = nullptr;
+	HANDLE ready_event_ = nullptr;
+	HANDLE stop_event_ = nullptr;
+	std::thread immediate_thread_;
+};
+
+edopro_next::policy::LfListLoadResult load_named_pipe_with_timeout(
+	const std::filesystem::path& path, NamedPipe* pipe = nullptr) {
+	std::packaged_task<edopro_next::policy::LfListLoadResult()> task([path] {
+		return edopro_next::policy::load_lflist(path);
+	});
+	auto future = task.get_future();
+	std::thread(std::move(task)).detach();
+	if(future.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
+		if(pipe != nullptr)
+			pipe->close();
+		EDOPRO_POLICY_CHECK(false);
+		return {};
+	}
+	return future.get();
+}
+#endif
 
 } // namespace
 
@@ -474,10 +663,24 @@ EDOPRO_POLICY_TEST(loadLflistFileRoundTrips) {
 }
 
 EDOPRO_POLICY_TEST(loadLflistMissingFileFails) {
-	auto result = load_lflist("/definitely/does/not/exist.conf");
+	const std::filesystem::path missing = "/definitely/does/not/exist.conf";
+	auto result = load_lflist(missing);
 	EDOPRO_POLICY_CHECK(!result.ok);
-	EDOPRO_POLICY_CHECK(!result.error.empty());
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to open file: " + missing.string());
 	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 0u);
+}
+
+EDOPRO_POLICY_TEST(loadLflistZeroByteRegularFileSucceedsWithNoLists) {
+	const auto path = std::filesystem::temp_directory_path() /
+		"edopro_next_policy_test_zero_byte.conf";
+	{
+		std::ofstream output(path, std::ios::binary);
+	}
+	const auto result = load_lflist(path);
+	std::filesystem::remove(path);
+	EDOPRO_POLICY_CHECK(result.ok);
+	EDOPRO_POLICY_CHECK(result.error.empty());
+	EDOPRO_POLICY_CHECK(result.lists.empty());
 }
 
 EDOPRO_POLICY_TEST(loadLflistDirectoryPathFailsCleanly) {
@@ -492,4 +695,157 @@ EDOPRO_POLICY_TEST(loadLflistDirectoryPathFailsCleanly) {
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK(!result.error.empty());
 	EDOPRO_POLICY_CHECK_EQ(result.lists.size(), 0u);
+}
+
+EDOPRO_POLICY_TEST(loadLflistStatFailureDefersToOpenFailure) {
+	const auto directory = std::filesystem::temp_directory_path();
+	const auto link = directory / "edopro_next_policy_test_dangling_link.conf";
+	const auto target = directory / "edopro_next_policy_test_missing_target.conf";
+	std::error_code cleanup_error;
+	std::filesystem::remove(link, cleanup_error);
+	std::filesystem::remove(target, cleanup_error);
+	std::error_code create_error;
+	std::filesystem::create_symlink(target, link, create_error);
+	if(create_error) {
+		std::cout << "  SKIP loadLflistStatFailureDefersToOpenFailure: cannot create symlink: "
+				  << create_error.message() << "\n";
+		return;
+	}
+
+	const auto result = load_lflist(link);
+	std::filesystem::remove(link, cleanup_error);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to open file: " + link.string());
+}
+
+EDOPRO_POLICY_TEST(loadLflistNonRegularFileIsRejectedBeforeOpening) {
+	const std::filesystem::path device = "/dev/zero";
+	if(!std::filesystem::exists(device)) {
+		std::cout << "  SKIP loadLflistNonRegularFileIsRejectedBeforeOpening: /dev/zero is unavailable\n";
+		return;
+	}
+	const auto result = load_lflist(device);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + device.string());
+}
+
+EDOPRO_POLICY_TEST(loadLflistWindowsDeviceNamesFailWithoutWaitingForInput) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistWindowsDeviceNamesFailWithoutWaitingForInput: Windows device names are unavailable on this platform\n";
+	return;
+#else
+	for(const auto name : {L"CON", L"NUL", L"PRN", L"AUX", L"COM1"}) {
+		const auto path = std::filesystem::path(name);
+		const auto result = load_named_pipe_with_timeout(path);
+		std::cout << "    device " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_POLICY_CHECK(!result.ok);
+		EDOPRO_POLICY_CHECK(result.error == "failed to read file: " + path.string() ||
+			result.error == "failed to open file: " + path.string());
+	}
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistFreeNamedPipeFailsBeforeConsumingAnInstance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistFreeNamedPipeFailsBeforeConsumingAnInstance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(false)) {
+		EDOPRO_POLICY_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), &pipe);
+	std::cout << "    free " << pipe.path().string() << " -> " << result.error << "\n";
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_POLICY_CHECK(result.lists.empty());
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(true)) {
+		EDOPRO_POLICY_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), &pipe);
+	std::cout << "    holding/busy " << pipe.path().string() << " -> " << result.error << "\n";
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_POLICY_CHECK(result.lists.empty());
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistNamedPipeAliasesFailWithoutHanging) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistNamedPipeAliasesFailWithoutHanging: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	for(std::size_t index = 0; index < 5; ++index) {
+		NamedPipe pipe;
+		if(!pipe.create(false)) {
+			EDOPRO_POLICY_CHECK(false);
+			return;
+		}
+		const auto path = pipe.alternate_paths().at(index);
+		const auto result = load_named_pipe_with_timeout(path, &pipe);
+		std::cout << "    " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_POLICY_CHECK(!result.ok);
+		EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + path.string());
+		EDOPRO_POLICY_CHECK(result.lists.empty());
+	}
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistImmediatelyDisconnectedNamedPipeAliasesFailWithoutHanging) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistImmediatelyDisconnectedNamedPipeAliasesFailWithoutHanging: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	for(std::size_t index = 0; index < 6; ++index) {
+		NamedPipe pipe;
+		if(!pipe.create_immediate_disconnect()) {
+			EDOPRO_POLICY_CHECK(false);
+			return;
+		}
+		const auto path = index == 0 ? pipe.path() : pipe.alternate_paths().at(index - 1);
+		const auto result = load_named_pipe_with_timeout(path, &pipe);
+		std::cout << "    immediate " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_POLICY_CHECK(!result.ok);
+		EDOPRO_POLICY_CHECK(result.error == "failed to read file: " + path.string() ||
+			result.error == "failed to open file: " + path.string());
+		EDOPRO_POLICY_CHECK(result.lists.empty());
+	}
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistShareLockedRegularFileReportsOpenFailure) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistShareLockedRegularFileReportsOpenFailure: Windows share locks are unavailable on this platform\n";
+	return;
+#else
+	const auto path = std::filesystem::temp_directory_path() /
+		"edopro_next_policy_test_share_locked.conf";
+	std::error_code cleanup_error;
+	std::filesystem::remove(path, cleanup_error);
+	{
+		std::ofstream output(path, std::ios::binary);
+		output << "!Test\n4 1\n";
+	}
+	const auto lock = CreateFileW(
+		path.c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	EDOPRO_POLICY_CHECK(lock != INVALID_HANDLE_VALUE);
+	if(lock == INVALID_HANDLE_VALUE)
+		return;
+	const auto result = load_lflist(path);
+	CloseHandle(lock);
+	std::filesystem::remove(path, cleanup_error);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to open file: " + path.string());
+#endif
 }

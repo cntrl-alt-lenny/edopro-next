@@ -10,13 +10,35 @@
 // gframe/deck_manager.cpp's LoadCardList/SaveDeck/MakeYdkEntryString - see
 // docs/architecture/deck-model.md for the exact source citations behind
 // each MATCH/DIVERGE decision this suite pins.
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+
 #include "edopro_next/data/ydk.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <future>
+#include <iostream>
 #include <limits>
 #include <string>
+#include <thread>
+#include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#ifdef max
+#undef max
+#endif
+#ifdef small
+#undef small
+#endif
+#endif
 
 #include "test_support.h"
 
@@ -47,6 +69,173 @@ public:
 private:
 	std::filesystem::path path_;
 };
+
+#ifdef _WIN32
+std::atomic<unsigned> named_pipe_counter{0};
+
+class NamedPipe {
+public:
+	NamedPipe() = default;
+	~NamedPipe() { close(); }
+	NamedPipe(const NamedPipe&) = delete;
+	NamedPipe& operator=(const NamedPipe&) = delete;
+
+	bool create(bool occupy) {
+		const auto number = named_pipe_counter.fetch_add(1);
+		leaf_ = L"edopro_next_deck_test_" + std::to_wstring(GetCurrentProcessId()) +
+			L"_" + std::to_wstring(number);
+		name_ = L"\\\\.\\pipe\\" + leaf_;
+		server_ = CreateNamedPipeW(
+			name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+			PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
+		if(server_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(!occupy)
+			return true;
+
+		connect_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		if(connect_event_ == nullptr)
+			return false;
+		OVERLAPPED overlapped{};
+		overlapped.hEvent = connect_event_;
+		bool already_connected = ConnectNamedPipe(server_, &overlapped) != FALSE;
+		if(!already_connected) {
+			const auto error = GetLastError();
+			if(error == ERROR_PIPE_CONNECTED)
+				already_connected = true;
+			else if(error != ERROR_IO_PENDING)
+				return false;
+		}
+		if(already_connected)
+			return true;
+
+		client_ = CreateFileW(name_.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+		if(client_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(WaitForSingleObject(connect_event_, 5000) != WAIT_OBJECT_0)
+			return false;
+		DWORD transferred = 0;
+		return GetOverlappedResult(server_, &overlapped, &transferred, FALSE) != FALSE;
+	}
+
+	void close() {
+		if(immediate_thread_.joinable()) {
+			SetEvent(stop_event_);
+			immediate_thread_.join();
+		}
+		if(stop_event_ != nullptr) {
+			CloseHandle(stop_event_);
+			stop_event_ = nullptr;
+		}
+		if(ready_event_ != nullptr) {
+			CloseHandle(ready_event_);
+			ready_event_ = nullptr;
+		}
+		if(client_ != INVALID_HANDLE_VALUE) {
+			CloseHandle(client_);
+			client_ = INVALID_HANDLE_VALUE;
+		}
+		if(server_ != INVALID_HANDLE_VALUE) {
+			CancelIoEx(server_, nullptr);
+			DisconnectNamedPipe(server_);
+			CloseHandle(server_);
+			server_ = INVALID_HANDLE_VALUE;
+		}
+		if(connect_event_ != nullptr) {
+			CloseHandle(connect_event_);
+			connect_event_ = nullptr;
+		}
+	}
+
+	std::filesystem::path path() const { return std::filesystem::path(name_); }
+
+	std::vector<std::filesystem::path> alternate_paths() const {
+		return {
+			std::filesystem::path(L"\\\\?\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\.\\GLOBALROOT\\Device\\NamedPipe\\" + leaf_),
+			std::filesystem::path(L"\\\\localhost\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\127.0.0.1\\pipe\\" + leaf_),
+			std::filesystem::path(L"\\\\?\\UNC\\localhost\\pipe\\" + leaf_),
+		};
+	}
+
+	bool create_immediate_disconnect() {
+		const auto number = named_pipe_counter.fetch_add(1);
+		leaf_ = L"edopro_next_deck_test_" + std::to_wstring(GetCurrentProcessId()) +
+			L"_" + std::to_wstring(number);
+		name_ = L"\\\\.\\pipe\\" + leaf_;
+		ready_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		stop_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		if(ready_event_ == nullptr || stop_event_ == nullptr)
+			return false;
+		immediate_thread_ = std::thread([this] {
+			for(;;) {
+				if(WaitForSingleObject(stop_event_, 0) == WAIT_OBJECT_0)
+					return;
+				HANDLE server = CreateNamedPipeW(
+					name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+					PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
+				if(server == INVALID_HANDLE_VALUE)
+					return;
+				SetEvent(ready_event_);
+
+				HANDLE connect_event = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+				if(connect_event == nullptr) {
+					CloseHandle(server);
+					return;
+				}
+				OVERLAPPED overlapped{};
+				overlapped.hEvent = connect_event;
+				bool connected = ConnectNamedPipe(server, &overlapped) != FALSE;
+				if(!connected) {
+					const auto error = GetLastError();
+					if(error == ERROR_PIPE_CONNECTED) {
+						connected = true;
+					} else if(error == ERROR_IO_PENDING) {
+						HANDLE events[] = {connect_event, stop_event_};
+						const auto wait = WaitForMultipleObjects(2, events, FALSE, INFINITE);
+						if(wait == WAIT_OBJECT_0) {
+							DWORD transferred = 0;
+							connected = GetOverlappedResult(server, &overlapped, &transferred, FALSE) != FALSE;
+						}
+					}
+				}
+				if(connected)
+					DisconnectNamedPipe(server);
+				CloseHandle(connect_event);
+				CloseHandle(server);
+			}
+		});
+		return WaitForSingleObject(ready_event_, 5000) == WAIT_OBJECT_0;
+	}
+
+private:
+	std::wstring name_;
+	std::wstring leaf_;
+	HANDLE server_ = INVALID_HANDLE_VALUE;
+	HANDLE client_ = INVALID_HANDLE_VALUE;
+	HANDLE connect_event_ = nullptr;
+	HANDLE ready_event_ = nullptr;
+	HANDLE stop_event_ = nullptr;
+	std::thread immediate_thread_;
+};
+
+edopro_next::data::YdkLoadResult load_named_pipe_with_timeout(
+	const std::filesystem::path& path, NamedPipe* pipe = nullptr) {
+	std::packaged_task<edopro_next::data::YdkLoadResult()> task([path] {
+		return edopro_next::data::load_ydk(path);
+	});
+	auto future = task.get_future();
+	std::thread(std::move(task)).detach();
+	if(future.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
+		if(pipe != nullptr)
+			pipe->close();
+		EDOPRO_DATA_CHECK(false);
+		return {};
+	}
+	return future.get();
+}
+#endif
 
 } // namespace
 
@@ -437,7 +626,7 @@ EDOPRO_DATA_TEST(loading_a_missing_file_fails_and_leaves_an_existing_deck_untouc
 
 	const auto result = edopro_next::data::load_ydk(missing);
 	EDOPRO_DATA_CHECK(!result.ok);
-	EDOPRO_DATA_CHECK(!result.error.empty());
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to open file: " + missing.string());
 	EDOPRO_DATA_CHECK(result.deck.empty());
 
 	// The caller's own guard - not this codec - is what makes a failed
@@ -445,6 +634,172 @@ EDOPRO_DATA_TEST(loading_a_missing_file_fails_and_leaves_an_existing_deck_untouc
 	if(result.ok)
 		existing = result.deck;
 	EDOPRO_DATA_CHECK_EQ(existing.main, (std::vector<CardCode>{CardCode{1}, CardCode{2}}));
+}
+
+EDOPRO_DATA_TEST(loading_a_zero_byte_regular_file_succeeds_with_an_empty_deck) {
+	TempFile file("zero_byte");
+	std::ofstream output(file.path(), std::ios::binary);
+	output.close();
+	const auto result = edopro_next::data::load_ydk(file.path());
+	EDOPRO_DATA_CHECK(result.ok);
+	EDOPRO_DATA_CHECK(result.error.empty());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+}
+
+EDOPRO_DATA_TEST(loading_a_directory_fails_cleanly) {
+	const auto result = edopro_next::data::load_ydk(std::filesystem::temp_directory_path());
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK(!result.error.empty());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+}
+
+EDOPRO_DATA_TEST(a_stat_failure_defers_to_the_open_failure) {
+	const auto directory = std::filesystem::temp_directory_path();
+	const auto link = directory / "edopro_next_deck_test_dangling_link.ydk";
+	const auto target = directory / "edopro_next_deck_test_missing_target.ydk";
+	std::error_code cleanup_error;
+	std::filesystem::remove(link, cleanup_error);
+	std::filesystem::remove(target, cleanup_error);
+	std::error_code create_error;
+	std::filesystem::create_symlink(target, link, create_error);
+	if(create_error) {
+		std::cout << "  SKIP a_stat_failure_defers_to_the_open_failure: cannot create symlink: "
+				  << create_error.message() << "\n";
+		return;
+	}
+
+	const auto result = edopro_next::data::load_ydk(link);
+	std::filesystem::remove(link, cleanup_error);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to open file: " + link.string());
+}
+
+EDOPRO_DATA_TEST(a_non_regular_file_is_rejected_before_opening) {
+	const std::filesystem::path device = "/dev/zero";
+	if(!std::filesystem::exists(device)) {
+		std::cout << "  SKIP a_non_regular_file_is_rejected_before_opening: /dev/zero is unavailable\n";
+		return;
+	}
+	const auto result = edopro_next::data::load_ydk(device);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + device.string());
+}
+
+EDOPRO_DATA_TEST(windows_device_names_fail_without_waiting_for_input) {
+#ifndef _WIN32
+	std::cout << "  SKIP windows_device_names_fail_without_waiting_for_input: Windows device names are unavailable on this platform\n";
+	return;
+#else
+	for(const auto name : {L"CON", L"NUL", L"PRN", L"AUX", L"COM1"}) {
+		const auto path = std::filesystem::path(name);
+		const auto result = load_named_pipe_with_timeout(path);
+		std::cout << "    device " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_DATA_CHECK(!result.ok);
+		EDOPRO_DATA_CHECK(result.error == "failed to read file: " + path.string() ||
+			result.error == "failed to open file: " + path.string());
+	}
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_a_free_named_pipe_fails_before_consuming_an_instance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_a_free_named_pipe_fails_before_consuming_an_instance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(false)) {
+		EDOPRO_DATA_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), &pipe);
+	std::cout << "    free " << pipe.path().string() << " -> " << result.error << "\n";
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_a_busy_named_pipe_fails_without_opening_an_instance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_a_busy_named_pipe_fails_without_opening_an_instance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(true)) {
+		EDOPRO_DATA_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), &pipe);
+	std::cout << "    holding/busy " << pipe.path().string() << " -> " << result.error << "\n";
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_named_pipe_aliases_fails_without_hanging) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_named_pipe_aliases_fails_without_hanging: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	for(std::size_t index = 0; index < 5; ++index) {
+		NamedPipe pipe;
+		if(!pipe.create(false)) {
+			EDOPRO_DATA_CHECK(false);
+			return;
+		}
+		const auto path = pipe.alternate_paths().at(index);
+		const auto result = load_named_pipe_with_timeout(path, &pipe);
+		std::cout << "    " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_DATA_CHECK(!result.ok);
+		EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + path.string());
+		EDOPRO_DATA_CHECK(result.deck.empty());
+	}
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_immediately_disconnected_named_pipe_aliases_fails_without_hanging) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_immediately_disconnected_named_pipe_aliases_fails_without_hanging: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	for(std::size_t index = 0; index < 6; ++index) {
+		NamedPipe pipe;
+		if(!pipe.create_immediate_disconnect()) {
+			EDOPRO_DATA_CHECK(false);
+			return;
+		}
+		const auto path = index == 0 ? pipe.path() : pipe.alternate_paths().at(index - 1);
+		const auto result = load_named_pipe_with_timeout(path, &pipe);
+		std::cout << "    immediate " << path.string() << " -> " << result.error << "\n";
+		EDOPRO_DATA_CHECK(!result.ok);
+		EDOPRO_DATA_CHECK(result.error == "failed to read file: " + path.string() ||
+			result.error == "failed to open file: " + path.string());
+		EDOPRO_DATA_CHECK(result.deck.empty());
+	}
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_a_share_locked_regular_file_reports_open_failure) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_a_share_locked_regular_file_reports_open_failure: Windows share locks are unavailable on this platform\n";
+	return;
+#else
+	TempFile file("share_locked");
+	{
+		std::ofstream output(file.path(), std::ios::binary);
+		output << "#main\n1\n";
+	}
+	const auto lock = CreateFileW(
+		file.path().c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	EDOPRO_DATA_CHECK(lock != INVALID_HANDLE_VALUE);
+	if(lock == INVALID_HANDLE_VALUE)
+		return;
+	const auto result = edopro_next::data::load_ydk(file.path());
+	CloseHandle(lock);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to open file: " + file.path().string());
+#endif
 }
 
 // ---------------------------------------------------------------------

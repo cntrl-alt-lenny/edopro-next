@@ -2,7 +2,7 @@
 
 Brief-ID: 008-2026-09-01-read-failure-predicate
 
-Status: delivered
+Status: rejected
 
 **Adjudicated 2026-09-01: NOT ACCEPTED — corrections required.** The lifecycle
 status stays `delivered` because that is what it is: delivered, not archived.
@@ -245,5 +245,25 @@ The standard report in [`docs/agents/roles/worker.md`](../../agents/roles/worker
 - **The predicate comparison table** from investigation 1, across platforms.
 - **The mechanism recommendation** from investigation 3, with what it misses.
 - Anything in the existing comments at `lf_list.cpp:274` / `ydk.cpp:170` that
-  turned out to be wrong, stated plainly — they were written from empirical
+  turned out to be wrong, stated plainly - they were written from empirical
   work and one of them may still be right about the case it describes.
+
+## Brief 011 close-out
+
+**Corrective round delivered 2026-09-20:** Brief 011 closed C1 through C4 in
+the working tree; the original Brief 008 round remains rejected and PR #24
+remains open pending independent review. Both loaders now
+report missing and dangling-link paths as open failures, the public load
+contracts enumerate inspection/open/read failures without the false
+"exactly when" biconditional, status errors are allowed to reach the open,
+and non-regular inputs are rejected before a blocking stream operation. The
+decision and its limits are recorded in
+[`docs/architecture/read-failure-class.md`](../../architecture/read-failure-class.md)
+and [ADR 0009](../../adr/0009-file-loader-failure-class.md). The platform
+divergence recommendation is recorded there as well; no CI check was changed.
+
+The original `loading_a_directory_fails_cleanly` test remains, but the new
+tests cover the actual error message, deferred status failure, and a
+non-terminating device path. Windows/MSVC was not exercised in this round;
+the Windows handle supplement is documented as a platform-specific decision
+to be verified by that platform's build and tests.
