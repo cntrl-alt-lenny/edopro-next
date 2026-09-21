@@ -737,6 +737,7 @@ EDOPRO_POLICY_TEST(loadLflistWindowsDeviceNamesFailWithoutWaitingForInput) {
 	for(const auto name : {L"CON", L"NUL", L"PRN", L"AUX", L"COM1"}) {
 		const auto path = std::filesystem::path(name);
 		const auto result = load_named_pipe_with_timeout(path);
+		std::cout << "    device " << path.string() << " -> " << result.error << "\n";
 		EDOPRO_POLICY_CHECK(!result.ok);
 		EDOPRO_POLICY_CHECK(result.error == "failed to read file: " + path.string() ||
 			result.error == "failed to open file: " + path.string());
@@ -755,6 +756,7 @@ EDOPRO_POLICY_TEST(loadLflistFreeNamedPipeFailsBeforeConsumingAnInstance) {
 		return;
 	}
 	const auto result = load_named_pipe_with_timeout(pipe.path(), &pipe);
+	std::cout << "    free " << pipe.path().string() << " -> " << result.error << "\n";
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
 	EDOPRO_POLICY_CHECK(result.lists.empty());
@@ -772,6 +774,7 @@ EDOPRO_POLICY_TEST(loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance) {
 		return;
 	}
 	const auto result = load_named_pipe_with_timeout(pipe.path(), &pipe);
+	std::cout << "    holding/busy " << pipe.path().string() << " -> " << result.error << "\n";
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
 	EDOPRO_POLICY_CHECK(result.lists.empty());

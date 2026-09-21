@@ -129,14 +129,16 @@ This distinction is the single most useful thing in this file.
 - Semantic coverage beyond the 34 decoded message types.
 - **That our layers behave the same on every platform we support.** Six
   divergences have been found so far that Linux CI could not see. Brief 011's
-  C1-C3 and POSIX half of C4 were evidenced on the macOS machine; this round
-  additionally compiled and ran the generic Windows object probe on Windows
-  11/MSVC. Both loaders rejected canonical free and connected/busy named pipes
-  and the GLOBALROOT, localhost UNC, loopback UNC and extended UNC spellings
-  promptly with `failed to read file`. The Windows tests did not measure a
-  separate freed-mid-load race, unrelated device/symlink cases, or a pipe
-  server denying the native probe with another error. The decision, limits,
-  and recommended cross-platform matrix are in
+  C1-C3 and POSIX half of C4 were previously evidenced on the macOS machine;
+  macOS is unavailable for this corrective pass. This round compiled and ran
+  both loaders on Windows 11/MSVC using a same-handle native read. Canonical
+  free and holding/busy pipes, immediate-disconnect/re-listen servers, and
+  five aliases all returned promptly with `ok == false`; most diagnostics were
+  `failed to read file`, with some alias races reporting `failed to open file`.
+  `CON`, `NUL` and tested peer device names also returned promptly. The Windows
+  tests did not measure unrelated symlink cases or a server denying both native
+  classification attempts. The decision, limits, and recommended
+  cross-platform matrix are in
   [`architecture/read-failure-class.md`](architecture/read-failure-class.md)
   and ADR 0009; platform equality remains unproven outside those inputs.
 
@@ -256,12 +258,13 @@ namespaces. The archived record notes one wording nit: “newly installed” sho
 have said “files adoption would otherwise install.”
 
 Brief 008's record remains archived as rejected. Brief 011 was delivered and
-reopened after review at `3b15ad56`; R1-R8 were delivered on PR #24, and Brain
-reopened the same round at head `797a1d86` with R9-R10. The Builder's
-corrective pass is now on that still-open PR; it has not been accepted or
-merged. The POSIX evidence is current, and the Windows named-pipe evidence
-now covers the generic object probe's canonical free and connected/busy cases
-and four non-canonical spellings:
+reopened after review at `3b15ad56`; R1-R8 were delivered on PR #24, Brain
+reopened the same round at head `797a1d86` with R9-R10, and reopened it again
+for R11-R13 at `2a3f3e43`. The Builder's corrective pass is now on that
+still-open PR; it has not been accepted or merged. The Windows evidence now
+covers same-handle loading, canonical free and holding/busy cases,
+immediate-disconnect/re-listen, and five non-canonical spellings for both
+loaders, plus Windows device names:
 [`briefs/archive/008-2026-09-01-read-failure-predicate.md`](briefs/archive/008-2026-09-01-read-failure-predicate.md).
 Brief 009 remains a delivered record, not active work:
 [`briefs/delivered/009-2026-09-01-evidence-freshness.md`](briefs/delivered/009-2026-09-01-evidence-freshness.md)
@@ -269,10 +272,12 @@ is delivered and unadjudicated. PR #25 and PR #26 are closed with their
 branches kept; #25's queue record is reflected in the delivered 008/009 files,
 and #26's work remains on `meta/evidence-freshness` to be re-landed as its own
 reviewed round. PR #24 remains open and under review; Brief 011 is active again
-on `m3/read-failure-predicate` pending adjudication of R9-R10. The evidence
-does not establish Windows behavior for unrelated device/symlink cases, a
-different native-probe error mode, or separately measure a freed-mid-load
-race.
+on `m3/read-failure-predicate` pending adjudication of R11-R13. Some immediate
+alias runs report `failed to open file` when the server is between instances;
+the evidence claims prompt unsuccessful results, not one diagnostic string for
+every lifetime race. The evidence does not establish Windows behavior for
+unrelated symlink cases or separately measure a server that denies both native
+classification attempts.
 
 ## Local toolchain — state, and what still does not build
 
@@ -369,21 +374,24 @@ not fold it into a narrative section.)*
   enforce provider-shaped lane names or branch namespaces. The framework must
   provide a project-declared namespace mechanism and reconcile that scanner
   rule with its adoption guidance before this can close.
-- **Brief 011 R9-R10 — Windows handle semantics** — PR #24 remains open and
+- **Brief 011 R11-R13 — Windows handle semantics** — PR #24 remains open and
   under review while the delivered brief is active again for adjudication. On
-  Windows 11/MSVC, both loaders compile and their real canonical free/busy and
-  four alias-spelling tests pass with prompt `failed to read file` rejection.
-  The tests do not separately measure a freed-mid-load race, unrelated
-  device/symlink cases, or a different native-probe error mode. The predicate
-  and platform-divergence recommendation are recorded in the architecture
-  document and ADR; no CI change was made.
+  Windows 11/MSVC, both loaders compile and their real canonical free,
+  holding/busy, immediate-disconnect, and five alias-spelling tests pass with
+  prompt `ok == false` results. `CON`, `NUL` and tested peer device names also
+  return promptly. Diagnostics are usually `failed to read file`, but an alias
+  can report `failed to open file` when no instance exists at classification.
+  The tests do not establish unrelated symlink behavior or a server denying
+  both native classification attempts. The same-handle predicate and
+  platform-divergence recommendation are recorded in the architecture
+  document; no CI change was made.
 - **Brief 009** — delivered but unadjudicated; branch `meta/evidence-freshness`
   must be reviewed and re-landed as its own round.
 
 ## Recommended next slice
 
 **Review Brief 011 — the read-failure class** on
-`m3/read-failure-predicate`. Verify R1-R10, the non-terminating-file predicate,
+`m3/read-failure-predicate`. Verify R1-R13, the non-terminating-file predicate,
 and the platform-divergence recommendation before Brain decides whether PR
 #24 can be merged. No CI policy change is part of this round.
 
@@ -391,10 +399,11 @@ and the platform-divergence recommendation before Brain decides whether PR
 own reviewed round. Do not build on its outcome before adjudication.
 
 The read-failure work was entirely inside `policy/` and `data/`, both of which
-build and test on the current machine. The macOS directory failure and the
-silent `data/` gap are covered by the branch's tests; Windows named-pipe
-behavior is covered for the tested canonical free/busy and four alias inputs,
-with the remaining platform gaps stated above.
+build and test on the current Windows/MSVC machine. The earlier macOS
+directory failure and the silent `data/` gap are covered by the branch's tests;
+macOS is unavailable in this pass. Windows named-pipe behavior is covered for
+the tested canonical free/holding/busy and immediate-disconnect states and five
+alias inputs, with the remaining platform gaps stated above.
 
 The round's answer to the mechanism question is a recommendation for a
 non-required macOS-and-Windows portability matrix over the data/policy tests;

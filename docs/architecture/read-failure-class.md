@@ -1,115 +1,106 @@
 # File-loader failure classification
 
 `data::load_ydk()` and `policy::load_lflist()` read attacker- or user-selected
-paths, so a result must not be successful merely because the stream reached a
+paths, so a result must not be successful merely because a stream reached a
 state that looks like EOF. A loader either reads a regular file to completion,
 or returns `ok == false` with a non-empty diagnostic.
 
 ## Decision
 
-Both loaders perform a fail-closed preflight before constructing an
-`std::ifstream`:
+POSIX and Windows use different mechanisms because the operating systems expose
+different useful predicates:
 
-1. On Windows, a shared native handle is opened first with `CreateFileW()` and
-   classified with `GetFileType()`; a failed probe is supplemented with
-   `GetFileAttributesW()` for directory detection. This is
-   deliberately an object probe, not a path-prefix list: Windows resolves the
-   spelling before returning the handle, so a successful non-disk handle is a
-   named pipe or other device regardless of whether the input used `\\.\\pipe\\`,
-   GLOBALROOT, a host alias, or an extended UNC spelling. `ERROR_PIPE_BUSY` is
-   also rejected as a non-regular input. Directories are identified through
-   their Windows file attributes. A failed probe other than `ERROR_PIPE_BUSY`
-   falls through to the stream open so missing and share-locked regular files
-   retain the authoritative `failed to open file` result.
+1. On Windows, each loader first opens the path with `CreateFileW()` for
+   `GENERIC_READ` and the normal shared-read/write/delete mode. `GetFileType()`
+   classifies that returned handle. A non-disk handle (including a named pipe,
+   console, NUL or another device) is rejected before any read. A disk handle
+   is read with `ReadFile()` on that same handle; the loader never closes it and
+   then constructs an `ifstream` for the path. Thus the object whose type
+   permits the load is the object whose bytes are read. `ERROR_PIPE_BUSY` is
+   also rejected before another open. If an inbound pipe rejects the read
+   access request with `ERROR_ACCESS_DENIED`, a zero-access probe is used only
+   to reject a non-disk object; a disk result remains the ordinary open
+   failure. Directory attributes classify a directory when its open is denied.
 2. On POSIX, `std::filesystem::status()` rejects directories and every known
    non-regular type, including FIFOs and device files. A missing path or any
-   other status error is *not* rejected at this stage; the stream open is
-   allowed to provide the authoritative `failed to open file` result.
-3. Only a path that survives those checks is read with the existing sized
+   other status error is not rejected at this stage; the same path is then
+   opened by `ifstream` so it can provide the authoritative `failed to open
+   file` diagnostic.
+3. On POSIX, the surviving path is read by the existing sized
    `ifstream::read()` loop, and `file.bad()` remains the mid-read failure
-   predicate.
+   predicate. A zero-byte regular file is therefore a successful empty input.
 
-This deliberately keeps `ifstream` for the actual portable file read and uses
-the Windows object probe before any filesystem status call. The probe may
-consume a free named-pipe instance as a side effect, but it closes the handle
-after classifying it and never passes that path to `ifstream`; an occupied
-instance is rejected from `ERROR_PIPE_BUSY` before the stream open. Therefore
-the tested pipe spellings are covered by Windows' object resolution rather
-than by an enumerated prefix list. The remaining limit is an untested Windows
-error mode in which a pipe server denies the probe with an error other than
-`ERROR_PIPE_BUSY`. The fixtures use the default named-pipe security descriptor
-and do not create that denial state; the share-locked regular-file test proves
-only that the fallback preserves a regular-file open failure, not what a
-restricted pipe would do. Such a path is therefore not claimed as a
-separately measured input.
+The Windows rule is deliberately handle-based rather than a list of path
+prefixes. Windows resolves the spelling before returning a handle, so the
+classification covers the canonical pipe namespace, `\\?\pipe`, GLOBALROOT,
+host aliases and extended UNC spellings without teaching the loaders those
+spellings. Crucially, the accepted disk path is read through the classified
+handle, closing the classification/read two-open race found at the old head.
+For a named pipe, the loader returns before attempting a potentially blocking
+read. If a pipe disappears between connection attempts, Windows can instead
+report the ordinary `failed to open file`; that is still prompt `ok == false`
+and is not treated as a successfully loaded empty file.
 
-At `338fe1e87770142ec7918553eaf43560e0657685` on Windows 11/MSVC, the
-pre-guard behavior was observed input by input: a free named pipe could be
-connected by `status()`, taking the only instance; a busy pipe and that
-inspection-taken pipe made the native probe fail with `ERROR_PIPE_BUSY`; and
-the loader reached `ifstream` and returned promptly with `ok == false` and
-`failed to open file`. A probe/open timing window could let `ifstream` connect
-after an instance freed, which is the blocking-read risk this guard removes.
-The current Windows-only tests create a real single-instance pipe for both
-loaders and exercise the GLOBALROOT, local-host, loopback-host, and extended
-UNC spellings, as well as the canonical free and connected/busy cases. At the
-final head they pass on Windows 11/MSVC with prompt `failed to read file`
-results. The tests do not separately measure a freed-mid-load race, unrelated
-Windows device names, or dangling symlinks; those remain outside the observed
-input set.
+At `338fe1e87770142ec7918553eaf43560e0657685` on Windows 11/MSVC, the old
+preflight could classify one object and then let `ifstream` open another. A
+free pipe could be consumed by `status()`, while a busy pipe made the native
+probe return `ERROR_PIPE_BUSY`; the loader then reached `ifstream`. At
+`2a3f3e4314f16aa3e77c16446bc841e03c0b2348`, Brain and the Verifier observed
+that an immediate-disconnect-and-relisten server could make both loaders
+return `ok == true` with an empty result. The corrected tests include that
+server state, a holding/busy client, a free single-instance server, and all
+six tested spellings for both loaders. Repeated Windows 11/MSVC runs returned
+prompt `ok == false`; the observed diagnostic was usually `failed to read
+file`, with `failed to open file` when an alias was unavailable at the
+classification attempt.
+
+The tests do not claim a particular error string for every possible named-pipe
+security or lifetime race. They establish the required invariant for the
+tested states: no tested spelling reaches a second path open or a blocking
+read, and every result is prompt and unsuccessful.
 
 The observable classification is:
 
-| Input | POSIX status | Windows supplement | Result |
+| Input | POSIX predicate | Windows predicate | Result |
 | --- | --- | --- | --- |
-| Missing path | status error; open attempted | failed probe; open attempted | `failed to open file` |
-| Permission-denied path | status may succeed or fail; open decides | same | open diagnostic |
-| Directory or symlink to directory | directory | directory | `failed to read file` |
-| FIFO | non-regular | not applicable | `failed to read file` before blocking |
-| Named pipe, free instance | not applicable | native object probe classifies the returned non-disk handle; the probe may consume the instance but no `ifstream` follows | `failed to read file` promptly; observed by Windows test |
-| Named pipe, busy or inspection-taken | not applicable | native probe returns `ERROR_PIPE_BUSY` and rejects before status/open | `failed to read file` promptly; observed by Windows test |
-| Named pipe, freed during a possible probe/open window | not applicable | no separate race test; either a returned pipe handle or `ERROR_PIPE_BUSY` is rejected before `ifstream` | expected prompt rejection; race not separately measured |
-| Device such as `/dev/zero` | non-regular | native handle type is inspected on Windows; POSIX status rejects it | `failed to read file` before blocking; Windows device result not measured here |
-| Zero-byte regular file | regular | disk-handle path | successful empty parse on POSIX; Windows regular-file result not separately measured here |
-| Dangling symlink | status error; open attempted | open attempted; Windows result not separately measured here | `failed to open file` on POSIX; Windows not claimed |
+| Missing path | status error; `ifstream` open attempted | native open fails; open diagnostic retained | `failed to open file` |
+| Share-locked regular file | open decides | read-capable native open fails sharing check | `failed to open file` |
+| Directory or symlink to directory | directory status or read failure | directory attributes or non-disk handle | `failed to read file` |
+| FIFO | non-regular status | not applicable | `failed to read file` before blocking |
+| Named pipe, free/holding/busy/immediate-disconnect state | not applicable | same native object is classified; non-disk or `ERROR_PIPE_BUSY` is rejected | prompt `ok == false`; observed read/open diagnostic depends on server timing |
+| Windows device (`CON`, `NUL`, and tested peers) | not applicable | non-disk handle or prompt failed open | prompt `ok == false` |
+| Zero-byte regular file | regular status, clean EOF | disk handle, `ReadFile()` returns zero bytes | `ok == true`, empty result |
+| Dangling symlink | status error; open attempted | not measured here | `failed to open file` on POSIX |
 
-The Windows native-handle preflight is compiled and exercised in the
-data/policy builds on Windows 11/MSVC. The named-pipe tests establish prompt
-rejection and the expected diagnostic for the four non-canonical spellings
-above, plus free and busy canonical instances. They do not establish behavior
-for unrelated Windows device names, dangling symlinks, or a pipe whose server
-denies the native probe with an error other than `ERROR_PIPE_BUSY`. The public
-headers therefore enumerate inspection, opening, and reading failures rather
-than making a false biconditional claim.
+The Windows native-handle implementation is compiled and exercised in the
+`data/` and `policy/` builds on Windows 11/MSVC. macOS is unavailable for this
+round. Windows tests also skip POSIX-only `/dev/zero` and dangling-symlink
+fixtures with visible `SKIP` lines; those POSIX cases remain covered on their
+own platform. No claim is made here about an untested restricted-pipe error
+mode beyond the required prompt-failure invariant.
 
 ## Mechanism recommendation
 
-The six observed portability failures span three different detection classes:
-compiler diagnostics need a build on the affected toolchain; configuration
-and build-system failures need configure plus build; runtime standard-library
-semantics need a test that actually runs on the affected platform. A Linux-only
-build cannot provide the last two guarantees for macOS or Windows, and a test
-that only exercises a directory cannot protect the non-terminating special-file
+The six observed portability failures span three detection classes: compiler
+diagnostics need a build on the affected toolchain; configuration and
+build-system failures need configure plus build; runtime standard-library and
+OS semantics need tests that actually run on the affected platform. A
+Linux-only build cannot provide the last two guarantees for macOS or Windows,
+and a directory-only test cannot protect the non-terminating special-file
 class.
 
 The recommendation is one cross-platform portability matrix for the
 presentation-independent modules, with macOS and Windows jobs running the
 `data/` and `policy/` configure/build/CTest suites. Keep those jobs
 non-required initially while collecting reliability data; the owner decides
-whether to make any new check required. This is a recommendation only: this
-round does not edit `.github/workflows/` or branch protection.
+whether to make any new check required. This round does not edit
+`.github/workflows/` or branch protection.
 
 The matrix would catch Apple libc++ runtime behavior and MSVC diagnostics once
-those jobs run. The existing Linux and this machine's Windows evidence are
-cheap baselines, but the matrix would make both repeatable in CI. It would not
-prove behavior on
-platforms absent from it, would not catch a runtime class for which no test
-exists, and would not replace the upstream-baseline evidence required when
-upstream-facing code changes.
-
-The costs are additional hosted runners, dependency setup, and another source
-of platform-specific flakiness. A documentation rule in `AGENTS.md` is useful
-to prevent unsupported portability claims but cannot observe runtime behavior;
-tightening Linux warnings is cheaper but only addresses compiler-diagnostic
-classes. Those alternatives are therefore complements, not substitutes for a
-small runtime matrix.
+those jobs run. It would not prove behavior on platforms absent from it, would
+not catch a runtime class for which no test exists, and would not replace the
+upstream-baseline evidence required when upstream-facing code changes. The
+costs are additional hosted runners, dependency setup, and another source of
+platform-specific flakiness. Documentation rules and stricter Linux warnings
+are useful complements, but neither observes foreign-platform runtime
+semantics.
