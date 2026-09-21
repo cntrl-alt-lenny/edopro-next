@@ -14,9 +14,15 @@ Both loaders perform a fail-closed preflight before constructing an
    non-regular type, including FIFOs and device files. A missing path or any
    other status error is *not* rejected at this stage; the stream open is
    allowed to provide the authoritative `failed to open file` result.
-2. On Windows, a shared native read handle is opened for inspection with
-   `CreateFileW()` and `GetFileType()`. This supplements, rather than replaces,
-   the filesystem check because MSVC can report a live named pipe as
+2. On Windows, documented named-pipe namespaces (`\\.\\pipe\\` and
+   `\\?\\pipe\\`, case-insensitive and accepting Windows' slash spelling) are
+   rejected before any filesystem API. This ordering is required because
+   `std::filesystem::status()` can connect to a named pipe as a client and
+   consume its only free instance; a subsequent `CreateFileW()` probe can then
+   report `ERROR_PIPE_BUSY` and leave the loader to reach `ifstream`. For other
+   paths, a shared native read handle is still opened for inspection with
+   `CreateFileW()` and `GetFileType()`; this supplements, rather than replaces,
+   the filesystem check because MSVC can report some non-disk objects as
    `file_type::regular`. A handle that is not `FILE_TYPE_DISK` is rejected
    before the `ifstream` open.
 3. Only a path that survives those checks is read with the existing sized
@@ -24,15 +30,27 @@ Both loaders perform a fail-closed preflight before constructing an
    predicate.
 
 This deliberately keeps `ifstream` for the actual portable file read and uses
-native Windows inspection only where the standard filesystem classification is
-known to be insufficient. It is not portable by construction: it is a
-platform-aware preflight whose Windows supplement must be maintained with the
-Windows API contract. The POSIX half of this decision was compiled and tested
-on macOS; the Windows supplement has not been compiled or exercised here, and
-no test currently opens a Windows named pipe. Its intended result is therefore
-documented below as an open platform item, not claimed as observed evidence.
-A path changing type between preflight and the subsequent `ifstream` open
-remains a normal filesystem race and is not claimed to be eliminated here.
+platform-aware preflight only where the standard filesystem classification is
+known to be insufficient. The named-pipe namespace guard is what closes the
+non-terminating-input class: free, busy, inspection-taken, and freed-mid-load
+instance states all return before `status()`, `CreateFileW()`, or `ifstream`,
+so none can reach a blocking read. The guard also means loading a recognized
+named-pipe path has no pipe connection as a side effect. If a caller supplies a
+pipe spelling outside the documented namespaces and Windows resolves it as a
+pipe, the status/handle inspection APIs may still connect; that is a known
+side effect of those native APIs, not a portable guarantee.
+
+At `338fe1e87770142ec7918553eaf43560e0657685` on Windows 11/MSVC, the
+pre-guard behavior was observed input by input: a free named pipe could be
+connected by `status()`, taking the only instance; a busy pipe and that
+inspection-taken pipe made the native probe fail with `ERROR_PIPE_BUSY`; and
+the loader reached `ifstream` and returned promptly with `ok == false` and
+`failed to open file`. A probe/open timing window could let `ifstream` connect
+after an instance freed, which is the blocking-read risk this guard removes.
+The current Windows-only tests create a real free pipe and a connected/busy
+pipe for both loaders; those tests pass on Windows 11/MSVC at the delivered
+head. They do not claim to measure a freed-mid-load race; that state is closed
+by the pre-status ordering argument above.
 
 The observable classification is:
 
@@ -42,15 +60,19 @@ The observable classification is:
 | Permission-denied path | status may succeed or fail; open decides | same | open diagnostic |
 | Directory or symlink to directory | directory | directory | `failed to read file` |
 | FIFO | non-regular | not applicable | `failed to read file` before blocking |
-| Named pipe | not applicable | intended non-disk-handle rejection; uncompiled and untested | expected `failed to read file` before `ifstream`; not evidenced here |
-| Device such as `/dev/zero` | non-regular | intended non-disk-handle rejection; uncompiled and untested | `failed to read file` before blocking on POSIX; Windows not evidenced here |
-| Zero-byte regular file | regular | intended disk-handle path; uncompiled and untested | successful empty parse on POSIX; Windows not evidenced here |
-| Dangling symlink | status error; open attempted | open attempted; Windows not exercised | `failed to open file` on POSIX; Windows not evidenced here |
+| Named pipe, free instance | not applicable | namespace guard returns before status/open; no instance consumed | `failed to read file` promptly; observed by Windows test |
+| Named pipe, busy or inspection-taken | not applicable | namespace guard returns before status/open; no `ERROR_PIPE_BUSY` path | `failed to read file` promptly; observed by Windows test |
+| Named pipe, freed during a possible probe/open window | not applicable | namespace guard returns before any probe/open | no blocking read by construction; race not separately measured |
+| Device such as `/dev/zero` | non-regular | native handle type is inspected when the path is not a named-pipe namespace | `failed to read file` before blocking on POSIX; Windows device result not measured here |
+| Zero-byte regular file | regular | disk-handle path | successful empty parse on POSIX; Windows regular-file result not separately measured here |
+| Dangling symlink | status error; open attempted | open attempted; Windows result not separately measured here | `failed to open file` on POSIX; Windows not claimed |
 
-The Windows code is intended to reject `NUL` because its native handle is not
-`FILE_TYPE_DISK`, but that branch is uncompiled and unverified in this round.
-The public headers therefore enumerate inspection, opening, and reading
-failures rather than making a false biconditional claim.
+The Windows native-handle supplement is compiled and exercised in the
+data/policy builds on Windows 11/MSVC. The named-pipe tests establish the
+prompt rejection and expected diagnostic for free and busy instances; they do
+not establish behavior for unrelated Windows device names or dangling
+symlinks. The public headers therefore enumerate inspection, opening, and
+reading failures rather than making a false biconditional claim.
 
 ## Mechanism recommendation
 
@@ -70,10 +92,9 @@ whether to make any new check required. This is a recommendation only: this
 round does not edit `.github/workflows/` or branch protection.
 
 The matrix would catch Apple libc++ runtime behavior and MSVC diagnostics once
-those jobs run. Its Windows handle case would only be covered once a test
-exists that creates or opens a named pipe; a Windows build alone can compile
-the branch but cannot establish that runtime behavior. The existing Linux leg
-would remain the cheap baseline. The matrix would not prove behavior on
+those jobs run. The existing Linux and this machine's Windows evidence are
+cheap baselines, but the matrix would make both repeatable in CI. It would not
+prove behavior on
 platforms absent from it, would not catch a runtime class for which no test
 exists, and would not replace the upstream-baseline evidence required when
 upstream-facing code changes.

@@ -18,12 +18,14 @@ CI report truthful.
   words "path inspection", "opening", and "reading" appeared and that
   "exactly when" did not; after, it checks the positive predicate, the
   status-error exception, and absence of the old sentence.
-- **R2 — evidence scope.** Brief 008 C1-C3 and the POSIX half of C4 are
-  closed with evidence. The Windows `CreateFileW`/`GetFileType` half of C4 is
-  written, uncompiled, and unverified because no Windows named-pipe test
-  exists and this round runs on macOS. Rescope PR and architecture claims to
-  that boundary, and record the Windows handle case as an open item in
-  `docs/state.md`.
+- **R2 — evidence scope.** Brief 008 C1-C3 and the POSIX half of C4 remain
+  closed with evidence. After R5, the Windows implementation is compiled and
+  exercised on Windows 11/MSVC: both loaders reject real free and connected/
+  busy named pipes promptly with `failed to read file`, while the old head
+  returned `failed to open file`; the Windows tests do not measure a separate
+  freed-mid-load race or unrelated device/symlink cases. Rescope PR and
+  architecture claims to those observed inputs and update the former open item
+  in `docs/state.md`.
 - **R3 — visible platform skips.** The dangling-symlink and `/dev/zero`
   early returns in both the `data/` and `policy/` test suites must print an
   unambiguous `SKIP` line rather than report an indistinguishable pass.
