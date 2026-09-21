@@ -136,7 +136,7 @@ ownership column follows [`CLAUDE.md`](../CLAUDE.md) ("Where code belongs").
 The full system — colour, spacing, typography, motion, focus — is in
 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
 
-## Roadmap, in one line each
+## Roadmap
 
 The landing page's hand-typed roadmap table was replaced by a generated status block and
 this pointer. The milestones and their exit criteria are in [`ROADMAP.md`](ROADMAP.md),
