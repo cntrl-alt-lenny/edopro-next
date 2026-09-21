@@ -1,4 +1,4 @@
-Brief-ID: 013-2026-09-21-framework-guard-install
+Brief-ID: 014-2026-09-21-readme-standard
 
 Status: active
 
@@ -6,136 +6,127 @@ Status: active
 
 ## Goal
 
-Bring this repository's installed copy of the shared agentic framework up to
-one pinned framework revision, consistently, and install the
-provider-neutrality guard that the adoption round (Brief 010) deliberately
-left out.
+Make `README.md` a landing page that meets the owner's house standard, and
+make its "What works" status impossible to leave stale by hand. Everything
+cut from the landing page moves into `docs/`, or into collapsible blocks.
+Nothing is deleted.
 
-**Pinned framework revision:**
-`cntrl-alt-lenny/agentic-framework` at
-`fed26f360294baddedc74eeaabbaf2e716572260` (the merge of framework PR #11).
-Every framework file you install comes from that commit, and no other.
+The standard is `standards/readme.md` in `cntrl-alt-lenny/agentic-framework`
+at `fed26f360294baddedc74eeaabbaf2e716572260`. Read it there.
 
 ## Why this is next
 
-- Brief 010 installed the framework without its neutrality guard, because the
-  guard then contradicted this project's `m<N>/` and `meta/` branch
-  convention.
-- The framework has since added project-declared branch namespaces (its
-  PR #9), cross-clone delivery reporting and a line-ending tool (PR #10), and
-  a fix so that command-form and prose-form text is matched the same way
-  (PR #11).
-- The read-only trial of PR #9 on this repository (recorded in
-  `docs/state.md`, *Shared-framework status*) accepted 25 of 26 real branches
-  under the declaration `<!-- guard:branch-namespaces prefixes="m<N>,meta" -->`.
-- Our installed framework files are older and partly out of step with each
-  other. `tools/report.py`, for example, matches framework commit `a70c559d`,
-  and no document records which revision was adopted.
+The owner asked for it. It is also an honesty fix. The current README, about
+1,940 words against the standard's 250–500 visible, states things that are no
+longer true. Among them, found by Brain on 2026-09-21:
 
-## Base and branch
+- It says Windows and macOS builds were "not attempted, Linux only". All four
+  C++ modules have since been built and tested under MSVC (Brief 005), and
+  the C++ layers under Apple clang (Brief 007).
+- Its architecture list omits `data/` and `policy/`.
+- The screenshot caption says four of five subsystems are "planned".
 
-Branch `meta/framework-guard-install`. Its first commit is Brain's close-out
-of round 012; it touches only `docs/briefs/`, `docs/state.md` and
-`docs/agents/model-notes.md`. Continue on top of it. Do not rebase or
-force-push. The close-out commit is part of the reviewed range: report any
-error you find in it, and do not rewrite it.
+`CLAUDE.md`'s honesty rules make a false README a defect in its own right.
+
+## Owner decisions (2026-09-21) and rulings to apply
+
+The framework's Brain accepted these rulings in its Dev Hub reply of
+2026-09-21; the standard's own text will be corrected later. Where they
+differ from the standard, they win.
+
+- **"What works" is generated.** It comes from a single source of truth for
+  project status, with a check that fails when the README and that source
+  disagree. The check must fail at this branch's base. You decide what the
+  source of truth is. It must be real project data, and it must not become a
+  second copy of the roadmap that can drift from `docs/ROADMAP.md`. It must
+  keep what exists, what is in progress and what is planned separate, as
+  `CLAUDE.md` requires. Run the check in the existing Python test suite,
+  following the pattern of `tools/generate_messages.py --check`. Make no
+  workflow change.
+- **No development-stage badge**, and no milestone badge: both are
+  changeable facts. Nothing on the landing page may state a changeable fact
+  by hand, unless a check covers it.
+- **The license badge is static:** `AGPL-3.0-or-later`, linking to
+  `LICENSE`. `LICENSE` must stay upstream's verbatim (`CLAUDE.md`), so
+  GitHub cannot recognise it and a live license badge would say "not
+  specified".
+- **Badges** come from shields.io in `flat` style, in the standard's order,
+  four or five at most, each linking to its evidence. The existing live CI
+  badge stays.
+- **The hero banner stays.** Also produce a raster 1280×640 export for
+  GitHub's social preview, committed under `docs/assets/`. The owner uploads
+  it as a repository setting; do not change any setting yourself. Committing
+  a rasterising dependency is out of scope. Say how you produced the image.
 
 ## Scope
 
-- Follow the pinned revision's `framework/adoption.md`, section *Updating an
-  adopted framework consistently*, and move the whole versioned surface it
-  lists in one change:
-  - every `VERBATIM_DOCS` document under `docs/agents/`;
-  - the baseline tools and their tests;
-  - the four neutrality-guard files;
-  - `.gitattributes`, and `.githooks/pre-push` where applicable.
-
-  Derive the exact file list from that revision's `tools/adopt.py`; do not
-  copy the list from this brief. Say in the report whether the pinned
-  revision treats the installed Claude Code adapter (`.claude/`) as part of
-  that surface, and act accordingly.
-- Declare this project's branch namespaces in root `AGENTS.md` using the
-  pinned revision's declaration syntax.
-- Record the pinned framework commit where a future session will find it,
-  including in `docs/state.md`'s *Shared-framework status*.
-- Run the pinned revision's `tools/line_endings.py check` in every checkout of
-  this clone: the primary checkout and each linked worktree. Report the
-  output of each run.
+- `README.md`.
+- New or extended pages under `docs/` for the material that moves out.
+- `docs/assets/`.
+- The generator and its check, under `tools/` and `tests/`.
+- Any link elsewhere in the repository that the move would break.
 
 ## Non-scope
 
-- No change to `.github/workflows/`, branch protection, required checks,
-  repository settings or remotes.
-- No production code (`client/`, `data/`, `policy/`, `ui/`, `gframe/`,
-  `ocgcore/`).
-- Do not edit the canonical framework documents or tools to make them fit.
-  If one does not fit this project, that is a framework finding: report it
-  and do not patch it locally.
-- Do not fix the known double-spaced PR-body fixtures (`pr_10.txt`,
-  `pr_16.txt`); they are a separate open item.
+- `LICENSE`, `COPYING` and `notices/`: untouched.
+- `.github/workflows/`, repository settings (including the social preview),
+  branch protection.
+- Production code.
+- Framework-owned files under `docs/agents/` and the installed framework
+  tools. The neutrality guard must still pass.
+- No card artwork, card databases or scripts in any image or page.
+- No news-style activity panels (the owner's decision in the standard).
 
 ## Protected invariants
 
-- **`.githooks/pre-push` is project-owned in this repository.** It carries
-  project checks and bypass history, pinned by `tests/test_push_guard.py`. If
-  the pinned revision's hook differs, the update must not weaken or drop any
-  behaviour those tests pin. Explain what you did and why.
-- **No exemption that hides a real finding.** Resolve every guard finding in
-  one of two ways: fix the project text, or add a declared counterexample
-  block around text that genuinely quotes a violation. Never widen a
-  declaration just to silence a finding. List every finding and its
-  resolution.
-- **Project-owned files keep their content.** That means `AGENTS.md` apart
-  from the declaration and any genuinely required wording fix, plus
-  `docs/agents/model-notes.md`, `launching.md` and `worktree-mechanism.md`.
-- **Existing tests survive.** Name any pre-existing assertion you change,
-  with its before and after property.
-
-## Required investigation
-
-1. Diff every installed framework file against the pinned revision before
-   changing anything. Report which were already current, which were stale,
-   and which were locally modified. Treat a local modification as something
-   to understand, not something to overwrite silently.
-2. Run the guard across the repository and classify each finding: a real
-   project defect, a legitimate quotation, or a framework defect.
-3. Check the declaration against every branch on `origin`
-   (`git ls-remote --heads origin`). The trial expected `modern-ui/bootstrap`
-   to be the one non-conforming branch. Say whether the pinned revision
-   requires it to be declared (with its tracked witness under
-   `docs/branch-namespaces/`), and why.
+- **Nothing is deleted.** Every paragraph, table, diagram and code block
+  removed from `README.md` appears elsewhere in the repository: moved,
+  possibly re-headed, with facts corrected where they were false. Deliver a
+  mapping from each removed README section to where it now lives.
+- **Honesty.** Planned is never described as shipped. Correct every false
+  statement you move, and list each correction with its evidence.
+- **The credits and trademark notice** (Project Ignis, edo9300, Konami,
+  Shueisha, no affiliation or endorsement), and the statement that no card
+  scripts, databases or artwork are included, stay on the landing page.
 
 ## Acceptance criteria
 
-- Every installed framework file is byte-identical to the pinned revision,
-  except those the adoption guide says the project owns or configures. Show
-  SHA-256 for each file on both sides.
-- The neutrality test runs and passes. Then it is **shown to fail**: add a
-  structurally invalid branch example to a normative document, watch the test
-  go red, then remove the example. Real output both ways.
-- `python -m unittest discover -s tests -v` and both generator `--check`
-  commands are green from Git Bash. `tests/test_push_guard.py` still passes.
-- `docs/state.md` records the pinned framework commit and no longer says the
-  guard is absent.
-- The PR body begins with `DO NOT MERGE — under review`, passes
-  `python tools/check_pr_evidence.py`, and is not merged.
+- **Word count.** Visible landing-page words, outside `<details>`, are within
+  250–500. State the counting method and the count, and re-run it at your
+  final head.
+- **Badges.** Every badge image URL returns HTTP 200, and every badge link
+  resolves. Show the output of the command you used.
+- **Generated status.** The "What works" check fails at base
+  `d035c66d4b5ede5edcac92ea7ba4cad7d42c98d4` and passes at your head. Show
+  it failing when a status fact changes in the source of truth but not in
+  the README.
+- **Social preview.** The PNG exists and is exactly 1280×640.
+- **Mapping.** The section mapping above is complete.
+- **Suite.** `python -m unittest discover -s tests -v` and both generator
+  `--check`s are green from Git Bash, including the neutrality test.
+- **Links.** Every relative link in `README.md` and in the pages you touched
+  resolves.
+- **The PR body.** It begins `DO NOT MERGE — under review` and passes
+  `python tools/check_pr_evidence.py`.
 
 ## Required evidence
 
-- Checkout check, platform, tool, model and OS (the OS from a command's
-  output, not assumed).
-- The before-diff inventory from investigation 1.
-- Per-file SHA-256 identity against the pinned revision.
-- Guard findings and their resolutions.
-- The mutation red/green.
-- `line_endings.py check` output for every checkout.
+- Checkout check, and the tool, model and OS (the OS from `cmd /c ver`).
+- The word count, badge probe output, generator fail/pass demonstration,
+  PNG dimensions, section mapping, list of corrected facts, and link check.
 - The suite and generator output.
 - Check-run conclusions at the final head.
+- **Presentation evidence** (`AGENTS.md`): say what you verified visually and
+  what you did not. For example, render `README.md` with
+  `gh api /markdown` and inspect the result, and say whether you inspected it
+  as an image or only as HTML.
 - What you did not run.
+- Any sentence you removed from `docs/state.md` or another durable document,
+  listed explicitly.
 
 ## Completion-report schema
 
 The standard report in
-[`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus: the file
-inventory (current, stale, locally modified), how `.githooks/pre-push` was
-handled, the guard findings table, and any framework findings to raise.
+[`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus: the source
+of truth chosen for "What works" and why, the section mapping, the corrected
+facts, and the visual-verification statement.
