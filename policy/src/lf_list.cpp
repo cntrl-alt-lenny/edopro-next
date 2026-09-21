@@ -3,6 +3,7 @@
 #include "edopro_next/policy/lf_list.h"
 
 #include <fstream>
+#include <string_view>
 #include <system_error>
 
 #ifdef _WIN32
@@ -52,7 +53,43 @@ constexpr std::uint32_t fixed_rotate_term(std::uint32_t code) {
 constexpr std::int32_t kHashSafeCountMin = -26;
 constexpr std::int32_t kHashSafeCountMax = 4;
 
+#ifdef _WIN32
+bool windows_path_prefix_matches(std::wstring_view value, std::wstring_view prefix) {
+	if(value.size() < prefix.size())
+		return false;
+	for(std::size_t i = 0; i < prefix.size(); ++i) {
+		wchar_t value_char = value[i];
+		wchar_t prefix_char = prefix[i];
+		if(value_char == L'/')
+			value_char = L'\\';
+		if(value_char >= L'A' && value_char <= L'Z')
+			value_char = static_cast<wchar_t>(value_char - L'A' + L'a');
+		if(prefix_char >= L'A' && prefix_char <= L'Z')
+			prefix_char = static_cast<wchar_t>(prefix_char - L'A' + L'a');
+		if(value_char != prefix_char)
+			return false;
+	}
+	return true;
+}
+
+bool is_windows_named_pipe_path(const std::filesystem::path& path) {
+	const auto native = path.native();
+	const std::wstring_view value(native);
+	return windows_path_prefix_matches(value, L"\\\\.\\pipe\\") ||
+		windows_path_prefix_matches(value, L"\\\\?\\pipe\\");
+}
+#endif
+
 bool is_known_non_regular_path(const std::filesystem::path& path) {
+#ifdef _WIN32
+	// A named-pipe path is not safe to probe with filesystem::status() or
+	// CreateFileW(): both APIs can connect as a client and consume an instance.
+	// Reject the documented pipe namespaces before either operation so no
+	// instance state can reach the blocking ifstream read below.
+	if(is_windows_named_pipe_path(path))
+		return true;
+#endif
+
 	std::error_code status_error;
 	const auto status = std::filesystem::status(path, status_error);
 	if(!status_error) {

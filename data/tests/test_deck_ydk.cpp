@@ -13,11 +13,17 @@
 #include "edopro_next/data/ydk.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <future>
 #include <iostream>
 #include <limits>
 #include <string>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "test_support.h"
 
@@ -48,6 +54,92 @@ public:
 private:
 	std::filesystem::path path_;
 };
+
+#ifdef _WIN32
+std::atomic<unsigned> named_pipe_counter{0};
+
+class NamedPipe {
+public:
+	NamedPipe() = default;
+	~NamedPipe() { close(); }
+	NamedPipe(const NamedPipe&) = delete;
+	NamedPipe& operator=(const NamedPipe&) = delete;
+
+	bool create(bool occupy) {
+		const auto number = named_pipe_counter.fetch_add(1);
+		name_ = L"\\\\.\\pipe\\edopro_next_deck_test_" +
+			std::to_wstring(GetCurrentProcessId()) + L"_" + std::to_wstring(number);
+		server_ = CreateNamedPipeW(
+			name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+			PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
+		if(server_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(!occupy)
+			return true;
+
+		connect_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		if(connect_event_ == nullptr)
+			return false;
+		OVERLAPPED overlapped{};
+		overlapped.hEvent = connect_event_;
+		bool already_connected = ConnectNamedPipe(server_, &overlapped) != FALSE;
+		if(!already_connected) {
+			const auto error = GetLastError();
+			if(error == ERROR_PIPE_CONNECTED)
+				already_connected = true;
+			else if(error != ERROR_IO_PENDING)
+				return false;
+		}
+		if(already_connected)
+			return true;
+
+		client_ = CreateFileW(name_.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+		if(client_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(WaitForSingleObject(connect_event_, 5000) != WAIT_OBJECT_0)
+			return false;
+		DWORD transferred = 0;
+		return GetOverlappedResult(server_, &overlapped, &transferred, FALSE) != FALSE;
+	}
+
+	void close() {
+		if(client_ != INVALID_HANDLE_VALUE) {
+			CloseHandle(client_);
+			client_ = INVALID_HANDLE_VALUE;
+		}
+		if(server_ != INVALID_HANDLE_VALUE) {
+			CancelIoEx(server_, nullptr);
+			DisconnectNamedPipe(server_);
+			CloseHandle(server_);
+			server_ = INVALID_HANDLE_VALUE;
+		}
+		if(connect_event_ != nullptr) {
+			CloseHandle(connect_event_);
+			connect_event_ = nullptr;
+		}
+	}
+
+	std::filesystem::path path() const { return std::filesystem::path(name_); }
+
+private:
+	std::wstring name_;
+	HANDLE server_ = INVALID_HANDLE_VALUE;
+	HANDLE client_ = INVALID_HANDLE_VALUE;
+	HANDLE connect_event_ = nullptr;
+};
+
+edopro_next::data::YdkLoadResult load_named_pipe_with_timeout(
+	const std::filesystem::path& path, NamedPipe& pipe) {
+	auto future = std::async(std::launch::async, [path] {
+		return edopro_next::data::load_ydk(path);
+	});
+	if(future.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
+		pipe.close();
+		EDOPRO_DATA_CHECK(false);
+	}
+	return future.get();
+}
+#endif
 
 } // namespace
 
@@ -485,6 +577,40 @@ EDOPRO_DATA_TEST(a_non_regular_file_is_rejected_before_opening) {
 	const auto result = edopro_next::data::load_ydk(device);
 	EDOPRO_DATA_CHECK(!result.ok);
 	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + device.string());
+}
+
+EDOPRO_DATA_TEST(loading_a_free_named_pipe_fails_before_consuming_an_instance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_a_free_named_pipe_fails_before_consuming_an_instance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(false)) {
+		EDOPRO_DATA_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), pipe);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_a_busy_named_pipe_fails_without_opening_an_instance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_a_busy_named_pipe_fails_without_opening_an_instance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(true)) {
+		EDOPRO_DATA_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), pipe);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_DATA_CHECK(result.deck.empty());
+#endif
 }
 
 // ---------------------------------------------------------------------

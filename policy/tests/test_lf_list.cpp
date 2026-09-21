@@ -10,12 +10,19 @@
 
 #include "edopro_next/policy/lf_list.h"
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <limits>
 #include <optional>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "test_support.h"
 
@@ -33,6 +40,92 @@ std::optional<LfList> only_list(const std::string& text) {
 		return std::nullopt;
 	return result.lists.front();
 }
+
+#ifdef _WIN32
+std::atomic<unsigned> named_pipe_counter{0};
+
+class NamedPipe {
+public:
+	NamedPipe() = default;
+	~NamedPipe() { close(); }
+	NamedPipe(const NamedPipe&) = delete;
+	NamedPipe& operator=(const NamedPipe&) = delete;
+
+	bool create(bool occupy) {
+		const auto number = named_pipe_counter.fetch_add(1);
+		name_ = L"\\\\.\\pipe\\edopro_next_policy_test_" +
+			std::to_wstring(GetCurrentProcessId()) + L"_" + std::to_wstring(number);
+		server_ = CreateNamedPipeW(
+			name_.c_str(), PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
+			PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 4096, 4096, 0, nullptr);
+		if(server_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(!occupy)
+			return true;
+
+		connect_event_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+		if(connect_event_ == nullptr)
+			return false;
+		OVERLAPPED overlapped{};
+		overlapped.hEvent = connect_event_;
+		bool already_connected = ConnectNamedPipe(server_, &overlapped) != FALSE;
+		if(!already_connected) {
+			const auto error = GetLastError();
+			if(error == ERROR_PIPE_CONNECTED)
+				already_connected = true;
+			else if(error != ERROR_IO_PENDING)
+				return false;
+		}
+		if(already_connected)
+			return true;
+
+		client_ = CreateFileW(name_.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+		if(client_ == INVALID_HANDLE_VALUE)
+			return false;
+		if(WaitForSingleObject(connect_event_, 5000) != WAIT_OBJECT_0)
+			return false;
+		DWORD transferred = 0;
+		return GetOverlappedResult(server_, &overlapped, &transferred, FALSE) != FALSE;
+	}
+
+	void close() {
+		if(client_ != INVALID_HANDLE_VALUE) {
+			CloseHandle(client_);
+			client_ = INVALID_HANDLE_VALUE;
+		}
+		if(server_ != INVALID_HANDLE_VALUE) {
+			CancelIoEx(server_, nullptr);
+			DisconnectNamedPipe(server_);
+			CloseHandle(server_);
+			server_ = INVALID_HANDLE_VALUE;
+		}
+		if(connect_event_ != nullptr) {
+			CloseHandle(connect_event_);
+			connect_event_ = nullptr;
+		}
+	}
+
+	std::filesystem::path path() const { return std::filesystem::path(name_); }
+
+private:
+	std::wstring name_;
+	HANDLE server_ = INVALID_HANDLE_VALUE;
+	HANDLE client_ = INVALID_HANDLE_VALUE;
+	HANDLE connect_event_ = nullptr;
+};
+
+edopro_next::policy::LfListLoadResult load_named_pipe_with_timeout(
+	const std::filesystem::path& path, NamedPipe& pipe) {
+	auto future = std::async(std::launch::async, [path] {
+		return edopro_next::policy::load_lflist(path);
+	});
+	if(future.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
+		pipe.close();
+		EDOPRO_POLICY_CHECK(false);
+	}
+	return future.get();
+}
+#endif
 
 } // namespace
 
@@ -526,4 +619,38 @@ EDOPRO_POLICY_TEST(loadLflistNonRegularFileIsRejectedBeforeOpening) {
 	const auto result = load_lflist(device);
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + device.string());
+}
+
+EDOPRO_POLICY_TEST(loadLflistFreeNamedPipeFailsBeforeConsumingAnInstance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistFreeNamedPipeFailsBeforeConsumingAnInstance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(false)) {
+		EDOPRO_POLICY_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), pipe);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_POLICY_CHECK(result.lists.empty());
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance: Windows named pipes are unavailable on this platform\n";
+	return;
+#else
+	NamedPipe pipe;
+	if(!pipe.create(true)) {
+		EDOPRO_POLICY_CHECK(false);
+		return;
+	}
+	const auto result = load_named_pipe_with_timeout(pipe.path(), pipe);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
+	EDOPRO_POLICY_CHECK(result.lists.empty());
+#endif
 }
