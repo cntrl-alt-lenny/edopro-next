@@ -37,7 +37,11 @@ instance is rejected from `ERROR_PIPE_BUSY` before the stream open. Therefore
 the tested pipe spellings are covered by Windows' object resolution rather
 than by an enumerated prefix list. The remaining limit is an untested Windows
 error mode in which a pipe server denies the probe with an error other than
-`ERROR_PIPE_BUSY`; such a path is not claimed as a separately measured input.
+`ERROR_PIPE_BUSY`. The fixtures use the default named-pipe security descriptor
+and do not create that denial state; the share-locked regular-file test proves
+only that the fallback preserves a regular-file open failure, not what a
+restricted pipe would do. Such a path is therefore not claimed as a
+separately measured input.
 
 At `338fe1e87770142ec7918553eaf43560e0657685` on Windows 11/MSVC, the
 pre-guard behavior was observed input by input: a free named pipe could be
