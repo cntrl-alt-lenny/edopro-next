@@ -380,12 +380,13 @@ Two traps specific to this machine, both of which cost real time:
    `loadLflistDirectoryPathFailsCleanly` until Brief 011 merged. macOS was
    last exercised at that round's `3b15ad56`, not at the merged head, so
    re-run `policy/` CTest on the Mac before relying on it.
-2. **A stale `client/build/edopro_next_semantic_trace` is silently preferred**
-   by `tests/test_semantic_trace.py`'s `find_binary()`, which searches fixed
-   paths with no freshness check. A binary four days old made four Python
-   tests fail against a clean tree. Delete the directory or set
-   `EDOPRO_NEXT_SEMANTIC_TRACE`. The dangerous direction is not the failure —
-   it is a C++ edit that never gets compiled and reports green.
+2. **Semantic-trace discovery is freshness-checked** by
+   `tests/test_semantic_trace.py`'s `find_binary()`: an explicit or searched
+   binary must be strictly newer than every source file that can be fully
+   enumerated and stat'ed under `client/`, excluding build output. An
+   unreadable source tree fails closed. The residual limit is that a newer
+   binary built from a different commit can still pass because the executable
+   carries no source revision.
 
 Two operational facts, true and previously written down nowhere: on Windows
 `cmake -G Ninja` finds no compiler outside the MSVC environment

@@ -60,17 +60,27 @@ def _source_mtime_ns(source_root: pathlib.Path) -> int | None:
     The semantic trace executable has no embedded source revision, so the
     harness uses a deliberately conservative local relation: every file in
     client/ (apart from ignored build output) must be older than the binary.
-    A missing or unreadable source tree is not evidence of freshness.
+    A missing or unreadable source tree is not evidence of freshness. This
+    uses explicit scandir recursion because Path.rglob can silently omit a
+    directory after an access-denied error on Windows.
     """
     try:
-        source_files = []
-        for path in source_root.rglob("*"):
-            relative = path.relative_to(source_root)
-            if path.is_file() and "build" not in relative.parts:
-                source_files.append(path)
-        if not source_files:
-            return None
-        return max(path.stat().st_mtime_ns for path in source_files)
+        newest = None
+        pending = [source_root]
+        while pending:
+            directory = pending.pop()
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    path = pathlib.Path(entry.path)
+                    relative = path.relative_to(source_root)
+                    if "build" in relative.parts:
+                        continue
+                    if entry.is_dir(follow_symlinks=False):
+                        pending.append(path)
+                    elif entry.is_file(follow_symlinks=False):
+                        mtime = entry.stat(follow_symlinks=False).st_mtime_ns
+                        newest = mtime if newest is None else max(newest, mtime)
+        return newest
     except (OSError, ValueError):
         return None
 
@@ -209,6 +219,57 @@ class TestBinaryFreshness(unittest.TestCase):
             os.utime(source, ns=(now, now))
             os.utime(binary, ns=(now + 1_000_000, now + 1_000_000))
             self.assertTrue(binary_is_fresh(binary, source_root))
+
+    def test_unreadable_source_tree_fails_closed(self) -> None:
+        if os.name != "nt":
+            self.skipTest("Windows ACL denial is required for this enumeration test")
+
+        with tempfile.TemporaryDirectory() as workdir:
+            root = pathlib.Path(workdir)
+            source_root = root / "client"
+            blocked = source_root / "blocked"
+            source_root.mkdir()
+            blocked.mkdir()
+            visible = source_root / "visible.cpp"
+            hidden = blocked / "newer.cpp"
+            binary = root / "edopro_next_semantic_trace"
+            visible.write_text("visible", encoding="utf-8")
+            hidden.write_text("hidden", encoding="utf-8")
+            binary.write_text("binary", encoding="utf-8")
+            now = 1_700_000_000_000_000_000
+            os.utime(visible, ns=(now, now))
+            os.utime(hidden, ns=(now + 2_000_000, now + 2_000_000))
+            os.utime(binary, ns=(now + 1_000_000, now + 1_000_000))
+
+            identity_result = subprocess.run(
+                ["whoami"], capture_output=True, text=True, check=False)
+            identity = identity_result.stdout.strip()
+            if identity_result.returncode != 0 or not identity:
+                self.skipTest("could not identify the Windows account for icacls")
+
+            deny = subprocess.run(
+                ["icacls", str(blocked), "/deny",
+                 f"{identity}:(OI)(CI)(RD)"],
+                capture_output=True, text=True, check=False)
+            if deny.returncode != 0:
+                self.skipTest(
+                    "could not establish a Windows read denial with icacls: "
+                    + deny.stderr.strip())
+
+            try:
+                try:
+                    with os.scandir(blocked):
+                        pass
+                except PermissionError:
+                    self.assertFalse(binary_is_fresh(binary, source_root))
+                else:
+                    self.skipTest(
+                        "icacls reported success but the test account can still "
+                        "enumerate the denied directory")
+            finally:
+                subprocess.run(
+                    ["icacls", str(blocked), "/remove:d", identity],
+                    capture_output=True, text=True, check=False)
 
     def test_find_binary_rejects_stale_search_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as workdir:
