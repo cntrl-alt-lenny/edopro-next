@@ -8,6 +8,12 @@
 // itself (gframe/deck_manager.cpp:80) is not something a reader should have
 // to re-derive by hand to trust these tests.
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+
 #include "edopro_next/policy/lf_list.h"
 
 #include <atomic>
@@ -22,6 +28,12 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#ifdef max
+#undef max
+#endif
+#ifdef small
+#undef small
+#endif
 #endif
 
 #include "test_support.h"
@@ -652,5 +664,31 @@ EDOPRO_POLICY_TEST(loadLflistBusyNamedPipeFailsWithoutOpeningAnInstance) {
 	EDOPRO_POLICY_CHECK(!result.ok);
 	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
 	EDOPRO_POLICY_CHECK(result.lists.empty());
+#endif
+}
+
+EDOPRO_POLICY_TEST(loadLflistShareLockedRegularFileReportsOpenFailure) {
+#ifndef _WIN32
+	std::cout << "  SKIP loadLflistShareLockedRegularFileReportsOpenFailure: Windows share locks are unavailable on this platform\n";
+	return;
+#else
+	const auto path = std::filesystem::temp_directory_path() /
+		"edopro_next_policy_test_share_locked.conf";
+	std::error_code cleanup_error;
+	std::filesystem::remove(path, cleanup_error);
+	{
+		std::ofstream output(path, std::ios::binary);
+		output << "!Test\n4 1\n";
+	}
+	const auto lock = CreateFileW(
+		path.c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	EDOPRO_POLICY_CHECK(lock != INVALID_HANDLE_VALUE);
+	if(lock == INVALID_HANDLE_VALUE)
+		return;
+	const auto result = load_lflist(path);
+	CloseHandle(lock);
+	std::filesystem::remove(path, cleanup_error);
+	EDOPRO_POLICY_CHECK(!result.ok);
+	EDOPRO_POLICY_CHECK_EQ(result.error, "failed to open file: " + path.string());
 #endif
 }

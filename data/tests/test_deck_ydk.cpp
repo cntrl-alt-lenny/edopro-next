@@ -10,12 +10,19 @@
 // gframe/deck_manager.cpp's LoadCardList/SaveDeck/MakeYdkEntryString - see
 // docs/architecture/deck-model.md for the exact source citations behind
 // each MATCH/DIVERGE decision this suite pins.
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
+
 #include "edopro_next/data/ydk.h"
 
 #include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <future>
 #include <iostream>
 #include <limits>
@@ -23,6 +30,12 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#ifdef max
+#undef max
+#endif
+#ifdef small
+#undef small
+#endif
 #endif
 
 #include "test_support.h"
@@ -610,6 +623,28 @@ EDOPRO_DATA_TEST(loading_a_busy_named_pipe_fails_without_opening_an_instance) {
 	EDOPRO_DATA_CHECK(!result.ok);
 	EDOPRO_DATA_CHECK_EQ(result.error, "failed to read file: " + pipe.path().string());
 	EDOPRO_DATA_CHECK(result.deck.empty());
+#endif
+}
+
+EDOPRO_DATA_TEST(loading_a_share_locked_regular_file_reports_open_failure) {
+#ifndef _WIN32
+	std::cout << "  SKIP loading_a_share_locked_regular_file_reports_open_failure: Windows share locks are unavailable on this platform\n";
+	return;
+#else
+	TempFile file("share_locked");
+	{
+		std::ofstream output(file.path(), std::ios::binary);
+		output << "#main\n1\n";
+	}
+	const auto lock = CreateFileW(
+		file.path().c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+	EDOPRO_DATA_CHECK(lock != INVALID_HANDLE_VALUE);
+	if(lock == INVALID_HANDLE_VALUE)
+		return;
+	const auto result = edopro_next::data::load_ydk(file.path());
+	CloseHandle(lock);
+	EDOPRO_DATA_CHECK(!result.ok);
+	EDOPRO_DATA_CHECK_EQ(result.error, "failed to open file: " + file.path().string());
 #endif
 }
 
