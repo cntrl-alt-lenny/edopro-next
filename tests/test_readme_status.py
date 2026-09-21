@@ -197,6 +197,20 @@ class CheckTest(unittest.TestCase):
             grs.apply_block("# no markers here\n", grs.render(self.milestones))
 
 
+class CommittedFilesTest(unittest.TestCase):
+    def test_committed_readme_block_is_current(self):
+        problems = grs.check(
+            grs.README.read_text(encoding="utf-8"), grs.ROADMAP.read_text(encoding="utf-8")
+        )
+        self.assertEqual(problems, [], "\n".join(problems))
+
+    def test_check_entry_point(self):
+        result = subprocess.run(
+            [sys.executable, str(TOOL), "--check"], cwd=str(REPO), text=True, capture_output=True
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 class CommandLineTest(unittest.TestCase):
     """The tool's own exit codes, against scratch copies."""
 
