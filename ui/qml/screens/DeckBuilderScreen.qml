@@ -548,6 +548,96 @@ Item {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.space2
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    Text {
+                        text: "Ruleset"
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                        color: Theme.textSecondary
+                    }
+
+                    ComboBox {
+                        id: rulesetCombo
+                        objectName: "rulesetCombo"
+                        Layout.fillWidth: true
+                        model: deckController.rulesetNames
+                        currentIndex: deckController.selectedRulesetIndex
+                        onActivated: function(index) { deckController.selectedRulesetIndex = index; }
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    Text {
+                        text: "Banlist"
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                        color: Theme.textSecondary
+                    }
+
+                    ComboBox {
+                        id: banlistCombo
+                        objectName: "banlistCombo"
+                        Layout.fillWidth: true
+                        model: deckController.banlistNames
+                        currentIndex: deckController.selectedBanlistIndex
+                        onActivated: function(index) { deckController.selectedBanlistIndex = index; }
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+                }
+            }
+
+            Connections {
+                target: deckController
+                function onSelectedRulesetChanged() {
+                    rulesetCombo.currentIndex = deckController.selectedRulesetIndex;
+                }
+                function onSelectedBanlistChanged() {
+                    banlistCombo.currentIndex = deckController.selectedBanlistIndex;
+                }
+            }
+
+            Rectangle {
+                id: legalityBox
+                objectName: "legalityBox"
+                Layout.fillWidth: true
+                radius: Theme.radiusSm
+                color: Theme.surface
+                border.width: 1
+                border.color: deckController.isLegal ? Theme.success : Theme.warning
+                implicitHeight: legalityLayout.implicitHeight + Theme.space2 * 2
+
+                RowLayout {
+                    id: legalityLayout
+                    anchors.fill: parent
+                    anchors.margins: Theme.space2
+                    spacing: Theme.space2
+
+                    Text {
+                        id: legalityText
+                        objectName: "legalityText"
+                        Layout.fillWidth: true
+                        text: deckController.legalityMessage
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                        color: deckController.isLegal ? Theme.success : Theme.warning
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
+
             Text {
                 Layout.fillWidth: true
                 visible: deckController.lastError.length > 0
