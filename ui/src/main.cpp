@@ -57,6 +57,12 @@ int main(int argc, char* argv[]) {
         QStringLiteral("path"));
     parser.addOption(cardDbOption);
 
+    QCommandLineOption lflistOption(
+        QStringLiteral("lflist"),
+        QStringLiteral("Path to an lflist.conf banlist file. Repeatable; later files append."),
+        QStringLiteral("path"));
+    parser.addOption(lflistOption);
+
     QCommandLineOption startScreenOption(
         QStringLiteral("start-screen"),
         QStringLiteral("Show this screen on launch instead of Home: home, decks, duel, "
@@ -99,6 +105,10 @@ int main(int argc, char* argv[]) {
     const QStringList cardDbPaths = parser.values(cardDbOption);
     if (!cardDbPaths.isEmpty())
         catalog.loadDatabases(cardDbPaths);
+
+    const QStringList lflistPaths = parser.values(lflistOption);
+    if (!lflistPaths.isEmpty())
+        deckController.loadBanlists(lflistPaths);
 
     QQmlApplicationEngine engine;
     // Lowercase, deliberately distinct from the QML_ELEMENT type names
