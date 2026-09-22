@@ -13,4 +13,3 @@ Evidence commands:
 - `python3 tools/generate_protocol_constants.py --check`
 - `python3 tests/test_semantic_trace.py --require -v`
 - `ctest --test-dir client/build --output-on-failure`
-
