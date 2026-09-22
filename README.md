@@ -37,7 +37,7 @@ The Qt shell, the `data/` and `policy/` modules, and per-platform notes are in [
 ## What works
 
 <!-- BEGIN GENERATED readme-status (tools/generate_readme_status.py; do not edit by hand) -->
-**No.** The duel field (M5) is not started. To duel today, use [EDOPro](https://github.com/edo9300/edopro).
+The duel field (M5) is not started. To duel today, use [EDOPro](https://github.com/edo9300/edopro).
 
 **Done**
 

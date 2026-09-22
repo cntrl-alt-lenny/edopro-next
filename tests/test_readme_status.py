@@ -133,11 +133,11 @@ class RenderTest(unittest.TestCase):
 
     def test_duel_answer_follows_the_duel_milestone(self):
         not_started = grs.render(grs.parse_roadmap(SMALL_ROADMAP))
-        self.assertIn("**No.** The duel field (M2) is not started.", not_started)
+        self.assertIn("The duel field (M2) is not started.", not_started)
         started = SMALL_ROADMAP.replace(
             "## M2 — Duel field", "## M2 — Duel field \U0001F536 in progress"
         ).replace("- [ ] later", "- [x] later\n- [ ] more")
-        self.assertIn("**Not yet.** The duel field (M2) is in progress.", grs.render(grs.parse_roadmap(started)))
+        self.assertIn("The duel field (M2) is in progress.", grs.render(grs.parse_roadmap(started)))
         finished = SMALL_ROADMAP.replace(
             "## M2 — Duel field", "## M2 — Duel field ✅ done"
         ).replace("- [ ] later", "- [x] later")
@@ -175,7 +175,7 @@ class CheckTest(unittest.TestCase):
         self.assertTrue(grs.check(self.current, moved))
 
     def test_hand_edited_readme_block_fails(self):
-        edited = self.current.replace("**No.**", "**Yes.**")
+        edited = self.current.replace("The duel field", "The duel arena")
         self.assertNotEqual(edited, self.current)
         self.assertTrue(grs.check(edited, SMALL_ROADMAP))
 

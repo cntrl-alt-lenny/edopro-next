@@ -169,15 +169,15 @@ def validate(milestones: list[Milestone]) -> None:
 def _duel_line(milestones: list[Milestone]) -> str:
     ms = next(m for m in milestones if m.title == DUEL_MILESTONE_TITLE)
     if ms.status == NOT_STARTED:
-        answer = f"**No.** The duel field ({ms.key}) is not started."
+        lead = f"The duel field ({ms.key}) is not started."
     elif ms.status == IN_PROGRESS:
-        answer = f"**Not yet.** The duel field ({ms.key}) is in progress."
+        lead = f"The duel field ({ms.key}) is in progress."
     else:
-        answer = (
+        lead = (
             f"The duel field ({ms.key}) is marked done in the roadmap; "
             "read its exit criterion before relying on that."
         )
-    return f"{answer} To duel today, use [EDOPro]({UPSTREAM_CLIENT})."
+    return f"{lead} To duel today, use [EDOPro]({UPSTREAM_CLIENT})."
 
 
 def _group(milestones: list[Milestone], status: str) -> list[str]:
