@@ -358,3 +358,32 @@ ranking.
   second time in two days, and caught it before handing the brief out. The
   rule is now written down for future sessions: copy every SHA from
   `git rev-parse`, then verify it with `git cat-file -e`.
+
+## Round 015 — 2026-09-22 — deck-builder legality UI
+
+Two passes (PR #31, merged `45bb2f33`). This is an observation log, not a
+ranking. There is one observation per configuration, and no controlled
+comparison.
+
+- **Pass 1, both seats in Antigravity (Gemini).**
+  - The Builder's code was sound: no rule logic in `ui/`, and `policy/` left
+    untouched.
+  - Its ADR cited six upstream constants that do not exist, and lines that
+    hold unrelated code. It gave its model only as "Gemini (inherited)".
+  - The Verifier had been told to re-read every citation. It returned
+    ACCEPT, called the invented constants traced, and missed the card-pool
+    divergence from upstream's default.
+  - This is the first round where the review layer passed a fabricated
+    upstream citation. The task, upstream archaeology, is the kind this
+    project's history says fails silently.
+- **Pass 2, both seats in Claude Code (Sonnet 5).**
+  - The Builder re-derived every corrected citation with verbatim quotes, and
+    found a real extra fact (upstream's default banlist is a concrete "N/A",
+    not null), which it routed to Brain.
+  - The Verifier re-read about 25 citations and found one genuine wrong-file
+    citation. It also raised one false finding ("`ocgcore/ocgapi_constants.h`
+    does not exist"), caused by an uninitialised submodule in its worktree:
+    an environment trap, now fixed.
+- **Brain-seat note.** Brain's own `grep` of the cited constants and its
+  trace of the card-pool default were what caught pass 1. Re-deriving one
+  load-bearing claim yourself is not optional on archaeology rounds.

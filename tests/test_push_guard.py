@@ -49,7 +49,28 @@ HOOK = REPO / ".githooks" / "pre-push"
 ZERO = "0" * 40
 SOME = "1111111111111111111111111111111111111111"
 
-_SH = shutil.which("sh") or shutil.which("bash")
+def _find_sh():
+    sh = shutil.which("sh")
+    if sh:
+        return sh
+    git = shutil.which("git")
+    if git:
+        git_dir = Path(git).resolve().parent.parent
+        for candidate in (
+            git_dir / "bin" / "sh.exe",
+            git_dir / "usr" / "bin" / "sh.exe",
+            git_dir / "bin" / "bash.exe",
+            git_dir / "usr" / "bin" / "bash.exe",
+        ):
+            if candidate.is_file():
+                return str(candidate)
+    bash = shutil.which("bash")
+    if bash and "WindowsApps" not in Path(bash).parts:
+        return bash
+    return None
+
+
+_SH = _find_sh()
 _GIT = shutil.which("git")
 
 

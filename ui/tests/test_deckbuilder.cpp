@@ -217,6 +217,7 @@ private slots:
     // as unqualified legality. These fail against 259b7bcd, where
     // legalityMessage() carries no disclosure in either branch below.
     void noBanlistSelectionDisclosesSkippedChecksWhenOtherwiseLegal();
+    void noBanlistSelectionDisclosesSkippedChecksForExtraDeckMonsterInMain();
     void noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal();
     void concreteBanlistSelectionCarriesNoSkippedChecksDisclosure();
 };
@@ -952,6 +953,58 @@ void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksWhenOtherwiseLegal
     QCOMPARE(msg, QStringLiteral("Deck meets this ruleset's size and type limits. No banlist "
                                   "is selected: card-scope, section-placement and copy-limit "
                                   "checks are not being made."));
+}
+
+void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksForExtraDeckMonsterInMain() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    // 1 Extra Deck monster (Fusion: type 0x41) and 39 Main Deck monsters (type 0x1)
+    QList<SyntheticCard> cards;
+    cards.push_back(SyntheticCard{200, QStringLiteral("Fusion Beast"), 0x41, 2000, 2000, 6});
+    for (quint32 i = 101; i <= 139; ++i) {
+        cards.push_back(SyntheticCard{i, QStringLiteral("Card%1").arg(i), 0x1, 1000, 1000, 4});
+    }
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    DeckController controller;
+    controller.setCatalog(&catalog);
+
+    // Add Fusion monster (code 200) to Main deck along with 39 normal monsters.
+    // Total Main deck count = 40.
+    controller.addCard(200, DeckController::Section::Main);
+    for (quint32 i = 101; i <= 139; ++i)
+        controller.addCard(i, DeckController::Section::Main);
+    QCOMPARE(controller.mainCount(), 40);
+
+    // Under "No banlist" (index 0), policy::validate_deck() skips CheckCards
+    // (and thus main_zone_check). Size and type checks pass.
+    // The controller must show the skipped-checks disclosure rather than
+    // reporting unqualified legality (S3, brief 015 second example).
+    QCOMPARE(controller.selectedBanlistIndex(), 0);
+    QCOMPARE(controller.isLegal(), true);
+    const QString msg = controller.legalityMessage();
+    QVERIFY2(msg.contains(QStringLiteral("No banlist is selected")),
+              qPrintable(QStringLiteral("expected a no-banlist disclosure, got: ") + msg));
+    QVERIFY2(msg.contains(QStringLiteral("card-scope, section-placement and copy-limit")),
+              qPrintable(msg));
+    QCOMPARE(msg, QStringLiteral("Deck meets this ruleset's size and type limits. No banlist "
+                                  "is selected: card-scope, section-placement and copy-limit "
+                                  "checks are not being made."));
+
+    // Under concrete banlist ("N/A"), CheckCards runs and catches the Extra Deck
+    // card placed in the Main deck.
+    controller.loadBanlistFromText("!N/A\n");
+    controller.setSelectedBanlistIndex(1);
+    QCOMPARE(controller.isLegal(), false);
+    QCOMPARE(controller.legalityErrorType(),
+             static_cast<int>(edopro_next::policy::DeckErrorType::ExtraCount));
+    QCOMPARE(controller.legalityCardCode(), 200u);
+    QVERIFY2(controller.legalityMessage().contains(QStringLiteral("belongs in the Main deck, not the Extra deck")),
+              qPrintable(controller.legalityMessage()));
 }
 
 void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal() {

@@ -1,652 +1,326 @@
 ## Summary
 
-
-
 Starting master SHA: `41281095348ba7ffa9d1748910ede227705d5446` (M3A + M3B, card database
-
 facade and deck model/`.ydk` codec, both merged). Branch: `m3/fast-card-search`. Final head:
-
 `91be4c8292d9be66e2fba046594c7446adaad378` (three rounds of external-review fixes landed
-
 after initial open - see "Review fixes" near the end).
 
-
-
 Addresses exactly one M3 roadmap item: **"Fast search over the full card pool"**. M3 remains
-
 in progress after this PR - the deck builder UI is not started. Also includes one unrelated
-
 tiny housekeeping fix, as its own first commit: README's condensed milestone table still
-
 showed M2 as in-progress when `docs/ROADMAP.md` already correctly marks it done.
 
-
-
 - `edopro_next::data::CardSearchIndex` (`data/include/edopro_next/data/card_search_index.h`,
-
   `data/src/card_search_index.cpp`): builds an explicit, presentation-independent snapshot
-
   from a `CardDatabase` and answers structured `SearchQuery`s with deterministic ranking. No
-
   Qt/QML/Irrlicht/`ocgcore`/`gframe`/`DeckBuilder`/`DeckManager`/LFList/networking.
-
 - `SearchQuery`/`SearchResult`/`MatchKind` (`search_query.h`, `search_result.h`): a
-
   structured query type - text/scope, exact code, typed static metadata filters - not
-
   upstream's compact sigil mini-language.
-
 - `normalize_search_text` (`text_normalize.h`/`.cpp`): source-faithful case/accent folding,
-
   UTF-8/`char32_t`, no locale dependency.
-
 - A new CMake target, `edopro_next_search` (`data/CMakeLists.txt`), depending on
-
   `edopro_next_data` (accepted exception - searching needs card data) but never exposing
-
   SQLite.
-
 - `docs/architecture/card-search.md` - full source archaeology of `DeckBuilder::
-
   FilterCards`/`CheckCardProperties`/`CheckCardText`/`SortList` and `DataManager::
-
   GetSetCode`, with exact line citations against upstream `54ea755a`.
-
 - `docs/adr/0005-card-search-structured-query.md` - the three load-bearing decisions.
-
 - `data/tests/test_card_search.cpp` - 35 tests, all passing.
-
 - `data/tests/bench_card_search.cpp` - a non-gating performance measurement executable.
-
 - `docs/ROADMAP.md`, `README.md` - status updates.
-
-
 
 ## Source archaeology findings (full detail in `docs/architecture/card-search.md`)
 
-
-
 - `DeckBuilder::FilterCards` (`gframe/deck_con.cpp:1059-1190`) parses a compact sigil
-
   mini-language: `||` splits independent OR-terms, `&&` splits AND-subterms, `*` splits a
-
   subterm into tokens, and an optional prefix (`!!` negate, `@` archetype-only, `$$`
-
   text-only, `$` name-only) selects a mode.
-
 - `DeckBuilder::CheckCardProperties` (`:1191-1324`) mixes ordinary static-metadata filtering
-
   (type/race/attribute/ATK/DEF/level/scale/category/link-marks) with genuine legality/policy
-
   in the same function: an unconditional top-of-function gate excluding tokens/hidden
-
   cards/non-official scope unless anime-mode or a whitelist is active, and a large switch
-
   consulting the loaded `LFList`'s ban/limit counts and named `SCOPE_*` legality categories.
-
 - `DataManager`'s `uppercase_name`/`uppercase_text` (`CardString`, `gframe/data_manager.h:
-
   100-105`) are precomputed once at load time, never per search, and the sixteen auxiliary
-
   strings are **never** searched by `CheckCardText` - only name and rules text.
-
 - `Utils::ContainsSubstring` (`gframe/utils.cpp:664-674`)'s own doc comment says "all tokens
-
   are contained in the input," but the implementation requires them in left-to-right,
-
   non-overlapping order (each token's search starts where the previous match ended) - an
-
   artifact of a single forward-advancing `find()`, not a stated design choice.
-
 - `DeckBuilder::SortList` (`:1397-1432`) is a UI column sort (by level/ATK/DEF/name/passcode,
-
   card-type-aware), not a relevance ranking - explicitly not reproduced as this module's
-
   ranking scheme.
-
 - `DataManager::GetSetCode` (`gframe/data_manager.cpp:401-421`) resolves a human, localized
-
   archetype-name string into numeric setcodes using a strings resource entirely outside
-
   `CardRecord`/`CardDatabase` - out of scope for this PR. `CardSetcodes`/`check_set_code`
-
   (`gframe/deck_con.cpp:1325-1340`) resolve *which* card's setcodes to check: an aliased
-
   card's own (usually empty) setcode is not used - its alias's is - reproduced exactly.
-
-
 
 ## Architecture chosen
 
-
-
 An explicit `CardSearchIndex` snapshot, built from a `CardDatabase` by `rebuild()` and never
-
 observing it afterward - a later `load_database()`/`load_locale()`/`clear_locale()` call is
-
 invisible until `rebuild()` runs again, by design (ADR 0005, Decision 1). A simple
-
 `std::vector<Entry>` with precomputed normalized strings, scanned linearly by `search()` - no
-
 inverted index, no third-party search library (see Performance below for why).
-
-
 
 ## Normalization semantics
 
-
-
 `normalize_search_text` reproduces `Utils::ToUpperChar`'s (`gframe/utils.h:320-358`) exact
-
 Latin-1 accent-folding table codepoint-for-codepoint (À-Å/à-å etc. -> A, similarly E/I/O/U/N,
-
 plus `¡`->`!`/`¿`->`?`), in UTF-8/`char32_t` rather than upstream's `wchar_t` - every
-
 codepoint the table cares about fits in one UTF-16 code unit, so this sidesteps the Windows
-
 (16-bit)/Linux (32-bit) `wchar_t` width difference without changing any result. A codepoint
-
 outside the table (any non-Latin script, or a Latin-1 character like Æ/ß upstream's own
-
 fallback does not touch) passes through unchanged - verified empirically that upstream's
-
 `std::toupper` fallback, under the default `"C"` locale with no `setlocale` call anywhere in
-
 this codebase's search path, only affects plain ASCII `a`-`z`. Implemented directly rather
-
 than calling the locale-dependent `std::toupper`, so this never depends on the embedding
-
 process's global locale state.
-
-
 
 ## Structured query API
 
-
-
 `SearchQuery`: `text`/`text_scope` (`Name`/`Text`/`NameOrText`), `exact_code` (a ranking
-
 hint - see "Ranking" below), and typed static filters, each using the operator that
-
 actually matches its upstream source (audited individually - see "Static filters
-
 implemented" and `docs/architecture/card-search.md`§2.1):
 
-
-
 - `type`/`link_marker`/`scope`: `BitmaskFilter{require_all_bits}` - **all** selected bits
-
   must be present.
-
 - `category`: `AnyBitmaskFilter{any_bits}` - **any** selected bit is enough (a deliberately
-
   different shape from the above - upstream's own effect-category filter is any-of, not
-
   all-bits; an explicit `AnyBitmaskFilter{0}` means no constraint, matching upstream's own
-
   zero-mask short-circuit).
-
 - `race`: `std::optional<std::uint64_t>`, **exact equality** - not bitmask containment,
-
   matching upstream's single-value selector.
-
 - `attribute`: exact match.
-
 - `attack`/`defense`/`level`/`left_scale`/`right_scale`: `NumericFilter{value, EqualTo|
-
   AtLeast|AtMost}` - both sides compared as `int64_t`, with no narrowing back to the
-
   field's native width and no silent unsigned reinterpretation.
-
 - `setcodes`: "any of these", alias-resolved.
 
-
-
 `limit` is applied after ranking. `CardSearchIndex::rebuild(const CardDatabase&)` builds the
-
 snapshot; `search(const SearchQuery&) const` returns `std::vector<SearchResult>` - a
-
 `CardCode` plus a `MatchKind`, never a pointer into index- or database-owned storage.
-
-
 
 ## Text matching semantics
 
-
-
 `text` is normalized once, then split on the full ASCII whitespace set (space, tab, CR, LF,
-
 vertical tab, form feed) into tokens - matched with **order-independent** AND semantics
-
 (every token must appear somewhere in the field, any order), a deliberate departure from
-
 upstream's ordered `Utils::ContainsSubstring`, chosen because the ordering requirement there
-
 is traceable to *how* it happens to be implemented, not to any stated intent, and because
-
 order-independent matching is the more ordinary search-box expectation. `Name`/`Text`/
-
 `NameOrText` scope isolation matches upstream's own `SEARCH_MODIFIER_NAME_ONLY`/`TEXT_ONLY`
-
 behaviour. Text that is empty, or normalizes and tokenizes to zero tokens (i.e. contains
-
 only ASCII whitespace), carries no text constraint at all - see "Ranking" below.
-
-
 
 ## Ranking
 
-
-
 `MatchKind`, in priority order: `ExactCode` > `ExactName` > `NamePrefix` > `NameMatch` >
-
 `TextMatch` > `NoTextQuery` (every filter-passing entry when `text` is empty *or* normalizes
-
 and tokenizes to zero tokens, i.e. contains only ASCII whitespace - a deliberate "match
-
 everything" contract, not "match nothing," so a caller building a browse-the-catalogue view
-
 needs no separate code path, and a live search box that is transiently empty or all-spaces
-
 gets the same browse behaviour without needing to trim it first). Within a tier, results are
-
 ordered by normalized name
-
 ascending then `CardCode` ascending - a total order, so the same index and query always
-
 produce byte-for-byte identical output. A new scheme, informed by but not copied from
-
 `SortList`'s UI column sort.
-
-
 
 ## Static filters implemented
 
-
-
 Type/link-marker/scope (bitmask "require all"), category (bitmask "any of" - **not**
-
 "require all", matching upstream's own any-of `filter_effect` semantics exactly, see
-
 "Review fixes" below), race (exact equality against `CardRecord::race`, matching upstream's
-
 own single-value selector - **not** a bitmask-containment filter), attribute (exact match),
-
 attack/defense/level/left_scale/right_scale (typed numeric comparison, 3 operators),
-
 setcodes (OR, alias-resolved). Deliberately excluded: `TYPE_TOKEN`/`SCOPE_HIDDEN`
-
 auto-exclusion, anime-mode gate, LFList ban/limit/whitelist, named `LIMITATION_FILTER_OCG`/
-
 `TCG`/`ANIME`/etc. categories - all legality/policy, not search
-
 (`docs/architecture/card-search.md`§2's full upstream-filter-to-`SearchQuery`-field table).
-
 `defense` never matches a Link monster; `left_scale`/`right_scale` never match a non-Pendulum
-
 card - both mirroring `CheckCardProperties`'s own unconditional exclusions. A full
-
 operator-level audit of every static filter against `CheckCardProperties` is in
-
 `docs/architecture/card-search.md`§2.1. The "?" ATK/DEF
-
 sentinel (-1/-2) needs no special case: a realistic `AtLeast` threshold already excludes it
-
 via ordinary signed comparison. `level`'s M3A-established `uint32_t` wraparound representation
-
 for a negative packed value participates in numeric comparisons exactly as upstream's own
-
 `uint32_t` comparison would, verified directly.
-
-
 
 ## Alias/setcode decision
 
-
-
 `setcodes` is a purely numeric filter over `CardRecord::setcodes` - schema data. Resolving a
-
 *human archetype name* (what `@name` does upstream, via `DataManager::GetSetCode`) needs a
-
 localized set-name string resource entirely outside `CardRecord`/`CardDatabase` today -
-
 deliberately deferred. The numeric alias-resolution rule (`CardSetcodes`: an aliased card's
-
 search uses its alias's setcodes, not its own) is reproduced exactly, resolved once per card
-
 at `rebuild()` time into `Entry::effective_setcodes`, not per query.
-
-
 
 ## Locale/rebuild lifecycle
 
-
-
 `CardSearchIndex` never observes `CardDatabase`. A `load_database()`/`load_locale()`/
-
 `clear_locale()` call is invisible to a previously built index until `rebuild()` runs again -
-
 tested explicitly through the full base -> locale -> clear cycle, and separately for a later
-
 database override, both showing the pre-rebuild staleness as documented, deliberate behavior.
-
-
 
 ## Performance implementation chosen and why
 
-
-
 A `std::vector<Entry>` of precomputed normalized strings and static metadata, scanned
-
 linearly - no inverted index, no SQLite FTS, no third-party search library. Chosen because it
-
 measured comfortably fast, not by default: see below.
-
-
 
 ## Benchmark dataset and measured results
 
-
-
 `data/tests/bench_card_search.cpp`: 22,000 deterministic synthetic cards (real Yu-Gi-Oh pool
-
 is ~13,000; this gives margin), realistic-length two-word names plus an id suffix, and rules
-
 text built from 2-5 concatenated sentence fragments (~150-400 characters). Measured on this
-
 development environment (WSL2/Ubuntu, g++ 15.2.0, `-O2` - one data point, not a guaranteed
-
 number on every platform):
 
-
-
 | Operation | Time |
-
 |---|---|
-
 | `CardDatabase::load_database` (22,000 rows) | ~216 ms |
-
 | `CardSearchIndex::rebuild` (cold) | ~243 ms |
-
 | `CardSearchIndex::rebuild` (warm) | ~250 ms |
-
 | Exact-name query (no match - worst-case full scan) | ~6.6 ms |
-
 | Name-prefix query (~1,100 hits) | ~6.7 ms |
-
 | Broad text-scan query (~8,000 hits) | ~8.6 ms |
-
 | Filtered query, no text (~8,000 hits) | ~5.6 ms |
-
 | Ranked broad name query (~1,500 hits) | ~6.4 ms |
 
-
-
 (Re-measured after the correction pass below - the stricter UTF-8 validator and corrected
-
 filters made no meaningful difference; run-to-run variance on this shared development
-
 environment is larger than the delta between the two measurements.)
 
-
-
 Every query lands single-digit-to-low-double-digit milliseconds, comfortably inside normal UI
-
 responsiveness budgets, with no index beyond a vector and a linear scan. On this evidence, no
-
 inverted index, n-gram index, or third-party search dependency was added.
-
-
 
 ## Memory considerations
 
-
-
 `Entry` copies only what `search()` needs - two normalized strings and static metadata - not
-
 the sixteen auxiliary strings (never searched) and not a `CardRecord*`/pointer back into the
-
 database. No further micro-optimization attempted; clarity and determinism prioritized over
-
 saving kilobytes at this scale.
-
-
 
 ## What legacy search behavior was deliberately not copied
 
-
-
 The `||`/`&&`/`*`/`$`/`$$`/`@`/`!!` sigil grammar itself (structured fields cover the same
-
 capabilities, `||`/`&&` composition and `!!` negation excepted - see below); `SortList`'s
-
 UI-column relevance model; `Utils::ContainsSubstring`'s ordered-token requirement;
-
 archetype-*name* resolution; the upstream six-way numeric filter-type scheme (replaced with
-
 three general-purpose comparisons).
-
-
 
 ## Explicit separation from legality
 
-
-
 No `LFList`/banlist parsing, no ban/limit/semi-limit counts, no whitelist logic, no
-
 "legal card" concept, no deck-size/copy-count validation, no format/duel-rule policy
-
 anywhere in this PR. `scope` is exposed as a raw bitmask filter only - not a legality
-
 decision this module makes. Full table of what upstream's `CheckCardProperties` does that
-
 this module deliberately excludes is in `docs/architecture/card-search.md`§2.
-
-
 
 ## Tests: 35 (`data/tests/test_card_search.cpp`), all passing
 
-
-
 Empty catalogue; the empty-query "match everything" contract; exact/prefix/substring name
-
 tiers; case-insensitivity; accent normalization (both direct `normalize_search_text` checks
-
 and an end-to-end accented-name search); Name-only/Text-only/NameOrText scope isolation;
-
 order-independent multi-token matching; full ranking-tier ordering; tie-break by name then
-
 code; no duplicate results for a card matching in both name and text; raw scope metadata
-
 never auto-excluded unless explicitly filtered; the "?" ATK/DEF sentinel; Link-monster
-
 defense exclusion and link-marker bitmask matching; 64-bit race; the wrapped-uint32 level
-
 case; setcode OR-matching with alias resolution; the full locale rebuild lifecycle; a
-
 database override staying stale until rebuild; repeated-call determinism; limit truncation
-
 after ranking; and three `exact_code` cases pinning its ranking-hint-not-filter contract
-
 (including the case that caught the wrong first implementation during development - see ADR
-
 0005, Decision 3).
-
-
 
 `edopro_next_data`'s 30 tests and `edopro_next_deck`'s 37 tests are unchanged and still pass.
 
-
-
 ## Local validation
 
-
-
 All run against this exact branch head, via WSL (this repo's own baseline platform,
-
 `docs/BASELINE.md`), using the same pip-user-installed CMake/SQLite setup as the prior two
-
 M3 PRs (no apt/root available in this sandbox):
 
-
-
 - `data/` configured and built with `-DEDOPRO_NEXT_WERROR=ON`: clean, zero warnings from any
-
   code this PR adds.
-
 - `ctest --test-dir data/build`: 3/3 suites pass - `card_database` (30/30, unchanged),
-
   `deck_ydk` (37/37, unchanged), and `card_search` (35/35).
-
 - `bench_card_search` run directly (not a `ctest` case): results above.
-
 - `client/` (with sibling `integration/`) configured and built with
-
   `-DEDOPRO_NEXT_WERROR=ON`: `ctest --test-dir client/build`: 7/7 suites pass, entirely
-
   unaffected (this PR never touches `client/`).
-
 - `python tools/generate_messages.py --check` and `generate_protocol_constants.py --check`:
-
   both up to date.
-
 - `python -m unittest discover -s tests -v`: 33 passed (structural M1 harness).
-
 - Semantic golden-trace verification against a freshly built `edopro_next_semantic_trace`:
-
   10/10 passed.
-
 - `git diff --check`: clean.
-
 - Full diff audited against master: only `data/`, `docs/`, and `README.md` touched. No
-
   `gframe/`, no `ocgcore/`, no `.cdb`, no artwork, no CardScripts, no build artifacts, no
-
   third-party search dependency, `client/` untouched.
-
-
 
 ## CI
 
-
-
 The existing `card-database` job (id and display name both unchanged - "Card and deck data"
-
 remains an accurate-enough description now that it also builds/runs `edopro_next_search`/
-
 `test_card_search`, per this task's own guidance) covers the new target automatically, since
-
 it lives in the same `data/CMakeLists.txt`/`data/build` tree. Expected jobs: Regression
-
 harness (3.10, 3.12), Card and deck data, Semantic client model, Qt 6 shell, Upstream EDOPro
-
 baseline (observer=false, observer=true).
-
-
 
 ## Review fixes landed since this PR opened
 
-
-
 Three rounds of external review, all fully addressed on the current head:
 
-
-
 - **Round 1**: `normalize_search_text` treated a malformed lead byte's raw numeric value as
-
   if it were itself a decoded codepoint, then folded it - 0xC3 (195), the lead byte of a
-
   truncated two-byte UTF-8 sequence, falls inside the fold table's own 192-197 "A" range by
-
   numerical coincidence, so a truncated sequence silently normalized to "A" instead of
-
   passing through unchanged as documented. `decode_utf8` was changed to return a bool
-
   distinguishing a genuinely decoded codepoint from a malformed byte, pinned by three new
-
   cases, bringing the suite to 28 tests.
-
 - **Round 2** (this pass): the Round 1 fix was still only a *shape*-based check (right byte
-
   count, each byte a generic continuation byte), which still accepts overlong encodings,
-
   UTF-16 surrogates, and codepoints beyond U+10FFFF - the same class of bug, generalized.
-
   `decode_utf8` now implements Unicode's own canonical well-formedness table. Also found:
-
   `category` was implemented as "require all selected bits" when upstream's own
-
   `filter_effect` is any-of; `race` was implemented as bitmask-containment when upstream's
-
   own filter is exact equality. Both fixed (new `AnyBitmaskFilter` type for `category`;
-
   `race` changed to a plain `std::optional<std::uint64_t>`). Also corrected: stale
-
   documentation claiming `NumericFilter` values are converted to each field's native type
-
   (they are not - both sides compare as `int64_t`, now documented precisely and pinned by a
-
   new test); an over-strong "never throws" claim on `normalize_search_text`; a stale
-
   `CardRecord::text1` reference; a misleadingly-named test renamed to match what it actually
-
   proves; and a whitespace-only text query now correctly takes the same "no text constraint"
-
   path as a genuinely empty one. Ten new tests in this round, bringing the suite to 34.
-
 - **Round 3** (this pass): two tiny edge cases plus wording. `AnyBitmaskFilter{0}`, explicitly
-
   set, was rejecting every card instead of behaving as no constraint - upstream's own
-
   `filter_effect &&` short-circuit means a zero mask is "nothing selected", not "match
-
   nothing"; fixed, with a test confirming `SearchQuery{}` and an explicit
-
   `AnyBitmaskFilter{0}` now return identical results. `whitespace_tokens` only recognized
-
   space/tab/LF/CR as whitespace, not the full ASCII set the documentation already claimed
-
   (vertical tab, form feed added). Also corrected two remaining stale statements in
-
   `card-search.md`: Ranking's `NoTextQuery` description didn't mention the whitespace-only
-
   case, and a claim that `type`'s positive all-bits filter could "exclude tokens" (a
-
   require-these-bits predicate cannot express negation - corrected to state plainly that
-
   this module has no negative filter). One new test, bringing the suite to 35.
-
-
 
 ## Known limitations / deliberately deferred work
 
-
-
 - Archetype-*name* search (`@name` upstream) is not implemented - needs a set-name string
-
   resource `data/` does not yet represent.
-
 - `||` (union of independent queries) and `&&`/`!!` (cross-sub-term AND/negation) have no
-
   `SearchQuery` equivalent - a caller wanting `||` composes multiple `search()` calls itself;
-
   the others are plausible small additions later, not built speculatively here.
-
 - No compatibility parser for upstream's exact sigil grammar - considered (ADR 0005,
-
   Decision 2) and deferred pending an actual keyboard-parity power-user use case, since it is
-
   small but not trivial and would conflate two different reviews if bundled here.
-
 - Fuzzy matching, edit distance, phonetic search, stemming, and autocomplete are not
-
   implemented - none of this exists upstream either.
-
 - No asynchronous/background search - measured fast enough (see Performance) that this may
-
   not be needed at all; left for the eventual UI layer to decide.
 
-
-
 RECOMMENDATION: READY FOR EXTERNAL REVIEW — DO NOT MERGE
-

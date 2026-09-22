@@ -167,11 +167,23 @@ source rather than from this ADR's prose.
 1. **Bundle a fixed banlist into the ruleset**. Rejected: banlists and rulesets vary
    independently; players test decks across different banlist seasons under standard rules.
 2. **Treat "No banlist" identically to an empty banlist**. Rejected: in `policy::validate_deck`
-   (`policy/deck_validation.cpp:270`), `if (!policy.lflist) return {};`. When `lflist` is
-   `std::nullopt`, card content and copy limits (`CheckCards`) are skipped entirely. A deck with 4+
-   copies of a card is accepted under `std::nullopt` (sandbox / unlimited mode). Conversely, an
-   empty concrete `LFList` (e.g., an "N/A" banlist with no restricted entries) causes `CheckCards`
-   to run, enforcing the standard maximum of 3 copies per card.
+   (`policy/src/deck_validation.cpp:270`):
+   ```cpp
+   if(!policy.lflist)
+       return {};
+   ```
+   faithfully mirroring upstream `gframe/deck_manager.cpp:217-218`:
+   ```cpp
+   banlist_content_t ccount;
+   if(!lflist)
+       return ret;
+   ```
+   When `lflist` is `std::nullopt` (upstream null `const LFList*`), card content, section placement,
+   and copy limits (`CheckCards`) are skipped entirely. A deck with 4+ copies of a card or an
+   Extra Deck card in Main is accepted under `std::nullopt` (sandbox / unlimited mode).
+   Conversely, an empty concrete `LFList` (e.g., an "N/A" banlist with no restricted entries)
+   causes `CheckCards` to run, enforcing the standard maximum of 3 copies per card and Extra Deck
+   placement.
 3. **Independent banlist selection via `BanlistStore`** (chosen). Index 0 represents "No banlist"
    (`std::nullopt`), clearly distinguished from loaded concrete banlists. Additional banlists are
    loaded from explicit paths via the `--lflist <path>` CLI option (never committing real banlist
@@ -182,11 +194,45 @@ source rather than from this ADR's prose.
 ### Options considered
 
 1. **Block illegal operations (prevent adding cards or saving invalid decks)**. Rejected: upstream
-   `gframe` never blocks saving or importing invalid decks (`DeckManager::SaveDeck`,
-   `deck_manager.cpp:436-452`; `ImportDeck`, `deck_manager.cpp:136-146`). A deck builder is a
+   never blocks saving or importing invalid decks. `DeckManager::SaveDeck` (`gframe/deck_manager.cpp:436-452`):
+   ```cpp
+   bool DeckManager::SaveDeck(epro::path_stringview name, const Deck& deck) {
+       const auto fullname = GetDeckPath(name);
+       FileStream deckfile{ fullname, FileStream::out };
+       if(deckfile.fail())
+           return false;
+       deckfile << "#created by " << BufferIO::EncodeUTF8(mainGame->ebNickName->getText()) << "\n#main\n";
+       auto serializeDeck = [&deckfile](const auto& deck) {
+           for(auto card : deck)
+               deckfile << MakeYdkEntryString(card->getRealCode());
+       };
+       serializeDeck(deck.main);
+       deckfile << "#extra\n";
+       serializeDeck(deck.extra);
+       deckfile << "!side\n";
+       serializeDeck(deck.side);
+       return true;
+   }
+   ```
+   and `DeckBuilder::ImportDeck` (`gframe/deck_con.cpp:136-146`):
+   ```cpp
+   void DeckBuilder::ImportDeck() {
+       const wchar_t* deck_string = Utils::OSOperator->getTextFromClipboard();
+       if(deck_string) {
+           epro::wstringview text{ deck_string };
+           if(starts_with(text, L"ydke://"))
+               DeckManager::ImportDeckYdke(current_deck, text.data());
+           else
+               (void)DeckManager::ImportDeckBase64Omega(current_deck, text);
+           RefreshLimitationStatus();
+       }
+   }
+   ```
+   both write or mutate deck contents directly without any legality checks. A deck builder is a
    creative workspace where decks are continuously in progress. Blocking saving or adding cards
    would severely disrupt user experience and diverge from upstream semantics.
 2. **Advisory status banner in deck builder UI** (chosen). When a deck violates legality rules, an
    advisory message ("Would not be accepted at duel entry: <reason>") is displayed with distinct
    warning styling (`Theme.warning`). When legal, a positive indicator is shown (`Theme.success`).
    The user remains free to edit, add/remove cards, and save `.ydk` files at all times.
+

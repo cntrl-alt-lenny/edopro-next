@@ -42,13 +42,15 @@ that in Builder's worktree would destroy the very state being reviewed.
 
 ## Setting them up on a new machine
 
-Three commands, run once from the repository root. They are the same on
+Five commands, run once from the repository root. They are the same on
 Windows, macOS and Linux:
 
 ```bash
 git config core.hooksPath .githooks
 git worktree add --detach .worktrees/builder master
 git worktree add --detach .worktrees/verifier master
+git -C .worktrees/builder submodule update --init ocgcore
+git -C .worktrees/verifier submodule update --init ocgcore
 ```
 
 **The first line is easy to forget and fails silently.** `core.hooksPath` is
@@ -87,21 +89,26 @@ inside them unchanged.
 
 ## Submodules
 
-`ocgcore/` is a submodule, and **git does not populate submodules in a new
-worktree**. A worktree that only touches `client/`, `data/`, `policy/`, `ui/`,
-`tools/` or `tests/` does not need it — none of those build against
-`ocgcore`, and CI proves that separation holds.
+`ocgcore/` is a submodule, and **git worktree add leaves submodules
+uninitialised in a new worktree**. The submodule directory exists as an empty
+directory, and `git submodule status ocgcore` shows a leading `-`.
 
-A worktree that needs the upstream baseline build, or that must read upstream
-engine source to check a semantic claim, initialises it there:
+A worktree that only touches `client/`, `data/`, `policy/`, `ui/`, `tools/` or
+`tests/` does not compile against `ocgcore` — CI proves that separation holds.
+However, Builder and Verifier frequently need to read upstream engine source or
+verify cited constants and headers (such as `ocgcore/ocgapi_constants.h`). In
+round 015, an uninitialised submodule in the Verifier's worktree produced a false
+review finding claiming an upstream header did not exist.
+
+Initialising `ocgcore` in each seat worktree during setup prevents this:
 
 ```bash
-git -C .worktrees/verifier submodule update --init --recursive
+git -C .worktrees/builder submodule update --init ocgcore
+git -C .worktrees/verifier submodule update --init ocgcore
 ```
 
-Reading upstream engine source is Verifier's normal job, so its worktree will
-usually want this. Note that `gframe/` is *not* a submodule — it is in the
-tree already, in every worktree.
+Note that `gframe/` is *not* a submodule — it is tracked directly in the tree,
+present in every worktree upon creation.
 
 ## Using them
 

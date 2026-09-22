@@ -17,10 +17,11 @@ different useful predicates:
    is read with `ReadFile()` on that same handle; the loader never closes it and
    then constructs an `ifstream` for the path. Thus the object whose type
    permits the load is the object whose bytes are read. `ERROR_PIPE_BUSY` is
-   also rejected before another open. If an inbound pipe rejects the read
-   access request with `ERROR_ACCESS_DENIED`, a zero-access probe is used only
-   to reject a non-disk object; a disk result remains the ordinary open
-   failure. Directory attributes classify a directory when its open is denied.
+   also rejected before another open. When an open fails with
+   `ERROR_ACCESS_DENIED` (such as an inbound pipe or an access-restricted
+   file), a zero-access probe is used only to reject a non-disk object; a disk
+   result remains the ordinary open failure. Directory attributes classify a
+   directory when its open is denied.
 2. On POSIX, `std::filesystem::status()` rejects directories and every known
    non-regular type, including FIFOs and device files. A missing path or any
    other status error is not rejected at this stage; the same path is then
@@ -56,8 +57,8 @@ classification attempt.
 
 The tests do not claim a particular error string for every possible named-pipe
 security or lifetime race. They establish the required invariant for the
-tested states: no tested spelling reaches a second path open or a blocking
-read, and every result is prompt and unsuccessful.
+tested states: no second open is ever read, no tested spelling reaches a
+blocking read, and every result is prompt and unsuccessful.
 
 The observable classification is:
 
