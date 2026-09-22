@@ -15,13 +15,13 @@
 
 ## What is this?
 
-edopro-next is a modern Qt 6 / QML client for [EDOPro](https://github.com/edo9300/edopro). It sits on top of EDOPro's existing duel engine and Project Ignis's card scripts, which stay authoritative and untouched. The new client reads a presentation-free model of the duel and never decides a rule itself.
+edopro-next is a modern client architecture for [EDOPro](https://github.com/edo9300/edopro), building toward a Qt 6 / QML client. It sits on top of EDOPro's existing duel engine and Project Ignis's card scripts, which stay authoritative and untouched. The client model is presentation-free and never decides a rule itself.
 
 [What works](#what-works) says exactly where it stands. [The overview](docs/overview.md) explains the reasoning.
 
 ## Quick start
 
-Build from source and run the tests. The semantic client model needs only a C++20 compiler, CMake and Ninja:
+Build from source and run the tests. To complete every step below, you need a C++20 compiler, CMake, Ninja, and Python 3.10+:
 
 ```bash
 git clone https://github.com/cntrl-alt-lenny/edopro-next.git
@@ -32,7 +32,7 @@ ctest --test-dir client/build --output-on-failure
 python -m unittest discover -s tests -v
 ```
 
-The Qt shell, the `data/` and `policy/` modules, and per-platform notes are in [docs/building.md](docs/building.md).
+On Windows, `cmake -G Ninja` needs the MSVC environment; see [docs/building.md](docs/building.md) for platform setup, the Qt shell, and the `data/` and `policy/` modules.
 
 ## What works
 
