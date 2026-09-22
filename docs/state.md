@@ -283,9 +283,20 @@ The README's "What works" block is generated from `docs/ROADMAP.md` by
 `tools/generate_readme_status.py`, and the suite fails if they drift. **So a
 roadmap edit now requires regenerating the README.**
 
-**Brief 015 is active**: surfacing deck legality in the QML deck builder, with
-the owner's visible format choice (2026-08-31), on branch
-`m3/deck-builder-legality-ui`.
+**Brief 015 — deck-builder legality UI — was accepted and merged 2026-09-22**
+as PR #31 (`45bb2f33`); see
+[`briefs/archive/015-…`](briefs/archive/015-2026-09-22-deck-builder-legality-ui.md)
+and ADR 0010. The deck builder shows advisory legality against a visible
+banlist and a named ruleset.
+
+**Brief 016 is active**: correcting known-wrong records and closing small test
+gaps, on branch `meta/records-and-test-gaps`.
+
+**Seat worktrees need the `ocgcore` submodule.** `git worktree add` leaves
+submodules uninitialised. A Verifier that searched its own worktree for an
+`ocgcore/` file once concluded, wrongly, that it did not exist. Both seat
+worktrees on the Windows machine were initialised on 2026-09-22 with
+`git -C .worktrees/<role> submodule update --init ocgcore`.
 
 ### Dev Hub (from 2026-09-21)
 
@@ -434,44 +445,27 @@ not fold it into a narrative section.)*
 ## Known open items
 
 - **The remaining M3 item**: the deck-builder UI. A functional core exists
-  (M3D1). Missing: **legality is not surfaced anywhere in the UI** — `policy/`
-  exists and nothing in `ui/` calls it — plus automatic Main/Extra
-  classification, artwork, the legacy sigil search grammar, structured filters
-  beyond plain text, and full keyboard/controller parity.
+  (M3D1), and advisory legality with a visible banlist and ruleset landed in
+  Brief 015. Still missing: automatic Main/Extra classification, artwork, the
+  legacy sigil search grammar, structured filters beyond plain text, and full
+  keyboard/controller parity.
 - **M1 Level 2** — not started, and required before any "duel behaviour is
   unchanged" claim.
-- **Double-spaced PR-body fixtures** — `tests/fixtures/pr_bodies/pr_10.txt`
-  and `pr_16.txt` were committed with every `\r\n` turned into `\n\n`, and
-  their tests pin the doubled line numbers. Verdicts are unaffected. Fix in a
-  small later round.
-- **Deck-builder legality UI** — Brief 015, active.
-- **Small tidy-ups, to batch into one later round:**
-  - the double-spaced fixtures (above);
-  - `read-failure-class.md`'s two imprecise sentences;
-  - PowerShell push-guard test portability;
+- **Records and test gaps** — Brief 016, active.
+- **Presentation tidy-ups, for a later round:**
   - `HomeScreen.qml`'s stale "planned" statuses and `hero.svg`'s dashed
     semantic-model box;
   - the letterboxed social preview;
   - splitting ROADMAP M6 into local builds and CI.
-- **`read-failure-class.md` imprecision** — two sentences named in Brief 011's
-  archived outcome. Fold them into a later documentation round.
-- **Push-guard tests under PowerShell** — 8 failures from the WSL `bash`
-  launcher. A test-portability fix, not yet briefed.
 - **Cross-platform CI** — Brief 011 recommends a non-required macOS and
   Windows matrix over the `data/` and `policy/` tests. Any change to required
   checks is the owner's decision.
 
 ## Recommended next slice
 
-**Finish Brief 015** — deck-builder legality in the QML deck builder. It
-runs on the Windows machine, which has Qt 6.8.3 and has built `ui/`; the Mac
-has no Qt. Its design inputs are Brief 001's accepted research
-([`architecture/deck-builder-legality.md`](architecture/deck-builder-legality.md) §7):
-upstream's deck editor never calls `CheckDeckContent`/`CheckDeckSize`. The
-other input is the owner's 2026-08-31 choice of that document's option (b),
-a visible ruleset choice. That choice is recorded in the brief and, when the
-round lands, in an ADR.
-
-**Then the small tidy-up round** listed under *Known open items*.
+**Finish Brief 016** — records and test gaps. **Then the presentation
+tidy-ups** listed under *Known open items*. After that, return to M3's
+remaining deck-builder parts: automatic Main/Extra classification,
+structured filters and keyboard parity.
 
 **Still not the duel field.** Unchanged and not near.

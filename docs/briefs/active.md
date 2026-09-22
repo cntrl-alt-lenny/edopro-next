@@ -1,4 +1,4 @@
-Brief-ID: 015-2026-09-22-deck-builder-legality-ui
+Brief-ID: 016-2026-09-22-records-and-test-gaps
 
 Status: active
 
@@ -6,216 +6,124 @@ Status: active
 
 ## Goal
 
-A user building a deck in the QML deck builder can see whether that deck
-would be accepted, and why not, against a banlist and a ruleset that they
-chose, visibly. Legality is still computed only by
-`policy::validate_deck()`. `ui/` supplies the inputs and renders the result;
-it never decides a rule.
+Correct the known-wrong statements that accepted rounds recorded but did not
+fix, and close the small test gaps they left. One theme: the repository's
+records and tests should say exactly what is true. No behaviour change to
+any product code.
 
 ## Why this is next
 
-This is the last unfinished legality work in M3, the milestone the roadmap
-currently cares about. `policy/` has computed deck legality, faithfully to
-upstream, since 2026-08-31, but nothing in `ui/` calls it: a deck built in the
-new client shows no legality at all.
+Rounds 011, 012 and 015 were each accepted with a recorded, known defect in
+a document or a test, and deferred to a later round. This is that round.
+Leaving known-wrong records in place is the drift this project's evidence
+discipline exists to stop.
 
-## The decision this round implements (owner, 2026-08-31)
+## The items (each is a problem to solve, with its source)
 
-Brief 001's accepted research,
-[`docs/architecture/deck-builder-legality.md`](../architecture/deck-builder-legality.md),
-found that upstream's deck editor never calls
-`CheckDeckContent`/`CheckDeckSize`. Those run only at duel entry. For five of
-`policy::ValidationPolicy`'s six fields, upstream has no editor-time value at
-all. §7 of that document set out three options. **The owner chose option
-(b):** give the deck builder a **visible, named ruleset choice now**, and do
-not defer legality to M4. The owner accepted the risk that M4's lobby work
-may later want a different mechanism.
+1. **Two imprecise sentences in `docs/architecture/read-failure-class.md`.**
+   They are named in
+   [`archive/011-…`](archive/011-2026-09-20-read-failure-class.md)'s outcome,
+   *Known imprecision merged*:
+   - "no tested spelling reaches a second path open" is literally false.
+     The `ERROR_ACCESS_DENIED` path makes a second zero-access
+     classification open. The invariant that holds is that no second open
+     is ever *read*.
+   - The zero-access fallback is described as if only an inbound pipe
+     triggers it. The code enters it for any `ERROR_ACCESS_DENIED`.
 
-What that decision implies, as constraints with their sources:
+   Re-read `data/src/ydk.cpp` and `policy/src/lf_list.cpp` and make the
+   document match the code.
+2. **Two double-spaced PR-body fixtures.** `tests/fixtures/pr_bodies/pr_10.txt`
+   and `pr_16.txt` were committed with every `\r\n` turned into `\n\n`, and
+   `tests/test_pr_evidence.py` pins line numbers in the doubled files
+   ([`archive/012-…`](archive/012-2026-09-21-evidence-freshness-reland.md)).
+   The fixtures must be byte-faithful to the live bodies
+   (`gh pr view <n> --json body`, line endings normalised to LF), and the
+   pinned expectations must follow. Every fixture's verdict must stay what
+   it is.
+3. **A wrong citation in `docs/adr/0010-deck-builder-ruleset-and-legality-ui.md`,
+   Decision 3.** "`ImportDeck`, `deck_manager.cpp:136-146`" points at
+   `DeckManager::TypeCount`. The function is `DeckBuilder::ImportDeck` at
+   `gframe/deck_con.cpp:136-146`
+   ([`archive/015-…`](archive/015-2026-09-22-deck-builder-legality-ui.md)).
+   Fix the citation and quote what is there. While in that file, re-read
+   every other upstream citation in Decisions 2 and 3, which the last round
+   did not re-derive.
+4. **A missing regression test.** Under "No banlist", S3 of brief 015 named
+   two examples that must show the "checks are not being made" disclosure:
+   four copies of one card, and an Extra Deck monster in the Main Deck. Only
+   the first is pinned by a test. Pin the second. It must fail if the
+   disclosure is removed.
+5. **The push-guard tests under Windows PowerShell.** From PowerShell, 8
+   `tests/test_push_guard.py` cases fail with exit 127. The test finds `sh`
+   or `bash` with `shutil.which`, and there that resolves to the WSL launcher
+   (`C:\Users\…\AppData\Local\Microsoft\WindowsApps\bash.exe`). The launcher
+   then receives a Windows path it cannot open. From Git Bash, all 13 pass.
+   Required outcome: the suite gives a correct result from both shells on
+   this machine. CI must still run these tests on Linux, not skip them, and
+   no case may be weakened. If the only honest answer on a machine with no
+   usable POSIX shell is a visible skip, say so and argue it.
+6. **Seat worktrees and submodules.** `docs/agents/worktree-mechanism.md` is
+   project-owned. It does not say that `git worktree add` leaves the
+   `ocgcore` submodule uninitialised in a seat's worktree. That gap produced
+   a false Verifier finding in round 015. Document the setup step and the
+   reason.
 
-- **Banlist.** `lflist` gets its own user-visible banlist selection, with
-  upstream precedent in the editor's `cbDBLFList` (research §7.1). "No banlist
-  selected" is an explicit choice that maps to `std::nullopt`, distinct from a
-  concrete "N/A" list (`deck-legality.md` §5). Banlist files come from paths
-  the user supplies explicitly, following the existing `--card-db` convention.
-  Never a fabricated fallback (`deck-builder-ui.md` §4). Never commit a
-  real banlist file.
-- **Ruleset.** The other five fields come from a **ruleset the user can see
-  and change**, whose name and values this project owns and documents as its
-  own, not upstream's (research §7.2(b)). It is never a hidden default.
-- **Advisory, not blocking.** Legality is presented as advice ("would not be
-  accepted at duel entry: …"), never as a gate on editing or saving. Upstream's
-  editor enforces none of this (research §7.3).
-- **Boundaries.**
-  - `validate_deck()` remains the only place legality is computed
-    (`deck-legality.md` §12).
-  - Any ruleset object is plain data built in `ui/`'s C++ adapter layer,
-    never in QML and never inside `policy/` (ADR 0006, ADR 0007 Decision 3).
-  - QML only renders the resulting errors.
-- **ADR.** Record the ruleset decision in a new ADR, alongside ADR 0006 and
-  ADR 0007.
+## Scope and non-scope
 
-## Base and branch
-
-Branch `m3/deck-builder-legality-ui`. Its first commit is Brain's close-out
-of round 014; it touches only `docs/briefs/`, `docs/state.md` and
-`docs/agents/model-notes.md`. Continue on top of it. Do not rebase or
-force-push. The close-out is part of the reviewed range: report any error in
-it, and do not rewrite it.
-
-## Required investigation
-
-1. **Where each ruleset value comes from.** For every value your ruleset(s)
-   supply to the five non-banlist fields, find the closest upstream source —
-   for example the defaults upstream's host settings use (`HostInfo` in
-   `gframe/network.h` and wherever its defaults are set) — and quote it at
-   file and line. Where no upstream source exists, say so and state the value
-   as this project's own choice. Never present an invented value as
-   upstream's.
-2. **How many rulesets.** Decide how many named rulesets to offer (the
-   research suggests one, "Standard OCG/TCG"), and argue it. More rulesets
-   mean more invented surface.
-3. **Presentation.** Decide how each `DeckValidationError` is presented to
-   the user, and how the display stays current as the deck, banlist or
-   ruleset changes. Keep all rule text out of QML: error kinds are named by
-   the adapter.
-
-## Scope
-
-- **`ui/` C++ adapter layer**, `ui/src/deckbuilder/` or a sibling you argue
-  for. This covers the banlist loading and selection, the ruleset type and its
-  mapping to `ValidationPolicy`, and exposing validation results to QML.
-- **Linking `policy/` into the `ui/` build**, the way `data/` is already
-  linked.
-- **`DeckBuilderScreen.qml`**, and any small component it needs, to show the
-  two selections and the advisory result.
-- **Tests:**
-  - adapter tests for the ruleset-to-policy mapping;
-  - null versus "N/A" banlist behaviour;
-  - errors surfaced for a deliberately illegal deck;
-  - a QML-level test that the screen loads and shows the result.
-
-  Use only synthetic fixtures.
-- **Documentation:**
-  - the new ADR;
-  - `docs/architecture/deck-builder-ui.md` updated;
-  - `docs/ROADMAP.md` M3's deck-builder item updated truthfully. The item
-    stays unchecked, because its other parts (filters, artwork, keyboard
-    parity, classification) remain.
-
-  Then regenerate the README status block with
-  `python tools/generate_readme_status.py` so the suite stays green.
-
-## Non-scope
-
-- Automatic Main/Extra classification, artwork, the legacy sigil search
-  grammar, structured filters, keyboard/controller parity.
-- Any change to `policy/`'s behaviour or public contract. If you find a
-  defect there, stop and report it.
-- `gframe/`, `ocgcore/`, `integration/legacy/`, `.github/workflows/`,
-  repository settings, the duel field.
-- No card artwork, `.cdb` or banlist data committed.
+- **In scope:**
+  - the files named above;
+  - `tests/`;
+  - `docs/agents/worktree-mechanism.md`;
+  - any link or regenerated artefact the changes require (for example the
+    README status block, if `docs/ROADMAP.md` changes; it should not).
+- **Out of scope:**
+  - any production-code behaviour change (`client/`, `data/`, `policy/`,
+    `ui/`: none of their code changes, only tests and documents);
+  - `.github/workflows/`, settings, `gframe/`, `ocgcore/`;
+  - canonical framework files under `docs/agents/` other than the
+    project-owned three, and the installed framework tools.
+- **Deferred:** the presentation tidy-ups (`HomeScreen.qml`, `hero.svg`,
+  the social preview, and splitting ROADMAP M6), which belong to a later
+  round.
 
 ## Protected invariants
 
-- The UI implements no game rule. A reviewer must be able to find every
-  legality decision inside `policy/`.
-- Existing deck-builder behaviour is unchanged:
-  - `.ydk` open, save and new;
-  - the dirty-state contract;
-  - explicit section editing.
-
-  Existing `ui/` tests survive; name any changed assertion with its before
-  and after property.
-- `client/`, `data/` and `policy/` stay free of Qt.
+- The push guard's behaviour and its CI enforcement are unchanged. Every
+  historical bypass case in `tests/test_push_guard.py` still runs in CI.
+- The neutrality guard still passes.
+- Name every changed pre-existing test assertion, with its before and after
+  property.
 
 ## Acceptance criteria
 
-- `ui/` configures, builds and passes `ctest` with
-  `-DEDOPRO_NEXT_UI_TESTS=ON` on this Windows machine (MSVC, Qt 6.8.3,
-  vcpkg; see `AGENTS.md`'s Windows notes). The offscreen clean-QML-load check
-  from `.github/workflows/edopro-next.yml` also passes.
-- `data/` and `policy/` still configure, build and pass `ctest`.
-- A test demonstrates, through the adapter, that an illegal deck shows a
-  specific error under the chosen ruleset and banlist, and that "no banlist"
-  and "N/A" behave differently where `policy/` says they do.
-- The Python suite and the three generator `--check`s pass from Git Bash,
-  including the README status check.
-- CI is green at the final head.
-- The PR body begins `DO NOT MERGE — under review` and passes
+- **Each item** is closed with evidence, or reported as not closable, with
+  the reason.
+- **Item 2:** the fixture-vs-live comparison shows 28 of 28 identical, and
+  the corpus test passes.
+- **Item 4:** the new test fails with the disclosure removed and passes with
+  it.
+- **Item 5:** the relevant suite result is shown from PowerShell and from
+  Git Bash, with CI's result at the final head.
+- **Suite:** `python -m unittest discover -s tests -v` and the three
+  generator `--check`s are green.
+- **`ui/`:** builds and passes `ctest` under MSVC, since item 4 adds a `ui/`
+  test.
+- **The PR body:** begins `DO NOT MERGE — under review` and passes
   `python tools/check_pr_evidence.py`.
 
 ## Required evidence
 
-- Checkout check, and the tool, model and OS (the OS from `cmd /c ver`).
-- The investigation-1 table, with each value, its upstream file:line or "this
-  project's choice", and a quote.
-- Real configure, build and `ctest` output for `ui/`, `data/` and `policy/`,
-  with counts.
-- The offscreen QML check.
-- **Presentation evidence:** at least one real capture of the deck builder
-  showing the banlist and ruleset selections and an advisory result for an
-  illegal deck. `edopro_next_shell --capture <path>` exists for this. Say what
-  you verified visually and what you did not.
-- The Python suite and generator output.
+- Checkout check, and the tool, exact model name and version, and OS (from
+  `cmd /c ver`).
+- For every citation touched, the verbatim line re-read.
+- The evidence named in each acceptance criterion.
 - Check-run conclusions at the final head.
-- Any sentence removed from a durable document, listed explicitly.
+- Every sentence removed from a durable document, listed explicitly.
 - What you did not run.
-- No replay-harness result is evidence about duel behaviour; this round must
-  not claim it.
 
 ## Completion-report schema
 
 The standard report in
-[`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus: the ruleset
-values table, the number of rulesets and why, the presentation decision, and
-the ADR's number and title.
-
-## Reopened corrections S1-S3
-
-Brain reviewed PR #31 at head `259b7bcd1dadc676009e4143a6bc14adb1bccd4a` and
-reopened the round. Recorded here verbatim, as the round's authoritative text;
-everything else in the round is accepted and must not be reworked.
-
-S1 — docs/adr/0010-deck-builder-ruleset-and-legality-ui.md cites upstream
-source that does not say what the ADR claims. Observed by Brain at 259b7bcd.
-The ADR names constants that do not exist anywhere in gframe/: MIN_MAIN_DECK,
-MAX_MAIN_DECK, MAX_EXTRA_DECK, MAX_SIDE_DECK, "ALLOWED_OCG_TCG = 0x3" and
-RULE_RITUAL_IN_EXTRA (grep finds none). It cites gframe/deck_con.cpp:1159-1162,
-which is card-search text matching, and generic_duel.cpp lines 371-384 for
-content those lines do not contain. It gives allowed_cards as
-policy::CardScope::Any, while the code uses policy::AllowedCardPool::OcgAndTcg.
-AGENTS.md makes upstream source the arbiter: quote what you actually read.
-Required outcome: every upstream citation in ADR 0010,
-ui/src/deckbuilder/ruleset.cpp's comments and in
-docs/architecture/deck-builder-ui.md points at a file:line you re-read, with a
-verbatim quote of what is there. Remove any value, constant or line that is
-not in the source.
-
-S2 — the "Standard OCG/TCG" ruleset uses AllowedCardPool::OcgAndTcg and
-presents it as upstream-grounded, but upstream's default host card pool
-differs. gframe/game_config.inl:21 sets `OPTION(uint32_t, lastallowedcards,
-3)`, game.cpp:1160 selects that index in cbRule, duelclient.cpp:229 sends it
-as `info.rule`, and generic_duel.cpp:381 casts it to DuelAllowedCards, whose
-index 3 (gframe/deck_manager.h:32-37) is ALLOWED_CARDS_WITH_PRERELEASE.
-Required outcome: the ruleset's card pool either matches upstream's default,
-or is recorded plainly in ADR 0010 as this project's own choice that diverges
-from upstream's default, with the divergence and its reason stated. CLAUDE.md
-and AGENTS.md require deliberate divergence from upstream to be recorded,
-never silent. The same honesty applies to every other ruleset field: say for
-each whether it matches an upstream default, or is this project's choice.
-
-S3 — with the default selection "No banlist", the deck builder reports "Deck
-is legal for duel entry under this ruleset and banlist." for decks that duel
-entry with any concrete banlist would reject. Faithfully to upstream's null
-LFList (policy/src/deck_validation.cpp:262-270,
-docs/architecture/deck-legality.md section 5), policy::validate_deck() then
-skips the card-scope, section-placement and three-copy checks. So a deck with
-four copies of one card, or an Extra Deck monster in the Main Deck, shows as
-legal, and nothing on screen says those checks are off. Required outcome:
-whenever no banlist is selected, the screen makes visible that these checks
-are not being made. The wording and its derivation live in the C++ adapter,
-never in QML, and policy/'s behaviour stays unchanged. Tests must pin that
-state, and must fail at 259b7bcd. Whether "No banlist" should stay the
-default selection is your call to argue in the report; it must remain a
-visible, distinct choice either way.
+[`docs/agents/roles/worker.md`](../agents/roles/worker.md), with one section
+per item.
