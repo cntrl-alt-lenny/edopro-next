@@ -131,3 +131,11 @@ The standard report in
 [`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus: the source
 of truth chosen for "What works" and why, the section mapping, the corrected
 facts, and the visual-verification statement.
+
+## Reopened corrections R1-R3
+
+R1 — README.md's "What is this?" opens "edopro-next is a modern Qt 6 / QML client for EDOPro." That describes as existing a client that is not yet usable: the duel field is not started, as the generated status says. CLAUDE.md's honesty rules forbid describing planned functionality as shipped. Required outcome: the landing page describes what the project is today, without implying a usable client exists, and stays consistent with the hero banner ("A modern client architecture for EDOPro") and the generated status.
+
+R2 — the generated status block opens with "**No.** The duel field (M5) is not started." under the heading "What works". The "No." answers a question the page never asks, and read on its own it suggests nothing works. Required outcome: the generated first sentence reads correctly on its own under that heading. It must still be computed from the Duel field milestone's status in docs/ROADMAP.md, never typed by hand, and the tests must cover the new wording.
+
+R3 — "Quick start" lists "a C++20 compiler, CMake and Ninja" as what is needed, but its last step runs Python. Required outcome: the section states everything a reader needs to complete every step it lists. That includes Python's minimum version, and a pointer for Windows readers, since cmake -G Ninja needs the MSVC environment there; linking docs/building.md is enough.
