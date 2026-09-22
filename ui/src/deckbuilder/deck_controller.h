@@ -12,16 +12,27 @@
 // specifies an explicit Section - the caller's (ultimately the user's)
 // choice, never inferred from card type. See
 // docs/architecture/deck-builder-ui.md#deck-session-semantics.
+//
+// Legality validation:
+// Deck legality is computed strictly by policy::validate_deck() (CLAUDE.md,
+// ADR 0007, ADR 0010). This controller owns the user-selected ruleset and
+// banlist inputs, and re-validates the deck reactively whenever the deck,
+// catalog, ruleset, or banlist changes. Results are exposed as advisory
+// properties (isLegal, legalityMessage, etc.) for QML to render.
 
 #pragma once
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QUrl>
 #include <qqmlintegration.h>
 
+#include "banlist_store.h"
 #include "deck_section_model.h"
 #include "edopro_next/data/deck.h"
+#include "edopro_next/policy/deck_validation.h"
+#include "ruleset.h"
 
 class CardCatalog;
 
@@ -50,6 +61,19 @@ class DeckController : public QObject {
     // successful operation. Not cumulative - only the latest attempt.
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
 
+    // Ruleset and banlist selection for deck legality validation (M3 Brief 015 / ADR 0010).
+    Q_PROPERTY(QStringList rulesetNames READ rulesetNames CONSTANT)
+    Q_PROPERTY(int selectedRulesetIndex READ selectedRulesetIndex WRITE setSelectedRulesetIndex NOTIFY selectedRulesetChanged)
+
+    Q_PROPERTY(QStringList banlistNames READ banlistNames NOTIFY banlistsChanged)
+    Q_PROPERTY(int selectedBanlistIndex READ selectedBanlistIndex WRITE setSelectedBanlistIndex NOTIFY selectedBanlistChanged)
+
+    // Advisory legality status computed by policy::validate_deck().
+    Q_PROPERTY(bool isLegal READ isLegal NOTIFY legalityChanged)
+    Q_PROPERTY(QString legalityMessage READ legalityMessage NOTIFY legalityChanged)
+    Q_PROPERTY(int legalityErrorType READ legalityErrorType NOTIFY legalityChanged)
+    Q_PROPERTY(quint32 legalityCardCode READ legalityCardCode NOTIFY legalityChanged)
+
 public:
     // QML_ELEMENT on the enclosing QObject is enough to expose a Q_ENUM to
     // QML as DeckController.Main/.Extra/.Side - no separate registration.
@@ -72,6 +96,25 @@ public:
     QString currentPath() const;
     QString currentFileName() const;
     QString lastError() const;
+
+    QStringList rulesetNames() const;
+    int selectedRulesetIndex() const { return selectedRulesetIndex_; }
+    void setSelectedRulesetIndex(int index);
+
+    QStringList banlistNames() const;
+    int selectedBanlistIndex() const { return selectedBanlistIndex_; }
+    void setSelectedBanlistIndex(int index);
+
+    bool isLegal() const { return isLegal_; }
+    QString legalityMessage() const { return legalityMessage_; }
+    int legalityErrorType() const { return legalityErrorType_; }
+    quint32 legalityCardCode() const { return legalityCardCode_; }
+
+    // Banlist loading affordances
+    Q_INVOKABLE bool loadBanlistFile(const QString& path);
+    void loadBanlists(const QStringList& paths);
+    void loadBanlistFromText(const std::string& text);
+    const edopro_next::ui::BanlistStore& banlistStore() const { return banlistStore_; }
 
     // Appends `code` to the end of the requested section - order and
     // duplicates are exactly what the user asked for, never deduplicated,
@@ -106,6 +149,10 @@ signals:
     void dirtyChanged();
     void currentPathChanged();
     void lastErrorChanged();
+    void selectedRulesetChanged();
+    void banlistsChanged();
+    void selectedBanlistChanged();
+    void legalityChanged();
 
 private:
     std::vector<edopro_next::data::CardCode>& sectionVector(Section section);
@@ -115,6 +162,10 @@ private:
     void rebindModels();
     bool saveToPath(const QString& path);
 
+    void validateLegality();
+    QString formatLegalityError(const edopro_next::policy::DeckValidationError& error) const;
+    QString formatCard(edopro_next::data::CardCode code) const;
+
     edopro_next::data::Deck deck_;
     CardCatalog* catalog_ = nullptr;
     DeckSectionModel* mainModel_;
@@ -123,4 +174,13 @@ private:
     bool dirty_ = false;
     QString currentPath_;
     QString lastError_;
+
+    edopro_next::ui::BanlistStore banlistStore_;
+    int selectedRulesetIndex_ = 0;
+    int selectedBanlistIndex_ = 0;
+
+    bool isLegal_ = false;
+    QString legalityMessage_;
+    int legalityErrorType_ = 0;
+    quint32 legalityCardCode_ = 0;
 };

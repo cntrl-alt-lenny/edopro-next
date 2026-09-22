@@ -4,7 +4,7 @@ Fast rehydration for a fresh Brain session. Keep this short — point at the
 detailed doc rather than duplicating it. **Every fact here is a claim to
 spot-check against live repository state, not a fact to relay forward.**
 
-**Last updated:** 2026-09-21 (evening).
+**Last updated:** 2026-09-22.
 
 **Derive these before trusting anything below them.** This file drifted within
 two rounds of being written — it claimed no Builder round had run while
@@ -276,8 +276,16 @@ report.
 merged 2026-09-21** as PR #29 (`d035c66d`); see
 [`briefs/archive/013-…`](briefs/archive/013-2026-09-21-framework-guard-install.md).
 
-**Brief 014 is active**: bringing `README.md` up to the framework's README
-standard, on branch `meta/readme-standard`.
+**Brief 014 — the README standard — was accepted and merged 2026-09-22** as
+PR #30 (`113e2c7f`); see
+[`briefs/archive/014-…`](briefs/archive/014-2026-09-21-readme-standard.md).
+The README's "What works" block is generated from `docs/ROADMAP.md` by
+`tools/generate_readme_status.py`, and the suite fails if they drift. **So a
+roadmap edit now requires regenerating the README.**
+
+**Brief 015 is active**: surfacing deck legality in the QML deck builder, with
+the owner's visible format choice (2026-08-31), on branch
+`m3/deck-builder-legality-ui`.
 
 ### Dev Hub (from 2026-09-21)
 
@@ -436,12 +444,15 @@ not fold it into a narrative section.)*
   and `pr_16.txt` were committed with every `\r\n` turned into `\n\n`, and
   their tests pin the doubled line numbers. Verdicts are unaffected. Fix in a
   small later round.
-- **README** — Brief 014, active. Owner decisions (2026-09-21):
-  - the "What works" table is generated from project data, with a check;
-  - no development-stage badge;
-  - a static AGPL-3.0-or-later license badge, since `LICENSE` must stay
-    upstream's;
-  - a raster 1280×640 social-preview file that the owner uploads.
+- **Deck-builder legality UI** — Brief 015, active.
+- **Small tidy-ups, to batch into one later round:**
+  - the double-spaced fixtures (above);
+  - `read-failure-class.md`'s two imprecise sentences;
+  - PowerShell push-guard test portability;
+  - `HomeScreen.qml`'s stale "planned" statuses and `hero.svg`'s dashed
+    semantic-model box;
+  - the letterboxed social preview;
+  - splitting ROADMAP M6 into local builds and CI.
 - **`read-failure-class.md` imprecision** — two sentences named in Brief 011's
   archived outcome. Fold them into a later documentation round.
 - **Push-guard tests under PowerShell** — 8 failures from the WSL `bash`
@@ -452,22 +463,15 @@ not fold it into a narrative section.)*
 
 ## Recommended next slice
 
-**Finish Brief 014** — the README round.
+**Finish Brief 015** — deck-builder legality in the QML deck builder. It
+runs on the Windows machine, which has Qt 6.8.3 and has built `ui/`; the Mac
+has no Qt. Its design inputs are Brief 001's accepted research
+([`architecture/deck-builder-legality.md`](architecture/deck-builder-legality.md) §7):
+upstream's deck editor never calls `CheckDeckContent`/`CheckDeckSize`. The
+other input is the owner's 2026-08-31 choice of that document's option (b),
+a visible ruleset choice. That choice is recorded in the brief and, when the
+round lands, in an ADR.
 
-**After that, the deck-builder legality UI** — the remaining M3 item, and the
-one the roadmap actually cares about. Two things gate it, and both are now
-tractable:
-
-- It touches `ui/`. The Windows machine, where the loop now runs, has Qt
-  6.8.3 and has built `ui/`; the Mac has no Qt. Say which machine in the
-  brief. An earlier version of this file recommended a `ui/` round while
-  recording that `ui/` could not be built, and the contradiction survived
-  several readings.
-- Its design blocker is **resolved**: brief 001's research was adjudicated
-  `accepted` on 2026-08-31, including the headline finding that upstream's
-  deck editor never calls `CheckDeckContent`/`CheckDeckSize`. That reshapes
-  the round — "surface legality in the deck builder" is not one thing — and
-  the corrections outstanding against it are listed in
-  [`briefs/archive/001-…`](briefs/archive/001-2026-08-31-deck-builder-legality-boundary.md).
+**Then the small tidy-up round** listed under *Known open items*.
 
 **Still not the duel field.** Unchanged and not near.

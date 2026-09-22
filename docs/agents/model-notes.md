@@ -336,3 +336,25 @@ ranking.
   `docs/state.md`. Brain found all three by reading the diff and re-hashing.
   With the same model in both seats, the Verifier's independence came only
   from its fresh context. That was enough in round 012, but not here.
+
+## Round 014 — 2026-09-21 to 2026-09-22 — README standard
+
+Two passes (PR #30, merged `113e2c7f`). This is an observation log, not a
+ranking.
+
+- **First pass, both seats in Claude Code (Sonnet 5).** The Builder's work
+  was thorough: a generated status block with mutation tests, twelve
+  corrected facts each with evidence, and a complete section mapping. The
+  Verifier did as the prompt asked and walked the old README itself before
+  reading the Builder's mapping, re-deriving six facts from primary sources.
+  It did not run `cmd /c ver`, and reported the OS from its environment.
+  Neither seat flagged that the landing page's first sentence described a
+  usable client that does not exist; Brain did.
+- **Corrective pass, both seats in Antigravity (Gemini 3.8 Flash, High).**
+  It made exactly the three corrections, with correct mechanics. The
+  Verifier's report file carries two `captured` header lines. It is harmless,
+  but a sign the seat wrote its report twice.
+- **Brain-seat note.** Brain wrote brief 014's base SHA from memory, for the
+  second time in two days, and caught it before handing the brief out. The
+  rule is now written down for future sessions: copy every SHA from
+  `git rev-parse`, then verify it with `git cat-file -e`.

@@ -154,10 +154,9 @@ already presentation-independent, so it can be built without touching the duel p
       `CHECK_UNOFFICIAL` magnitude quirk, both preserved deliberately. `parse_lflist()`
       reproduces upstream's own banlist grammar, hash formula, and quirks (a `$whitelist`
       prefix match, duplicate-code content/hash divergence), failing closed for the one
-      count domain in which upstream's own hash expression is undefined behavior. This is a
-      **presentation-independent foundation only** - nothing in `ui/` calls it yet, so a
-      deck built in the QML deck-builder still shows no legality information at all. Source
-      research and the deliberate divergences are in
+      count domain in which upstream's own hash expression is undefined behavior. Connected to the QML deck builder via the Qt adapter layer
+      ([ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md)). Source research and
+      the deliberate divergences are in
       [deck-legality.md](architecture/deck-legality.md) and
       [ADR 0007](adr/0007-deck-legality-policy-module.md).
 - [x] Real upstream `.ydk` interoperability proof. `integration/legacy/ydk_interop.{h,cpp}`
@@ -176,23 +175,24 @@ already presentation-independent, so it can be built without touching the duel p
       [ydk-interoperability.md](architecture/ydk-interoperability.md) and
       [ADR 0008](adr/0008-upstream-ydk-interop-harness.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
-      **A functional core exists (M3D1), not the complete item.** A real `DeckBuilderScreen`
+      **A functional core with legality exists, not the complete item.** A real `DeckBuilderScreen`
       wires `CardCatalog`/`CardSearchIndex` text search, an explicit-choice Main/Extra/Side
-      editor over one canonical `Deck`, and `.ydk` open/save/new with a tested dirty-state
-      contract, through a small Qt adapter layer (`ui/src/deckbuilder/`) that keeps `data/`
-      Qt-free. Still missing: legality is not yet surfaced anywhere in the UI (the
-      presentation-independent validation exists as of `policy/` above, but nothing in
-      `ui/` calls it), automatic Main/Extra classification, artwork, the legacy sigil
+      editor over one canonical `Deck`, `.ydk` open/save/new with a tested dirty-state
+      contract, and user-visible ruleset and banlist selection with advisory legality validation
+      driven by `policy::validate_deck()` ([ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md)),
+      through a small Qt adapter layer (`ui/src/deckbuilder/`) that keeps `data/` and `policy/`
+      Qt-free. Still missing: automatic Main/Extra classification, artwork, the legacy sigil
       search grammar and structured filters beyond plain text, and full keyboard/controller
       parity. Design and the deliberate exclusions:
-      [deck-builder-ui.md](architecture/deck-builder-ui.md) and
-      [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md).
+      [deck-builder-ui.md](architecture/deck-builder-ui.md),
+      [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md), and
+      [ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md).
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
 **Pending** - the card database facade, the deck model/`.ydk` codec, fast search, and the
 deck legality/policy foundation above are all done, and a functional deck-builder core
-exists (M3D1); UI-visible legality, automatic classification, structured/legacy search
+with advisory legality validation exists; automatic classification, structured/legacy search
 parity and full keyboard/controller parity remain, so the milestone is not complete.
 Current serializer -> real upstream `LoadDeckFromFile` compatibility is now **CI-proven**
 against deterministic synthetic card data (M3D3, above) - a real improvement over "supported

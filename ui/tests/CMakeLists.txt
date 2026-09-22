@@ -24,6 +24,7 @@ target_link_libraries(test_deckbuilder PRIVATE
     edopro_next_data
     edopro_next_deck
     edopro_next_search
+    edopro_next_legality
     SQLite::SQLite3
 )
 
@@ -147,6 +148,7 @@ target_link_libraries(test_deckbuilder_screen PRIVATE
     edopro_next_data
     edopro_next_deck
     edopro_next_search
+    edopro_next_legality
     SQLite::SQLite3
 )
 

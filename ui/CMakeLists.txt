@@ -39,6 +39,9 @@ qt_standard_project_setup(REQUIRES 6.5)
 set(EDOPRO_NEXT_DATA_TESTS OFF CACHE BOOL "Data/ tests are exercised by their own CI job, not the shell build" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../data ${CMAKE_CURRENT_BINARY_DIR}/data)
 
+set(EDOPRO_NEXT_LEGALITY_TESTS OFF CACHE BOOL "Legality tests are exercised by their own CI job, not the shell build" FORCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../policy ${CMAKE_CURRENT_BINARY_DIR}/policy)
+
 # find_package's own SQLite3::SQLite3/SQLite::SQLite3 imported target is
 # scoped to the directory that created it and that directory's
 # subdirectories - data/'s own find_package(SQLite3) call (above) is
@@ -88,6 +91,10 @@ set(EDOPRO_NEXT_SHELL_DECKBUILDER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/deck_section_model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/deck_controller.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/deck_controller.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/ruleset.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/ruleset.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/banlist_store.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/banlist_store.cpp
 )
 
 qt_add_executable(edopro_next_shell
@@ -139,6 +146,7 @@ target_link_libraries(edopro_next_shell PRIVATE
     edopro_next_data
     edopro_next_deck
     edopro_next_search
+    edopro_next_legality
 )
 
 if(EDOPRO_NEXT_UI_TESTS)

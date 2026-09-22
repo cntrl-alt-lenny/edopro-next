@@ -3,7 +3,9 @@
 #include "deck_controller.h"
 
 #include <QFileInfo>
+#include <algorithm>
 
+#include "card_catalog.h"
 #include "edopro_next/data/ydk.h"
 #include "qt_path.h"
 
@@ -13,6 +15,7 @@ DeckController::DeckController(QObject* parent)
       extraModel_(new DeckSectionModel(this)),
       sideModel_(new DeckSectionModel(this)) {
     rebindModels();
+    validateLegality();
 }
 
 CardCatalog* DeckController::catalog() const { return catalog_; }
@@ -22,6 +25,7 @@ void DeckController::setCatalog(CardCatalog* catalog) {
         return;
     catalog_ = catalog;
     rebindModels();
+    validateLegality();
     emit catalogChanged();
 }
 
@@ -52,6 +56,84 @@ QString DeckController::currentFileName() const {
 }
 
 QString DeckController::lastError() const { return lastError_; }
+
+QStringList DeckController::rulesetNames() const {
+    const auto& rulesets = edopro_next::ui::availableRulesets();
+    QStringList names;
+    names.reserve(static_cast<qsizetype>(rulesets.size()));
+    for (const auto& r : rulesets) {
+        names.append(r.displayName);
+    }
+    return names;
+}
+
+void DeckController::setSelectedRulesetIndex(int index) {
+    const auto& rulesets = edopro_next::ui::availableRulesets();
+    if (rulesets.empty())
+        return;
+    const int clamped = std::clamp(index, 0, static_cast<int>(rulesets.size()) - 1);
+    if (selectedRulesetIndex_ == clamped)
+        return;
+    selectedRulesetIndex_ = clamped;
+    validateLegality();
+    emit selectedRulesetChanged();
+}
+
+QStringList DeckController::banlistNames() const {
+    return banlistStore_.names();
+}
+
+void DeckController::setSelectedBanlistIndex(int index) {
+    const int count = banlistStore_.count();
+    if (count <= 0)
+        return;
+    const int clamped = std::clamp(index, 0, count - 1);
+    if (selectedBanlistIndex_ == clamped)
+        return;
+    selectedBanlistIndex_ = clamped;
+    validateLegality();
+    emit selectedBanlistChanged();
+}
+
+bool DeckController::loadBanlistFile(const QString& path) {
+    const bool ok = banlistStore_.loadFromFile(to_fs_path(path));
+    if (ok) {
+        if (selectedBanlistIndex_ >= banlistStore_.count()) {
+            selectedBanlistIndex_ = 0;
+            emit selectedBanlistChanged();
+        }
+        emit banlistsChanged();
+        validateLegality();
+    }
+    return ok;
+}
+
+void DeckController::loadBanlists(const QStringList& paths) {
+    bool anyLoaded = false;
+    for (const auto& path : paths) {
+        if (banlistStore_.loadFromFile(to_fs_path(path))) {
+            anyLoaded = true;
+        }
+    }
+    if (anyLoaded) {
+        if (selectedBanlistIndex_ >= banlistStore_.count()) {
+            selectedBanlistIndex_ = 0;
+            emit selectedBanlistChanged();
+        }
+        emit banlistsChanged();
+        validateLegality();
+    }
+}
+
+void DeckController::loadBanlistFromText(const std::string& text) {
+    banlistStore_.loadFromText(text);
+    if (selectedBanlistIndex_ >= banlistStore_.count()) {
+        selectedBanlistIndex_ = 0;
+        emit selectedBanlistChanged();
+    }
+    emit banlistsChanged();
+    validateLegality();
+}
 
 void DeckController::setDirty(bool value) {
     if (dirty_ == value)
@@ -117,6 +199,7 @@ void DeckController::addCard(quint32 code, Section section) {
     model->notifyInserted();
     setDirty(true);
     emit deckChanged();
+    validateLegality();
 }
 
 void DeckController::removeAt(Section section, int index) {
@@ -129,6 +212,7 @@ void DeckController::removeAt(Section section, int index) {
     model->notifyRemoved();
     setDirty(true);
     emit deckChanged();
+    validateLegality();
 }
 
 void DeckController::newDeck() {
@@ -144,6 +228,7 @@ void DeckController::newDeck() {
     setLastError(QString());
     setDirty(false);
     emit deckChanged();
+    validateLegality();
 }
 
 bool DeckController::loadDeck(const QUrl& fileUrl) {
@@ -173,6 +258,7 @@ bool DeckController::loadDeck(const QUrl& fileUrl) {
     setLastError(QString());
     setDirty(false);
     emit deckChanged();
+    validateLegality();
     return true;
 }
 
@@ -201,4 +287,148 @@ bool DeckController::saveToPath(const QString& path) {
     setLastError(QString());
     setDirty(false);
     return true;
+}
+
+void DeckController::validateLegality() {
+    const auto& rulesets = edopro_next::ui::availableRulesets();
+    if (rulesets.empty())
+        return;
+    const int rIdx = std::clamp(selectedRulesetIndex_, 0, static_cast<int>(rulesets.size()) - 1);
+    const auto& ruleset = rulesets[static_cast<std::size_t>(rIdx)];
+
+    const auto& lflistOpt = banlistStore_.listAt(selectedBanlistIndex_);
+    auto policy = ruleset.makePolicy(lflistOpt);
+
+    static const edopro_next::data::CardDatabase kEmptyDb;
+    const auto& db = (catalog_ != nullptr) ? catalog_->database() : kEmptyDb;
+
+    const auto error = edopro_next::policy::validate_deck(deck_, db, policy);
+
+    const bool newLegal = (error.type == edopro_next::policy::DeckErrorType::None);
+    QString newMsg;
+    if (!lflistOpt.has_value()) {
+        // No banlist selected: policy::validate_deck() takes the same
+        // short-circuit upstream's null LFList* does (gframe/deck_manager.cpp
+        // :217-218; policy/src/deck_validation.cpp; docs/architecture/
+        // deck-legality.md §5) and returns before card-scope,
+        // section-placement or the three-copy cap ever run - regardless of
+        // what `error` says. S3 (brief 015 reopened corrections): that must
+        // never be silently reported as full legality, in either direction.
+        if (newLegal) {
+            newMsg = QStringLiteral(
+                "Deck meets this ruleset's size and type limits. No banlist is selected: "
+                "card-scope, section-placement and copy-limit checks are not being made.");
+        } else {
+            newMsg = formatLegalityError(error)
+                + QStringLiteral(" No banlist is selected: card-scope, section-placement "
+                                  "and copy-limit checks are not being made either way.");
+        }
+    } else if (newLegal) {
+        newMsg = QStringLiteral("Deck is legal for duel entry under this ruleset and banlist.");
+    } else {
+        newMsg = formatLegalityError(error);
+    }
+    const int newErrType = static_cast<int>(error.type);
+    const quint32 newCardCode = static_cast<quint32>(error.card);
+
+    bool changed = false;
+    if (isLegal_ != newLegal) {
+        isLegal_ = newLegal;
+        changed = true;
+    }
+    if (legalityMessage_ != newMsg) {
+        legalityMessage_ = newMsg;
+        changed = true;
+    }
+    if (legalityErrorType_ != newErrType) {
+        legalityErrorType_ = newErrType;
+        changed = true;
+    }
+    if (legalityCardCode_ != newCardCode) {
+        legalityCardCode_ = newCardCode;
+        changed = true;
+    }
+
+    if (changed) {
+        emit legalityChanged();
+    }
+}
+
+QString DeckController::formatCard(edopro_next::data::CardCode code) const {
+    if (code == edopro_next::data::CardCode::None)
+        return QString();
+    if (catalog_ != nullptr) {
+        const auto* record = catalog_->database().find(code);
+        if (record && !record->name.empty()) {
+            return QStringLiteral("'%1' (%2)")
+                .arg(QString::fromUtf8(record->name.data(), static_cast<qsizetype>(record->name.size())))
+                .arg(static_cast<quint32>(code));
+        }
+    }
+    return QStringLiteral("card %1").arg(static_cast<quint32>(code));
+}
+
+QString DeckController::formatLegalityError(const edopro_next::policy::DeckValidationError& error) const {
+    switch (error.type) {
+    case edopro_next::policy::DeckErrorType::MainCount:
+        if (error.count.current < error.count.minimum) {
+            return QStringLiteral("Would not be accepted at duel entry: Main deck has %1 cards, fewer than the minimum of %2.")
+                .arg(error.count.current)
+                .arg(error.count.minimum);
+        } else {
+            return QStringLiteral("Would not be accepted at duel entry: Main deck has %1 cards, exceeding the maximum of %2.")
+                .arg(error.count.current)
+                .arg(error.count.maximum);
+        }
+    case edopro_next::policy::DeckErrorType::ExtraCount:
+        if (error.card != edopro_next::data::CardCode::None) {
+            return QStringLiteral("Would not be accepted at duel entry: %1 belongs in the Main deck, not the Extra deck.")
+                .arg(formatCard(error.card));
+        } else if (error.count.current > error.count.maximum) {
+            return QStringLiteral("Would not be accepted at duel entry: Extra deck has %1 cards, exceeding the maximum of %2.")
+                .arg(error.count.current)
+                .arg(error.count.maximum);
+        } else {
+            return QStringLiteral("Would not be accepted at duel entry: Extra deck has %1 cards, fewer than the minimum of %2.")
+                .arg(error.count.current)
+                .arg(error.count.minimum);
+        }
+    case edopro_next::policy::DeckErrorType::SideCount:
+        if (error.count.current > error.count.maximum) {
+            return QStringLiteral("Would not be accepted at duel entry: Side deck has %1 cards, exceeding the maximum of %2.")
+                .arg(error.count.current)
+                .arg(error.count.maximum);
+        } else {
+            return QStringLiteral("Would not be accepted at duel entry: Side deck has %1 cards, fewer than the minimum of %2.")
+                .arg(error.count.current)
+                .arg(error.count.minimum);
+        }
+    case edopro_next::policy::DeckErrorType::UnknownCard:
+        return QStringLiteral("Would not be accepted at duel entry: Unknown card code %1 (not found in database).")
+            .arg(static_cast<quint32>(error.card));
+    case edopro_next::policy::DeckErrorType::ForbiddenType:
+        return QStringLiteral("Would not be accepted at duel entry: Deck contains cards of a forbidden card type.");
+    case edopro_next::policy::DeckErrorType::TooManyLegends:
+        return QStringLiteral("Would not be accepted at duel entry: Deck exceeds the allowed number of Legend cards.");
+    case edopro_next::policy::DeckErrorType::TooManySkills:
+        return QStringLiteral("Would not be accepted at duel entry: Deck exceeds the allowed number of Skill cards.");
+    case edopro_next::policy::DeckErrorType::CardCount:
+        return QStringLiteral("Would not be accepted at duel entry: %1 exceeds the maximum allowed copy limit.")
+            .arg(formatCard(error.card));
+    case edopro_next::policy::DeckErrorType::TcgOnly:
+        return QStringLiteral("Would not be accepted at duel entry: %1 is TCG-only, not allowed under this ruleset.")
+            .arg(formatCard(error.card));
+    case edopro_next::policy::DeckErrorType::OcgOnly:
+        return QStringLiteral("Would not be accepted at duel entry: %1 is OCG-only, not allowed under this ruleset.")
+            .arg(formatCard(error.card));
+    case edopro_next::policy::DeckErrorType::UnofficialCard:
+        return QStringLiteral("Would not be accepted at duel entry: %1 is an unofficial or custom card.")
+            .arg(formatCard(error.card));
+    case edopro_next::policy::DeckErrorType::Lflist:
+        return QStringLiteral("Would not be accepted at duel entry: %1 exceeds the banlist limitation count.")
+            .arg(formatCard(error.card));
+    case edopro_next::policy::DeckErrorType::None:
+        return QStringLiteral("Deck is legal for duel entry under this ruleset and banlist.");
+    }
+    return QStringLiteral("Would not be accepted at duel entry: Deck is invalid.");
 }

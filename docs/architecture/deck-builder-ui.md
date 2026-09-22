@@ -12,10 +12,12 @@ a reimplementation of them.
 
 ## 0. What this slice is not
 
-It is not the complete M3 "Deck builder UI" roadmap item. There is no legality, no banlist,
-no deck-size or copy-count limit, no automatic Main/Extra classification, no artwork, no
-archetype-name search, no controller/gamepad navigation, and no full keyboard parity with
-upstream. `docs/ROADMAP.md`'s M3 entry stays unchecked. See §12.
+It is not the complete M3 "Deck builder UI" roadmap item. While legality validation,
+ruleset selection, and banlist selection are now integrated (see §14 and [ADR 0010](../adr/0010-deck-builder-ruleset-and-legality-ui.md)),
+there is still no automatic Main/Extra classification, no artwork, no archetype-name search,
+no controller/gamepad navigation, and no full keyboard parity with upstream.
+`docs/ROADMAP.md`'s M3 entry stays unchecked. See §12.
+
 
 ---
 
@@ -899,3 +901,64 @@ spinning) rather than the process ever doing further work. Never observed via th
 either way; worked around by never blocking on the scratch process's own exit when scripting a
 capture, launching it in the background and unconditionally terminating it after a fixed settle
 time instead.
+
+---
+
+## 14. Deck legality, ruleset, and banlist integration (ADR 0010)
+
+Following Owner ratification of Option (b) from `docs/architecture/deck-builder-legality.md` §7,
+authoritative legality checking from `policy::validate_deck()` is connected directly to the
+deck builder UI via the Qt adapter layer.
+
+### 14.1 The adapter seam: `Ruleset` and `BanlistStore`
+
+Computation remains strictly inside `policy/`. The `ui/src/deckbuilder/` adapter layer introduces
+two data models:
+- **`Ruleset` (`ruleset.h`/`ruleset.cpp`)**: Defines the user-selectable rulesets. Currently
+  exposes exactly one named ruleset: "Standard OCG/TCG" (indexed at 0). `makePolicy()` constructs
+  the corresponding `policy::ValidationPolicy` using values documented with upstream citations in
+  [ADR 0010](../adr/0010-deck-builder-ruleset-and-legality-ui.md).
+- **`BanlistStore` (`banlist_store.h`/`banlist_store.cpp`)**: Manages available banlists. Index 0
+  is always "No banlist selected" (`std::nullopt`). Subsequent entries represent parsed
+  `policy::LFList` objects loaded via `loadFromFile()` or `loadFromText()`. This preserves the
+  critical distinction between `std::nullopt` (which skips copy limit checking entirely) and an
+  empty concrete list ("N/A", which enforces standard 3-copy limits).
+- **CLI banlist loading**: The application shell accepts repeatable `--lflist <path>` flags,
+  populating `BanlistStore` without hardcoding or committing real banlist files into the repository.
+
+### 14.2 Reactive legality evaluation in `DeckController`
+
+`DeckController` exposes properties binding legality state to QML:
+- `rulesetIndex` / `availableRulesets`: QStringList of selectable ruleset names.
+- `banlistIndex` / `availableBanlists`: QStringList of selectable banlist names.
+- `isLegal` (`bool`): `true` if `policy::validate_deck` reports no errors, `false` otherwise.
+- `legalityMessage` (`QString`): Human-readable status message, built entirely in
+  `DeckController::validateLegality()` - QML only renders it, never derives wording. With a
+  concrete banlist selected: "Deck is legal for duel entry under this ruleset and banlist." when
+  legal, "Would not be accepted at duel entry: &lt;reason&gt;" when not. **With "No banlist"
+  selected** (S3, brief 015 reopened corrections): `policy::validate_deck()` takes the same
+  short-circuit upstream's null `LFList*` does (§5 above) and never runs the card-scope,
+  section-placement or three-copy checks, so the message says so explicitly rather than
+  reporting either state as complete - "Deck meets this ruleset's size and type limits. No
+  banlist is selected: card-scope, section-placement and copy-limit checks are not being made."
+  when otherwise legal, or the same illegal-reason message with " No banlist is selected: …
+  not being made either way." appended when not. An earlier version of this round reported the
+  unqualified "legal" message under "No banlist" too - `ui/tests/test_deckbuilder.cpp`'s
+  `noBanlistSelectionDisclosesSkippedChecksWhenOtherwiseLegal` and
+  `…WhenAlsoIllegal` pin the fix; `concreteBanlistSelectionCarriesNoSkippedChecksDisclosure`
+  pins that a concrete banlist carries no such disclosure.
+- `legalityErrorType` (`int`): Integer value corresponding to `policy::DeckValidationError::Type`.
+- `legalityCardCode` (`qulonglong`): The offending card code if applicable (e.g. for `CardLimitExceeded`).
+
+Legality is re-evaluated reactively via `validateLegality()` upon any deck mutation (insert,
+remove, reset), any change to `rulesetIndex` or `banlistIndex`, or catalog reloads.
+
+### 14.3 Advisory presentation in `DeckBuilderScreen.qml`
+
+In accordance with ADR 0010 Decision 3:
+- Legality evaluation is **advisory only**. It never blocks editing, card addition/removal, or saving.
+- `DeckBuilderScreen.qml` presents ruleset and banlist selector `ComboBox` elements (`rulesetCombo`
+  and `banlistCombo`) alongside the card count headers.
+- Below the section headers, a `legalityBox` status banner displays `deckController.legalityMessage`,
+  styled with `Theme.warning` when illegal and `Theme.success` when legal.
+
