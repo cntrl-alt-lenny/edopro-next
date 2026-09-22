@@ -275,6 +275,9 @@ private slots:
     // "?" - the real CardPreview.qml was showing the literal negative
     // number instead.
     void negativeCombatStatsRenderAsQuestionMarksInPreview();
+
+    // Legality UI and status box reactivity (M3 Brief 015 / ADR 0010)
+    void legalityStatusBoxIsRenderedAndUpdatesReactively();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -685,6 +688,68 @@ void TestDeckBuilderScreen::negativeCombatStatsRenderAsQuestionMarksInPreview() 
     QCOMPARE(h.child("atkValueText")->property("text").toString(), QStringLiteral("?"));
     QCOMPARE(h.child("defRowLabel")->property("visible").toBool(), true);
     QCOMPARE(h.child("defRowValue")->property("text").toString(), QStringLiteral("?"));
+}
+
+void TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() {
+    Harness h;
+    QVERIFY(h.valid());
+
+    auto* legalityBox = h.child("legalityBox");
+    auto* legalityText = h.child("legalityText");
+    auto* rulesetCombo = h.child("rulesetCombo");
+    auto* banlistCombo = h.child("banlistCombo");
+
+    QVERIFY(legalityBox != nullptr);
+    QVERIFY(legalityText != nullptr);
+    QVERIFY(rulesetCombo != nullptr);
+    QVERIFY(banlistCombo != nullptr);
+
+    // Initial empty deck: displays MainCount error
+    const QString initialMsg = legalityText->property("text").toString();
+    QCOMPARE(initialMsg, h.controller.legalityMessage());
+    QVERIFY(initialMsg.startsWith("Would not be accepted at duel entry: Main deck has 0 cards"));
+
+    // Ruleset and banlist initial names
+    const auto rulesetNames = rulesetCombo->property("model").toStringList();
+    QCOMPARE(rulesetNames.size(), 1);
+    QCOMPARE(rulesetNames.at(0), QStringLiteral("Standard OCG/TCG"));
+
+    const auto banlistNames = banlistCombo->property("model").toStringList();
+    QCOMPARE(banlistNames.size(), 1);
+    QCOMPARE(banlistNames.at(0), QStringLiteral("No banlist"));
+
+    // Load synthetic database with cards 1..40
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    for (quint32 i = 1; i <= 40; ++i) {
+        cards.push_back(SyntheticCard{i, QStringLiteral("Card%1").arg(i), 0x1, 1000, 1000, 4});
+    }
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+
+    // Add 40 cards to Main: legality message updates reactively
+    for (int i = 1; i <= 40; ++i) {
+        h.controller.addCard(i, DeckController::Section::Main);
+    }
+    QCOMPARE(h.controller.mainCount(), 40);
+    QCOMPARE(h.controller.isLegal(), true);
+    QCOMPARE(legalityText->property("text").toString(),
+             QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+
+    // Load a banlist and switch to it
+    h.controller.loadBanlistFromText("!N/A\n");
+    QCOMPARE(banlistCombo->property("count").toInt(), 2);
+    h.controller.setSelectedBanlistIndex(1);
+    QCOMPARE(banlistCombo->property("currentIndex").toInt(), 1);
+
+    // Adding card 1 three more times gives 4 copies, violating max 3 copies under "N/A" banlist
+    h.controller.addCard(1, DeckController::Section::Main);
+    h.controller.addCard(1, DeckController::Section::Main);
+    h.controller.addCard(1, DeckController::Section::Main);
+    QCOMPARE(h.controller.isLegal(), false);
+    QVERIFY(legalityText->property("text").toString().startsWith("Would not be accepted at duel entry: "));
+    QVERIFY(legalityText->property("text").toString().contains("exceeds the maximum allowed copy limit"));
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)

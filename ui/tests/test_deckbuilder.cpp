@@ -18,10 +18,13 @@
 
 #include <fstream>
 
+#include "banlist_store.h"
 #include "card_catalog.h"
 #include "card_entry.h"
 #include "deck_controller.h"
 #include "edopro_next/data/ydk.h"
+#include "edopro_next/policy/deck_validation.h"
+#include "ruleset.h"
 #include "search_results_model.h"
 
 namespace {
@@ -203,6 +206,12 @@ private slots:
     // summary line were both showing the literal negative number instead.
     void negativeCombatStatsRenderAsQuestionMarks();
     void searchSummaryRendersUnknownCombatStatsAsQuestionMarks();
+
+    // Legality validation and ruleset mapping (M3 Brief 015 / ADR 0010)
+    void rulesetMappingMatchesDocumentedSources();
+    void banlistStoreNulloptVsConcreteEmpty();
+    void banlistNulloptVsEmptyConcreteLegalityBehaviour();
+    void illegalDeckSurfacesSpecificErrors();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -693,6 +702,200 @@ void TestDeckBuilder::searchSummaryRendersUnknownCombatStatsAsQuestionMarks() {
     QCOMPARE(results.resultCount(), 1);
     QCOMPARE(results.data(results.index(0, 0), SearchResultsModel::SummaryRole).toString(),
              QStringLiteral("ATK ? / DEF ?"));
+}
+
+void TestDeckBuilder::rulesetMappingMatchesDocumentedSources() {
+    const auto& rulesets = edopro_next::ui::availableRulesets();
+    QCOMPARE(rulesets.size(), 1u);
+    const auto& r = rulesets[0];
+    QCOMPARE(r.id, QStringLiteral("standard_ocg_tcg"));
+    QCOMPARE(r.displayName, QStringLiteral("Standard OCG/TCG"));
+    QCOMPARE(r.deckSizes.main.min, 40);
+    QCOMPARE(r.deckSizes.main.max, 60);
+    QCOMPARE(r.deckSizes.extra.min, 0);
+    QCOMPARE(r.deckSizes.extra.max, 15);
+    QCOMPARE(r.deckSizes.side.min, 0);
+    QCOMPARE(r.deckSizes.side.max, 15);
+    QCOMPARE(r.allowedCards == edopro_next::policy::AllowedCardPool::OcgAndTcg, true);
+    QCOMPARE(r.forbiddenTypes, 0u);
+    QCOMPARE(r.ritualsBelongInExtra, false);
+    QCOMPARE(r.contentCheckingEnabled, true);
+
+    const auto policy = r.makePolicy(std::nullopt);
+    QCOMPARE(policy.deck_sizes == r.deckSizes, true);
+    QCOMPARE(policy.allowed_cards == r.allowedCards, true);
+    QCOMPARE(policy.forbidden_types, 0u);
+    QCOMPARE(policy.rituals_belong_in_extra, false);
+    QCOMPARE(policy.content_checking_enabled, true);
+    QCOMPARE(policy.lflist.has_value(), false);
+}
+
+void TestDeckBuilder::banlistStoreNulloptVsConcreteEmpty() {
+    edopro_next::ui::BanlistStore store;
+    QCOMPARE(store.count(), 1);
+    QCOMPARE(store.names().size(), 1);
+    QCOMPARE(store.names().at(0), QStringLiteral("No banlist"));
+    QCOMPARE(store.listAt(0).has_value(), false);
+    QCOMPARE(store.listAt(-1).has_value(), false);
+    QCOMPARE(store.listAt(99).has_value(), false);
+
+    // Load in-memory text with an empty "N/A" list and a second list
+    store.loadFromText("!N/A\n!2026.04 Test\n111 1\n");
+    QCOMPARE(store.count(), 3);
+    QCOMPARE(store.names().at(0), QStringLiteral("No banlist"));
+    QCOMPARE(store.names().at(1), QStringLiteral("N/A"));
+    QCOMPARE(store.names().at(2), QStringLiteral("2026.04 Test"));
+
+    // Entry 0 remains nullopt
+    QCOMPARE(store.listAt(0).has_value(), false);
+
+    // Entry 1 ("N/A") has value, empty content
+    QCOMPARE(store.listAt(1).has_value(), true);
+    QCOMPARE(store.listAt(1)->name, "N/A");
+    QCOMPARE(store.listAt(1)->content.empty(), true);
+
+    // Entry 2 has limitation for card 111
+    QCOMPARE(store.listAt(2).has_value(), true);
+    QCOMPARE(store.listAt(2)->name, "2026.04 Test");
+    QCOMPARE(store.listAt(2)->content.at(edopro_next::data::CardCode{111}), 1);
+}
+
+void TestDeckBuilder::banlistNulloptVsEmptyConcreteLegalityBehaviour() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    // Create synthetic database with 40 distinct cards (101..140).
+    QList<SyntheticCard> cards;
+    for (quint32 i = 101; i <= 140; ++i) {
+        cards.push_back(SyntheticCard{i, QStringLiteral("Card%1").arg(i), 0x1, 1000, 1000, 4});
+    }
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    DeckController controller;
+    controller.setCatalog(&catalog);
+
+    // 4 copies of card 101
+    for (int i = 0; i < 4; ++i) {
+        controller.addCard(101, DeckController::Section::Main);
+    }
+    // 36 single copies of cards 102..137 (total 40 cards)
+    for (quint32 i = 102; i <= 137; ++i) {
+        controller.addCard(i, DeckController::Section::Main);
+    }
+    QCOMPARE(controller.mainCount(), 40);
+
+    // Initially with "No banlist" (index 0, nullopt):
+    // nullopt skips CheckCards completely (upstream gframe/deck_manager.cpp:217-218).
+    // So 4 copies of card 101 is accepted under nullopt!
+    QCOMPARE(controller.selectedBanlistIndex(), 0);
+    QCOMPARE(controller.isLegal(), true);
+    QCOMPARE(controller.legalityMessage(),
+             QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+
+    // Now load a banlist that contains "!N/A\n" (concrete list with empty content)
+    controller.loadBanlistFromText("!N/A\n");
+    QCOMPARE(controller.banlistNames().size(), 2);
+    QCOMPARE(controller.banlistNames().at(1), QStringLiteral("N/A"));
+
+    // Select "N/A" (index 1)
+    controller.setSelectedBanlistIndex(1);
+    QCOMPARE(controller.selectedBanlistIndex(), 1);
+
+    // Concrete "N/A" runs CheckCards, enforcing standard max 3 copies!
+    // Card 101 has 4 copies -> rejected with CardCount.
+    QCOMPARE(controller.isLegal(), false);
+    QCOMPARE(controller.legalityErrorType(),
+             static_cast<int>(edopro_next::policy::DeckErrorType::CardCount));
+    QCOMPARE(controller.legalityCardCode(), 101u);
+    QVERIFY(controller.legalityMessage().startsWith("Would not be accepted at duel entry: "));
+    QVERIFY(controller.legalityMessage().contains("exceeds the maximum allowed copy limit"));
+
+    // Switch back to "No banlist" (index 0) -> legal again!
+    controller.setSelectedBanlistIndex(0);
+    QCOMPARE(controller.isLegal(), true);
+    QCOMPARE(controller.legalityMessage(),
+             QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+}
+
+void TestDeckBuilder::illegalDeckSurfacesSpecificErrors() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    const QString dbPath = dir.filePath("cards.cdb");
+    sqlite3* db = nullptr;
+    if (sqlite3_open(dbPath.toStdString().c_str(), &db) != SQLITE_OK)
+        qFatal("failed to create synthetic .cdb at %s", qPrintable(dbPath));
+    run(db, "CREATE TABLE datas (id INTEGER PRIMARY KEY NOT NULL, ot INTEGER NOT NULL, "
+            "alias INTEGER NOT NULL, setcode INTEGER NOT NULL, type INTEGER NOT NULL, "
+            "atk INTEGER NOT NULL, def INTEGER NOT NULL, level INTEGER NOT NULL, "
+            "race INTEGER NOT NULL, attribute INTEGER NOT NULL, category INTEGER NOT NULL);");
+    run(db, "CREATE TABLE texts (id INTEGER PRIMARY KEY NOT NULL, name TEXT, desc TEXT, "
+            "str1 TEXT, str2 TEXT, str3 TEXT, str4 TEXT, str5 TEXT, str6 TEXT, str7 TEXT, "
+            "str8 TEXT, str9 TEXT, str10 TEXT, str11 TEXT, str12 TEXT, str13 TEXT, "
+            "str14 TEXT, str15 TEXT, str16 TEXT);");
+
+    // Insert card 101 (ot=0x3 OCG/TCG, standard monster type=0x1)
+    run(db, "INSERT INTO datas VALUES (101, 3, 0, 0, 1, 1000, 1000, 4, 0, 0, 0);");
+    run(db, "INSERT INTO texts (id, name, desc) VALUES (101, 'Alpha Normal', 'desc');");
+
+    // Insert card 102 (ot=0x4 Unofficial/Anime, type=0x1)
+    run(db, "INSERT INTO datas VALUES (102, 4, 0, 0, 1, 1000, 1000, 4, 0, 0, 0);");
+    run(db, "INSERT INTO texts (id, name, desc) VALUES (102, 'Anime Card', 'desc');");
+
+    // Insert standard cards 103..150 (ot=0x3, type=0x1)
+    for (int i = 103; i <= 150; ++i) {
+        run(db, qPrintable(QStringLiteral("INSERT INTO datas VALUES (%1, 3, 0, 0, 1, 1000, 1000, 4, 0, 0, 0);").arg(i)));
+        run(db, qPrintable(QStringLiteral("INSERT INTO texts (id, name, desc) VALUES (%1, 'Card%1', 'desc');").arg(i)));
+    }
+    sqlite3_close(db);
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    controller.loadBanlistFromText("!N/A\n");
+    controller.setSelectedBanlistIndex(1); // Select "N/A" so content checking runs
+
+    // Case 1: Empty deck -> MainCount error
+    QCOMPARE(controller.isLegal(), false);
+    QCOMPARE(controller.legalityErrorType(),
+             static_cast<int>(edopro_next::policy::DeckErrorType::MainCount));
+    QCOMPARE(controller.legalityMessage(),
+             QStringLiteral("Would not be accepted at duel entry: Main deck has 0 cards, fewer than the minimum of 40."));
+
+    // Populate 40 standard cards (101, 103..141)
+    controller.addCard(101, DeckController::Section::Main);
+    for (int i = 103; i <= 141; ++i) {
+        controller.addCard(i, DeckController::Section::Main);
+    }
+    QCOMPARE(controller.mainCount(), 40);
+    QCOMPARE(controller.isLegal(), true);
+
+    // Case 2: Extra deck placement violation (adding ordinary monster 101 to Extra deck)
+    controller.addCard(101, DeckController::Section::Extra);
+    QCOMPARE(controller.isLegal(), false);
+    QCOMPARE(controller.legalityErrorType(),
+             static_cast<int>(edopro_next::policy::DeckErrorType::ExtraCount));
+    QCOMPARE(controller.legalityCardCode(), 101u);
+    QVERIFY(controller.legalityMessage().contains("belongs in the Main deck, not the Extra deck"));
+    QVERIFY(controller.legalityMessage().contains("'Alpha Normal' (101)"));
+
+    // Remove from Extra
+    controller.removeAt(DeckController::Section::Extra, 0);
+    QCOMPARE(controller.isLegal(), true);
+
+    // Case 3: Scope violation (card 102 with ot=4 in OcgAndTcg pool)
+    controller.addCard(102, DeckController::Section::Side);
+    QCOMPARE(controller.isLegal(), false);
+    QCOMPARE(controller.legalityErrorType(),
+             static_cast<int>(edopro_next::policy::DeckErrorType::UnofficialCard));
+    QCOMPARE(controller.legalityCardCode(), 102u);
+    QVERIFY(controller.legalityMessage().contains("is an unofficial or custom card"));
+    QVERIFY(controller.legalityMessage().contains("'Anime Card' (102)"));
 }
 
 QTEST_MAIN(TestDeckBuilder)
