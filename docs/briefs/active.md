@@ -170,3 +170,52 @@ The standard report in
 [`docs/agents/roles/worker.md`](../agents/roles/worker.md), plus: the ruleset
 values table, the number of rulesets and why, the presentation decision, and
 the ADR's number and title.
+
+## Reopened corrections S1-S3
+
+Brain reviewed PR #31 at head `259b7bcd1dadc676009e4143a6bc14adb1bccd4a` and
+reopened the round. Recorded here verbatim, as the round's authoritative text;
+everything else in the round is accepted and must not be reworked.
+
+S1 — docs/adr/0010-deck-builder-ruleset-and-legality-ui.md cites upstream
+source that does not say what the ADR claims. Observed by Brain at 259b7bcd.
+The ADR names constants that do not exist anywhere in gframe/: MIN_MAIN_DECK,
+MAX_MAIN_DECK, MAX_EXTRA_DECK, MAX_SIDE_DECK, "ALLOWED_OCG_TCG = 0x3" and
+RULE_RITUAL_IN_EXTRA (grep finds none). It cites gframe/deck_con.cpp:1159-1162,
+which is card-search text matching, and generic_duel.cpp lines 371-384 for
+content those lines do not contain. It gives allowed_cards as
+policy::CardScope::Any, while the code uses policy::AllowedCardPool::OcgAndTcg.
+AGENTS.md makes upstream source the arbiter: quote what you actually read.
+Required outcome: every upstream citation in ADR 0010,
+ui/src/deckbuilder/ruleset.cpp's comments and in
+docs/architecture/deck-builder-ui.md points at a file:line you re-read, with a
+verbatim quote of what is there. Remove any value, constant or line that is
+not in the source.
+
+S2 — the "Standard OCG/TCG" ruleset uses AllowedCardPool::OcgAndTcg and
+presents it as upstream-grounded, but upstream's default host card pool
+differs. gframe/game_config.inl:21 sets `OPTION(uint32_t, lastallowedcards,
+3)`, game.cpp:1160 selects that index in cbRule, duelclient.cpp:229 sends it
+as `info.rule`, and generic_duel.cpp:381 casts it to DuelAllowedCards, whose
+index 3 (gframe/deck_manager.h:32-37) is ALLOWED_CARDS_WITH_PRERELEASE.
+Required outcome: the ruleset's card pool either matches upstream's default,
+or is recorded plainly in ADR 0010 as this project's own choice that diverges
+from upstream's default, with the divergence and its reason stated. CLAUDE.md
+and AGENTS.md require deliberate divergence from upstream to be recorded,
+never silent. The same honesty applies to every other ruleset field: say for
+each whether it matches an upstream default, or is this project's choice.
+
+S3 — with the default selection "No banlist", the deck builder reports "Deck
+is legal for duel entry under this ruleset and banlist." for decks that duel
+entry with any concrete banlist would reject. Faithfully to upstream's null
+LFList (policy/src/deck_validation.cpp:262-270,
+docs/architecture/deck-legality.md section 5), policy::validate_deck() then
+skips the card-scope, section-placement and three-copy checks. So a deck with
+four copies of one card, or an Extra Deck monster in the Main Deck, shows as
+legal, and nothing on screen says those checks are off. Required outcome:
+whenever no banlist is selected, the screen makes visible that these checks
+are not being made. The wording and its derivation live in the C++ adapter,
+never in QML, and policy/'s behaviour stays unchanged. Tests must pin that
+state, and must fail at 259b7bcd. Whether "No banlist" should stay the
+default selection is your call to argue in the report; it must remain a
+visible, distinct choice either way.
