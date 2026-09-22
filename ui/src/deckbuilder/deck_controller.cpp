@@ -306,7 +306,24 @@ void DeckController::validateLegality() {
 
     const bool newLegal = (error.type == edopro_next::policy::DeckErrorType::None);
     QString newMsg;
-    if (newLegal) {
+    if (!lflistOpt.has_value()) {
+        // No banlist selected: policy::validate_deck() takes the same
+        // short-circuit upstream's null LFList* does (gframe/deck_manager.cpp
+        // :217-218; policy/src/deck_validation.cpp; docs/architecture/
+        // deck-legality.md §5) and returns before card-scope,
+        // section-placement or the three-copy cap ever run - regardless of
+        // what `error` says. S3 (brief 015 reopened corrections): that must
+        // never be silently reported as full legality, in either direction.
+        if (newLegal) {
+            newMsg = QStringLiteral(
+                "Deck meets this ruleset's size and type limits. No banlist is selected: "
+                "card-scope, section-placement and copy-limit checks are not being made.");
+        } else {
+            newMsg = formatLegalityError(error)
+                + QStringLiteral(" No banlist is selected: card-scope, section-placement "
+                                  "and copy-limit checks are not being made either way.");
+        }
+    } else if (newLegal) {
         newMsg = QStringLiteral("Deck is legal for duel entry under this ruleset and banlist.");
     } else {
         newMsg = formatLegalityError(error);

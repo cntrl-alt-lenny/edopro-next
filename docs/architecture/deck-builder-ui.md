@@ -932,8 +932,21 @@ two data models:
 - `rulesetIndex` / `availableRulesets`: QStringList of selectable ruleset names.
 - `banlistIndex` / `availableBanlists`: QStringList of selectable banlist names.
 - `isLegal` (`bool`): `true` if `policy::validate_deck` reports no errors, `false` otherwise.
-- `legalityMessage` (`QString`): Human-readable status message. When legal, reports "Deck is legal
-  under <ruleset> (<banlist>)". When illegal, reports "Would not be accepted at duel entry: <reason>".
+- `legalityMessage` (`QString`): Human-readable status message, built entirely in
+  `DeckController::validateLegality()` - QML only renders it, never derives wording. With a
+  concrete banlist selected: "Deck is legal for duel entry under this ruleset and banlist." when
+  legal, "Would not be accepted at duel entry: &lt;reason&gt;" when not. **With "No banlist"
+  selected** (S3, brief 015 reopened corrections): `policy::validate_deck()` takes the same
+  short-circuit upstream's null `LFList*` does (§5 above) and never runs the card-scope,
+  section-placement or three-copy checks, so the message says so explicitly rather than
+  reporting either state as complete - "Deck meets this ruleset's size and type limits. No
+  banlist is selected: card-scope, section-placement and copy-limit checks are not being made."
+  when otherwise legal, or the same illegal-reason message with " No banlist is selected: …
+  not being made either way." appended when not. An earlier version of this round reported the
+  unqualified "legal" message under "No banlist" too - `ui/tests/test_deckbuilder.cpp`'s
+  `noBanlistSelectionDisclosesSkippedChecksWhenOtherwiseLegal` and
+  `…WhenAlsoIllegal` pin the fix; `concreteBanlistSelectionCarriesNoSkippedChecksDisclosure`
+  pins that a concrete banlist carries no such disclosure.
 - `legalityErrorType` (`int`): Integer value corresponding to `policy::DeckValidationError::Type`.
 - `legalityCardCode` (`qulonglong`): The offending card code if applicable (e.g. for `CardLimitExceeded`).
 
