@@ -212,6 +212,13 @@ private slots:
     void banlistStoreNulloptVsConcreteEmpty();
     void banlistNulloptVsEmptyConcreteLegalityBehaviour();
     void illegalDeckSurfacesSpecificErrors();
+
+    // S3 (brief 015 reopened corrections): "No banlist" must never present
+    // as unqualified legality. These fail against 259b7bcd, where
+    // legalityMessage() carries no disclosure in either branch below.
+    void noBanlistSelectionDisclosesSkippedChecksWhenOtherwiseLegal();
+    void noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal();
+    void concreteBanlistSelectionCarriesNoSkippedChecksDisclosure();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -789,11 +796,18 @@ void TestDeckBuilder::banlistNulloptVsEmptyConcreteLegalityBehaviour() {
 
     // Initially with "No banlist" (index 0, nullopt):
     // nullopt skips CheckCards completely (upstream gframe/deck_manager.cpp:217-218).
-    // So 4 copies of card 101 is accepted under nullopt!
+    // So 4 copies of card 101 is accepted under nullopt - but the message must
+    // say so plainly rather than reporting full legality (S3, brief 015
+    // reopened corrections; before this fix the message here was the same
+    // unqualified "Deck is legal for duel entry under this ruleset and
+    // banlist." a concrete banlist earns, which is exactly the defect S3
+    // reports - see noBanlistSelectionDisclosesSkippedChecks below).
     QCOMPARE(controller.selectedBanlistIndex(), 0);
     QCOMPARE(controller.isLegal(), true);
     QCOMPARE(controller.legalityMessage(),
-             QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+             QStringLiteral("Deck meets this ruleset's size and type limits. No banlist is "
+                             "selected: card-scope, section-placement and copy-limit checks "
+                             "are not being made."));
 
     // Now load a banlist that contains "!N/A\n" (concrete list with empty content)
     controller.loadBanlistFromText("!N/A\n");
@@ -813,11 +827,14 @@ void TestDeckBuilder::banlistNulloptVsEmptyConcreteLegalityBehaviour() {
     QVERIFY(controller.legalityMessage().startsWith("Would not be accepted at duel entry: "));
     QVERIFY(controller.legalityMessage().contains("exceeds the maximum allowed copy limit"));
 
-    // Switch back to "No banlist" (index 0) -> legal again!
+    // Switch back to "No banlist" (index 0) -> legal again, with the same
+    // skipped-checks disclosure as before switching away.
     controller.setSelectedBanlistIndex(0);
     QCOMPARE(controller.isLegal(), true);
     QCOMPARE(controller.legalityMessage(),
-             QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+             QStringLiteral("Deck meets this ruleset's size and type limits. No banlist is "
+                             "selected: card-scope, section-placement and copy-limit checks "
+                             "are not being made."));
 }
 
 void TestDeckBuilder::illegalDeckSurfacesSpecificErrors() {
@@ -896,6 +913,99 @@ void TestDeckBuilder::illegalDeckSurfacesSpecificErrors() {
     QCOMPARE(controller.legalityCardCode(), 102u);
     QVERIFY(controller.legalityMessage().contains("is an unofficial or custom card"));
     QVERIFY(controller.legalityMessage().contains("'Anime Card' (102)"));
+}
+
+void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksWhenOtherwiseLegal() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    QList<SyntheticCard> cards;
+    for (quint32 i = 101; i <= 140; ++i) {
+        cards.push_back(SyntheticCard{i, QStringLiteral("Card%1").arg(i), 0x1, 1000, 1000, 4});
+    }
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    DeckController controller;
+    controller.setCatalog(&catalog);
+
+    // 4 copies of card 101 plus 36 singles: 40 Main cards total, so every
+    // check that still runs without a banlist (size, forbidden type, Legend/
+    // Skill counts) passes - but this would be rejected by any real banlist
+    // enforcing the standard 3-copy cap (S3's illustrating example).
+    for (int i = 0; i < 4; ++i)
+        controller.addCard(101, DeckController::Section::Main);
+    for (quint32 i = 102; i <= 137; ++i)
+        controller.addCard(i, DeckController::Section::Main);
+    QCOMPARE(controller.mainCount(), 40);
+
+    QCOMPARE(controller.selectedBanlistIndex(), 0); // "No banlist" is the default
+    QCOMPARE(controller.isLegal(), true);
+    const QString msg = controller.legalityMessage();
+    QVERIFY2(msg.contains(QStringLiteral("No banlist is selected")),
+              qPrintable(QStringLiteral("expected a no-banlist disclosure, got: ") + msg));
+    QVERIFY2(msg.contains(QStringLiteral("card-scope, section-placement and copy-limit")),
+              qPrintable(msg));
+    // The pre-S3 message never disclosed anything; assert it is gone outright.
+    QCOMPARE(msg, QStringLiteral("Deck meets this ruleset's size and type limits. No banlist "
+                                  "is selected: card-scope, section-placement and copy-limit "
+                                  "checks are not being made."));
+}
+
+void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath =
+        writeSyntheticDatabase(dir.filePath("cards.cdb"), {{101, "Solo Card"}});
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    // Empty Main deck: MainCount fails regardless of any banlist. The
+    // disclosure must still appear - "not being made either way" - because a
+    // reader must not conclude that fixing the count is the only thing
+    // standing between this deck and full legality.
+    QCOMPARE(controller.selectedBanlistIndex(), 0);
+    QCOMPARE(controller.isLegal(), false);
+    QCOMPARE(controller.legalityErrorType(),
+             static_cast<int>(edopro_next::policy::DeckErrorType::MainCount));
+    const QString msg = controller.legalityMessage();
+    QVERIFY2(msg.startsWith(QStringLiteral("Would not be accepted at duel entry: Main deck has "
+                                            "0 cards, fewer than the minimum of 40.")),
+              qPrintable(msg));
+    QVERIFY2(msg.contains(QStringLiteral("No banlist is selected")), qPrintable(msg));
+    QVERIFY2(msg.contains(QStringLiteral("not being made either way")), qPrintable(msg));
+}
+
+void TestDeckBuilder::concreteBanlistSelectionCarriesNoSkippedChecksDisclosure() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    QList<SyntheticCard> cards;
+    for (quint32 i = 101; i <= 140; ++i) {
+        cards.push_back(SyntheticCard{i, QStringLiteral("Card%1").arg(i), 0x1, 1000, 1000, 4});
+    }
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    for (quint32 i = 101; i <= 140; ++i)
+        controller.addCard(i, DeckController::Section::Main);
+    QCOMPARE(controller.mainCount(), 40);
+
+    controller.loadBanlistFromText("!N/A\n");
+    controller.setSelectedBanlistIndex(1);
+    QCOMPARE(controller.isLegal(), true);
+    const QString msg = controller.legalityMessage();
+    QVERIFY2(!msg.contains(QStringLiteral("No banlist is selected")), qPrintable(msg));
+    QCOMPARE(msg, QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
 }
 
 QTEST_MAIN(TestDeckBuilder)

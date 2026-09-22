@@ -728,20 +728,31 @@ void TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() {
     const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
     QVERIFY(h.catalog.loadDatabases({dbPath}));
 
-    // Add 40 cards to Main: legality message updates reactively
+    // Add 40 cards to Main: legality message updates reactively. Still "No
+    // banlist" selected, so - S3, brief 015 reopened corrections - the
+    // screen must disclose that card-scope, section-placement and
+    // copy-limit checks are not being made, not report unqualified
+    // legality (an earlier version of this test pinned exactly that bug).
     for (int i = 1; i <= 40; ++i) {
         h.controller.addCard(i, DeckController::Section::Main);
     }
     QCOMPARE(h.controller.mainCount(), 40);
     QCOMPARE(h.controller.isLegal(), true);
+    QCOMPARE(legalityText->property("text").toString(), h.controller.legalityMessage());
     QCOMPARE(legalityText->property("text").toString(),
-             QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+             QStringLiteral("Deck meets this ruleset's size and type limits. No banlist is "
+                             "selected: card-scope, section-placement and copy-limit checks "
+                             "are not being made."));
 
     // Load a banlist and switch to it
     h.controller.loadBanlistFromText("!N/A\n");
     QCOMPARE(banlistCombo->property("count").toInt(), 2);
     h.controller.setSelectedBanlistIndex(1);
     QCOMPARE(banlistCombo->property("currentIndex").toInt(), 1);
+    // A concrete banlist (even the empty "N/A" one) runs every check, so the
+    // no-banlist disclosure must not appear.
+    QCOMPARE(h.controller.isLegal(), true);
+    QVERIFY(!legalityText->property("text").toString().contains("No banlist is selected"));
 
     // Adding card 1 three more times gives 4 copies, violating max 3 copies under "N/A" banlist
     h.controller.addCard(1, DeckController::Section::Main);
