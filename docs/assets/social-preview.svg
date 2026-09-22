@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="edopro-next — a modern client architecture for EDOPro">
+  <title>edopro-next social preview</title>
+  <desc>Source for social-preview.png (1280x640, GitHub's social preview size). It centres hero.svg at its native 1200x320 size on the canvas, leaving a 40px margin either side, on the same background. No card artwork.</desc>
+
+  <defs>
+    <!-- Same palette as hero.svg, which takes it from ui/qml/Theme.qml. -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16181D"/>
+      <stop offset="1" stop-color="#0E0F12"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+
+  <!-- hero.svg is 1200x320: drawn at that size, centred both ways. -->
+  <image href="hero.svg" xlink:href="hero.svg" x="40" y="160" width="1200" height="320"/>
+</svg>

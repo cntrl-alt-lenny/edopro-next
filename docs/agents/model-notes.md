@@ -317,3 +317,22 @@ observation log, not a ranking.
 prompt from memory, and it did not exist. The prompt's fallback
 (`git rev-parse 823fa679`) caught it. Every SHA in a prompt is now copied
 from command output.
+
+## Round 013 — 2026-09-21 — framework update to fed26f36 and neutrality guard
+
+One pass (PR #29, merged `d035c66d`). Builder and Verifier both ran in
+Antigravity (Gemini 3.8 Flash, High). This is an observation log, not a
+ranking.
+
+- **Mechanics were clean again.** Both seats ran the checkout check in the
+  right worktree and wrote their reports under the right role and Brief-ID.
+  They left no stray files. Asked to take the OS from `cmd /c ver`, both
+  reported it correctly this time.
+- **The installation itself was correct**, and Brain re-hashed every file.
+- **The Verifier was less critical than in round 012.** It reported
+  "Conflicts: None" while the Builder's report contained two false
+  statements (a `.gitattributes` "stale" claim, and a SHA-table row). It did
+  not notice that the Builder had deleted a settled-decisions record from
+  `docs/state.md`. Brain found all three by reading the diff and re-hashing.
+  With the same model in both seats, the Verifier's independence came only
+  from its fresh context. That was enough in round 012, but not here.

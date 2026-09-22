@@ -272,9 +272,12 @@ checkout path, once their prompts named the worktree for every command. The
 observations are in `model-notes.md` and in a Dev Hub framework-feedback
 report.
 
-**Brief 013 is active**: bringing the installed framework up to a pinned
-revision and installing the neutrality guard, on branch
-`meta/framework-guard-install`.
+**Brief 013 — framework update and neutrality guard — was accepted and
+merged 2026-09-21** as PR #29 (`d035c66d`); see
+[`briefs/archive/013-…`](briefs/archive/013-2026-09-21-framework-guard-install.md).
+
+**Brief 014 is active**: bringing `README.md` up to the framework's README
+standard, on branch `meta/readme-standard`.
 
 ### Dev Hub (from 2026-09-21)
 
@@ -328,7 +331,10 @@ and `tools/line_endings.py`). Milestone and meta branch namespaces are
 declared in `AGENTS.md` via
 `<!-- guard:branch-namespaces prefixes="m<N>,meta" -->`.
 `modern-ui/bootstrap` remains a historical remote branch; nothing normative
-names it.
+names it. Two proposals are settled with the framework's Brain and should not
+be re-sent. The first, forbidding a role name as the first scope token, was
+deferred because it would reject `meta/builder-contract-update`. The second
+is the five neutrality-guard findings already accepted.
 
 **Correction lists.** State each correction as a problem, not a solution, and
 check a list for mutual consistency before issuing it. Brief 008's C2 and C3
@@ -426,16 +432,16 @@ not fold it into a narrative section.)*
   beyond plain text, and full keyboard/controller parity.
 - **M1 Level 2** — not started, and required before any "duel behaviour is
   unchanged" claim.
-- **Framework neutrality guard** — Brief 013 installed; active and verified at pinned revision fed26f36.
 - **Double-spaced PR-body fixtures** — `tests/fixtures/pr_bodies/pr_10.txt`
   and `pr_16.txt` were committed with every `\r\n` turned into `\n\n`, and
   their tests pin the doubled line numbers. Verdicts are unaffected. Fix in a
   small later round.
-- **README** — the owner asked for a README round against the framework's
-  `standards/readme.md`. Brain's assessment was given to the owner on
-  2026-09-21. Queued after Brief 013. One owner decision is outstanding:
-  whether the "What works" table should be generated from project data or
-  hand-kept.
+- **README** — Brief 014, active. Owner decisions (2026-09-21):
+  - the "What works" table is generated from project data, with a check;
+  - no development-stage badge;
+  - a static AGPL-3.0-or-later license badge, since `LICENSE` must stay
+    upstream's;
+  - a raster 1280×640 social-preview file that the owner uploads.
 - **`read-failure-class.md` imprecision** — two sentences named in Brief 011's
   archived outcome. Fold them into a later documentation round.
 - **Push-guard tests under PowerShell** — 8 failures from the WSL `bash`
@@ -446,8 +452,7 @@ not fold it into a narrative section.)*
 
 ## Recommended next slice
 
-**Finish Brief 013** — the guard installation. **Then the README round**,
-against the framework's README standard.
+**Finish Brief 014** — the README round.
 
 **After that, the deck-builder legality UI** — the remaining M3 item, and the
 one the roadmap actually cares about. Two things gate it, and both are now
