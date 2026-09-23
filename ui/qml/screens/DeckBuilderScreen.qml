@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // The functional deck-builder core (M3D1): search the loaded card pool,
-// inspect a card, add it explicitly to Main/Extra/Side, remove entries,
-// and open/save a .ydk. This screen owns no deck data itself - every list
+// inspect a card, add it to the deck (Main or Extra, as deckController
+// reports from policy/'s Extra Deck rule - ADR 0011) or to Side, remove
+// entries, and open/save a .ydk. This screen owns no deck data itself - every list
 // here is a direct view over `deckController`'s canonical Deck
 // (deck_controller.h) or `cardCatalog`'s search index
 // (search_results_model.h); this file only renders and forwards user
 // intent. See docs/architecture/deck-builder-ui.md.
 //
-// Deliberately not implemented here: legality of any kind, deck-size or
-// copy-count limits, automatic Main/Extra classification, artwork,
-// archetype-name search, controller navigation.
+// Deliberately not implemented here: any game rule - legality is computed
+// by policy::validate_deck() and section placement by
+// policy::classify_card(), both through deckController; this file only
+// renders their answers. Not built yet: artwork, archetype-name search,
+// structured filters, controller navigation.
 
 import QtQuick
 import QtQuick.Controls

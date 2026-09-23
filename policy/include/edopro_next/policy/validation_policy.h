@@ -91,11 +91,13 @@ struct ValidationPolicy {
 	// Mirrors the resolved boolean gframe/generic_duel.cpp actually passes
 	// to CheckDeckContent (`rituals_in_extra`, derived there from a
 	// DUEL_EXTRA_DECK_RITUAL duel-rule bit) - NOT the three-state
-	// RITUAL_LOCATION enum LoadDeck's own *classification* step uses. This
-	// module validates a Deck whose Main/Extra/Side split already exists;
-	// it does not classify one, so that three-state loader concept does
-	// not apply here - see docs/architecture/deck-legality.md#ritual-policy
-	// and docs/adr/0007.
+	// RITUAL_LOCATION enum LoadDeck's own *classification* step uses.
+	// validate_deck() checks a Deck whose Main/Extra/Side split already
+	// exists, so it takes what CheckDeckContent takes; it converts this to
+	// the three-state RitualPlacement (deck_placement.h) with upstream's own
+	// `flag ? EXTRA : MAIN` rule to reach the one Extra Deck rule - see
+	// docs/architecture/deck-legality.md#ritual-policy, docs/adr/0007 and
+	// docs/adr/0011.
 	bool rituals_belong_in_extra;
 
 	// Mirrors gframe/network.h's HostInfo::no_check_deck_content, inverted
