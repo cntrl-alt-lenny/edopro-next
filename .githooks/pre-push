@@ -41,7 +41,7 @@
 #
 # Known ways to push past this hook even where it is installed (this is the
 # family as far as it has been established -- see tests/test_push_guard.py
-# and docs/agents/launching.md for how, and what remains unenumerated):
+# for how, and what remains unenumerated):
 #   - git push --no-verify              -- documented, intended escape hatch
 #   - git -c core.hooksPath= push ...   -- disables hook lookup for one call
 #   - git send-pack ...                 -- the plumbing command git push's
