@@ -2,10 +2,10 @@
 round: 019-presentation-tidy
 role: builder
 branch: builder/019-presentation-tidy
-head: 9823ace0e64a726fa3b824589a8183882f7a1db3
+head: e05761f8e16fea2a84f5588c5cceca87809db9db
 os: macOS 27.0
 python: 3.13.15
-written: 2026-09-23T13:56:45Z
+written: 2026-09-23T13:58:13Z
 -->
 # Builder report: 019-presentation-tidy
 
