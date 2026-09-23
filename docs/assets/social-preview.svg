@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="edopro-next — a modern client architecture for EDOPro">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="edopro-next — a modern client architecture for EDOPro">
   <title>edopro-next social preview</title>
-  <desc>Source for social-preview.png (1280x640, GitHub's social preview size). It centres hero.svg at its native 1200x320 size on the canvas, leaving a 40px margin either side, on the same background. No card artwork.</desc>
+  <desc>Source for social-preview.png (1280x640, GitHub's social preview size). The same elements as hero.svg - duel-field geometry, wordmark, and the layer stack - re-laid-out and enlarged for a 2:1 canvas, so the text stays legible when a chat app or link card shows the image at a few hundred pixels wide. Keep the four stack chips' colours in step with hero.svg (tests/test_presentation_assets.py checks this). No card artwork.</desc>
 
   <defs>
     <!-- Same palette as hero.svg, which takes it from ui/qml/Theme.qml. -->
@@ -8,10 +8,81 @@
       <stop offset="0" stop-color="#16181D"/>
       <stop offset="1" stop-color="#0E0F12"/>
     </linearGradient>
+
+    <g id="cell">
+      <rect x="0" y="0" width="34" height="48" rx="3"
+            fill="none" stroke="#2A2E37" stroke-width="1"/>
+    </g>
+    <g id="cellActive">
+      <rect x="0" y="0" width="34" height="48" rx="3"
+            fill="#3A3218" stroke="#C9A227" stroke-width="1.25"/>
+    </g>
   </defs>
 
   <rect width="1280" height="640" fill="url(#bg)"/>
 
-  <!-- hero.svg is 1200x320: drawn at that size, centred both ways. -->
-  <image href="hero.svg" xlink:href="hero.svg" x="40" y="160" width="1200" height="320"/>
+  <!-- ── Duel-field geometry, hero.svg's, at 1.5x ──────────────────────────── -->
+  <g transform="translate(80 118) scale(1.5)" opacity="0.85">
+    <g opacity="0.5">
+      <use href="#cell" x="0"   y="0"/>
+      <use href="#cell" x="44"  y="0"/>
+      <use href="#cell" x="88"  y="0"/>
+      <use href="#cell" x="132" y="0"/>
+      <use href="#cell" x="176" y="0"/>
+    </g>
+    <g>
+      <use href="#cell"       x="0"   y="76"/>
+      <use href="#cell"       x="44"  y="76"/>
+      <use href="#cellActive" x="88"  y="76"/>
+      <use href="#cell"       x="132" y="76"/>
+      <use href="#cell"       x="176" y="76"/>
+    </g>
+    <path d="M105 76 L105 58 Q105 50 113 50 L149 50"
+          fill="none" stroke="#C9A227" stroke-width="1.5" opacity="0.9"/>
+    <circle cx="105" cy="76" r="2.5" fill="#C9A227"/>
+    <circle cx="149" cy="50" r="2.5" fill="#C9A227" opacity="0.55"/>
+  </g>
+
+  <line x1="440" y1="112" x2="440" y2="304" stroke="#2A2E37" stroke-width="1.5"/>
+
+  <!-- ── Wordmark and tagline ─────────────────────────────────────────────── -->
+  <rect x="480" y="150" width="8" height="84" rx="4" fill="#C9A227"/>
+  <text x="512" y="228"
+        font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+        font-size="96" font-weight="600" fill="#E8EAED" letter-spacing="-1.5">edopro-next</text>
+  <text x="514" y="286"
+        font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+        font-size="30" font-weight="400" fill="#9AA0AA">A modern client architecture for EDOPro</text>
+
+  <!-- ── The layer stack, hero.svg's, at 1.8x ─────────────────────────────── -->
+  <g transform="translate(96 380) scale(1.8)"
+     font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+     font-size="11.5">
+    <g>
+      <rect x="0" y="0" width="176" height="26" rx="4" fill="#1E2128" stroke="#2A2E37"/>
+      <text x="14" y="17" fill="#9AA0AA">Project Ignis CardScripts</text>
+    </g>
+    <g transform="translate(190 0)">
+      <rect x="0" y="0" width="110" height="26" rx="4" fill="#1E2128" stroke="#2A2E37"/>
+      <text x="14" y="17" fill="#9AA0AA">ocgcore</text>
+    </g>
+    <g transform="translate(314 0)">
+      <rect x="0" y="0" width="150" height="26" rx="4" fill="#3A3218" stroke="#C9A227"/>
+      <text x="14" y="17" fill="#C9A227">semantic model</text>
+    </g>
+    <g transform="translate(478 0)">
+      <rect x="0" y="0" width="126" height="26" rx="4" fill="#3A3218" stroke="#C9A227"/>
+      <text x="14" y="17" fill="#C9A227">Qt 6 / QML</text>
+    </g>
+
+    <g stroke="#2A2E37" stroke-width="1">
+      <line x1="176" y1="13" x2="190" y2="13"/>
+      <line x1="300" y1="13" x2="314" y2="13"/>
+      <line x1="464" y1="13" x2="478" y2="13"/>
+    </g>
+  </g>
+
+  <text x="96" y="520"
+        font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
+        font-size="26" fill="#9AA0AA">Preserve the engine.  Expose clean semantics.  Modernise the client.</text>
 </svg>
