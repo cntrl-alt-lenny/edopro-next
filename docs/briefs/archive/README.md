@@ -1,12 +1,10 @@
-# Adjudicated briefs
+# Adjudicated briefs (closed history)
 
-Rounds that have been **adjudicated** — `accepted` or `rejected`. Nothing else
-belongs here.
-
-A brief that Builder has delivered but that Verifier and Brain have not yet
-ruled on lives in [`../delivered/`](../delivered/), not here. The full
-lifecycle, and why that distinction is a directory rather than a note, is in
-[`../README.md`](../README.md).
+Frozen as of round 018-framework-3-0-0 — see [`../README.md`](../README.md).
+Rounds that had been **adjudicated** — `accepted` or `rejected` — under the
+pre-3.0.0 lifecycle. Nothing else was ever meant to belong here; current
+rounds are adjudicated by merging their folder under
+[`../../rounds/`](../../rounds/) instead.
 
 This file deliberately makes **no claim about what this directory contains**.
 An earlier version said "empty so far", and was still saying it after a brief

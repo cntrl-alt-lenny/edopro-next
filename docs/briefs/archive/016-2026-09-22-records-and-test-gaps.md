@@ -1,6 +1,6 @@
 Brief-ID: 016-2026-09-22-records-and-test-gaps
 
-Status: active
+Status: accepted
 
 ## MODE: IMPLEMENTATION
 
@@ -127,3 +127,53 @@ discipline exists to stop.
 The standard report in
 [`docs/agents/roles/worker.md`](../agents/roles/worker.md), with one section
 per item.
+
+---
+
+## Outcome — accepted and merged 2026-09-22
+
+Accepted by Brain and merged as PR #32 (merge `b130d5a7`) at head
+`81de44a2ca0df2976cdfa8be18595902afa67883`, base
+`45bb2f339825e2b3cd7dbf163be2654158e5587e`, in one pass. Builder and
+Verifier both ran in Antigravity. The Verifier reported Gemini 3.8 Flash
+(High); the Builder reported "Gemini 2.5 Pro".
+
+**All six items closed.** No production-code behaviour changed: the diff
+over `client/src data/src policy/src ui/src ui/qml` is empty.
+
+- **Item 1.** `read-failure-class.md` now states the invariant that holds:
+  no second open is ever *read*. It also says the zero-access probe runs for
+  any `ERROR_ACCESS_DENIED`.
+- **Item 2.** All 28 PR-body fixtures are byte-faithful to the live bodies,
+  and every verdict is unchanged. `pr_28.txt` also changed, because PR #28's
+  live body lost its review-gate line at merge.
+- **Item 3.** ADR 0010 now quotes `DeckBuilder::ImportDeck` at
+  `gframe/deck_con.cpp:136-146`, and Decisions 2-3 carry verbatim upstream
+  quotes. One trivial imprecision remains: the Decision 2 quote attributed to
+  `deck_manager.cpp:217-218` includes line 216.
+- **Item 4.** A committed test pins the "checks not being made" disclosure
+  for an Extra Deck monster in Main under "No banlist". The Verifier's own
+  mutation, which removed the disclosure, turned it red.
+- **Item 5.** `tests/test_push_guard.py` finds Git for Windows' bundled `sh`
+  before the WSL launcher. Brain ran it from Windows PowerShell: 13 tests,
+  OK. CI still runs it without skips.
+- **Item 6.** `docs/agents/worktree-mechanism.md` now puts the `ocgcore`
+  submodule initialisation in the setup steps.
+
+**Brain's error.** The brief said `worktree-mechanism.md` did not mention
+that `git worktree add` leaves submodules uninitialised. It already did, for
+the Verifier, just not in the setup steps. The Builder improved the page
+without flagging the contradiction.
+
+**Report defect, not merged content.** The Builder's report narrated a test
+and a mutation run against code that does not exist ("Stardust Dragon",
+`DeckBuilderModel::recalculateLegality()`); `grep` over `ui/` finds neither.
+The Verifier noted it and ran the real mutation; Brain confirmed. It was
+reported to the framework's Brain in the Dev Hub.
+
+**Acceptance conditions, confirmed at the literal head.** The Verifier
+reviewed `81de44a2` (task `016-verify-records-and-test-gaps`). Brain
+re-checked the citations, the test, the push-guard result from PowerShell,
+and the product-code diff. All required checks were green (12 success,
+1 conditional matrix entry skipped; merge state CLEAN). The change is inside
+routine scope.
