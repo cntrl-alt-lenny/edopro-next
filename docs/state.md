@@ -20,8 +20,10 @@ through `ocgcore`) not started — that is what "duel behaviour is unchanged"
 actually needs; **M3** (deck/card data) has `data/`, `.ydk`, search,
 `policy/` and advisory deck-builder legality done, with automatic
 Main/Extra classification, the legacy sigil search grammar, structured
-filters and full keyboard/controller parity still open; **M4-M6** not
-started, M5 (duel field) deliberately last.
+filters and full keyboard/controller parity still open; **M4** and **M5**
+not started, M5 (duel field) deliberately last; **M6** (platform and input)
+has local Windows and macOS builds evidenced, with Windows and macOS CI,
+controller navigation, Steam Deck and accessibility still open.
 
 ## Owner decisions
 
@@ -76,9 +78,6 @@ duplicate-code divergences
 - **Cross-platform CI** — a non-required macOS/Windows matrix over
   `data/`/`policy/` tests has been recommended but not decided; any change
   to required checks is the owner's decision.
-- **Presentation tidy-ups**: `HomeScreen.qml`'s stale "planned" statuses and
-  `hero.svg`'s dashed semantic-model box; the letterboxed social preview;
-  splitting `ROADMAP.md` M6 into local builds and CI.
 
 ## Pointers
 
@@ -86,9 +85,9 @@ duplicate-code divergences
 - Round-by-round history (pre-3.0.0): [`state-history.md`](state-history.md).
   Current and future rounds: [`docs/rounds/`](rounds/).
 - Windows/MSVC build detail: [`agents/local/windows-notes.md`](agents/local/windows-notes.md).
-- **Recommended next slice**: the presentation tidy-ups above, then M3's
-  remaining deck-builder parts (automatic Main/Extra classification,
-  structured filters, keyboard parity). Still not the duel field.
+- **Recommended next slice**: M3's remaining deck-builder parts (automatic
+  Main/Extra classification, structured filters, keyboard parity). Still
+  not the duel field.
 
 ## Historical anchors
 
