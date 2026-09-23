@@ -231,10 +231,12 @@ milestone.
       MSVC: all four modules (`client/`, `data/`, `policy/`, `ui/`) configure, build under
       `-DEDOPRO_NEXT_WERROR=ON` and pass CTest ([brief 005](briefs/archive/005-2026-08-31-windows-msvc-build.md),
       which also records that MSVC was not re-run after brief 007 touched two test files).
-      macOS / Apple clang: `client/`, `data/` and `policy/` only, and their CTest suites pass
-      ([brief 007](briefs/archive/007-2026-09-01-apple-clang-build.md),
-      [`state-history.md`](state-history.md) "Local toolchain"); `ui/` on macOS has no
-      recorded evidence, because the machine had no Qt.
+      macOS / Apple clang: `client/`, `data/` and `policy/` build
+      ([brief 007](briefs/archive/007-2026-09-01-apple-clang-build.md)) and their CTest suites
+      pass, `policy/`'s only from [brief 011](briefs/archive/011-2026-09-20-read-failure-class.md)
+      on ([`state-history.md`](state-history.md) "Local toolchain"); `ui/` builds and its CTest
+      suites pass with Qt 6.11.1, first recorded in round 019
+      ([`rounds/019-presentation-tidy/verifier.md`](rounds/019-presentation-tidy/verifier.md)).
 - [ ] **Windows and macOS CI.** Nothing runs on either platform in the active CI, which is
       Linux-only.
 - [ ] Controller navigation over the existing focus model
