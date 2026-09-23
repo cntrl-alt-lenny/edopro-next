@@ -96,10 +96,28 @@ Item {
         hasPreview = true;
     }
 
-    function addSelectedResultTo(section) {
+    // Where the selected search result would go if added to the deck -
+    // DeckController.Main/.Extra, or -1 when it cannot be added (a token,
+    // or nothing selected). The answer comes from deckController, which asks
+    // policy/'s one Extra Deck rule (ADR 0011); this screen only renders it.
+    readonly property int selectedResultPlacement:
+        (selectedResultRow >= 0 && selectedResultRow < searchResults.resultCount)
+            ? deckController.placementFor(searchResults.cardCodeAt(selectedResultRow))
+            : -1
+
+    // Upstream's right-click add (gframe/deck_con.cpp:725): the card lands
+    // in Main or Extra by type, decided outside QML.
+    function addSelectedResultToDeck() {
         if (selectedResultRow < 0 || selectedResultRow >= searchResults.resultCount)
             return;
-        deckController.addCard(searchResults.cardCodeAt(selectedResultRow), section);
+        deckController.addCardToDeck(searchResults.cardCodeAt(selectedResultRow));
+    }
+
+    // Upstream's Shift+right-click add (gframe/deck_con.cpp:721-722).
+    function addSelectedResultToSide() {
+        if (selectedResultPlacement < 0)
+            return;
+        deckController.addCard(searchResults.cardCodeAt(selectedResultRow), DeckController.Side);
     }
 
     // The one and only removal path - both the "Remove selected" button
@@ -484,16 +502,22 @@ Item {
                     enabled: root.selectedResultRow >= 0
 
                     Button {
-                        text: "Add to Main"
-                        onClicked: root.addSelectedResultTo(DeckController.Main)
+                        objectName: "addToDeckButton"
+                        // Names the section the card will actually go to,
+                        // so the placement is visible before the click.
+                        text: root.selectedResultPlacement === DeckController.Extra
+                              ? "Add to Extra" : "Add to Main"
+                        enabled: root.selectedResultPlacement >= 0
+                        onClicked: root.addSelectedResultToDeck()
                     }
                     Button {
-                        text: "Extra"
-                        onClicked: root.addSelectedResultTo(DeckController.Extra)
-                    }
-                    Button {
-                        text: "Side"
-                        onClicked: root.addSelectedResultTo(DeckController.Side)
+                        objectName: "addToSideButton"
+                        text: "Add to Side"
+                        // A card that cannot go in the deck at all (a
+                        // token) cannot go in the Side Deck either: upstream
+                        // never offers one to add (deck_con.cpp:1192).
+                        enabled: root.selectedResultPlacement >= 0
+                        onClicked: root.addSelectedResultToSide()
                     }
                 }
             }

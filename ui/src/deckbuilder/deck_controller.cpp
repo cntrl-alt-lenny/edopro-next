@@ -202,6 +202,33 @@ void DeckController::addCard(quint32 code, Section section) {
     validateLegality();
 }
 
+int DeckController::placementFor(quint32 code) const {
+    // Code 0 is never a Deck entry (see addCard() below); a missing catalog
+    // means there is nothing to classify by.
+    if (code == 0 || catalog_ == nullptr)
+        return -1;
+    switch (edopro_next::policy::classify_card(catalog_->database(),
+                                               static_cast<edopro_next::data::CardCode>(code),
+                                               kAddRitualPlacement)) {
+    case edopro_next::policy::CardPlacement::Main:
+        return static_cast<int>(Section::Main);
+    case edopro_next::policy::CardPlacement::Extra:
+        return static_cast<int>(Section::Extra);
+    case edopro_next::policy::CardPlacement::Token:
+    case edopro_next::policy::CardPlacement::Unknown:
+        return -1;
+    }
+    return -1; // unreachable
+}
+
+int DeckController::addCardToDeck(quint32 code) {
+    const int section = placementFor(code);
+    if (section < 0)
+        return -1;
+    addCard(code, static_cast<Section>(section));
+    return section;
+}
+
 void DeckController::removeAt(Section section, int index) {
     auto& vec = sectionVector(section);
     if (index < 0 || static_cast<std::size_t>(index) >= vec.size())
