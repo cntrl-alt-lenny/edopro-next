@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
-// The home screen states honestly what this project is and what actually
-// works. It does not display fabricated decks, cards or duel history.
+// The home screen states honestly what this project is and how far along it
+// is. Its status rows mirror docs/ROADMAP.md and are checked against it by
+// tools/check_home_status.py. It does not display fabricated decks, cards or
+// duel history.
 
 import QtQuick
 import QtQuick.Layouts
@@ -56,42 +58,66 @@ Flickable {
 
             Text {
                 Layout.fillWidth: true
-                text: "This shell is an architectural proof, not a playable client. Nothing below is dressed up as finished."
+                text: "This shell is not a playable client. To duel today, use upstream EDOPro. Each status below is the state of the matching milestone in docs/ROADMAP.md, and tools/check_home_status.py fails the test suite if they disagree."
                 font.family: Theme.fontFamily
                 font.pointSize: Theme.textCaption
                 color: Theme.textTertiary
                 wrapMode: Text.WordWrap
             }
 
+            // One row per roadmap milestone. `milestone`, `title` and `status`
+            // are checked against docs/ROADMAP.md by tools/check_home_status.py
+            // (run by the Python test suite in CI): change a status only when
+            // the roadmap changes, and change it to match. `detail` says what
+            // the milestone covers and must not state a status of its own.
             StatusRow {
                 Layout.fillWidth: true
-                title: "Upstream baseline builds"
-                detail: "Untouched upstream EDOPro compiles and runs; see docs/BASELINE.md."
-                status: "working"
+                milestone: "M0"
+                title: "Foundation"
+                detail: "Upstream baseline build, architecture survey, and this Qt 6 / QML shell with its design tokens."
+                status: "done"
             }
             StatusRow {
                 Layout.fillWidth: true
-                title: "Qt 6 / QML shell"
-                detail: "This window. Design tokens, responsive rail, keyboard focus."
-                status: "working"
+                milestone: "M1"
+                title: "Make change provable"
+                detail: "Recorded-protocol regression baseline, for showing that a change altered presentation and not duel behaviour."
+                status: "in progress"
             }
             StatusRow {
                 Layout.fillWidth: true
+                milestone: "M2"
                 title: "Semantic client model"
-                detail: "Presentation-free duel state, so game state can be reasoned about without a renderer. Not started."
-                status: "planned"
+                detail: "Presentation-free duel state decoded from the message stream, so it can be reasoned about without a renderer."
+                status: "done"
             }
             StatusRow {
                 Layout.fillWidth: true
-                title: "Deck builder"
-                detail: "The first screen to migrate: deck files and card data are already presentation-independent upstream."
-                status: "planned"
+                milestone: "M3"
+                title: "Deck and card data"
+                detail: "Card database, deck files, search and deck legality, and the deck builder screen that uses them."
+                status: "in progress"
             }
             StatusRow {
                 Layout.fillWidth: true
+                milestone: "M4"
+                title: "Low-risk screens"
+                detail: "Settings, replay browser, and lobby and network screens."
+                status: "not started"
+            }
+            StatusRow {
+                Layout.fillWidth: true
+                milestone: "M5"
                 title: "Duel field"
-                detail: "Deliberately last. Highest risk; needs the semantic model first."
-                status: "planned"
+                detail: "Deliberately last: the highest-risk screen, and it depends on everything above."
+                status: "not started"
+            }
+            StatusRow {
+                Layout.fillWidth: true
+                milestone: "M6"
+                title: "Platform and input"
+                detail: "Windows and macOS builds and CI, controller navigation, Steam Deck, and an accessibility pass."
+                status: "in progress"
             }
         }
 

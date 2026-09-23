@@ -225,9 +225,18 @@ Last, deliberately. Highest risk, and dependent on everything above.
 exist yet — the recorded-protocol baseline alone is not sufficient evidence for this
 milestone.
 
-## M6 — Platform and input
+## M6 — Platform and input  🔶 in progress
 
-- [ ] Windows and macOS builds and CI
+- [x] **Windows and macOS local builds**, for the platforms and modules evidenced. Windows 11 /
+      MSVC: all four modules (`client/`, `data/`, `policy/`, `ui/`) configure, build under
+      `-DEDOPRO_NEXT_WERROR=ON` and pass CTest ([brief 005](briefs/archive/005-2026-08-31-windows-msvc-build.md),
+      which also records that MSVC was not re-run after brief 007 touched two test files).
+      macOS / Apple clang: `client/`, `data/` and `policy/` only, and their CTest suites pass
+      ([brief 007](briefs/archive/007-2026-09-01-apple-clang-build.md),
+      [`state-history.md`](state-history.md) "Local toolchain"); `ui/` on macOS has no
+      recorded evidence, because the machine had no Qt.
+- [ ] **Windows and macOS CI.** Nothing runs on either platform in the active CI, which is
+      Linux-only.
 - [ ] Controller navigation over the existing focus model
 - [ ] Steam Deck as a first-class target
 - [ ] Accessibility pass

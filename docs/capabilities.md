@@ -27,23 +27,27 @@ Nothing here is rounded up.
 | Real upstream `.ydk` interoperability proof | ✅ **Working** | a `.ydk` from this project's own `save_ydk()` loads through the real, preserved `DeckManager::LoadDeckFromFile()`, against synthetic committed-safe data; format/loader level only, not upstream's GUI or file-picker path — [design](architecture/ydk-interoperability.md) |
 | Deck builder UI | 🔶 **Core working** | search, explicit Main/Extra/Side editing, `.ydk` open/save, over a tested Qt adapter; no legality, no artwork, no full keyboard/controller parity — [design](architecture/deck-builder-ui.md) |
 | Duel field | ⬜ Not started | deliberately last |
-| Windows / macOS builds | 🔶 **Built locally, not in CI** | Windows 11 / MSVC: all four modules (`client/`, `data/`, `policy/`, `ui/`) configure, build under `-DEDOPRO_NEXT_WERROR=ON` and pass CTest — [brief 005](briefs/archive/005-2026-08-31-windows-msvc-build.md). macOS / Apple clang: `client/`, `data/` and `policy/` build and pass; `ui/` could not be configured there because the machine has no Qt — [brief 007](briefs/archive/007-2026-09-01-apple-clang-build.md), [`state.md`](state.md) ("Local toolchain"). Neither is in the active CI (Linux-only), and the roadmap still lists platform builds and CI under M6 as not started |
+| Windows / macOS builds | 🔶 **Built locally, not in CI** | Windows 11 / MSVC: all four modules (`client/`, `data/`, `policy/`, `ui/`) configure, build under `-DEDOPRO_NEXT_WERROR=ON` and pass CTest — [brief 005](briefs/archive/005-2026-08-31-windows-msvc-build.md). macOS / Apple clang: `client/`, `data/` and `policy/` build and their CTest suites pass; `ui/` on macOS has no recorded evidence, because the machine had no Qt — [brief 007](briefs/archive/007-2026-09-01-apple-clang-build.md), [`state-history.md`](state-history.md) ("Local toolchain, as last exercised"). Neither platform is in the active CI, which is Linux-only; the roadmap records the local builds as done and Windows/macOS CI as not started, which makes M6 in progress |
 
-## The shell, as first captured
+## The shell
 
 A real screenshot of the compiled application — not a mockup.
 
 <div align="center">
-<img src="assets/shell.png" alt="The edopro-next Qt/QML shell: navigation rail, home screen with honest project status, and live build metadata" width="88%">
+<img src="assets/shell.png" alt="The edopro-next Qt/QML shell's home screen as captured at the build named below: navigation rail, one status row per roadmap milestone, and live build metadata" width="88%">
 </div>
 
-<div align="center"><sub>Captured from the running binary via <code>--capture</code> (build <code>94b15108</code>, 2026-08-24). Two of the five status rows say <em>working</em> and three say <em>planned</em>.</sub></div>
+<div align="center"><sub>Captured from the running binary (build <code>6e74e5fc</code>, macOS 27.0 arm64, Qt 6.11.1, offscreen platform, 1280&times;960 window) with <code>QT_QPA_PLATFORM=offscreen edopro_next_shell --capture shell.png --capture-width 1280 --capture-height 960</code>. The window is taller than the shell's 1280&times;800 default so that the whole home screen, build metadata and licence notice included, is in frame.</sub></div>
 
-Two caveats. The screenshot's caption on the old landing page said "four of five
-subsystems say planned"; the image itself shows three. And its status rows are
-hard-coded in [`ui/qml/screens/HomeScreen.qml`](../ui/qml/screens/HomeScreen.qml), which
-has not changed since the shell was first committed (`git log -- ui/qml/screens/HomeScreen.qml`
-lists one commit). Its "Semantic client model: planned" and "Deck builder: planned" rows
-therefore no longer match the roadmap, where the semantic client model (M2) is done and a
-deck-builder core exists. Treat the image as a record of the first shell, not of current
-status.
+The home screen shows one status row per roadmap milestone, in the roadmap's own
+vocabulary (`done`, `in progress`, `not started`). The words are typed into
+[`ui/qml/screens/HomeScreen.qml`](../ui/qml/screens/HomeScreen.qml), because the compiled
+shell cannot read `docs/` at run time, so they are checked instead:
+[`tools/check_home_status.py`](../tools/check_home_status.py), run by the Python test suite
+in CI, fails when a row's milestone, title or status disagrees with
+[`ROADMAP.md`](ROADMAP.md), when a milestone has no row, or when a row's free text states
+a status of its own.
+
+That check covers the QML, not the image. The screenshot is a snapshot of the screen at
+the build named above and is not regenerated when the roadmap moves, so if it ever
+disagrees with the roadmap, the roadmap wins and the image is stale.

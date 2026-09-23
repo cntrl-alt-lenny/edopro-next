@@ -48,12 +48,12 @@ The duel field (M5) is not started. To duel today, use [EDOPro](https://github.c
 
 - **M1** Make change provable — still open: Level 2 — not started, and required for the strong claim
 - **M3** Deck and card data — still open: Deck builder UI in QML: filters, legality, preview, keyboard parity
+- **M6** Platform and input — still open: Windows and macOS CI; Controller navigation over the existing focus model; Steam Deck as a first-class target; Accessibility pass
 
 **Planned, not started**
 
 - **M4** Low-risk screens
 - **M5** Duel field
-- **M6** Platform and input
 
 <sub>Generated from [`docs/ROADMAP.md`](docs/ROADMAP.md) by `tools/generate_readme_status.py`; the test suite fails if it drifts. Detail: [what exists today](docs/capabilities.md).</sub>
 <!-- END GENERATED readme-status -->

@@ -74,8 +74,10 @@
         A modern client architecture for EDOPro
       </text>
 
-      <!-- The architecture, as a stack. Preserved layers are neutral; the layer
-           this project actually builds is the accented one. -->
+      <!-- The architecture, as a stack. Preserved layers (CardScripts, ocgcore)
+           are neutral; the layers this project builds (the semantic model and
+           the Qt 6 / QML client) are accented. Both exist today, so neither is
+           drawn dashed or dimmed: that would read as "not built". -->
       <g transform="translate(21 190)"
          font-family="Inter, 'Segoe UI', 'Noto Sans', DejaVu Sans, sans-serif"
          font-size="11.5">
@@ -88,8 +90,8 @@
           <text x="14" y="17" fill="#9AA0AA">ocgcore</text>
         </g>
         <g transform="translate(314 0)">
-          <rect x="0" y="0" width="150" height="26" rx="4" fill="#16181D" stroke="#3A404C" stroke-dasharray="3 3"/>
-          <text x="14" y="17" fill="#6B7280">semantic model</text>
+          <rect x="0" y="0" width="150" height="26" rx="4" fill="#3A3218" stroke="#C9A227"/>
+          <text x="14" y="17" fill="#C9A227">semantic model</text>
         </g>
         <g transform="translate(478 0)">
           <rect x="0" y="0" width="126" height="26" rx="4" fill="#3A3218" stroke="#C9A227"/>
