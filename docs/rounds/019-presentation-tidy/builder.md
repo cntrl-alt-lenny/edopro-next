@@ -255,7 +255,17 @@ the test suite if they disagree." `StatusRow.qml` now takes `milestone` and
 displays the roadmap vocabulary (`done`, `in progress`, `not started`)
 instead of `working`/`progress`/`planned`; nothing else used `StatusRow`.
 
-CI check conclusions at the final commit: filled in below after the push.
+CI check conclusions, from `gh run view 35870798941 --json headSha,conclusion,jobs`,
+run on push at `f33e67e357e3` (the first pushed head, which holds every code
+and asset change; it was queried after the push, so this paragraph is a
+later docs-only commit on top of it): run conclusion `success`; jobs
+"Semantic client model" success, "Regression harness (3.12)" success,
+"Regression harness (3.10)" success, "Card and deck data" success,
+"Qt 6 shell (Linux)" success (Qt 6.8.3, including the empty-stderr offscreen
+load step), "Upstream EDOPro baseline" skipped (it runs on pull requests and
+`master`, and no PR is open, and this round touched nothing it covers). That
+CI run is the only evidence for Linux / Qt 6.8.3 and Python 3.10. The commit
+that adds this paragraph has not been through CI at the time of writing.
 
 ## Not verified
 
