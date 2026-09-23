@@ -12,10 +12,12 @@ a reimplementation of them.
 
 ## 0. What this slice is not
 
-It is not the complete M3 "Deck builder UI" roadmap item. While legality validation,
-ruleset selection, and banlist selection are now integrated (see §14 and [ADR 0010](../adr/0010-deck-builder-ruleset-and-legality-ui.md)),
-there is still no automatic Main/Extra classification, no artwork, no archetype-name search,
-no controller/gamepad navigation, and no full keyboard parity with upstream.
+It is not the complete M3 "Deck builder UI" roadmap item. Legality validation, ruleset
+selection and banlist selection are integrated (see §14 and [ADR 0010](../adr/0010-deck-builder-ruleset-and-legality-ui.md)),
+and adding a card places it in Main or Extra by upstream's rule (§7.2 and
+[ADR 0011](../adr/0011-extra-deck-classification.md)), but there is still no artwork, no
+archetype-name search, no structured filters, no controller/gamepad navigation, and no full
+keyboard parity with upstream.
 `docs/ROADMAP.md`'s M3 entry stays unchecked. See §12.
 
 
@@ -35,9 +37,11 @@ base `docs/UPSTREAM.md` records:
   `push_main`/`push_extra`/`push_side`/`pop_main`/`pop_extra`/`pop_side` (`:1577-1672`) are
   the section-mutation primitives, each taking an explicit `DeckType` destination - none of
   them *choose* that destination from the card's type. But `push_main` and `push_extra` do
-  gate on type: `push_main` rejects Fusion/Synchro/Xyz and non-Spell Link cards, and
-  `push_extra` rejects anything that is not Ritual/Fusion/Synchro/Xyz/Link
-  (`:1585-1588,1617-1621`) - so a card lands in the right section only because the caller's
+  gate on type: `push_main` rejects Fusion/Synchro/Xyz and non-Spell Link cards and (outside
+  side-decking, unless forced) a Rush Ritual Monster, and `push_extra` rejects a Link Spell,
+  anything that is not Ritual/Fusion/Synchro/Xyz/Link, and (likewise) a non-Rush Ritual
+  Monster (`:1578-1588,1611-1621`; quoted in full in
+  [deck-placement.md](deck-placement.md) §3) - so a card lands in the right section only because the caller's
   own cascade tries sections in some order and falls through on rejection (e.g.
   `push_extra(pointer) || push_main(pointer)`, `:701`), not because any single function
   classifies it. `LoadDeck`'s reclassification is a genuinely different mechanism from this -
@@ -227,26 +231,21 @@ could drift from the real one.
   (`CardCode::None`, `data/`'s own "not a real card" sentinel) is silently rejected rather than
   appended - a small, deliberate guard on this public `Q_INVOKABLE` surface, audited during a
   follow-up review pass: neither real UI path that can add a card can trigger this today
-  (`addSelectedResultTo()` only ever offers a code `CardSearchIndex` actually found in a loaded
+  (the screen only ever offers a code `CardSearchIndex` actually found in a loaded
   `CardDatabase`, which itself rejects a code-`0` row as a load failure; `parse_ydk` excludes a
   code-`0` line from the `Deck` it produces - `deck-model.md`§5), but the guard keeps the
   invariant true from *any* caller of the public API, not only the shipped QML.
   `addCardSilentlyRejectsCardCodeZero` (`ui/tests/test_deckbuilder.cpp`) pins it.
 - **`removeAt(section, index)`** erases exactly that one vector element. Removing one copy of
   a triplicated code leaves the other two, in their original relative order.
-- **The caller always names the section explicitly.** `DeckController` has no logic anywhere
-  that inspects a `CardEntry`'s `isMonster`/`isXyz`/`isLink`/`isPendulum` fields to choose or
-  veto a destination - those fields exist on `CardEntry` purely for the preview pane (§10.7) and
-  the search result's summary line (§6), never for section routing. This is the direct
-  continuation of upstream's own `push_main`/`push_extra`/`push_side` shape (§1): the
-  *destination* is always an explicit parameter, never inferred inside the push/add call
-  itself.
+- **`addCard(code, section)` places a card exactly where its caller names.** It never inspects
+  the card, and it never moves one: the explicit, unclassified primitive, matching upstream's
+  own `push_main`/`push_extra`/`push_side` shape (§1) in taking the destination as a parameter.
+  `CardEntry`'s `isMonster`/`isXyz`/`isLink`/`isPendulum` fields exist purely for the preview
+  pane (§10.7) and the search result's summary line (§6), never for section routing.
 
 `explicitSectionChoiceIsNeverReclassified` (`ui/tests/test_deckbuilder.cpp`) pins this: adding
-the same code to all three sections keeps it in all three, rather than a hypothetical
-Fusion/Synchro/Xyz/Link check moving it to Extra the way upstream's separate `LoadDeck`
-reclassification step would (`deck-model.md`§3) - a step this slice does not implement or call,
-matching `edopro_next_deck` itself.
+the same code to all three sections with `addCard` keeps it in all three.
 
 ### 7.0.1 A small robustness audit, two items resolved by inspection alone
 
@@ -387,6 +386,33 @@ mistake to avoid.
 selection has already broken the pristine `currentIndex: -1` default (§7.1.1's own tests only
 cover the state before any selection ever happens): `selectedResultClearsOnDifferentQuery`,
 `selectedResultClearsOnZeroResultQuery`, `selectedResultClearsOnCatalogReplacement`.
+
+### 7.2 Adding a card places it by upstream's rule (round 020, ADR 0011)
+
+- **`placementFor(code)`** returns `Section::Main` or `Section::Extra` (as an `int`), or `-1`
+  for a card that is never placed: a token, a code the catalog does not know, code `0`, or no
+  catalog bound. The answer is `policy::classify_card()` under
+  `RitualPlacement::RushInExtra` (upstream's `RITUAL_LOCATION::DEFAULT`, which is what its
+  deck builder's push cascade amounts to outside side-decking - `deck-placement.md`§3.3).
+  `DeckController` adds no rule of its own.
+- **`addCardToDeck(code)`** appends the card to the end of that section, via `addCard`, and
+  returns the section, or returns `-1` and changes nothing.
+- **The screen** has one add button, labelled with the section `placementFor()` reports ("Add
+  to Main" or "Add to Extra"), and an "Add to Side" button (upstream's Shift+right-click).
+  Both are disabled when `placementFor()` is `-1`. The screen offers no way to put a card in
+  the "wrong" one of Main/Extra; a misplaced card can still arrive from an opened file, stays
+  where the file put it, and advisory legality reports it (ADR 0011, Decisions 3 and 4).
+- **Opening a `.ydk` does not reclassify** (ADR 0004, Decision 2, kept by ADR 0011,
+  Decision 4). `openingAYdkKeepsTheFilesSectionsUnclassified` pins this.
+
+`addToDeckPlacesExtraDeckMonstersInExtraAndEverythingElseInMain`,
+`addToDeckPlacesRitualMonstersAsUpstreamsDeckBuilderDoes` and
+`addToDeckRefusesTokensUnknownCodesAndMissingCatalog` (`ui/tests/test_deckbuilder.cpp`) and
+`addButtonsFollowTheControllersPlacement` (`ui/tests/test_deckbuilder_screen.cpp`) drive this
+through the adapter and the real screen; the rule itself is pinned case by case in
+`policy/tests/test_deck_placement.cpp`. Every divergence from upstream's deck builder
+(capacity and Legend fallback to Side, `forced` placement, side-decking, tokens) is listed in
+`deck-placement.md`§6.
 
 ---
 
@@ -824,13 +850,9 @@ is driven by the nav rail), and not part of ordinary interactive use.
 
 ## 12. What remains before the M3 roadmap item can be checked
 
-- Legality of any kind: deck-size limits, the three-copy rule, `LFList`/banlist checks.
-- Automatic Main/Extra classification from card type (upstream's `LoadDeck` reclassification,
-  `deck-model.md`§3) - a `Deck -> Deck` transformation layered on top of `edopro_next_deck`,
-  deliberately not built here or inside this codec.
 - Artwork: no image loading, downloading, or caching of any kind.
-- The legacy sigil search grammar / archetype-name resolution (`card-search.md`§1.1) - only
-  plain text search is wired up.
+- The legacy sigil search grammar / archetype-name resolution (`card-search.md`§1.1), and
+  structured filters - only plain text search is wired up.
 - Full keyboard and controller parity (§11 covers only the core interactions).
 - `.ydke`/Base64 import-export (`deck-model.md`§8).
 - An end-to-end proof through upstream's own GUI/file-picker interaction - still not

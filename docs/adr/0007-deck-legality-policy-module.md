@@ -105,6 +105,12 @@ enum. Modelling the loader's own enum here would imply this module performs (or 
 performs) classification, which §0 of `docs/architecture/deck-legality.md` explicitly
 disclaims.
 
+**Superseded in part by [ADR 0011](0011-extra-deck-classification.md)** (round 020):
+`policy/` now also holds the per-card Extra Deck rule (`deck_placement.h`), including a
+`RitualPlacement` enum mirroring `RITUAL_LOCATION`, and `validate_deck()`'s zone checks call
+it. The decision above still holds for `ValidationPolicy`, which keeps the resolved boolean,
+and `policy/` still never moves a card between a `Deck`'s sections.
+
 ## Decision 5 — The LFList hash's undefined-behavior domain is rejected, not reproduced or "fixed"
 
 `gframe/deck_manager.cpp:80`'s hash expression computes two shift amounts directly from a

@@ -594,8 +594,10 @@ rather than taken on the reviewer's word:
 - **Fast search.** Not part of this codec at all - the next, separate M3 roadmap item.
 - **Card-type classification.** `LoadDeck`'s Extra-Deck reclassification (§3) and Ritual/Rush
   handling (`RITUAL_LOCATION`, `isRitualMonster()`/`isRush()`) are real upstream behaviour,
-  deliberately not reimplemented here - see §3 for the reasoning and where such a layer
-  would belong if built later.
+  deliberately not reimplemented here - see §3 for the reasoning. The per-card rule now lives
+  in `policy/` (`deck_placement.h`, [deck-placement.md](deck-placement.md),
+  [ADR 0011](../adr/0011-extra-deck-classification.md)); opening a file still does not
+  reclassify it.
 - **YDKe / Base64 import-export.** `ExportDeckYdke`/`ImportDeckYdke`
   (`gframe/deck_manager.cpp`) and `ImportDeckBase64Omega` are a completely different
   serialization (a `ydke://` URI carrying raw little-endian `uint32` arrays, Base64-encoded),

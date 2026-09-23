@@ -89,6 +89,12 @@ for presentation (`docs/architecture/deck-builder-ui.md`§7, §10) - the same "c
 display, never for section-membership" split `CardSearchIndex` already established for its own
 static filters ([ADR 0005](0005-card-search-structured-query.md)).
 
+**Superseded in part by [ADR 0011](0011-extra-deck-classification.md)** (round 020): the
+deck builder's add action now places a card in Main or Extra by upstream's Extra Deck rule,
+computed in `policy/` (`DeckController::addCardToDeck()`). `addCard(code, section)` keeps
+exactly the explicit-choice behaviour described above, and `CardEntry`'s type bits are still
+used only for presentation.
+
 ## Status
 
 Accepted. Implemented in `ui/src/deckbuilder/{card_entry,card_catalog,search_results_model,
