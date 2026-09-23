@@ -6,8 +6,7 @@ runs in. `CLAUDE.md` only points here and adds no rules.
 This project runs the agentic framework: read
 [`docs/agents/FRAMEWORK.md`](docs/agents/FRAMEWORK.md) and your role card in
 [`docs/agents/roles/`](docs/agents/roles/). This file adds the project's own
-rules, which take precedence over the framework's, and CLAUDE.md's, which take
-precedence over both.
+rules, which take precedence over the framework's.
 
 Merge rule: owner-approves
 
@@ -175,8 +174,7 @@ CI requires those tests to actually run rather than skip.
 ## Where to look
 
 - Live state, decisions, what is parked: [`docs/state.md`](docs/state.md)
-- Project rules and architecture boundaries: this file and
-  [`CLAUDE.md`](CLAUDE.md)
+- Project rules and architecture boundaries: this file
 - Milestones and honest status: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 - Decisions and their reasoning: [`docs/adr/`](docs/adr/)
 - Per-subsystem source research and deliberate upstream divergences:
