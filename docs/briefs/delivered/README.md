@@ -1,17 +1,14 @@
-# Delivered briefs
+# Delivered briefs (closed history)
 
-Rounds Builder has **delivered** — a PR exists — but that Verifier and Brain
-have not yet ruled on. Not accepted, not rejected, not history.
+Frozen as of round 018-framework-3-0-0 — see [`../README.md`](../README.md).
+Under the pre-3.0.0 lifecycle this held rounds Builder had **delivered** —
+a PR existed — that Verifier and Brain had not yet ruled on. Always empty in
+a healthy state of that lifecycle by design; kept only as part of the
+historical record, not because anything is expected to land here again.
+Current rounds report delivery through `python3 tools/fw.py delivery`
+instead, against `docs/rounds/`.
 
-On adjudication a brief moves to [`../archive/`](../archive/) with its outcome
-appended. The full lifecycle is in [`../README.md`](../README.md).
-
-This file also exists so the directory does, which is not merely bookkeeping:
-git does not track empty directories, so when this directory last emptied, a
-fresh CI checkout did not contain it at all and two documents linking here
-broke. That was invisible locally — the empty directory still existed on the
-author's disk — and only the merge gate caught it. `tests/test_docs_consistency.py`
-now resolves links against `git ls-files` rather than the working tree, so a
-local run can no longer pass where CI would fail.
-
-This file makes no claim about what this directory currently holds. Run `ls`.
+This file exists so the directory does: git does not track empty
+directories, and an earlier version of this project's link checker once
+broke on exactly that. Run `ls` rather than trusting a claim here about
+current contents.

@@ -1,32 +1,30 @@
 # Working on this repository
 
-[`CLAUDE.md`](../CLAUDE.md) is the working agreement — what the project is, and what may not
-be broken. [`AGENTS.md`](../AGENTS.md) is the coordination model: three roles (Brain,
-Builder, Verifier), the brief and review loop, and the evidence each kind of change must
-produce. [`state.md`](state.md) is the short rehydration doc for a fresh session.
+[`AGENTS.md`](../AGENTS.md) is the project's instructions — what it is, the coordination
+model (Brain, Builder, Verifier), and the evidence each kind of change must produce;
+[`CLAUDE.md`](../CLAUDE.md) only points at it. [`state.md`](state.md) is the short
+rehydration doc for a fresh session; [`agents/FRAMEWORK.md`](agents/FRAMEWORK.md) is the
+framework this project runs on.
 
-Builder and Verifier each work in a git worktree of this same clone, at fixed
-repo-relative paths so the layout is identical on every machine. From the repository root,
-on any OS:
+A Builder or Verifier round starts with `python3 tools/fw.py start --role <role> --round
+<id>`, which puts that seat on its own branch at the right commit — any clone, cloud
+workspace or linked checkout works. After it, run `git submodule update --init` for
+`ocgcore`, which `fw.py start` does not do itself. Run `git config core.hooksPath
+.githooks` once per clone to enable the local push guard.
 
-```bash
-git config core.hooksPath .githooks
-git worktree add --detach .worktrees/builder master
-git worktree add --detach .worktrees/verifier master
-```
+[`.githooks/pre-push`](../.githooks/pre-push) rejects a push to `master` or one that would
+ship drift in the derived protocol tables. It is a local convenience, not a control — it
+needs that config in every clone, it is bypassed by `git push --no-verify`, and a fresh
+clone has no guard until it is set.
 
-The first line installs [`.githooks/pre-push`](../.githooks/pre-push), which rejects a push
-to `master` or one that would ship drift in the derived protocol tables. It is a local
-convenience, not a control — it needs that config in every clone, it is bypassed by
-`git push --no-verify`, and a fresh clone has no guard until it is set.
+The real guarantee is GitHub branch protection on `master`: changes only via PR, required
+checks green, applied to administrators too, no force-pushes or deletions. See
+[`AGENTS.md`](../AGENTS.md), "What is actually enforced", which says how to re-check this
+live rather than trusting a date here.
 
-The real guarantee is GitHub branch protection on `master`, **enabled** as of 2026-08-31:
-changes only via PR, required checks green, applied to administrators too, no force-pushes
-or deletions. See [`AGENTS.md`](../AGENTS.md), "Never push to `master`". On 2026-09-21
-`gh api repos/cntrl-alt-lenny/edopro-next/branches/master --jq .protected` returned `true`.
-
-`.worktrees/` is gitignored. Rationale, per-role usage and the caveats that come with
-nesting are in [`agents/worktree-mechanism.md`](agents/worktree-mechanism.md).
+A linked worktree (`git worktree add --detach .worktrees/<role> master`) is an optional
+convenience for running a seat alongside the primary checkout; `.worktrees/` is gitignored.
+It is never required — any clone or workspace works equally well.
 
 ## Derived files
 
