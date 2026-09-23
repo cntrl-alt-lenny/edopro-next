@@ -43,7 +43,7 @@ downloadable to the user's home directory.
 #    the 9p filesystem makes large C++ builds punishingly slow.
 DST=$HOME/edopro-baseline
 mkdir -p "$DST"
-tar -C /mnt/c/Users/leona/Dev/edopro-next --exclude=.git -cf - . | tar -C "$DST" -xf -
+tar -C "/mnt/c/<path to your edopro-next clone>" --exclude=.git -cf - . | tar -C "$DST" -xf -
 cd "$DST"
 
 # 2. Normalise line endings (see Gotcha 1).
