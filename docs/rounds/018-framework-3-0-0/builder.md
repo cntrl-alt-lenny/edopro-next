@@ -2,10 +2,10 @@
 round: 018-framework-3-0-0
 role: builder
 branch: builder/018-framework-3-0-0
-head: f80189212be34b77510fef9bd73e5f9353ea98ce
+head: f48de13093cf7ad2832714ca1e6e922f28a2a2a4
 os: macOS 27.0
 python: 3.9.6
-written: 2026-09-23T10:40:25Z
+written: 2026-09-23T10:42:22Z
 -->
 ## Verified
 
@@ -471,7 +471,7 @@ AssertionError: 1 != 0
 This failure is **pre-existing and unrelated to this round's diff**: it
 reproduces identically, with the same traceback, against an entirely
 separate, untouched checkout of this repository at the same base commit
-(`/Users/leo/Dev/GitHub/edopro-next`, the coordinating session's own clone,
+(the coordinating session's own clone, on another path on this machine,
 git-status-clean at the round's start commit `b130d5a7`) — this round's
 diff over `docs/`, `tests/`, `tools/`, `.claude/`, `AGENTS.md` and
 `CLAUDE.md` does not touch `tests/test_readme_status.py`,
