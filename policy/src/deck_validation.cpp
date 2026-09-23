@@ -2,6 +2,8 @@
 
 #include "edopro_next/policy/deck_validation.h"
 
+#include "edopro_next/policy/deck_placement.h"
+
 #include <map>
 #include <optional>
 #include <vector>
@@ -15,17 +17,12 @@ namespace {
 // legacy-client-only extension bit ocgcore itself does not define) -
 // matching the exact citation precedent already established in
 // ui/src/deckbuilder/card_entry.cpp and data/src/card_search_index.cpp.
-// Used only to reproduce upstream's own deck-validation checks; never to
-// decide deck-section membership for editing, which stays the user's own
-// explicit choice (see data/'s own Deck.h).
+// Used only for the counting checks below. The bits that decide Main versus
+// Extra Deck placement are not repeated here: the zone checks call the one
+// definition of that rule, deck_placement.h (ADR 0011).
 constexpr std::uint32_t kTypeMonster = 0x1;
 constexpr std::uint32_t kTypeSpell = 0x2;
 constexpr std::uint32_t kTypeTrap = 0x4;
-constexpr std::uint32_t kTypeFusion = 0x40;
-constexpr std::uint32_t kTypeRitual = 0x80;
-constexpr std::uint32_t kTypeSynchro = 0x2000;
-constexpr std::uint32_t kTypeXyz = 0x800000;
-constexpr std::uint32_t kTypeLink = 0x4000000;
 constexpr std::uint32_t kTypeSkill = 0x8000000;
 
 // Verified against gframe/data_manager.h's SCOPE_* block.
@@ -33,25 +30,6 @@ constexpr std::uint32_t kScopeOcg = 0x1;
 constexpr std::uint32_t kScopeTcg = 0x2;
 constexpr std::uint32_t kScopePrerelease = 0x100;
 constexpr std::uint32_t kScopeLegend = 0x400;
-
-// Mirrors gframe/data_manager.h:92-94's CardDataC::isRitualMonster()
-// exactly: `(type & (TYPE_MONSTER|TYPE_RITUAL)) == (TYPE_MONSTER|TYPE_RITUAL)`.
-bool is_ritual_monster(const data::CardRecord& record) {
-	return (record.type & (kTypeMonster | kTypeRitual)) == (kTypeMonster | kTypeRitual);
-}
-
-// Mirrors gframe/deck_manager.cpp:335-338's is_extra_deck_card lambda's
-// Fusion/Synchro/Xyz/Link(-monster) half only - Ritual is handled
-// separately by the two call sites below, exactly as upstream's own
-// additionalCheck callbacks do (deck_manager.cpp:219-234), because Ritual
-// placement additionally depends on policy.rituals_belong_in_extra.
-bool is_unconditionally_extra_deck_type(const data::CardRecord& record) {
-	if(record.type & (kTypeFusion | kTypeSynchro | kTypeXyz))
-		return true;
-	if((record.type & kTypeLink) && (record.type & kTypeMonster))
-		return true;
-	return false;
-}
 
 // Mirrors gframe/deck_manager.cpp:140-146's DeckManager::TypeCount exactly.
 int type_count(const std::vector<data::CardCode>& cards, const data::CardDatabase& database,
@@ -272,10 +250,17 @@ DeckValidationError validate_deck(const data::Deck& deck, const data::CardDataba
 
 	std::map<data::CardCode, int> ccount;
 
+	// gframe/deck_manager.cpp:219-225. Upstream's Main-section callback is
+	// `(Fusion|Synchro|Xyz) || (Link && Monster)` then
+	// `isRitualMonster() && rituals_in_extra` - term for term the
+	// is_extra_deck_card lambda (:335-348) under the RITUAL_LOCATION that
+	// the same boolean selects everywhere upstream converts one
+	// (ritual_placement_for). So it calls that one definition directly;
+	// docs/architecture/deck-placement.md §4 and
+	// policy/tests/test_deck_placement.cpp pin the equivalence.
+	const auto rituals = ritual_placement_for(policy.rituals_belong_in_extra);
 	auto main_zone_check = [&](const data::CardRecord& record) -> DeckErrorType {
-		if(is_unconditionally_extra_deck_type(record))
-			return DeckErrorType::ExtraCount;
-		if(is_ritual_monster(record) && policy.rituals_belong_in_extra)
+		if(belongs_in_extra_deck(record, rituals))
 			return DeckErrorType::ExtraCount;
 		return DeckErrorType::None;
 	};
@@ -284,11 +269,19 @@ DeckValidationError validate_deck(const data::Deck& deck, const data::CardDataba
 	   error)
 		return error;
 
+	// gframe/deck_manager.cpp:227-234. Upstream's Extra-section callback asks
+	// the Ritual question FIRST, before the Fusion/Synchro/Xyz/Link one - the
+	// opposite order from is_extra_deck_card. For every card except a Ritual
+	// Monster that is also Fusion/Synchro/Xyz/Link Monster the two orders
+	// agree ("allowed in Extra" == belongs_in_extra_deck); for that hybrid
+	// they do not, and this reproduces upstream's own disagreement rather
+	// than smoothing it over (deck-placement.md §4). Built from the same
+	// primitives as belongs_in_extra_deck, not a second copy of them.
 	auto extra_zone_check = [&](const data::CardRecord& record) -> DeckErrorType {
 		if(is_ritual_monster(record)) {
 			if(!policy.rituals_belong_in_extra)
 				return DeckErrorType::ExtraCount;
-		} else if(!is_unconditionally_extra_deck_type(record)) {
+		} else if(!is_extra_deck_type(record)) {
 			return DeckErrorType::ExtraCount;
 		}
 		return DeckErrorType::None;
