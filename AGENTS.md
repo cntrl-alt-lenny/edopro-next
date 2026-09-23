@@ -134,7 +134,7 @@ Control block) are in `docs/agents/local/windows-notes.md`.
 ## What is actually enforced
 
 **GitHub branch protection on `master`** is the guarantee (checked
-2026-08-31, re-verify live with
+live 2026-09-23, re-verify live with
 `gh api repos/cntrl-alt-lenny/edopro-next/branches/master --jq .protected`,
 **not** `rules/branches/master`, which reports rulesets only): PR required,
 `enforce_admins: true`, `strict: true`, five required checks, no force-push
