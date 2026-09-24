@@ -87,16 +87,18 @@ by design of upstream's editor, not by omission of ours:
   same static helpers when initialized (`RefreshLimitationStatus`, `:1456-1474`).
 - **Fusion/Synchro/Xyz/Link-non-spell cards are unconditionally rejected from Main** (and
   their Extra-Deck counterparts have their own type gate) regardless of `forced` - this is
-  section-placement-by-type-classification happening *at push time* in the editor, which is
-  exactly the "automatic Main/Extra classification" this project's `policy/` and
-  `edopro_next_deck` both deliberately do not perform (`deck-legality.md`§0,
-  `deck-builder-ui.md`§0/§7). The editor's push functions conflate "which section is this
-  card allowed in" (a classification concept) with "does adding it violate a count cap" (a
-  validation concept) in one function; this project's own architecture keeps those two
-  concerns in different layers (`edopro_next_deck` for classification, if ever built;
-  `policy/` for validation), so this is a genuine three-way split (editor: fused together;
-  duel entry: neither - `CheckDeckContent` trusts the caller's Main/Extra split completely;
-  this project: two separate, not-yet-connected pieces) rather than a two-way comparison.
+  section-placement-by-type-classification happening *at push time* in the editor. The
+  editor's push functions conflate "which section is this card allowed in" (a classification
+  concept) with "does adding it violate a count cap" (a validation concept) in one function.
+  Since round 020 this project has the classification half as one per-card rule in `policy/`
+  (`deck_placement.h`), which the deck builder uses when adding a card and `validate_deck()`
+  uses for its zone checks, and keeps count caps in validation only
+  ([deck-placement.md](deck-placement.md), [ADR 0011](../adr/0011-extra-deck-classification.md)).
+  *Correction (round 020):* this paragraph used to say duel entry does neither, with
+  `CheckDeckContent` trusting the caller's Main/Extra split completely. That is not so: the
+  client sends Main and Extra as one list (`gframe/menu_handler.cpp:43-48`) and the server
+  rebuilds the split by type with `LoadDeckFromBuffer` (`gframe/generic_duel.cpp:423`) before
+  `CheckDeckContent` runs (deck-placement.md §5.4).
 
 **A correction this document prompted in this project's own `deck-builder-ui.md`.**
 That document previously stated: *"there is no upstream function that decides a card's
@@ -516,6 +518,10 @@ analogue to follow.
    whatever this project builds should be presented as advisory ("this deck would not be
    accepted at duel entry: ..."), matching how loosely upstream's own two mechanisms actually
    relate, not as a hard gate the editor enforces upstream never did either.
+   *Correction (round 021):* the advisory presentation stands, but that example wording does
+   not: it claims what duel entry would do, and the server re-sorts Main and Extra by card type
+   and drops tokens before it validates (deck-placement.md §5.4). The shipped messages say
+   "Fails as arranged: ..." and "Passes as arranged ..." instead (ADR 0011, Decision 5).
 
 **Scheduling is one relevant signal for this recommendation, not the only one.** How soon
 M4's "Lobby and network screens" item is actually expected to start affects the calculus: if

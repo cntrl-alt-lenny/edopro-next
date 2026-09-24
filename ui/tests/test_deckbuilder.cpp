@@ -58,6 +58,9 @@ struct SyntheticCard {
     // or the link-marker bitmask for a Link type (see struct doc above).
     qint32 defenseOrLinkMarker = 1000;
     qint32 level = 4;
+    // `datas.ot` - 0 unless a test needs a scope bit (SCOPE_RUSH, 0x200,
+    // gframe/data_manager.h:29, for the Rush Ritual placement test).
+    quint32 scope = 0;
 };
 
 // A distinct name, not an overload of writeSyntheticDatabase() below: a
@@ -82,13 +85,14 @@ QString writeSyntheticDatabaseWithFields(const QString& path, const QList<Synthe
             "str14 TEXT, str15 TEXT, str16 TEXT);");
     for (const auto& card : cards) {
         run(db, qPrintable(QStringLiteral("INSERT INTO datas (id,ot,alias,setcode,type,atk,def,"
-                                           "level,race,attribute,category) VALUES (%1,0,0,0,%2,"
+                                           "level,race,attribute,category) VALUES (%1,%6,0,0,%2,"
                                            "%3,%4,%5,0,0,0);")
                                 .arg(card.code)
                                 .arg(card.type)
                                 .arg(card.attack)
                                 .arg(card.defenseOrLinkMarker)
-                                .arg(card.level)));
+                                .arg(card.level)
+                                .arg(card.scope)));
         // str1..str16 are left at their column default (NULL - the schema
         // above does not mark them NOT NULL) by omitting them from the
         // column list entirely, rather than hand-counting sixteen '' value
@@ -131,6 +135,13 @@ private slots:
 
     // C) explicit sections
     void explicitSectionChoiceIsNeverReclassified();
+
+    // Round 020 / ADR 0011: "Add to deck" places by upstream's Extra Deck
+    // rule (policy::classify_card), never by a QML decision.
+    void addToDeckPlacesExtraDeckMonstersInExtraAndEverythingElseInMain();
+    void addToDeckPlacesRitualMonstersAsUpstreamsDeckBuilderDoes();
+    void addToDeckRefusesTokensUnknownCodesAndMissingCatalog();
+    void openingAYdkKeepsTheFilesSectionsUnclassified();
 
     // D) YDK load
     void loadPreservesOrderDuplicatesAndUnknownCodes();
@@ -220,6 +231,11 @@ private slots:
     void noBanlistSelectionDisclosesSkippedChecksForExtraDeckMonsterInMain();
     void noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal();
     void concreteBanlistSelectionCarriesNoSkippedChecksDisclosure();
+
+    // Round 021: no legality message claims anything about upstream's duel
+    // entry, which re-derives Main and Extra from card type and drops tokens
+    // before it validates (deck-placement.md §5.4). Pins every message.
+    void everyLegalityMessageSpeaksAboutTheDeckAsArrangedOnly();
 };
 
 void TestDeckBuilder::loadDatabaseAndSearch() {
@@ -281,6 +297,153 @@ void TestDeckBuilder::explicitSectionChoiceIsNeverReclassified() {
     QCOMPARE(controller.deck().main.front(), edopro_next::data::CardCode{999});
     QCOMPARE(controller.deck().extra.front(), edopro_next::data::CardCode{999});
     QCOMPARE(controller.deck().side.front(), edopro_next::data::CardCode{999});
+}
+
+namespace {
+
+// ocgcore/ocgapi_constants.h:33-58.
+constexpr quint32 kMonster = 0x1;
+constexpr quint32 kSpell = 0x2;
+constexpr quint32 kTrap = 0x4;
+constexpr quint32 kNormal = 0x10;
+constexpr quint32 kEffect = 0x20;
+constexpr quint32 kFusion = 0x40;
+constexpr quint32 kRitual = 0x80;
+constexpr quint32 kSynchro = 0x2000;
+constexpr quint32 kToken = 0x4000;
+constexpr quint32 kXyz = 0x800000;
+constexpr quint32 kLink = 0x4000000;
+// gframe/data_manager.h:29.
+constexpr quint32 kScopeRush = 0x200;
+
+std::vector<edopro_next::data::CardCode> codes(std::initializer_list<quint32> values) {
+    std::vector<edopro_next::data::CardCode> out;
+    for (auto v : values)
+        out.push_back(edopro_next::data::CardCode{v});
+    return out;
+}
+
+} // namespace
+
+void TestDeckBuilder::addToDeckPlacesExtraDeckMonstersInExtraAndEverythingElseInMain() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        {
+            {1, "Normal", kMonster | kNormal},
+            {2, "Effect", kMonster | kEffect},
+            {3, "Spell", kSpell},
+            {4, "Trap", kTrap},
+            {5, "Fusion", kMonster | kFusion},
+            {6, "Synchro", kMonster | kSynchro},
+            {7, "Xyz", kMonster | kXyz},
+            {8, "Link", kMonster | kEffect | kLink, 1000, 0x1, 1},
+            {9, "LinkSpell", kSpell | kLink, 0, 0x1, 0},
+        });
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+
+    const int main = static_cast<int>(DeckController::Section::Main);
+    const int extra = static_cast<int>(DeckController::Section::Extra);
+    for (quint32 code : {1u, 2u, 3u, 4u, 9u})
+        QCOMPARE(controller.placementFor(code), main);
+    for (quint32 code : {5u, 6u, 7u, 8u})
+        QCOMPARE(controller.placementFor(code), extra);
+
+    // Added in an interleaved order: each lands at the end of its own
+    // section, keeping the order the user added them in.
+    for (quint32 code : {5u, 1u, 6u, 2u, 7u, 3u, 8u, 4u, 9u, 5u})
+        QVERIFY(controller.addCardToDeck(code) >= 0);
+    QCOMPARE(controller.deck().main, codes({1, 2, 3, 4, 9}));
+    QCOMPARE(controller.deck().extra, codes({5, 6, 7, 8, 5}));
+    QVERIFY(controller.deck().side.empty());
+    QCOMPARE(controller.addCardToDeck(1), main);
+    QCOMPARE(controller.addCardToDeck(7), extra);
+    QVERIFY(controller.dirty());
+}
+
+void TestDeckBuilder::addToDeckPlacesRitualMonstersAsUpstreamsDeckBuilderDoes() {
+    // gframe/deck_con.cpp:1578-1583/:1611-1616: outside side-decking,
+    // push_main refuses a Rush Ritual Monster and push_extra refuses any
+    // other, so the right-click cascade (:725) lands a Rush one in Extra
+    // and every other one in Main - RITUAL_LOCATION::DEFAULT.
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        {
+            {1, "Ritual", kMonster | kRitual | kEffect},
+            {2, "RushRitual", kMonster | kRitual, 1000, 1000, 4, kScopeRush},
+            {3, "RitualSpell", kSpell | kRitual, 0, 0, 0, kScopeRush},
+        });
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+
+    QCOMPARE(controller.addCardToDeck(1), static_cast<int>(DeckController::Section::Main));
+    QCOMPARE(controller.addCardToDeck(2), static_cast<int>(DeckController::Section::Extra));
+    QCOMPARE(controller.addCardToDeck(3), static_cast<int>(DeckController::Section::Main));
+    QCOMPARE(controller.deck().main, codes({1, 3}));
+    QCOMPARE(controller.deck().extra, codes({2}));
+    // Not the ruleset's duel-entry boolean: "Standard OCG/TCG" says
+    // rituals do not belong in Extra, and the Rush one still went there.
+    QCOMPARE(edopro_next::ui::availableRulesets().front().ritualsBelongInExtra, false);
+}
+
+void TestDeckBuilder::addToDeckRefusesTokensUnknownCodesAndMissingCatalog() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        {
+            {1, "Token", kMonster | kToken | kNormal},
+            {2, "Normal", kMonster | kNormal},
+        });
+
+    DeckController noCatalog;
+    QCOMPARE(noCatalog.placementFor(2), -1);
+    QCOMPARE(noCatalog.addCardToDeck(2), -1);
+    QVERIFY(noCatalog.deck().empty());
+    QVERIFY(!noCatalog.dirty());
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    QSignalSpy deckChanged(&controller, &DeckController::deckChanged);
+    for (quint32 code : {1u, 999u, 0u}) {
+        QCOMPARE(controller.placementFor(code), -1);
+        QCOMPARE(controller.addCardToDeck(code), -1);
+    }
+    QVERIFY(controller.deck().empty());
+    QVERIFY(!controller.dirty());
+    QCOMPARE(deckChanged.count(), 0);
+}
+
+void TestDeckBuilder::openingAYdkKeepsTheFilesSectionsUnclassified() {
+    // ADR 0011, Decision 4 (keeping ADR 0004, Decision 2): opening a file
+    // shows what the file says. Upstream's deck builder would move the
+    // Fusion listed under #main to Extra (LoadDeck, separated mode); this
+    // editor does not, and advisory legality reports it instead.
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"), {{1, "Normal", kMonster | kNormal}, {5, "Fusion", kMonster | kFusion}});
+    const QString ydkPath = dir.filePath("deck.ydk");
+    writeFile(ydkPath, "#main\n1\n5\n#extra\n1\n!side\n");
+
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    QVERIFY(controller.loadDeck(QUrl::fromLocalFile(ydkPath)));
+    QCOMPARE(controller.deck().main, codes({1, 5}));
+    QCOMPARE(controller.deck().extra, codes({1}));
+    QVERIFY(!controller.dirty());
 }
 
 void TestDeckBuilder::loadPreservesOrderDuplicatesAndUnknownCodes() {
@@ -800,8 +963,8 @@ void TestDeckBuilder::banlistNulloptVsEmptyConcreteLegalityBehaviour() {
     // So 4 copies of card 101 is accepted under nullopt - but the message must
     // say so plainly rather than reporting full legality (S3, brief 015
     // reopened corrections; before this fix the message here was the same
-    // unqualified "Deck is legal for duel entry under this ruleset and
-    // banlist." a concrete banlist earns, which is exactly the defect S3
+    // unqualified "Passes as arranged under this ruleset and banlist." a
+    // concrete banlist earns, which is exactly the defect S3
     // reports - see noBanlistSelectionDisclosesSkippedChecks below).
     QCOMPARE(controller.selectedBanlistIndex(), 0);
     QCOMPARE(controller.isLegal(), true);
@@ -825,7 +988,7 @@ void TestDeckBuilder::banlistNulloptVsEmptyConcreteLegalityBehaviour() {
     QCOMPARE(controller.legalityErrorType(),
              static_cast<int>(edopro_next::policy::DeckErrorType::CardCount));
     QCOMPARE(controller.legalityCardCode(), 101u);
-    QVERIFY(controller.legalityMessage().startsWith("Would not be accepted at duel entry: "));
+    QVERIFY(controller.legalityMessage().startsWith("Fails as arranged: "));
     QVERIFY(controller.legalityMessage().contains("exceeds the maximum allowed copy limit"));
 
     // Switch back to "No banlist" (index 0) -> legal again, with the same
@@ -883,7 +1046,7 @@ void TestDeckBuilder::illegalDeckSurfacesSpecificErrors() {
     QCOMPARE(controller.legalityErrorType(),
              static_cast<int>(edopro_next::policy::DeckErrorType::MainCount));
     QCOMPARE(controller.legalityMessage(),
-             QStringLiteral("Would not be accepted at duel entry: Main deck has 0 cards, fewer than the minimum of 40."));
+             QStringLiteral("Fails as arranged: Main deck has 0 cards, fewer than the minimum of 40."));
 
     // Populate 40 standard cards (101, 103..141)
     controller.addCard(101, DeckController::Section::Main);
@@ -899,7 +1062,7 @@ void TestDeckBuilder::illegalDeckSurfacesSpecificErrors() {
     QCOMPARE(controller.legalityErrorType(),
              static_cast<int>(edopro_next::policy::DeckErrorType::ExtraCount));
     QCOMPARE(controller.legalityCardCode(), 101u);
-    QVERIFY(controller.legalityMessage().contains("belongs in the Main deck, not the Extra deck"));
+    QVERIFY(controller.legalityMessage().contains("is in a section that does not accept it"));
     QVERIFY(controller.legalityMessage().contains("'Alpha Normal' (101)"));
 
     // Remove from Extra
@@ -1003,7 +1166,11 @@ void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksForExtraDeckMonste
     QCOMPARE(controller.legalityErrorType(),
              static_cast<int>(edopro_next::policy::DeckErrorType::ExtraCount));
     QCOMPARE(controller.legalityCardCode(), 200u);
-    QVERIFY2(controller.legalityMessage().contains(QStringLiteral("belongs in the Main deck, not the Extra deck")),
+    QVERIFY2(controller.legalityMessage().contains(QStringLiteral("is in a section that does not accept it")),
+              qPrintable(controller.legalityMessage()));
+    // The card here is an Extra Deck card sitting in Main. The message used
+    // to say it "belongs in the Main deck", the opposite of the truth.
+    QVERIFY2(!controller.legalityMessage().contains(QStringLiteral("belongs in the Main deck")),
               qPrintable(controller.legalityMessage()));
 }
 
@@ -1027,7 +1194,7 @@ void TestDeckBuilder::noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal() 
     QCOMPARE(controller.legalityErrorType(),
              static_cast<int>(edopro_next::policy::DeckErrorType::MainCount));
     const QString msg = controller.legalityMessage();
-    QVERIFY2(msg.startsWith(QStringLiteral("Would not be accepted at duel entry: Main deck has "
+    QVERIFY2(msg.startsWith(QStringLiteral("Fails as arranged: Main deck has "
                                             "0 cards, fewer than the minimum of 40.")),
               qPrintable(msg));
     QVERIFY2(msg.contains(QStringLiteral("No banlist is selected")), qPrintable(msg));
@@ -1058,7 +1225,89 @@ void TestDeckBuilder::concreteBanlistSelectionCarriesNoSkippedChecksDisclosure()
     QCOMPARE(controller.isLegal(), true);
     const QString msg = controller.legalityMessage();
     QVERIFY2(!msg.contains(QStringLiteral("No banlist is selected")), qPrintable(msg));
-    QCOMPARE(msg, QStringLiteral("Deck is legal for duel entry under this ruleset and banlist."));
+    QCOMPARE(msg, QStringLiteral("Passes as arranged under this ruleset and banlist."));
+}
+
+void TestDeckBuilder::everyLegalityMessageSpeaksAboutTheDeckAsArrangedOnly() {
+    using edopro_next::policy::DeckErrorType;
+    using edopro_next::policy::DeckSizeCount;
+    using edopro_next::policy::DeckValidationError;
+    using edopro_next::data::CardCode;
+
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath =
+        writeSyntheticDatabase(dir.filePath("cards.cdb"), {{101, "Alpha Normal"}});
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+
+    struct Case {
+        DeckValidationError error;
+        QString expected;
+    };
+    const QString prefix = QStringLiteral("Fails as arranged: ");
+    const auto sized = [](DeckErrorType type, std::uint32_t current, std::uint32_t minimum,
+                          std::uint32_t maximum) {
+        return DeckValidationError{type, DeckSizeCount{current, minimum, maximum}, CardCode::None};
+    };
+    const auto carded = [](DeckErrorType type) {
+        return DeckValidationError{type, DeckSizeCount{}, CardCode{101}};
+    };
+    const auto whole = [](DeckErrorType type) {
+        return DeckValidationError{type, DeckSizeCount{}, CardCode::None};
+    };
+    const QList<Case> cases = {
+        {sized(DeckErrorType::MainCount, 39, 40, 60),
+         prefix + QStringLiteral("Main deck has 39 cards, fewer than the minimum of 40.")},
+        {sized(DeckErrorType::MainCount, 61, 40, 60),
+         prefix + QStringLiteral("Main deck has 61 cards, exceeding the maximum of 60.")},
+        {sized(DeckErrorType::ExtraCount, 16, 0, 15),
+         prefix + QStringLiteral("Extra deck has 16 cards, exceeding the maximum of 15.")},
+        {sized(DeckErrorType::ExtraCount, 1, 2, 15),
+         prefix + QStringLiteral("Extra deck has 1 cards, fewer than the minimum of 2.")},
+        // ExtraCount with a card is the zone-placement error, raised for a
+        // card in Main and for a card in Extra alike: it must not say which
+        // section the card belongs in, and must not say it would be rejected
+        // at duel entry, where upstream re-sorts by type first.
+        {carded(DeckErrorType::ExtraCount),
+         prefix + QStringLiteral("'Alpha Normal' (101) is in a section that does not accept it "
+                                 "(whether a card goes in the Main deck or the Extra deck "
+                                 "follows from its type).")},
+        {sized(DeckErrorType::SideCount, 16, 0, 15),
+         prefix + QStringLiteral("Side deck has 16 cards, exceeding the maximum of 15.")},
+        {sized(DeckErrorType::SideCount, 1, 2, 15),
+         prefix + QStringLiteral("Side deck has 1 cards, fewer than the minimum of 2.")},
+        {DeckValidationError{DeckErrorType::UnknownCard, DeckSizeCount{}, CardCode{999}},
+         prefix + QStringLiteral("Unknown card code 999 (not found in database).")},
+        {whole(DeckErrorType::ForbiddenType),
+         prefix + QStringLiteral("Deck contains cards of a forbidden card type.")},
+        {whole(DeckErrorType::TooManyLegends),
+         prefix + QStringLiteral("Deck exceeds the allowed number of Legend cards.")},
+        {whole(DeckErrorType::TooManySkills),
+         prefix + QStringLiteral("Deck exceeds the allowed number of Skill cards.")},
+        {carded(DeckErrorType::CardCount),
+         prefix + QStringLiteral("'Alpha Normal' (101) exceeds the maximum allowed copy limit.")},
+        {carded(DeckErrorType::TcgOnly),
+         prefix + QStringLiteral("'Alpha Normal' (101) is TCG-only, not allowed under this ruleset.")},
+        {carded(DeckErrorType::OcgOnly),
+         prefix + QStringLiteral("'Alpha Normal' (101) is OCG-only, not allowed under this ruleset.")},
+        {carded(DeckErrorType::UnofficialCard),
+         prefix + QStringLiteral("'Alpha Normal' (101) is an unofficial or custom card.")},
+        {carded(DeckErrorType::Lflist),
+         prefix + QStringLiteral("'Alpha Normal' (101) exceeds the banlist limitation count.")},
+        {whole(DeckErrorType::None),
+         QStringLiteral("Passes as arranged under this ruleset and banlist.")},
+        // An error type this formatter does not know still fails safely.
+        {whole(static_cast<DeckErrorType>(9999)), prefix + QStringLiteral("Deck is invalid.")},
+    };
+    for (const auto& c : cases) {
+        const QString message = controller.formatLegalityError(c.error);
+        QCOMPARE(message, c.expected);
+        // Upstream's duel entry is not something this editor can speak for.
+        QVERIFY2(!message.contains(QStringLiteral("duel entry")), qPrintable(message));
+    }
 }
 
 QTEST_MAIN(TestDeckBuilder)

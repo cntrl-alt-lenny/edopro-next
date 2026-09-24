@@ -8,10 +8,12 @@
 // contents: it reads through mainModel/extraModel/sideModel, which are
 // thin views over this object's own Deck (deck_section_model.h).
 //
-// This class never decides which section a card belongs in. Every add
-// specifies an explicit Section - the caller's (ultimately the user's)
-// choice, never inferred from card type. See
-// docs/architecture/deck-builder-ui.md#deck-session-semantics.
+// Section placement: this class never decides by itself which section a
+// card belongs in. addCardToDeck() asks policy::classify_card() - the one
+// definition of upstream's Extra Deck rule (policy/include/edopro_next/
+// policy/deck_placement.h, ADR 0011) - and puts the card where that answer
+// says; addCard() puts a card exactly where its caller names, unclassified.
+// See docs/architecture/deck-builder-ui.md §7 and deck-placement.md §5.
 //
 // Legality validation:
 // Deck legality is computed strictly by policy::validate_deck() (CLAUDE.md,
@@ -31,6 +33,7 @@
 #include "banlist_store.h"
 #include "deck_section_model.h"
 #include "edopro_next/data/deck.h"
+#include "edopro_next/policy/deck_placement.h"
 #include "edopro_next/policy/deck_validation.h"
 #include "ruleset.h"
 
@@ -116,9 +119,27 @@ public:
     void loadBanlistFromText(const std::string& text);
     const edopro_next::ui::BanlistStore& banlistStore() const { return banlistStore_; }
 
-    // Appends `code` to the end of the requested section - order and
-    // duplicates are exactly what the user asked for, never deduplicated,
-    // never reordered.
+    // Where addCardToDeck() would put `code`: Section::Main or
+    // Section::Extra as an int, or -1 when it would not add it at all (a
+    // token, a code the loaded catalog does not know, code 0, or no catalog
+    // bound). The answer is policy::classify_card()'s, under
+    // kAddRitualPlacement; QML renders it and decides nothing itself.
+    Q_INVOKABLE int placementFor(quint32 code) const;
+
+    // The deck builder's "add" action: appends `code` to the end of the
+    // section placementFor() names, exactly as upstream's deck builder
+    // lands a card added from its search results (deck_con.cpp:725,
+    // push_main then push_extra; deck-placement.md §3). Returns that
+    // section as an int, or -1 - with the deck untouched - when
+    // placementFor() is -1.
+    Q_INVOKABLE int addCardToDeck(quint32 code);
+
+    // Appends `code` to the end of the requested section, unclassified -
+    // order and duplicates are exactly what the caller asked for, never
+    // deduplicated, never reordered, never moved. The screen uses it for
+    // Side (upstream's Shift+right-click, deck_con.cpp:721-722); a card put
+    // in the "wrong" Main/Extra section through it stays there and
+    // advisory legality reports it (ADR 0011, Decision 3).
     Q_INVOKABLE void addCard(quint32 code, Section section);
     // Removes exactly the occurrence at `index` within `section` - one
     // entry, not "all copies of this code".
@@ -143,6 +164,26 @@ public:
     // parse_ydk()/load_ydk() directly.
     const edopro_next::data::Deck& deck() const { return deck_; }
 
+    // The sentence legalityMessage() shows for `error`. Public, and C++-only,
+    // so the tests can pin every message, including the ones no small
+    // synthetic deck reaches. Every message speaks about the deck *as
+    // arranged* in the editor's own sections, never about what upstream's
+    // duel entry would do: the server re-derives Main and Extra from card
+    // type and drops tokens before it validates (deck-placement.md §5.4), so
+    // it can accept a deck this rejects and, with a token present, reject one
+    // this passes.
+    QString formatLegalityError(const edopro_next::policy::DeckValidationError& error) const;
+
+    // The RITUAL_LOCATION upstream's deck builder effectively applies when
+    // it adds a card outside side-decking: push_main refuses a Rush Ritual
+    // Monster and push_extra refuses any other Ritual Monster
+    // (deck_con.cpp:1578-1583, :1611-1616), which is RITUAL_LOCATION::DEFAULT
+    // (deck-placement.md §3; ADR 0011, Decision 2). It does not follow the
+    // selected ruleset's ritualsBelongInExtra, because upstream's editor
+    // does not consult DUEL_EXTRA_DECK_RITUAL unless it is side-decking.
+    static constexpr edopro_next::policy::RitualPlacement kAddRitualPlacement =
+        edopro_next::policy::RitualPlacement::RushInExtra;
+
 signals:
     void catalogChanged();
     void deckChanged();
@@ -163,7 +204,6 @@ private:
     bool saveToPath(const QString& path);
 
     void validateLegality();
-    QString formatLegalityError(const edopro_next::policy::DeckValidationError& error) const;
     QString formatCard(edopro_next::data::CardCode code) const;
 
     edopro_next::data::Deck deck_;

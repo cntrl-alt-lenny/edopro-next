@@ -10,8 +10,9 @@ namespace {
 // data/src/card_database.cpp. Used *only* to decide which numeric fields
 // this preview renders (a presentation decision - is an ATK/DEF/Level row
 // meaningful for this printed card, is a Pendulum scale row worth showing)
-// - never to decide deck-section membership, which stays entirely the
-// user's own explicit choice via DeckController::addCard. This mirrors
+// - never to decide deck-section membership, which is policy/'s rule
+// (deck_placement.h, reached through DeckController::placementFor) or the
+// caller's explicit choice (DeckController::addCard). This mirrors
 // exactly how CardSearchIndex already uses the same two bits (Link,
 // Pendulum) to decide which numeric filters can match a card, not to
 // classify it into a deck section.

@@ -176,24 +176,29 @@ already presentation-independent, so it can be built without touching the duel p
       [ADR 0008](adr/0008-upstream-ydk-interop-harness.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
       **A functional core with legality exists, not the complete item.** A real `DeckBuilderScreen`
-      wires `CardCatalog`/`CardSearchIndex` text search, an explicit-choice Main/Extra/Side
-      editor over one canonical `Deck`, `.ydk` open/save/new with a tested dirty-state
-      contract, and user-visible ruleset and banlist selection with advisory legality validation
+      wires `CardCatalog`/`CardSearchIndex` text search, a Main/Extra/Side editor over one
+      canonical `Deck` that adds a card to Main or Extra by upstream's Extra Deck rule
+      (one definition, in `policy/`, which validation also calls -
+      [ADR 0011](adr/0011-extra-deck-classification.md)) and to Side on request, `.ydk`
+      open/save/new with a tested dirty-state contract (opening follows the file's own
+      sections), and user-visible ruleset and banlist selection with advisory legality validation
       driven by `policy::validate_deck()` ([ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md)),
       through a small Qt adapter layer (`ui/src/deckbuilder/`) that keeps `data/` and `policy/`
-      Qt-free. Still missing: automatic Main/Extra classification, artwork, the legacy sigil
-      search grammar and structured filters beyond plain text, and full keyboard/controller
-      parity. Design and the deliberate exclusions:
-      [deck-builder-ui.md](architecture/deck-builder-ui.md),
-      [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md), and
-      [ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md).
+      Qt-free. Still missing: artwork, the legacy sigil search grammar and structured filters
+      beyond plain text, and full keyboard/controller parity. Design and the deliberate
+      exclusions: [deck-builder-ui.md](architecture/deck-builder-ui.md),
+      [deck-placement.md](architecture/deck-placement.md),
+      [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md),
+      [ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md), and
+      [ADR 0011](adr/0011-extra-deck-classification.md).
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.
 **Pending** - the card database facade, the deck model/`.ydk` codec, fast search, and the
 deck legality/policy foundation above are all done, and a functional deck-builder core
-with advisory legality validation exists; automatic classification, structured/legacy search
-parity and full keyboard/controller parity remain, so the milestone is not complete.
+with advisory legality validation and automatic Main/Extra placement exists; artwork,
+structured/legacy search parity and full keyboard/controller parity remain, so the milestone
+is not complete.
 Current serializer -> real upstream `LoadDeckFromFile` compatibility is now **CI-proven**
 against deterministic synthetic card data (M3D3, above) - a real improvement over "supported
 by construction" - but actual GUI/file-picker interaction remains outside that harness by

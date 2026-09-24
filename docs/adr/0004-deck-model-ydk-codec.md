@@ -93,6 +93,12 @@ reclassification as an explicit `Deck -> Deck` transformation on top of this cod
 a strictly better place for it than inside text parsing, and this decision deliberately
 leaves room for it without prejudging its design.
 
+Round 020 ([ADR 0011](0011-extra-deck-classification.md), Decision 4) revisited this with a
+card database available and kept it: opening a `.ydk` in the deck builder still follows the
+file's markers, and no `Deck -> Deck` reclassifier was built. The per-card rule itself now
+exists, in `policy/` (`deck_placement.h`), and the deck builder applies it when a card is
+added.
+
 ## Decision 3 — Card code 0 is excluded during parsing, not stored
 
 `docs/architecture/deck-model.md`§5 traces both of upstream's own behaviours for a code that

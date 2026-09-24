@@ -19,11 +19,13 @@ for the full module-boundary reasoning.
   in-progress duel, side-decking between games, or `LoadDeck`'s own
   Main/Extra *classification* step - see §7 below for why that is a
   deliberately separate concern this module does not perform).
-- Not automatic Main/Extra classification. This module validates a `Deck`
-  whose section split already exists; it never moves a card between
-  sections. See `docs/architecture/deck-model.md` for why classification,
-  if it is ever built, is intentionally a separate `Deck -> Deck`
-  transformation.
+- Not a deck reclassifier. `validate_deck()` validates a `Deck` whose
+  section split already exists, and nothing in `policy/` moves a card
+  between sections. Since round 020 the per-card Extra Deck rule itself
+  does live in this module (`deck_placement.h`; see
+  [deck-placement.md](deck-placement.md) and
+  [ADR 0011](../adr/0011-extra-deck-classification.md)): the zone checks
+  below call it, and the deck builder uses it to place a card being added.
 - Not a ruleset author. `ValidationPolicy` (§6) has no default value; a
   caller must supply every field explicitly. This module never invents "the"
   rules of Yu-Gi-Oh.
@@ -174,10 +176,13 @@ itself receives only a resolved **boolean**
 `generic_duel.cpp:379` from a duel-rule flag
 (`host_info.duel_flag_high & (DUEL_EXTRA_DECK_RITUAL >> 32)`).
 `ValidationPolicy::rituals_belong_in_extra` models exactly that boolean, not
-the three-state loader enum - this module does not implement automatic
-classification at all (§0), so the loader's `DEFAULT` (Rush-conditional)
-behavior has no equivalent here; a caller who needs it must resolve it to a
-boolean before calling `validate_deck()`.
+the three-state loader enum. `CheckDeckContent` never receives the loader's
+`DEFAULT` (Rush-conditional) mode, so validation has no use for it. The
+three-state enum does exist in this module since round 020, as
+`RitualPlacement` in `deck_placement.h`, for classifying a card; the Main
+zone check calls that rule with `ritual_placement_for(rituals_belong_in_extra)`,
+upstream's own `flag ? EXTRA : MAIN` conversion
+([deck-placement.md](deck-placement.md) §2.3, §4).
 
 ## 8. Unknown-card semantics - a deliberately different claim from upstream's
 

@@ -278,6 +278,10 @@ private slots:
 
     // Legality UI and status box reactivity (M3 Brief 015 / ADR 0010)
     void legalityStatusBoxIsRenderedAndUpdatesReactively();
+
+    // Round 020 / ADR 0011: the real screen's add buttons render and use
+    // the controller's placement; QML decides nothing.
+    void addButtonsFollowTheControllersPlacement();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -707,7 +711,7 @@ void TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() {
     // Initial empty deck: displays MainCount error
     const QString initialMsg = legalityText->property("text").toString();
     QCOMPARE(initialMsg, h.controller.legalityMessage());
-    QVERIFY(initialMsg.startsWith("Would not be accepted at duel entry: Main deck has 0 cards"));
+    QVERIFY(initialMsg.startsWith("Fails as arranged: Main deck has 0 cards"));
 
     // Ruleset and banlist initial names
     const auto rulesetNames = rulesetCombo->property("model").toStringList();
@@ -759,8 +763,61 @@ void TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() {
     h.controller.addCard(1, DeckController::Section::Main);
     h.controller.addCard(1, DeckController::Section::Main);
     QCOMPARE(h.controller.isLegal(), false);
-    QVERIFY(legalityText->property("text").toString().startsWith("Would not be accepted at duel entry: "));
+    QVERIFY(legalityText->property("text").toString().startsWith("Fails as arranged: "));
     QVERIFY(legalityText->property("text").toString().contains("exceeds the maximum allowed copy limit"));
+}
+
+void TestDeckBuilderScreen::addButtonsFollowTheControllersPlacement() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    // TYPE_* from ocgcore/ocgapi_constants.h:33-58.
+    const QString dbPath = writeSyntheticDatabaseWithFields(
+        dir.filePath("cards.cdb"),
+        {
+            {111, QStringLiteral("Alpha Fusion"), 0x1 | 0x40},
+            {222, QStringLiteral("Beta Normal"), 0x1 | 0x10},
+            {333, QStringLiteral("Gamma Token"), 0x1 | 0x4000},
+        });
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+    QObject* addToDeck = h.child("addToDeckButton");
+    QObject* addToSide = h.child("addToSideButton");
+    QVERIFY(addToDeck);
+    QVERIFY(addToSide);
+
+    h.setSearchQuery(QStringLiteral("Alpha"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("selectedResultPlacement").toInt(), static_cast<int>(DeckController::Section::Extra));
+    QCOMPARE(addToDeck->property("text").toString(), QStringLiteral("Add to Extra"));
+    QCOMPARE(addToDeck->property("enabled").toBool(), true);
+    h.invoke("addSelectedResultToDeck");
+    QCOMPARE(h.controller.extraCount(), 1);
+    QCOMPARE(h.controller.mainCount(), 0);
+
+    h.setSearchQuery(QStringLiteral("Beta"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(addToDeck->property("text").toString(), QStringLiteral("Add to Main"));
+    h.invoke("addSelectedResultToDeck");
+    h.invoke("addSelectedResultToSide");
+    QCOMPARE(h.controller.mainCount(), 1);
+    QCOMPARE(h.controller.sideCount(), 1);
+    QCOMPARE(h.controller.deck().main.front(), edopro_next::data::CardCode{222});
+    QCOMPARE(h.controller.deck().side.front(), edopro_next::data::CardCode{222});
+
+    // A token is never placed: both buttons disabled, and the functions
+    // they call change nothing even if reached another way.
+    h.setSearchQuery(QStringLiteral("Gamma"));
+    h.selectByClick("resultsList", 0);
+    QCOMPARE(h.prop("selectedResultPlacement").toInt(), -1);
+    QCOMPARE(addToDeck->property("enabled").toBool(), false);
+    QCOMPARE(addToSide->property("enabled").toBool(), false);
+    h.invoke("addSelectedResultToDeck");
+    h.invoke("addSelectedResultToSide");
+    QCOMPARE(h.controller.mainCount(), 1);
+    QCOMPARE(h.controller.extraCount(), 1);
+    QCOMPARE(h.controller.sideCount(), 1);
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)

@@ -38,6 +38,7 @@ endif()
 
 add_library(edopro_next_legality STATIC
     src/lf_list.cpp
+    src/deck_placement.cpp
     src/deck_validation.cpp
 )
 
@@ -117,4 +118,23 @@ if(EDOPRO_NEXT_LEGALITY_TESTS)
         endif()
     endif()
     add_test(NAME deck_validation COMMAND test_deck_validation)
+
+    # The one Extra Deck rule (deck_placement.h, ADR 0011): every upstream
+    # classification case, plus the test that fails if validate_deck()'s
+    # zone checks and the rule ever disagree. Synthetic .cdb fixtures, same
+    # SQLite-direct pattern as test_deck_validation above.
+    add_executable(test_deck_placement tests/test_deck_placement.cpp)
+    target_link_libraries(test_deck_placement PRIVATE edopro_next_legality_test_main SQLite::SQLite3)
+    if(MSVC)
+        target_compile_options(test_deck_placement PRIVATE /W4)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_deck_placement PRIVATE /WX)
+        endif()
+    else()
+        target_compile_options(test_deck_placement PRIVATE -Wall -Wextra)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_deck_placement PRIVATE -Werror)
+        endif()
+    endif()
+    add_test(NAME deck_placement COMMAND test_deck_placement)
 endif()

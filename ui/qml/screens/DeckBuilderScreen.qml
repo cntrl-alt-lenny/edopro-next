@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
 // The functional deck-builder core (M3D1): search the loaded card pool,
-// inspect a card, add it explicitly to Main/Extra/Side, remove entries,
-// and open/save a .ydk. This screen owns no deck data itself - every list
+// inspect a card, add it to the deck (Main or Extra, as deckController
+// reports from policy/'s Extra Deck rule - ADR 0011) or to Side, remove
+// entries, and open/save a .ydk. This screen owns no deck data itself - every list
 // here is a direct view over `deckController`'s canonical Deck
 // (deck_controller.h) or `cardCatalog`'s search index
 // (search_results_model.h); this file only renders and forwards user
 // intent. See docs/architecture/deck-builder-ui.md.
 //
-// Deliberately not implemented here: legality of any kind, deck-size or
-// copy-count limits, automatic Main/Extra classification, artwork,
-// archetype-name search, controller navigation.
+// Deliberately not implemented here: any game rule - legality is computed
+// by policy::validate_deck() and section placement by
+// policy::classify_card(), both through deckController; this file only
+// renders their answers. Not built yet: artwork, archetype-name search,
+// structured filters, controller navigation.
 
 import QtQuick
 import QtQuick.Controls
@@ -96,10 +99,28 @@ Item {
         hasPreview = true;
     }
 
-    function addSelectedResultTo(section) {
+    // Where the selected search result would go if added to the deck -
+    // DeckController.Main/.Extra, or -1 when it cannot be added (a token,
+    // or nothing selected). The answer comes from deckController, which asks
+    // policy/'s one Extra Deck rule (ADR 0011); this screen only renders it.
+    readonly property int selectedResultPlacement:
+        (selectedResultRow >= 0 && selectedResultRow < searchResults.resultCount)
+            ? deckController.placementFor(searchResults.cardCodeAt(selectedResultRow))
+            : -1
+
+    // Upstream's right-click add (gframe/deck_con.cpp:725): the card lands
+    // in Main or Extra by type, decided outside QML.
+    function addSelectedResultToDeck() {
         if (selectedResultRow < 0 || selectedResultRow >= searchResults.resultCount)
             return;
-        deckController.addCard(searchResults.cardCodeAt(selectedResultRow), section);
+        deckController.addCardToDeck(searchResults.cardCodeAt(selectedResultRow));
+    }
+
+    // Upstream's Shift+right-click add (gframe/deck_con.cpp:721-722).
+    function addSelectedResultToSide() {
+        if (selectedResultPlacement < 0)
+            return;
+        deckController.addCard(searchResults.cardCodeAt(selectedResultRow), DeckController.Side);
     }
 
     // The one and only removal path - both the "Remove selected" button
@@ -484,16 +505,22 @@ Item {
                     enabled: root.selectedResultRow >= 0
 
                     Button {
-                        text: "Add to Main"
-                        onClicked: root.addSelectedResultTo(DeckController.Main)
+                        objectName: "addToDeckButton"
+                        // Names the section the card will actually go to,
+                        // so the placement is visible before the click.
+                        text: root.selectedResultPlacement === DeckController.Extra
+                              ? "Add to Extra" : "Add to Main"
+                        enabled: root.selectedResultPlacement >= 0
+                        onClicked: root.addSelectedResultToDeck()
                     }
                     Button {
-                        text: "Extra"
-                        onClicked: root.addSelectedResultTo(DeckController.Extra)
-                    }
-                    Button {
-                        text: "Side"
-                        onClicked: root.addSelectedResultTo(DeckController.Side)
+                        objectName: "addToSideButton"
+                        text: "Add to Side"
+                        // A card that cannot go in the deck at all (a
+                        // token) cannot go in the Side Deck either: upstream
+                        // never offers one to add (deck_con.cpp:1192).
+                        enabled: root.selectedResultPlacement >= 0
+                        onClicked: root.addSelectedResultToSide()
                     }
                 }
             }
