@@ -127,9 +127,11 @@ public:
     Q_INVOKABLE int placementFor(quint32 code) const;
 
     // The deck builder's "add" action: appends `code` to the end of the
-    // section placementFor() names, exactly as upstream's deck builder
+    // section placementFor() names. That is where upstream's deck builder
     // lands a card added from its search results (deck_con.cpp:725,
-    // push_main then push_extra; deck-placement.md §3). Returns that
+    // push_main then push_extra) for every card except the families
+    // deck-placement.md §3.3 records, where this editor follows LoadDeck
+    // instead (ADR 0011, Decision 2). Returns that
     // section as an int, or -1 - with the deck untouched - when
     // placementFor() is -1.
     Q_INVOKABLE int addCardToDeck(quint32 code);

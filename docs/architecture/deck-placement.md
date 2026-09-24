@@ -346,18 +346,21 @@ with `const bool loadalways = !!extralist;` (`:334`).
 
 - **Tokens** (`cd->type & TYPE_TOKEN`, `:357`) are dropped from every list, in every mode,
   before the lambda is asked. `TYPE_TOKEN` is `0x4000` (`ocgcore/ocgapi_constants.h:46`).
-- **Unknown codes.** `GetDummyOrMappedCardData` (`gframe/deck_manager.cpp:17-28`) returns the
-  card an id-mapping file maps the code to, if any
-  (`DataManager::GetMappedCardData`, `gframe/data_manager.cpp:349-354`); otherwise, while
-  `load_dummies` is true, a placeholder with `code = 0` and every other field zero. Upstream
-  stops loading placeholders once its card repositories have finished updating
-  (`gframe/game.cpp:2682`, `gframe/data_handler.cpp:159-160`). So:
-  - without an extra list (`loadalways` false): an unknown code is dropped and becomes the
-    returned error code (`:352-354`);
+- **Unknown codes.** `GetDummyOrMappedCardData` (`gframe/deck_manager.cpp:17-28`) has two
+  phases. While `load_dummies` is true it returns a placeholder for the code, created once and
+  cached, with `code = 0`, `alias` set to the original code and every other field zero
+  (`:20-27`); the id-mapping file is not consulted. Upstream stops loading placeholders once
+  its card repositories have finished updating (`gframe/game.cpp:2682`,
+  `gframe/data_handler.cpp:159-160`); from then on the function returns the card an id-mapping
+  file maps the code to, or null (`:18-19`; `DataManager::GetMappedCardData`,
+  `gframe/data_manager.cpp:349-354`). So:
+  - without an extra list (`loadalways` false): a code that resolves to a placeholder or to
+    null is dropped and becomes the returned error code (`:352-354`);
   - with an extra list: a placeholder is kept and, since its `code` is `0`, never
-    classified (`:359`), so it stays in the list it came from; with placeholders off, `cd` is
-    null and the code is dropped silently (`:357`).
-- **Mapped codes** are classified by the card they map to.
+    classified (`:359`), so it stays in the list it came from; with placeholders off, an
+    unmapped code gives null and is dropped silently (`:357`).
+- **Mapped codes** are classified by the card they map to, but only once placeholders are
+  off; while they are on, a mapped code becomes a placeholder like any other unknown code.
 
 ### 5.2 The two modes, and which caller uses which
 
