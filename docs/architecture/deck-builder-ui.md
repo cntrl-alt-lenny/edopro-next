@@ -41,8 +41,9 @@ base `docs/UPSTREAM.md` records:
   side-decking, unless forced) a Rush Ritual Monster, and `push_extra` rejects a Link Spell,
   anything that is not Ritual/Fusion/Synchro/Xyz/Link, and (likewise) a non-Rush Ritual
   Monster (`:1578-1588,1611-1621`; quoted in full in
-  [deck-placement.md](deck-placement.md) §3) - so a card lands in the right section only because the caller's
-  own cascade tries sections in some order and falls through on rejection (e.g.
+  [deck-placement.md](deck-placement.md) §3) - so a card lands in a section only because the caller's
+  own cascade tries sections in some order and falls through on rejection, which for the
+  families recorded in deck-placement.md §3.3 is not the section `LoadDeck` would choose (e.g.
   `push_extra(pointer) || push_main(pointer)`, `:701`), not because any single function
   classifies it. `LoadDeck`'s reclassification is a genuinely different mechanism from this -
   it runs at file-load time, not at interactive push time, and can move a card between
@@ -392,8 +393,10 @@ cover the state before any selection ever happens): `selectedResultClearsOnDiffe
 - **`placementFor(code)`** returns `Section::Main` or `Section::Extra` (as an `int`), or `-1`
   for a card that is never placed: a token, a code the catalog does not know, code `0`, or no
   catalog bound. The answer is `policy::classify_card()` under
-  `RitualPlacement::RushInExtra` (upstream's `RITUAL_LOCATION::DEFAULT`, which is what its
-  deck builder's push cascade amounts to outside side-decking - `deck-placement.md`§3.3).
+  `RitualPlacement::RushInExtra` (upstream's `RITUAL_LOCATION::DEFAULT`, the mode whose
+  Ritual handling matches its deck builder's push cascade outside side-decking; for the
+  families in `deck-placement.md`§3.3 the cascade places a card differently, and ADR 0011,
+  Decision 2, records why this editor follows `LoadDeck` there).
   `DeckController` adds no rule of its own.
 - **`addCardToDeck(code)`** appends the card to the end of that section, via `addCard`, and
   returns the section, or returns `-1` and changes nothing.

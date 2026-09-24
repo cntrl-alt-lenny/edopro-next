@@ -106,12 +106,17 @@ section from its type at push time either; classification-on-load is a separate,
 step."* Read narrowly - no single function *reclassifies/redirects* a card to a different
 section the way `LoadDeck`'s own loader-side classification does - that holds. But
 `push_main`/`push_extra` themselves, quoted above, plainly do decide-by-type **at push
-time**: `push_main` returns `false` outright for any Fusion/Synchro/Xyz/non-Spell-Link card,
-and `push_extra` returns `false` for anything that is not a Ritual/Link-non-Spell/Fusion/
-Synchro/Xyz card. The caller's own cascade
+time**: `push_main` returns `false` outright for any Fusion/Synchro/Xyz/non-Spell-Link card
+(and, outside side-decking and unless forced, a Rush Ritual Monster), and `push_extra` returns
+`false` for a non-Rush Ritual Monster (likewise), for a Link Spell that is not a Ritual Monster,
+and for any other card that is neither a Ritual Monster nor Link, Fusion, Synchro or Xyz
+(`deck_con.cpp:1578-1588,1611-1621`).
+The caller's own cascade
 (`if (!push_main(pointer, ...) && !push_extra(pointer, ...)) push_side(pointer);` -
-`deck_con.cpp:725`, similarly at `:665-669,701`) relies on exactly these type gates to land a
-card in its correct section through trial and rejection, not routing. `deck-builder-ui.md`§1
+`deck_con.cpp:725`, similarly at `:665-669,701`) relies on these type gates to place a card
+through trial and rejection, not routing. For most cards that matches `LoadDeck`'s rule; for
+the families recorded in deck-placement.md §3.3 it lands the card in Side or in the other
+section instead. `deck-builder-ui.md`§1
 has since been corrected to say precisely this - no single function *chooses* a destination,
 but `push_main`/`push_extra` do gate on type at push time, and the caller's cascade is what
 turns that gating into effective section placement.
