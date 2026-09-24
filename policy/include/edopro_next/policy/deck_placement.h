@@ -6,10 +6,13 @@
 //
 // It reproduces the `is_extra_deck_card` lambda inside upstream's
 // DeckManager::LoadDeck (gframe/deck_manager.cpp:335-348) exactly, plus the
-// token/unknown handling that loop applies before the lambda is ever asked
-// (:349-358). policy::validate_deck() reaches the same functions for its own
-// zone checks (deck_validation.cpp), so validation and classification cannot
-// drift apart; policy/tests/test_deck_placement.cpp pins both.
+// loop's token skip (:357) and a coarser version of its unresolved-code
+// handling (see classify_card() for exactly how coarse). policy::validate_deck()
+// reaches the same functions for its own zone checks (deck_validation.cpp), so
+// validation and classification cannot drift apart;
+// policy/tests/test_deck_placement.cpp pins both, and pins the card shapes on
+// which upstream's deck builder (a different code path from the lambda) puts a
+// card elsewhere (deck-placement.md §3.3).
 //
 // THE UI MUST NOT IMPLEMENT GAME RULES (AGENTS.md). This header carries no Qt
 // type and no UI concept: a caller asks where a card goes and renders the
@@ -77,9 +80,9 @@ bool is_extra_deck_type(const data::CardRecord& record) noexcept;
 bool belongs_in_extra_deck(const data::CardRecord& record, RitualPlacement rituals) noexcept;
 
 // Where a card goes when it is placed by type. `Token` and `Unknown` are the
-// two cases upstream never places at all: LoadDeck skips a token outright
+// cases with no placement: LoadDeck skips a token outright
 // (deck_manager.cpp:357-358) and upstream's deck-builder search never lists
-// one (deck_con.cpp:1192); an unknown code has no type to classify by.
+// one (deck_con.cpp:1192); an unresolved code has no type to classify by.
 enum class CardPlacement {
 	Main,
 	Extra,
@@ -90,6 +93,23 @@ enum class CardPlacement {
 // Looks `code` up in `database` and classifies it: Unknown if it does not
 // resolve, Token if it is a token, otherwise Main or Extra by
 // belongs_in_extra_deck().
+//
+// What this reproduces of LoadDeck's per-code loop (deck_manager.cpp:349-364)
+// and what it does not:
+//  - Tokens: reproduced. The loop skips a token, after resolving it and before
+//    asking the lambda, in every mode (:357); Token is that skip.
+//  - Unresolved codes: only the part they share. The loop asks
+//    gDataManager->GetCardData(code) and then GetDummyOrMappedCardData(code)
+//    (:350-351); classify_card() asks only `database`, so a code `database`
+//    lacks is Unknown even where upstream would resolve it through an
+//    id-mapping file. For a code neither resolves, upstream does one of two
+//    things depending on whether the load has an extra list: drops the code
+//    and reports it as an error code (:352-354), or keeps a placeholder with
+//    code 0 in the list it came from without classifying it (:359). Unknown
+//    stands for both: "no classification". Neither the error code nor the
+//    placeholder is modelled here.
+//  - Side-list and Extra-list loops (:365-390) do not classify and are not
+//    modelled.
 CardPlacement classify_card(const data::CardDatabase& database, data::CardCode code,
 							RitualPlacement rituals) noexcept;
 

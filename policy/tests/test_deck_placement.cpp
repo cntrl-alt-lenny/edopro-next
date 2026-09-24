@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <iterator>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -158,7 +159,8 @@ EDOPRO_POLICY_TEST(linkMonsterBelongsInExtra) {
 
 EDOPRO_POLICY_TEST(linkWithoutMonsterBelongsInMain) {
 	for(auto rituals : kAllPlacements) {
-		// A Link Spell - the one real shape (deck-placement.md §6).
+		// Link and Spell bits, no Monster bit (deck-placement.md §2.1). This is a
+		// bit combination the rule must handle, not a claim that any card has it.
 		EDOPRO_POLICY_CHECK(!belongs_in_extra_deck(card(kTypeSpell | kTypeLink), rituals));
 		// The bare Link bit, and Link Trap: not Monsters either.
 		EDOPRO_POLICY_CHECK(!belongs_in_extra_deck(card(kTypeLink), rituals));
@@ -374,4 +376,277 @@ EDOPRO_POLICY_TEST(extraDeckTypeIsTheUnconditionalHalfOnly) {
 	EDOPRO_POLICY_CHECK(is_extra_deck_type(card(kTypeMonster | kTypeLink)));
 	EDOPRO_POLICY_CHECK(!is_extra_deck_type(card(kTypeSpell | kTypeLink)));
 	EDOPRO_POLICY_CHECK(!is_extra_deck_type(card(kTypeMonster | kTypeRitual, kScopeRush)));
+}
+
+// ---- Part 3: upstream's deck builder against this project's rule ----
+//
+// deck-placement.md §3.3 records every card shape for which upstream's deck
+// builder (DeckBuilder::push_main / push_extra, gframe/deck_con.cpp:1577-1636)
+// puts a card somewhere other than where this project's rule (the
+// is_extra_deck_card lambda under RITUAL_LOCATION::DEFAULT,
+// gframe/deck_manager.cpp:335-348) puts it. This test is what keeps that
+// record exact: it transcribes the two push functions, runs every
+// combination of the type bits either rule reads in both scopes, and requires
+// the set of cards the two disagree on to be exactly the union of the
+// recorded families - none missing, none extra, each with the outcome the
+// record states and the card count it states.
+//
+// Changing the transcription, the recorded families or belongs_in_extra_deck()
+// without the other two makes this fail.
+namespace {
+
+enum class Lands { Main, Extra, Side };
+
+constexpr const char* name_of(Lands where) {
+	switch(where) {
+	case Lands::Main:
+		return "Main";
+	case Lands::Extra:
+		return "Extra";
+	case Lands::Side:
+		return "Side";
+	}
+	return "?";
+}
+
+bool is_ritual_monster_bits(std::uint32_t type) {
+	return (type & (kTypeMonster | kTypeRitual)) == (kTypeMonster | kTypeRitual);
+}
+
+bool has_fusion_synchro_xyz(std::uint32_t type) {
+	return (type & (kTypeFusion | kTypeSynchro | kTypeXyz)) != 0;
+}
+
+// gframe/deck_con.cpp:1577-1588, DeckBuilder::push_main, the type gates only:
+// forced is false, mainGame->is_siding is false, and the Legend / Skill / 60
+// card refusals at :1590-1601 do not fire (the section is not full).
+//
+//   if(pointer->isRitualMonster()) {
+//   	if(mainGame->is_siding) { ... }
+//   	else if(pointer->isRush() && !forced)
+//   		return false;
+//   }
+//   if(pointer->type & (TYPE_FUSION | TYPE_SYNCHRO | TYPE_XYZ))
+//   	return false;
+//   if((pointer->type & (TYPE_LINK | TYPE_SPELL)) == TYPE_LINK)
+//   	return false;
+bool builder_push_main_accepts(std::uint32_t type, bool rush) {
+	if(is_ritual_monster_bits(type)) {
+		if(rush)
+			return false;
+	}
+	if(type & (kTypeFusion | kTypeSynchro | kTypeXyz))
+		return false;
+	if((type & (kTypeLink | kTypeSpell)) == kTypeLink)
+		return false;
+	return true;
+}
+
+// gframe/deck_con.cpp:1610-1621, DeckBuilder::push_extra, the type gates only,
+// under the same conditions (the 15 card and Legend refusals at :1623-1628 do
+// not fire).
+//
+//   if(pointer->isRitualMonster()) {
+//   	if(mainGame->is_siding) { ... }
+//   	else if(!pointer->isRush() && !forced)
+//   		return false;
+//   } else if(pointer->type & TYPE_LINK) {
+//   	if(pointer->type & TYPE_SPELL)
+//   		return false;
+//   } else if((pointer->type & (TYPE_FUSION | TYPE_SYNCHRO | TYPE_XYZ)) == 0)
+//   	return false;
+bool builder_push_extra_accepts(std::uint32_t type, bool rush) {
+	if(is_ritual_monster_bits(type)) {
+		if(!rush)
+			return false;
+	} else if(type & kTypeLink) {
+		if(type & kTypeSpell)
+			return false;
+	} else if((type & (kTypeFusion | kTypeSynchro | kTypeXyz)) == 0)
+		return false;
+	return true;
+}
+
+// The call sites that add a card unforced outside side-decking try the two
+// pushes in one of two orders and fall back to Side (deck-placement.md §3.2):
+// right-click, deck_con.cpp:725-726, `!push_main(...) && !push_extra(...)`
+// then push_side; middle-click, :767-769, `!push_extra(...) && !push_main(...)`
+// then push_side.
+Lands builder_lands(std::uint32_t type, bool rush, bool main_first) {
+	const bool main = builder_push_main_accepts(type, rush);
+	const bool extra = builder_push_extra_accepts(type, rush);
+	if(main_first) {
+		if(main)
+			return Lands::Main;
+		if(extra)
+			return Lands::Extra;
+	} else {
+		if(extra)
+			return Lands::Extra;
+		if(main)
+			return Lands::Main;
+	}
+	return Lands::Side;
+}
+
+// One recorded family: the cards (type bits + scope) for which the deck
+// builder and this project disagree, with both outcomes and how many
+// (type, scope) combinations of the eight bits it holds. The predicates are
+// written from the family's description in deck-placement.md §3.3, not from
+// the transcription above, so a slip in one is not repeated in the other.
+struct RecordedFamily {
+	const char* id;
+	bool (*matches)(std::uint32_t type, bool rush);
+	Lands upstream_builder;
+	Lands this_project;
+	int cards;
+};
+
+const RecordedFamily kRecordedFamilies[] = {
+	// A: a Link card that is neither a Monster nor a Spell (and not
+	// Fusion/Synchro/Xyz). Builder: push_main refuses it (:1587), push_extra
+	// takes its Link branch (:1617-1619) -> Extra. Project: Link needs the
+	// Monster bit -> Main. {Trap, Ritual} free x 2 scopes.
+	{"A link-not-monster-not-spell",
+	 [](std::uint32_t t, bool) {
+		 return (t & kTypeLink) && !(t & kTypeSpell) && !(t & kTypeMonster) &&
+				!has_fusion_synchro_xyz(t);
+	 },
+	 Lands::Extra, Lands::Main, 8},
+	// B1: Link + Spell + Monster, not Ritual, no Fusion/Synchro/Xyz.
+	// Builder: push_main lets it through (:1587 needs Link without Spell),
+	// push_extra refuses it (:1618) -> Main. Project: Link and Monster ->
+	// Extra. {Trap} free x 2 scopes.
+	{"B1 link-spell-monster",
+	 [](std::uint32_t t, bool) {
+		 return (t & kTypeLink) && (t & kTypeSpell) && (t & kTypeMonster) && !(t & kTypeRitual) &&
+				!has_fusion_synchro_xyz(t);
+	 },
+	 Lands::Main, Lands::Extra, 4},
+	// B2: the same with the Ritual bit, so a Ritual Monster, outside Rush
+	// scope. Builder: push_main lets it through (a non-Rush Ritual Monster
+	// passes :1582, and :1585/:1587 do not fire), push_extra refuses a
+	// non-Rush Ritual Monster (:1615) -> Main. Project: Link and Monster ->
+	// Extra. In Rush scope both agree on Extra (push_main refuses at :1582).
+	// {Trap} free.
+	{"B2 ritual-link-spell-monster-not-rush",
+	 [](std::uint32_t t, bool rush) {
+		 return !rush && is_ritual_monster_bits(t) && (t & kTypeLink) && (t & kTypeSpell) &&
+				!has_fusion_synchro_xyz(t);
+	 },
+	 Lands::Main, Lands::Extra, 2},
+	// C1: a non-Rush Ritual Monster that is also Link, without Spell, no
+	// Fusion/Synchro/Xyz. Builder: push_main refuses (:1587), push_extra
+	// refuses a non-Rush Ritual Monster (:1615) -> Side. Project: Link and
+	// Monster -> Extra. {Trap} free.
+	{"C1 ritual-link-not-spell-not-rush",
+	 [](std::uint32_t t, bool rush) {
+		 return !rush && is_ritual_monster_bits(t) && (t & kTypeLink) && !(t & kTypeSpell) &&
+				!has_fusion_synchro_xyz(t);
+	 },
+	 Lands::Side, Lands::Extra, 2},
+	// C2: a non-Rush Ritual Monster that is also Fusion, Synchro or Xyz (with
+	// any Link/Spell/Trap bits). Builder: push_main refuses (:1585),
+	// push_extra refuses a non-Rush Ritual Monster (:1615) -> Side.
+	// Project: Fusion/Synchro/Xyz -> Extra. 7 x {Link, Spell, Trap} free.
+	{"C2 ritual-fusion-synchro-xyz-not-rush",
+	 [](std::uint32_t t, bool rush) {
+		 return !rush && is_ritual_monster_bits(t) && has_fusion_synchro_xyz(t);
+	 },
+	 Lands::Side, Lands::Extra, 56},
+	// D: not a Ritual Monster, with Link, Spell and at least one of
+	// Fusion/Synchro/Xyz. Builder: push_main refuses (:1585), push_extra
+	// takes its Link branch and refuses the Spell (:1617-1618) and never
+	// reaches the Fusion/Synchro/Xyz test -> Side. Project:
+	// Fusion/Synchro/Xyz -> Extra. 7 x 3 (Monster/Ritual not both) x
+	// {Trap} free x 2 scopes.
+	{"D link-spell-fusion-synchro-xyz-not-ritual-monster",
+	 [](std::uint32_t t, bool) {
+		 return !is_ritual_monster_bits(t) && (t & kTypeLink) && (t & kTypeSpell) &&
+				has_fusion_synchro_xyz(t);
+	 },
+	 Lands::Side, Lands::Extra, 84},
+};
+
+constexpr int kRecordedDisagreements = 8 + 4 + 2 + 2 + 56 + 84;
+
+} // namespace
+
+EDOPRO_POLICY_TEST(deckBuilderPushCascadeDiffersFromTheRuleInExactlyTheRecordedFamilies) {
+	constexpr std::uint32_t kBits[] = {kTypeMonster, kTypeSpell,   kTypeTrap, kTypeFusion,
+									   kTypeRitual,  kTypeSynchro, kTypeXyz,  kTypeLink};
+	constexpr std::uint32_t kCombinations = 1u << 8;
+
+	int checked = 0;
+	int disagreements = 0;
+	int family_cards[std::size(kRecordedFamilies)] = {};
+
+	for(bool rush : {false, true}) {
+		for(std::uint32_t mask = 0; mask < kCombinations; ++mask) {
+			std::uint32_t type = 0;
+			for(std::uint32_t bit = 0; bit < 8; ++bit)
+				if(mask & (1u << bit))
+					type |= kBits[bit];
+			++checked;
+
+			// The order the call sites try the pushes in does not matter, and
+			// no card is accepted by both, so a card lands in exactly one
+			// section or, if both refuse it, in Side.
+			const Lands right_click = builder_lands(type, rush, true);
+			const Lands middle_click = builder_lands(type, rush, false);
+			EDOPRO_POLICY_CHECK_EQ(name_of(right_click), name_of(middle_click));
+			EDOPRO_POLICY_CHECK(!(builder_push_main_accepts(type, rush) &&
+								  builder_push_extra_accepts(type, rush)));
+
+			const Lands ours =
+				belongs_in_extra_deck(card(type, rush ? kScopeOcgTcg | kScopeRush : kScopeOcgTcg),
+									  RitualPlacement::RushInExtra)
+					? Lands::Extra
+					: Lands::Main;
+
+			int matching = 0;
+			const RecordedFamily* family = nullptr;
+			for(std::size_t i = 0; i < std::size(kRecordedFamilies); ++i) {
+				if(kRecordedFamilies[i].matches(type, rush)) {
+					++matching;
+					family = &kRecordedFamilies[i];
+					++family_cards[i];
+				}
+			}
+
+			std::ostringstream label;
+			label << "type 0x" << std::hex << type << (rush ? " (Rush scope)" : " (non-Rush scope)")
+				  << ": deck builder -> " << name_of(right_click) << ", this project -> "
+				  << name_of(ours);
+			if(right_click != ours) {
+				++disagreements;
+				if(matching != 1) {
+					edopro_next::policy::testing::report_failure(
+						__FILE__, __LINE__,
+						label.str() + " is in " + std::to_string(matching) +
+							" recorded families, expected exactly 1");
+				} else if(family->upstream_builder != right_click || family->this_project != ours) {
+					edopro_next::policy::testing::report_failure(
+						__FILE__, __LINE__,
+						label.str() + " but family " + family->id + " records deck builder -> " +
+							name_of(family->upstream_builder) + ", this project -> " +
+							name_of(family->this_project));
+				}
+			} else if(matching != 0) {
+				edopro_next::policy::testing::report_failure(
+					__FILE__, __LINE__,
+					label.str() + " agree, but " + std::to_string(matching) +
+						" recorded family(ies) claim it");
+			}
+		}
+	}
+
+	// 2 scopes x 256 type combinations.
+	EDOPRO_POLICY_CHECK_EQ(checked, 512);
+	for(std::size_t i = 0; i < std::size(kRecordedFamilies); ++i) {
+		const auto& family = kRecordedFamilies[i];
+		EDOPRO_POLICY_CHECK_EQ(std::string(family.id) + ": " + std::to_string(family_cards[i]),
+							   std::string(family.id) + ": " + std::to_string(family.cards));
+	}
+	EDOPRO_POLICY_CHECK_EQ(disagreements, kRecordedDisagreements);
 }
