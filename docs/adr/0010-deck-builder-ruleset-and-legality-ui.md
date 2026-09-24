@@ -236,3 +236,10 @@ source rather than from this ADR's prose.
    warning styling (`Theme.warning`). When legal, a positive indicator is shown (`Theme.success`).
    The user remains free to edit, add/remove cards, and save `.ydk` files at all times.
 
+   **Superseded in part by [ADR 0011](0011-extra-deck-classification.md), Decision 5** (round
+   021): the message wording quoted above claimed what upstream's duel entry would do, which
+   the editor cannot say (upstream's server re-sorts Main and Extra by card type and drops
+   tokens before it validates). The messages now read "Fails as arranged: <reason>" and
+   "Passes as arranged under this ruleset and banlist." The advisory, non-blocking presentation
+   this decision chose is unchanged.
+

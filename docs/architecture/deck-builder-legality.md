@@ -518,6 +518,10 @@ analogue to follow.
    whatever this project builds should be presented as advisory ("this deck would not be
    accepted at duel entry: ..."), matching how loosely upstream's own two mechanisms actually
    relate, not as a hard gate the editor enforces upstream never did either.
+   *Correction (round 021):* the advisory presentation stands, but that example wording does
+   not: it claims what duel entry would do, and the server re-sorts Main and Extra by card type
+   and drops tokens before it validates (deck-placement.md §5.4). The shipped messages say
+   "Fails as arranged: ..." and "Passes as arranged ..." instead (ADR 0011, Decision 5).
 
 **Scheduling is one relevant signal for this recommendation, not the only one.** How soon
 M4's "Lobby and network screens" item is actually expected to start affects the calculus: if

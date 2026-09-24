@@ -19,8 +19,9 @@ numbers refer to those files.
 | Validating at duel entry | `DeckManager::CheckDeckContent`, `gframe/deck_manager.cpp:204-236` | whether a card already in Main or Extra is allowed there (§4) |
 | Adding a card in the deck builder | `DeckBuilder::push_main`/`push_extra`, `gframe/deck_con.cpp:1577-1636`, and the call sites that try them in turn (§3) | whether a section accepts the card; the caller's order of attempts turns that into a placement |
 
-The first two agree on a common rule (§4). The third applies the same rule with
-`RITUAL_LOCATION::DEFAULT`, except for two unusual card shapes (§3.3).
+The first two agree on a common rule (§4). The third is a different piece of code: for most
+type-bit combinations it agrees with that rule under `RITUAL_LOCATION::DEFAULT`, and for six
+families of them it does not (§3.3).
 
 ---
 
@@ -164,13 +165,30 @@ the first that accepts:
 - Right-click on a search result (`:717-727`): after `check_limit` (the copy limit,
   `:719`), Shift sends it to `push_side` (`:721-722`); otherwise
   `if (!push_main(pointer, -1, gGameConfig->ignoreDeckContents) && !push_extra(pointer, -1, gGameConfig->ignoreDeckContents)) push_side(pointer);` (`:725-726`).
-- Middle-click on a search result (`:756-769`, the search-result branch at `:767-769`): `if(!push_extra(pointer) && !push_main(pointer)) push_side(pointer);`.
+- Middle-click (`:744-771`; not while side-decking, `:747-748`), after `check_limit` unless
+  `forceInput` (`:756`), where `forceInput` is
+  `gGameConfig->ignoreDeckContents || event.MouseInput.Shift` (`:624`). It never passes
+  `forced`. On a search result (`:767-769`):
+  `if(!push_extra(pointer) && !push_main(pointer)) push_side(pointer);`. On a card already in
+  Main (`:758-760`): `if(!push_main(pointer)) push_side(pointer);`. On one in Extra
+  (`:761-763`): `if(!push_extra(pointer)) push_side(pointer);`. On one in Side
+  (`:764-766`): `if(!push_side(pointer) && !push_extra(pointer)) push_main(pointer);`.
 - Dragging a card onto a section (`:664-669`) calls that section's push with `forceInput`;
   if it refuses, a card dragged out of a deck section goes back to that section
   (`:672-678`), and one dragged from the search results is not added.
 - Dropping card-name text onto the deck (`:875-878`):
   `push_main(dragging_pointer, hovered_seq, true) || push_extra(dragging_pointer, hovered_seq + is_lastcard, true);`
+- A card dragged from the Side deck (`click_pos == 3`) and released with the right button
+  (`:729-736`): `if(!push_extra(dragging_pointer)) push_main(dragging_pointer);`; from Main or
+  Extra (`:730-733`) it goes to `push_side`.
 - While side-decking, right-click on a Side card (`:700-702`): `if(push_extra(pointer) || push_main(pointer))`.
+
+Every unforced attempt that chooses between Main and Extra tries them in one of two orders:
+Main then Extra (right-click on a search result, `:725`) or Extra then Main (middle-click on
+a search result, `:768`; a card from Side released with the right button, `:735-736`; a
+middle-click on a Side card once Side refuses it, `:765-766`; and, while side-decking only,
+`:701`). The other unforced attempts (`:759`, `:762`, `:674-678`) try only the section the
+card came from (`:759` and `:762` then fall back to Side), and so choose nothing by type.
 
 Tokens never reach any of these: the search result filter rejects them first,
 `gframe/deck_con.cpp:1192`:
@@ -181,7 +199,7 @@ database.
 ### 3.3 What that adds up to
 
 For an ordinary right-click or middle-click add, outside side-decking, with `forced` false
-and the section not full:
+and the section not full ("unforced" below), the ordinary card shapes land like this:
 
 | Card | `push_main` | `push_extra` | Lands in |
 |---|---|---|---|
@@ -192,23 +210,67 @@ and the section not full:
 | Ritual Monster, Rush | refuses (`:1582`) | accepts | Extra |
 | Any other card | accepts | refuses (`:1620`) | Main |
 
-That is `is_extra_deck_card` under `RITUAL_LOCATION::DEFAULT`, row for row. It differs in
-only two shapes, both of which the push functions and the lambda treat differently:
+That is `is_extra_deck_card` under `RITUAL_LOCATION::DEFAULT`, row for row, but it is a list of
+the shapes someone thought of, not of every combination of type bits. The exhaustive statement
+follows.
 
-1. **A card with the Link bit and neither the Monster nor the Spell bit** (for example
-   `TYPE_LINK` alone, or `TYPE_TRAP | TYPE_LINK`). `push_main` refuses it
-   (`(type & (TYPE_LINK | TYPE_SPELL)) == TYPE_LINK`) and `push_extra` accepts it, so it lands
-   in Extra; the lambda requires the Monster bit, so `LoadDeck` puts it in Main.
-2. **A Ritual Monster that is also Fusion, Synchro, Xyz or Link, and not Rush.** `push_main`
-   refuses it for its Fusion/Synchro/Xyz/Link bit and `push_extra` refuses it as a non-Rush
-   Ritual, so right-click falls through to Side; the lambda asks Fusion/Synchro/Xyz/Link
-   first and says Extra.
+**The order of the two attempts does not matter** (§3.2 lists both orders and every place each
+occurs). No card is accepted by both functions: `push_extra` accepts only a Rush Ritual Monster
+(which `push_main` refuses at `:1582`), a card that is not a Ritual Monster, with the Link bit
+and not the Spell bit (which `push_main` refuses at `:1587`), or a card that is not a Ritual
+Monster and not Link, with a Fusion, Synchro or Xyz bit (which `push_main` refuses at
+`:1585`). So the two orders always agree on which of Main and Extra takes a card. When both
+refuse it, the two attempts place nothing, and the call sites that have a fallback push it to
+Side (`:725-726`, `:768-769`); `:735-736` has none. Dragging onto a section and the text drop
+use `forced`, which is out of this table (§6).
 
-Neither shape occurs in the card databases of a local Project Ignis install checked for this
-round (no card with the Link bit and neither Monster nor Spell; no Ritual Monster with a
-Fusion, Synchro, Xyz or Link bit). That check was a read-only SQL count over data this
-project does not commit; it is not reproducible in CI and is not a claim about every
-database a user may load.
+**Where the deck builder and this project's rule differ.** The rule is the lambda under
+`RITUAL_LOCATION::DEFAULT` (§2); the deck builder is the unforced cascade above. Over every
+combination of the eight type bits either one reads (Monster, Spell, Trap, Fusion, Ritual,
+Synchro, Xyz, Link: 256) in both scopes (Rush: `ot & SCOPE_RUSH`; not Rush), 512 combinations
+in all, they disagree on exactly 156, which fall into six families and no others:
+
+| | Card (type bits; scope) | `push_main` | `push_extra` | Deck builder | This project | Combinations |
+|---|---|---|---|---|---|---|
+| A | Link bit; no Monster, Spell, Fusion, Synchro or Xyz bit; either scope | refuses (`:1587`) | accepts (Link branch, `:1617-1619`) | Extra | Main | 8 |
+| B1 | Link, Spell and Monster bits; no Ritual, Fusion, Synchro or Xyz bit; either scope | accepts (`:1587` needs Link without Spell) | refuses (`:1618`) | Main | Extra | 4 |
+| B2 | Ritual Monster with Link and Spell bits; no Fusion, Synchro or Xyz bit; not Rush | accepts | refuses (non-Rush Ritual Monster, `:1615`) | Main | Extra | 2 |
+| C1 | Ritual Monster with the Link bit, no Spell, Fusion, Synchro or Xyz bit; not Rush | refuses (`:1587`) | refuses (`:1615`) | Side | Extra | 2 |
+| C2 | Ritual Monster with at least one Fusion, Synchro or Xyz bit (any Link, Spell, Trap bits); not Rush | refuses (`:1585`) | refuses (`:1615`) | Side | Extra | 56 |
+| D | not a Ritual Monster; Link and Spell bits and at least one Fusion, Synchro or Xyz bit; either scope | refuses (`:1585`) | refuses: the Link branch is taken and refuses the Spell (`:1618`), so the Fusion/Synchro/Xyz test is never reached | Side | Extra | 84 |
+
+The Trap bit is read by neither rule and is free in every family (in A the Ritual bit is free
+too, since without the Monster bit it is not a Ritual Monster); "Ritual Monster" is the
+Monster and Ritual bits together (`isRitualMonster()`, §2.2). A Ritual Monster in Rush scope
+never differs: `push_main` refuses it (`:1582`), `push_extra` accepts it, and the lambda says
+Extra. Tokens never reach the push functions (§3.2), and no other `SCOPE_*` bit is read by
+either rule, so nothing else enters the count. The remaining 356 combinations agree.
+
+The count 156 = 8 + 4 + 2 + 2 + 56 + 84 and the rows above are not asserted by this document
+alone: `policy/tests/test_deck_placement.cpp`,
+`deckBuilderPushCascadeDiffersFromTheRuleInExactlyTheRecordedFamilies`, transcribes
+`push_main` and `push_extra` from the lines quoted in §3.1, runs all 512 combinations, and
+requires the set of cards the cascade and `belongs_in_extra_deck(..., RushInExtra)` disagree
+on to be exactly the union of these six families, each with the two outcomes and the count
+shown. It also checks that the two call-site orders agree and that no card is accepted by both
+pushes. Changing the transcription, the families or the rule without the other two makes it
+fail.
+
+**Which is right at duel entry.** In every one of the six families the section this project
+chooses is the section `LoadDeck` gives the card whatever `RITUAL_LOCATION` the duel uses
+(the test checks this for every differing card), so it is where the server's re-split puts the
+card on the way into a duel (§5.4). The deck builder's answer is either Side (C1, C2, D: the
+card is not placed at all) or a section the re-split moves the card out of (A, B1, B2). What
+duel entry then does with a Ritual Monster in B2, C1 or C2 is §4's hybrid: `LoadDeck` says
+Extra, and `CheckDeckContent`'s Extra callback accepts it only when the duel has
+`DUEL_EXTRA_DECK_RITUAL`. Section 6 records what this project does about all of this.
+
+**Whether any card has these shapes is not claimed.** This record says nothing about which of
+the 156 combinations occur in any card database; the test covers every combination, which does
+not depend on the answer. (An earlier version of this section said that two of these shapes
+were not found in a local Project Ignis install. That was a read-only count over data this
+project does not commit, it covered only two of the six families, and it cannot be reproduced
+in CI, so it is removed rather than restated.)
 
 Three more differences are not about type at all, and are listed in §6 as decisions: the
 61st-card, 16th-card and Legend/Skill refusals that push a card to Side instead; `forced`
@@ -324,10 +386,11 @@ A client sends its deck with Main and Extra concatenated into one list
 then every Main code, then every Extra code). The server rebuilds it with
 `LoadDeckFromBuffer` in the not-separated mode (`generic_duel.cpp:423`) before
 `CheckDeckContent` runs, so upstream re-derives every card's section from its type, under the
-duel's own `RITUAL_LOCATION`, on the way into a duel. A deck whose split disagrees with the
-rule in the editor is, at a real upstream duel entry, re-split rather than rejected - except
-for the Ritual hybrid of §4, which the re-split itself puts where the Extra callback rejects
-it. See §6, "Advisory legality", for what this means for this project's legality messages.
+duel's own `RITUAL_LOCATION`, and drops tokens and unknown codes (§5.1), on the way into a
+duel. A deck whose split disagrees with the rule in the editor is, at a real upstream duel
+entry, re-split rather than rejected - except for the Ritual hybrid of §4, which the re-split
+itself puts where the Extra callback rejects it. See §6, "Legality messages", for what this
+means for this project's legality messages.
 
 ---
 
@@ -359,10 +422,12 @@ rule with (ADR 0011, Decision 1):
 
 All recorded, with reasons, in [ADR 0011](../adr/0011-extra-deck-classification.md):
 
-- **Adding uses the lambda under `DEFAULT`, not the push functions.** The two shapes of §3.3
-  where they differ follow the lambda: a Link-bit card with neither Monster nor Spell goes to
-  Main (upstream's deck builder: Extra), and a non-Rush Ritual Monster that is also
-  Fusion/Synchro/Xyz/Link goes to Extra (upstream's right-click: Side).
+- **Adding uses the lambda under `DEFAULT`, not the push functions.** In the six families of
+  §3.3 (156 of the 512 type-bit and scope combinations) this project follows the lambda: A goes
+  to Main (upstream's deck builder: Extra); B1 and B2 go to Extra (deck builder: Main); C1, C2
+  and D go to Extra (deck builder: Side, that is, not placed). The reason is in ADR 0011,
+  Decision 2: in every family the lambda's answer is where `LoadDeck`, and so the server's
+  re-split at duel entry, puts the card, and the cascade's is not.
 - **No capacity or Legend/Skill fallback.** Upstream sends a card to Side when Main has 60
   cards, Extra has 15, or a Legend/Skill limit is reached; this editor always places by type
   and lets advisory legality report the count (ADR 0010's non-blocking model, and
@@ -383,12 +448,19 @@ All recorded, with reasons, in [ADR 0011](../adr/0011-extra-deck-classification.
   into Extra and drop tokens. Here such a card stays in Main and advisory legality reports it
   when a banlist is selected; saving writes back exactly what was opened plus the user's
   edits.
-- **Advisory legality is unchanged, and §5.4 qualifies it.** The legality banner reports a
-  card in the wrong section as "Would not be accepted at duel entry". §5.4 shows that
-  upstream's server re-splits a deck by type before validating it, so for anything but the
-  Ritual hybrid, a misplaced card would be moved, not rejected, at a real upstream duel
-  entry. The wording predates this round; changing it is outside this round's scope and is
-  raised as an open question in the round report rather than changed silently.
+- **Legality messages describe the deck as arranged, not what duel entry would do.** The
+  computation is unchanged (`policy::validate_deck()` on the sections as the editor holds
+  them), but §5.4 shows the server does not validate that arrangement: it re-derives Main and
+  Extra from card type under the duel's `RITUAL_LOCATION`, and `LoadDeck` drops tokens
+  (`deck_manager.cpp:357`), before it counts or checks anything. So the deck builder's
+  banner no longer says a deck "would not be accepted at duel entry" or is "legal for duel
+  entry". Errors read "Fails as arranged: ..." and a pass reads "Passes as arranged under this
+  ruleset and banlist." The placement error, which used to say a card "belongs in the Main
+  deck, not the Extra deck" even for an Extra Deck card sitting in Main, now says only that the
+  card "is in a section that does not accept it (whether a card goes in the Main deck or the
+  Extra deck follows from its type)". Why each old claim was false, and when the new ones are
+  true, is in ADR 0011, Decision 5. Not changed: the disclosure that no banlist is selected,
+  and "Deck meets this ruleset's size and type limits", which do not speak about duel entry.
 
 ### Tests
 
@@ -400,7 +472,9 @@ All recorded, with reasons, in [ADR 0011](../adr/0011-extra-deck-classification.
   bits either rule reads, in both scopes and both values of the duel flag, that checks the
   lambda against independent transcriptions of `CheckDeckContent`'s two callbacks and runs
   `validate_deck()` on each card in each section. It counts the 120 hybrid disagreements
-  exactly.
+  exactly. A second test over all 512 (type bits, scope) combinations transcribes upstream's
+  `push_main` and `push_extra` and requires the cards on which the deck builder and this
+  project differ to be exactly the six families of §3.3, in both call-site orders.
 - `ui/tests/test_deckbuilder.cpp`: `addCardToDeck()` for each card kind, Ritual and Rush
   Ritual placement, refusal of tokens, unknown codes, code 0 and a missing catalog, and an
   opened `.ydk` keeping its sections. `ui/tests/test_deckbuilder_screen.cpp`: the real

@@ -956,8 +956,12 @@ two data models:
 - `isLegal` (`bool`): `true` if `policy::validate_deck` reports no errors, `false` otherwise.
 - `legalityMessage` (`QString`): Human-readable status message, built entirely in
   `DeckController::validateLegality()` - QML only renders it, never derives wording. With a
-  concrete banlist selected: "Deck is legal for duel entry under this ruleset and banlist." when
-  legal, "Would not be accepted at duel entry: &lt;reason&gt;" when not. **With "No banlist"
+  concrete banlist selected: "Passes as arranged under this ruleset and banlist." when
+  legal, "Fails as arranged: &lt;reason&gt;" when not ("as arranged" is the deck's own
+  sections as the editor holds them; the wording makes no claim about upstream's duel entry,
+  which re-sorts Main and Extra by card type and drops tokens before it validates - ADR 0011,
+  Decision 5; it read "Deck is legal for duel entry ..." / "Would not be accepted at duel
+  entry: ..." until round 021). **With "No banlist"
   selected** (S3, brief 015 reopened corrections): `policy::validate_deck()` takes the same
   short-circuit upstream's null `LFList*` does (§5 above) and never runs the card-scope,
   section-placement or three-copy checks, so the message says so explicitly rather than
