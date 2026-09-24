@@ -350,8 +350,6 @@ void DeckController::validateLegality() {
                 + QStringLiteral(" No banlist is selected: card-scope, section-placement "
                                   "and copy-limit checks are not being made either way.");
         }
-    } else if (newLegal) {
-        newMsg = QStringLiteral("Deck is legal for duel entry under this ruleset and banlist.");
     } else {
         newMsg = formatLegalityError(error);
     }
@@ -399,63 +397,64 @@ QString DeckController::formatLegalityError(const edopro_next::policy::DeckValid
     switch (error.type) {
     case edopro_next::policy::DeckErrorType::MainCount:
         if (error.count.current < error.count.minimum) {
-            return QStringLiteral("Would not be accepted at duel entry: Main deck has %1 cards, fewer than the minimum of %2.")
+            return QStringLiteral("Fails as arranged: Main deck has %1 cards, fewer than the minimum of %2.")
                 .arg(error.count.current)
                 .arg(error.count.minimum);
         } else {
-            return QStringLiteral("Would not be accepted at duel entry: Main deck has %1 cards, exceeding the maximum of %2.")
+            return QStringLiteral("Fails as arranged: Main deck has %1 cards, exceeding the maximum of %2.")
                 .arg(error.count.current)
                 .arg(error.count.maximum);
         }
     case edopro_next::policy::DeckErrorType::ExtraCount:
         if (error.card != edopro_next::data::CardCode::None) {
-            return QStringLiteral("Would not be accepted at duel entry: %1 belongs in the Main deck, not the Extra deck.")
+            return QStringLiteral("Fails as arranged: %1 is in a section that does not accept it "
+                                  "(whether a card goes in the Main deck or the Extra deck follows from its type).")
                 .arg(formatCard(error.card));
         } else if (error.count.current > error.count.maximum) {
-            return QStringLiteral("Would not be accepted at duel entry: Extra deck has %1 cards, exceeding the maximum of %2.")
+            return QStringLiteral("Fails as arranged: Extra deck has %1 cards, exceeding the maximum of %2.")
                 .arg(error.count.current)
                 .arg(error.count.maximum);
         } else {
-            return QStringLiteral("Would not be accepted at duel entry: Extra deck has %1 cards, fewer than the minimum of %2.")
+            return QStringLiteral("Fails as arranged: Extra deck has %1 cards, fewer than the minimum of %2.")
                 .arg(error.count.current)
                 .arg(error.count.minimum);
         }
     case edopro_next::policy::DeckErrorType::SideCount:
         if (error.count.current > error.count.maximum) {
-            return QStringLiteral("Would not be accepted at duel entry: Side deck has %1 cards, exceeding the maximum of %2.")
+            return QStringLiteral("Fails as arranged: Side deck has %1 cards, exceeding the maximum of %2.")
                 .arg(error.count.current)
                 .arg(error.count.maximum);
         } else {
-            return QStringLiteral("Would not be accepted at duel entry: Side deck has %1 cards, fewer than the minimum of %2.")
+            return QStringLiteral("Fails as arranged: Side deck has %1 cards, fewer than the minimum of %2.")
                 .arg(error.count.current)
                 .arg(error.count.minimum);
         }
     case edopro_next::policy::DeckErrorType::UnknownCard:
-        return QStringLiteral("Would not be accepted at duel entry: Unknown card code %1 (not found in database).")
+        return QStringLiteral("Fails as arranged: Unknown card code %1 (not found in database).")
             .arg(static_cast<quint32>(error.card));
     case edopro_next::policy::DeckErrorType::ForbiddenType:
-        return QStringLiteral("Would not be accepted at duel entry: Deck contains cards of a forbidden card type.");
+        return QStringLiteral("Fails as arranged: Deck contains cards of a forbidden card type.");
     case edopro_next::policy::DeckErrorType::TooManyLegends:
-        return QStringLiteral("Would not be accepted at duel entry: Deck exceeds the allowed number of Legend cards.");
+        return QStringLiteral("Fails as arranged: Deck exceeds the allowed number of Legend cards.");
     case edopro_next::policy::DeckErrorType::TooManySkills:
-        return QStringLiteral("Would not be accepted at duel entry: Deck exceeds the allowed number of Skill cards.");
+        return QStringLiteral("Fails as arranged: Deck exceeds the allowed number of Skill cards.");
     case edopro_next::policy::DeckErrorType::CardCount:
-        return QStringLiteral("Would not be accepted at duel entry: %1 exceeds the maximum allowed copy limit.")
+        return QStringLiteral("Fails as arranged: %1 exceeds the maximum allowed copy limit.")
             .arg(formatCard(error.card));
     case edopro_next::policy::DeckErrorType::TcgOnly:
-        return QStringLiteral("Would not be accepted at duel entry: %1 is TCG-only, not allowed under this ruleset.")
+        return QStringLiteral("Fails as arranged: %1 is TCG-only, not allowed under this ruleset.")
             .arg(formatCard(error.card));
     case edopro_next::policy::DeckErrorType::OcgOnly:
-        return QStringLiteral("Would not be accepted at duel entry: %1 is OCG-only, not allowed under this ruleset.")
+        return QStringLiteral("Fails as arranged: %1 is OCG-only, not allowed under this ruleset.")
             .arg(formatCard(error.card));
     case edopro_next::policy::DeckErrorType::UnofficialCard:
-        return QStringLiteral("Would not be accepted at duel entry: %1 is an unofficial or custom card.")
+        return QStringLiteral("Fails as arranged: %1 is an unofficial or custom card.")
             .arg(formatCard(error.card));
     case edopro_next::policy::DeckErrorType::Lflist:
-        return QStringLiteral("Would not be accepted at duel entry: %1 exceeds the banlist limitation count.")
+        return QStringLiteral("Fails as arranged: %1 exceeds the banlist limitation count.")
             .arg(formatCard(error.card));
     case edopro_next::policy::DeckErrorType::None:
-        return QStringLiteral("Deck is legal for duel entry under this ruleset and banlist.");
+        return QStringLiteral("Passes as arranged under this ruleset and banlist.");
     }
-    return QStringLiteral("Would not be accepted at duel entry: Deck is invalid.");
+    return QStringLiteral("Fails as arranged: Deck is invalid.");
 }

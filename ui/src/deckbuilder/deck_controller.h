@@ -164,6 +164,16 @@ public:
     // parse_ydk()/load_ydk() directly.
     const edopro_next::data::Deck& deck() const { return deck_; }
 
+    // The sentence legalityMessage() shows for `error`. Public, and C++-only,
+    // so the tests can pin every message, including the ones no small
+    // synthetic deck reaches. Every message speaks about the deck *as
+    // arranged* in the editor's own sections, never about what upstream's
+    // duel entry would do: the server re-derives Main and Extra from card
+    // type and drops tokens before it validates (deck-placement.md §5.4), so
+    // it can accept a deck this rejects and, with a token present, reject one
+    // this passes.
+    QString formatLegalityError(const edopro_next::policy::DeckValidationError& error) const;
+
     // The RITUAL_LOCATION upstream's deck builder effectively applies when
     // it adds a card outside side-decking: push_main refuses a Rush Ritual
     // Monster and push_extra refuses any other Ritual Monster
@@ -194,7 +204,6 @@ private:
     bool saveToPath(const QString& path);
 
     void validateLegality();
-    QString formatLegalityError(const edopro_next::policy::DeckValidationError& error) const;
     QString formatCard(edopro_next::data::CardCode code) const;
 
     edopro_next::data::Deck deck_;

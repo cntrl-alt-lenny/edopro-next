@@ -711,7 +711,7 @@ void TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() {
     // Initial empty deck: displays MainCount error
     const QString initialMsg = legalityText->property("text").toString();
     QCOMPARE(initialMsg, h.controller.legalityMessage());
-    QVERIFY(initialMsg.startsWith("Would not be accepted at duel entry: Main deck has 0 cards"));
+    QVERIFY(initialMsg.startsWith("Fails as arranged: Main deck has 0 cards"));
 
     // Ruleset and banlist initial names
     const auto rulesetNames = rulesetCombo->property("model").toStringList();
@@ -763,7 +763,7 @@ void TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() {
     h.controller.addCard(1, DeckController::Section::Main);
     h.controller.addCard(1, DeckController::Section::Main);
     QCOMPARE(h.controller.isLegal(), false);
-    QVERIFY(legalityText->property("text").toString().startsWith("Would not be accepted at duel entry: "));
+    QVERIFY(legalityText->property("text").toString().startsWith("Fails as arranged: "));
     QVERIFY(legalityText->property("text").toString().contains("exceeds the maximum allowed copy limit"));
 }
 
