@@ -620,6 +620,15 @@ EDOPRO_POLICY_TEST(deckBuilderPushCascadeDiffersFromTheRuleInExactlyTheRecordedF
 				  << name_of(ours);
 			if(right_click != ours) {
 				++disagreements;
+				// The ADR's argument for following the lambda rests on this: in
+				// every family the section this project picks is the one
+				// LoadDeck gives the card whatever RITUAL_LOCATION the duel
+				// uses, so it is also where the server's re-split puts the card
+				// at duel entry (deck-placement.md §5.4).
+				const auto scope = rush ? kScopeOcgTcg | kScopeRush : kScopeOcgTcg;
+				for(auto rituals : kAllPlacements)
+					EDOPRO_POLICY_CHECK_EQ(belongs_in_extra_deck(card(type, scope), rituals),
+										   ours == Lands::Extra);
 				if(matching != 1) {
 					edopro_next::policy::testing::report_failure(
 						__FILE__, __LINE__,
