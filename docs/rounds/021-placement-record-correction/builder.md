@@ -1,3 +1,12 @@
+<!-- fw-report
+round: 021-placement-record-correction
+role: builder
+branch: builder/021-placement-record-correction
+head: 55155a3d1506d00a4e684078e14315498cc68d5b
+os: macOS 27.0
+python: 3.9.6
+written: 2026-09-24T07:23:24Z
+-->
 # Builder report: 021-placement-record-correction
 
 Code and documentation evidence below is at commit `6a52b92ceba2a1fdb768c9048384d4325860c392` (the
