@@ -18,9 +18,9 @@ milestone table and honest status. Current state: **M0** (foundation) and
 Level 1 (recorded-protocol regression) done and Level 2 (re-simulation
 through `ocgcore`) not started — that is what "duel behaviour is unchanged"
 actually needs; **M3** (deck/card data) has `data/`, `.ydk`, search,
-`policy/` and advisory deck-builder legality done, with automatic
-Main/Extra classification, the legacy sigil search grammar, structured
-filters and full keyboard/controller parity still open; **M4** and **M5**
+`policy/`, advisory deck-builder legality and Main/Extra placement by
+upstream's rule done, with artwork, the legacy sigil search grammar,
+structured filters and full keyboard/controller parity still open; **M4** and **M5**
 not started, M5 (duel field) deliberately last; **M6** (platform and input)
 has local Windows and macOS builds evidenced, with Windows and macOS CI,
 controller navigation, Steam Deck and accessibility still open.
@@ -68,7 +68,10 @@ card search exclusions
 deck legality's null-vs-"N/A" `LFList`, `CHECK_UNOFFICIAL`, `$whitelist` and
 duplicate-code divergences
 ([`architecture/deck-legality.md`](architecture/deck-legality.md), ADR
-0007).
+0007); the deck builder placing an added card by `LoadDeck`'s rule rather
+than upstream's push cascade, and never reclassifying an opened `.ydk`
+([`architecture/deck-placement.md`](architecture/deck-placement.md), ADR
+0011).
 
 ## Parked — do not reopen without new evidence
 
@@ -85,9 +88,9 @@ duplicate-code divergences
 - Round-by-round history (pre-3.0.0): [`state-history.md`](state-history.md).
   Current and future rounds: [`docs/rounds/`](rounds/).
 - Windows/MSVC build detail: [`agents/local/windows-notes.md`](agents/local/windows-notes.md).
-- **Recommended next slice**: M3's remaining deck-builder parts (automatic
-  Main/Extra classification, structured filters, keyboard parity). Still
-  not the duel field.
+- **Recommended next slice**: M3's remaining deck-builder parts (structured
+  filters and the legacy sigil search grammar, keyboard parity, artwork).
+  Still not the duel field.
 
 ## Historical anchors
 
