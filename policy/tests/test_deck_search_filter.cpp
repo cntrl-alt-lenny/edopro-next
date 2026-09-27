@@ -275,7 +275,7 @@ EDOPRO_POLICY_TEST(deckSearchAdmitsExactlyTheCardsUpstreamsSearchLists) {
 							if(expected != actual) {
 								edopro_next::policy::testing::report_failure(
 									__FILE__, __LINE__,
-									"code " + std::to_string(holder.code) + " ot 0x" + std::to_string(ot) +
+									"code " + std::to_string(holder.code) + " ot " + std::to_string(ot) +
 										" type " + std::to_string(type) + " filter " + std::to_string(f) +
 										" anime " + std::to_string(anime) + " list " +
 										(list.ours ? list.ours->name : std::string("none")) +
