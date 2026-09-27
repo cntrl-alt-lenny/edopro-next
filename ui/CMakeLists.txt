@@ -87,6 +87,8 @@ set(EDOPRO_NEXT_SHELL_DECKBUILDER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/card_catalog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/search_results_model.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/search_results_model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/search_filters.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/search_filters.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/deck_section_model.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/deck_section_model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/deck_controller.h

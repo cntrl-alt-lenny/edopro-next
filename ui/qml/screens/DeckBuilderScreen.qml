@@ -12,8 +12,10 @@
 // Deliberately not implemented here: any game rule - legality is computed
 // by policy::validate_deck() and section placement by
 // policy::classify_card(), both through deckController; this file only
-// renders their answers. Not built yet: artwork, archetype-name search,
-// structured filters, controller navigation.
+// renders their answers. The search filters (round 022, ADR 0012) are
+// indexes and text handed to searchResults; matching happens in data/ and
+// policy/, and this file never inspects a card. Not built yet: artwork,
+// archetype-name search, the legacy search grammar, controller navigation.
 
 import QtQuick
 import QtQuick.Controls
@@ -177,8 +179,60 @@ Item {
 
     SearchResultsModel {
         id: searchResults
+        objectName: "searchResults"
         catalog: cardCatalog
+        deckController: deckController
         queryText: searchField.text
+    }
+
+    // A filter drop-down bound to one index on searchResults. The binding is
+    // restored after each user pick, because a user choice assigns
+    // currentIndex and would otherwise break it (the same reason the
+    // ruleset and banlist boxes below re-sync through Connections).
+    component FilterCombo: ComboBox {
+        property int boundIndex: 0
+        signal picked(int index)
+        Layout.fillWidth: true
+        currentIndex: boundIndex
+        onActivated: function(index) {
+            picked(index);
+            currentIndex = Qt.binding(function() { return boundIndex; });
+        }
+        font.family: Theme.fontFamily
+        font.pointSize: Theme.textCaption
+    }
+
+    // A number box bound to one text on searchResults. What the text means
+    // (">=1500", "?", ...) is decided by data::parse_numeric_filter, not here.
+    component FilterField: TextField {
+        property string boundText: ""
+        signal edited(string value)
+        Layout.fillWidth: true
+        Layout.preferredWidth: 60
+        text: boundText
+        onTextEdited: {
+            edited(text);
+            text = Qt.binding(function() { return boundText; });
+        }
+        placeholderText: ">=1500, ?"
+        font.family: Theme.fontFamilyMono
+        font.pointSize: Theme.textCaption
+        color: Theme.textPrimary
+    }
+
+    // Basic style draws a CheckBox label in its palette's window-text
+    // colour, which is dark and unreadable on this theme; set that colour
+    // from Theme rather than replacing the control's own label item.
+    component FilterCheck: CheckBox {
+        font.family: Theme.fontFamily
+        font.pointSize: Theme.textCaption
+        palette.windowText: enabled ? Theme.textPrimary : Theme.textTertiary
+    }
+
+    component FilterLabel: Text {
+        font.family: Theme.fontFamily
+        font.pointSize: Theme.textCaption
+        color: enabled ? Theme.textSecondary : Theme.textTertiary
     }
 
     // SearchResultsModel::refresh() (search_results_model.cpp) always
@@ -411,6 +465,275 @@ Item {
                     font.pointSize: Theme.textBody
                     color: Theme.textPrimary
                     Keys.onDownPressed: resultsList.forceActiveFocus()
+                }
+
+                // ---- Filters: upstream's filter window (gframe/game.cpp:
+                // 661-743). Every control only reports a choice to
+                // searchResults; what it means is decided in data/ and policy/.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.space2
+
+                    Button {
+                        id: filtersToggle
+                        objectName: "filtersToggle"
+                        checkable: true
+                        checked: true
+                        text: (checked ? "Hide filters" : "Show filters")
+                              + (searchResults.filtersActive ? " (active)" : "")
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+                    Item { Layout.fillWidth: true }
+                    Button {
+                        objectName: "clearFiltersButton"
+                        // Upstream's Clear (deck_con.cpp:1363-1397) empties the
+                        // name box too.
+                        text: "Clear"
+                        onClicked: {
+                            searchResults.clearFilters();
+                            searchField.clear();
+                        }
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+                }
+
+                GridLayout {
+                    objectName: "filterGrid"
+                    visible: filtersToggle.checked
+                    Layout.fillWidth: true
+                    columns: 4
+                    columnSpacing: Theme.space2
+                    rowSpacing: Theme.space1
+
+                    FilterLabel { text: "Type" }
+                    FilterCombo {
+                        objectName: "cardTypeCombo"
+                        model: searchResults.cardTypeNames
+                        boundIndex: searchResults.cardType
+                        onPicked: function(index) { searchResults.cardType = index; }
+                    }
+                    FilterLabel { text: "Sub-type"; enabled: searchResults.subTypeEnabled }
+                    FilterCombo {
+                        objectName: "subTypeCombo"
+                        enabled: searchResults.subTypeEnabled
+                        model: searchResults.subTypeNames
+                        boundIndex: searchResults.subType
+                        onPicked: function(index) { searchResults.subType = index; }
+                    }
+
+                    FilterLabel { text: "Attribute"; enabled: searchResults.monsterFiltersEnabled }
+                    FilterCombo {
+                        objectName: "attributeCombo"
+                        enabled: searchResults.monsterFiltersEnabled
+                        model: searchResults.attributeNames
+                        boundIndex: searchResults.attribute
+                        onPicked: function(index) { searchResults.attribute = index; }
+                    }
+                    FilterLabel { text: "Type/race"; enabled: searchResults.monsterFiltersEnabled }
+                    FilterCombo {
+                        objectName: "raceCombo"
+                        enabled: searchResults.monsterFiltersEnabled
+                        model: searchResults.raceNames
+                        boundIndex: searchResults.race
+                        onPicked: function(index) { searchResults.race = index; }
+                    }
+
+                    FilterLabel { text: "ATK"; enabled: searchResults.monsterFiltersEnabled }
+                    FilterField {
+                        objectName: "attackField"
+                        enabled: searchResults.monsterFiltersEnabled
+                        boundText: searchResults.attackText
+                        onEdited: function(value) { searchResults.attackText = value; }
+                    }
+                    FilterLabel { text: "DEF"; enabled: searchResults.defenseEnabled }
+                    FilterField {
+                        objectName: "defenseField"
+                        enabled: searchResults.defenseEnabled
+                        boundText: searchResults.defenseText
+                        onEdited: function(value) { searchResults.defenseText = value; }
+                    }
+
+                    FilterLabel { text: "Level/Rank"; enabled: searchResults.monsterFiltersEnabled }
+                    FilterField {
+                        objectName: "levelField"
+                        enabled: searchResults.monsterFiltersEnabled
+                        placeholderText: "4, <=3"
+                        boundText: searchResults.levelText
+                        onEdited: function(value) { searchResults.levelText = value; }
+                    }
+                    FilterLabel { text: "Scale"; enabled: searchResults.monsterFiltersEnabled }
+                    FilterField {
+                        objectName: "scaleField"
+                        enabled: searchResults.monsterFiltersEnabled
+                        placeholderText: ">=5"
+                        boundText: searchResults.scaleText
+                        onEdited: function(value) { searchResults.scaleText = value; }
+                    }
+
+                    FilterLabel { text: "Limit" }
+                    FilterCombo {
+                        objectName: "limitationCombo"
+                        Layout.columnSpan: 3
+                        model: searchResults.limitationNames
+                        boundIndex: searchResults.limitation
+                        onPicked: function(index) { searchResults.limitation = index; }
+                    }
+
+                    FilterCheck {
+                        objectName: "nonOfficialCheck"
+                        Layout.columnSpan: 4
+                        text: "Show non-official cards (anime, custom, …)"
+                        enabled: searchResults.nonOfficialSwitchEnabled
+                        checked: searchResults.showNonOfficial
+                        onToggled: {
+                            searchResults.showNonOfficial = checked;
+                            checked = Qt.binding(function() { return searchResults.showNonOfficial; });
+                        }
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+
+                    Button {
+                        objectName: "categoriesButton"
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        text: searchResults.selectedCategoryCount > 0
+                              ? ("Effects (" + searchResults.selectedCategoryCount + ")…") : "Effects…"
+                        onClicked: categoriesPopup.open()
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+                    Button {
+                        id: markersButton
+                        objectName: "linkMarkersButton"
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        text: "Link markers…"
+                        onClicked: markersPopup.open()
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.textCaption
+                    }
+                }
+
+                Popup {
+                    id: categoriesPopup
+                    objectName: "categoriesPopup"
+                    modal: true
+                    focus: true
+                    width: 420
+                    height: 360
+                    padding: Theme.space3
+                    background: Rectangle {
+                        color: Theme.surfaceRaised
+                        border.color: Theme.borderStrong
+                        radius: Theme.radiusMd
+                    }
+                    contentItem: ColumnLayout {
+                        spacing: Theme.space2
+                        Text {
+                            Layout.fillWidth: true
+                            // Upstream names these with its string resource,
+                            // which this repository does not include (ADR 0012).
+                            text: "Effect categories: a card matches if it has any selected one."
+                            wrapMode: Text.WordWrap
+                            font.family: Theme.fontFamily
+                            font.pointSize: Theme.textCaption
+                            color: Theme.textSecondary
+                        }
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            clip: true
+                            GridLayout {
+                                columns: 2
+                                Repeater {
+                                    model: searchResults.categoryNames
+                                    FilterCheck {
+                                        id: categoryCheck
+                                        required property int index
+                                        required property string modelData
+                                        objectName: "categoryCheck" + index
+                                        text: modelData
+                                        checked: searchResults.categorySelected(index)
+                                        onToggled: searchResults.setCategorySelected(index, checked)
+                                        Connections {
+                                            target: searchResults
+                                            function onFiltersChanged() {
+                                                categoryCheck.checked = searchResults.categorySelected(categoryCheck.index);
+                                            }
+                                        }
+                                        font.family: Theme.fontFamily
+                                        font.pointSize: Theme.textCaption
+                                    }
+                                }
+                            }
+                        }
+                        Button {
+                            Layout.alignment: Qt.AlignRight
+                            text: "Done"
+                            onClicked: categoriesPopup.close()
+                        }
+                    }
+                }
+
+                Popup {
+                    id: markersPopup
+                    objectName: "markersPopup"
+                    modal: true
+                    focus: true
+                    padding: Theme.space3
+                    background: Rectangle {
+                        color: Theme.surfaceRaised
+                        border.color: Theme.borderStrong
+                        radius: Theme.radiusMd
+                    }
+                    contentItem: ColumnLayout {
+                        spacing: Theme.space2
+                        Text {
+                            text: "A card matches if it has every selected marker."
+                            font.family: Theme.fontFamily
+                            font.pointSize: Theme.textCaption
+                            color: Theme.textSecondary
+                        }
+                        // Upstream's 3x3 layout (game.cpp:734-741): the eight
+                        // markers around an empty centre.
+                        GridLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            columns: 3
+                            Repeater {
+                                model: [0, 1, 2, 3, -1, 4, 5, 6, 7]
+                                Button {
+                                    id: markerButton
+                                    required property int modelData
+                                    Layout.preferredWidth: 40
+                                    Layout.preferredHeight: 40
+                                    // The centre cell keeps the grid's shape
+                                    // and is not a control.
+                                    enabled: modelData >= 0
+                                    opacity: modelData >= 0 ? 1 : 0
+                                    objectName: modelData >= 0 ? ("markerButton" + modelData) : "markerCentre"
+                                    checkable: true
+                                    text: modelData >= 0 ? searchResults.linkMarkerGlyphs[modelData] : ""
+                                    checked: modelData >= 0 && searchResults.linkMarkerSelected(modelData)
+                                    onToggled: searchResults.setLinkMarkerSelected(modelData, checked)
+                                    Connections {
+                                        target: searchResults
+                                        function onFiltersChanged() {
+                                            if (markerButton.modelData >= 0)
+                                                markerButton.checked = searchResults.linkMarkerSelected(markerButton.modelData);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Button {
+                            Layout.alignment: Qt.AlignRight
+                            text: "Done"
+                            onClicked: markersPopup.close()
+                        }
+                    }
                 }
 
                 Rectangle {

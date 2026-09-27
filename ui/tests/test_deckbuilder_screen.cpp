@@ -282,6 +282,10 @@ private slots:
     // Round 020 / ADR 0011: the real screen's add buttons render and use
     // the controller's placement; QML decides nothing.
     void addButtonsFollowTheControllersPlacement();
+
+    // Round 022 (ADR 0012): the real screen's filter controls reach
+    // SearchResultsModel, and are reachable by keyboard.
+    void filterControlsReachTheSearchModel();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -818,6 +822,64 @@ void TestDeckBuilderScreen::addButtonsFollowTheControllersPlacement() {
     QCOMPARE(h.controller.mainCount(), 1);
     QCOMPARE(h.controller.extraCount(), 1);
     QCOMPARE(h.controller.sideCount(), 1);
+}
+
+void TestDeckBuilderScreen::filterControlsReachTheSearchModel() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    cards.push_back(SyntheticCard{401, QStringLiteral("Low"), 0x1, 1000});
+    cards.push_back(SyntheticCard{402, QStringLiteral("Mid"), 0x1, 2000});
+    cards.push_back(SyntheticCard{403, QStringLiteral("High"), 0x1, 3000});
+    cards.push_back(SyntheticCard{404, QStringLiteral("Spell"), 0x2, 0, 0, 0});
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+    QObject* results = h.child("searchResults");
+    QVERIFY(results);
+    auto count = [&]() { return h.child("resultsList")->property("count").toInt(); };
+    QCOMPARE(count(), 4);
+
+    // Each control, as a user drives it: ComboBox::activated and
+    // TextField::textEdited are the signals a real pick and keystroke emit.
+    QVERIFY(QMetaObject::invokeMethod(h.child("cardTypeCombo"), "activated", Q_ARG(int, 1)));
+    QCOMPARE(results->property("cardType").toInt(), 1);
+    QCOMPARE(h.child("cardTypeCombo")->property("currentIndex").toInt(), 1);
+    QCOMPARE(count(), 3);
+    QVERIFY(h.child("attackField")->property("enabled").toBool());
+
+    h.child("attackField")->setProperty("text", QStringLiteral(">=2000"));
+    QVERIFY(QMetaObject::invokeMethod(h.child("attackField"), "textEdited"));
+    QCOMPARE(results->property("attackText").toString(), QStringLiteral(">=2000"));
+    QCOMPARE(count(), 2);
+
+    // The Link sub-type (index 8) disables DEF, as upstream does.
+    QVERIFY(h.child("defenseField")->property("enabled").toBool());
+    QVERIFY(QMetaObject::invokeMethod(h.child("subTypeCombo"), "activated", Q_ARG(int, 8)));
+    QVERIFY(!h.child("defenseField")->property("enabled").toBool());
+    QCOMPARE(count(), 0);
+
+    QVERIFY(QMetaObject::invokeMethod(h.child("limitationCombo"), "activated", Q_ARG(int, 0)));
+    QVERIFY(h.child("nonOfficialCheck")->property("enabled").toBool());
+
+    // Clear resets every control and the result list.
+    QVERIFY(QMetaObject::invokeMethod(h.child("clearFiltersButton"), "clicked"));
+    QCOMPARE(results->property("cardType").toInt(), 0);
+    QCOMPARE(h.child("cardTypeCombo")->property("currentIndex").toInt(), 0);
+    QCOMPARE(h.child("attackField")->property("text").toString(), QString());
+    QCOMPARE(count(), 4);
+
+    // Keyboard: every filter control takes focus by Tab (Qt::TabFocus bit).
+    for (const char* name : {"cardTypeCombo", "subTypeCombo", "attributeCombo", "raceCombo", "attackField",
+                              "defenseField", "levelField", "scaleField", "limitationCombo",
+                              "nonOfficialCheck", "categoriesButton", "linkMarkersButton",
+                              "clearFiltersButton", "filtersToggle"}) {
+        QObject* control = h.child(name);
+        QVERIFY2(control, name);
+        QVERIFY2(control->property("focusPolicy").toInt() & Qt::TabFocus, name);
+    }
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)
