@@ -442,9 +442,10 @@ All recorded, with reasons, in [ADR 0011](../adr/0011-extra-deck-classification.
   way to place a card against the rule, and the screen offers it only for Side.
 - **No side-decking.** This editor has no between-games side-decking, so the push functions'
   `is_siding` branch has no counterpart.
-- **Tokens are never placed, including in Side.** Upstream never offers one (§3.2); here the
-  search does show tokens (card search is out of this round's scope), so both add buttons are
-  disabled for one and `addCardToDeck()` refuses it.
+- **Tokens are never placed, including in Side.** Upstream never offers one (§3.2). Round 020
+  left tokens in this project's search results, so both add buttons are disabled for one and
+  `addCardToDeck()` refuses it. Since round 022 the search hides tokens as upstream's does
+  (ADR 0012, Decision 4); the refusal stays, for a token reached another way.
 - **Opening a `.ydk` does not reclassify.** ADR 0004, Decision 2 stands: the deck shows what
   the file says. Upstream's deck builder opens in separated mode and would move a
   Fusion/Synchro/Xyz/Link Monster (or, under `DEFAULT`, a Rush Ritual Monster) out of `#main`

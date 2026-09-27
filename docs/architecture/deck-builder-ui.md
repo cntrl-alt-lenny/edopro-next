@@ -854,8 +854,10 @@ is driven by the nav rail), and not part of ordinary interactive use.
 ## 12. What remains before the M3 roadmap item can be checked
 
 - Artwork: no image loading, downloading, or caching of any kind.
-- The legacy sigil search grammar / archetype-name resolution (`card-search.md`§1.1), and
-  structured filters - only plain text search is wired up.
+- The legacy sigil search grammar / archetype-name resolution (`card-search.md`§1.1),
+  including upstream's card-code lookup from the search box. Upstream's filter window is
+  wired up since round 022 (§15), with non-descriptive labels for the 32 effect categories,
+  whose names are in a string resource this repository does not have (ADR 0012, Decision 5).
 - Full keyboard and controller parity (§11 covers only the core interactions).
 - `.ydke`/Base64 import-export (`deck-model.md`§8).
 - An end-to-end proof through upstream's own GUI/file-picker interaction - still not
@@ -991,3 +993,40 @@ In accordance with ADR 0010 Decision 3:
 - Below the section headers, a `legalityBox` status banner displays `deckController.legalityMessage`,
   styled with `Theme.warning` when illegal and `Theme.success` when legal.
 
+## 15. Search filters (round 022, ADR 0012)
+
+The search pane has upstream's filter window (`gframe/game.cpp:661-743`): card type and
+sub-type, attribute, race, ATK, DEF, Level/Rank and Scale boxes, an "Effects…" popup with the
+32 effect-category check boxes, a "Link markers…" popup with the eight markers in upstream's
+3x3 layout, the limit list, the "Show non-official cards" switch, and Clear. A "Hide filters"
+button folds the grid away.
+
+- **Who decides what.** `SearchResultsModel` (`ui/src/deckbuilder/search_results_model.h`)
+  holds the user's choices as indexes and text and offers the labels.
+  `ui/src/deckbuilder/search_filters.{h,cpp}` holds upstream's option tables (values and
+  order, cited) and copies the choices into a `data::SearchQuery`; the text of a number box
+  becomes a comparison in `data::parse_numeric_filter`, and `CardSearchIndex` matches. The
+  banlist-dependent part - hidden cards, the whitelist, the limit list - is
+  `policy::deck_search_admits`, applied to the ranked results before the 200-result cap,
+  against `deckController`'s selected banlist. QML sets indexes and text and renders labels;
+  it inspects no card.
+- **Upstream's own interplay, reproduced in the model:** changing the card type clears the
+  sub-type, attribute, race and number boxes (`deck_con.cpp:525-532`); the Monster-only
+  controls are disabled unless the card type is Monster; choosing the Link sub-type disables
+  and clears DEF (`:577-583`); the non-official switch is disabled with a whitelist
+  (`game.cpp:3420-3436`); the limit list's choices follow the banlist and the switch
+  (`:3412-3442`).
+- **What differs from upstream** (ADR 0012, Decision 6): the search re-runs on every change
+  rather than on Enter or a button; Clear leaves every visible card listed rather than an
+  empty list; a limit choice survives a change of list only if it is still offered; the
+  switch is not saved between runs; card labels are English and not upstream's strings.
+- **Keyboard.** Every filter control takes focus with Tab (`focusPolicy` includes
+  `Qt.TabFocus`, pinned by `filterControlsReachTheSearchModel`). Full keyboard parity for the
+  screen is still open (§12).
+- **Tests.** `searchFiltersDriveEveryUpstreamControl`, `searchHidesWhatUpstreamHidesByDefault`,
+  `limitFilterFollowsTheSelectedBanlist` and `cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes`
+  (`ui/tests/test_deckbuilder.cpp`) drive every control through the adapter against a
+  synthetic database; `filterControlsReachTheSearchModel` (`ui/tests/test_deckbuilder_screen.cpp`)
+  drives the real screen's controls.
+- **Visual check** (round 022): a `--capture` of the Decks screen with a synthetic database and
+  banlist, at the default 1280x800 window, showing the filter grid in its default state.
