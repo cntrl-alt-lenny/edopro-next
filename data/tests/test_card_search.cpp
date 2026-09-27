@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "synthetic_cdb.h"
@@ -1061,4 +1062,43 @@ EDOPRO_DATA_TEST(exact_code_for_a_missing_code_with_a_non_matching_text_query_ma
 	query.exact_code = CardCode{999};
 	query.text = "Nonexistent Keyword";
 	EDOPRO_DATA_CHECK(index.search(query).empty());
+}
+
+// ---------------------------------------------------------------------
+// type_equals: upstream's Spell/Trap sub-type filter compares the whole type
+// word (`data._data.type != filter_type2`, gframe/deck_con.cpp:1233, :1240),
+// so "Normal Spell" (TYPE_SPELL, game.cpp:3396) is exactly TYPE_SPELL.
+// ---------------------------------------------------------------------
+
+EDOPRO_DATA_TEST(type_equals_matches_the_whole_type_word_not_a_subset) {
+	constexpr std::uint32_t kTypeSpell = 0x2;
+	constexpr std::uint32_t kTypeQuickPlay = 0x10000;
+	TempFile file("type_equals");
+	sqlite3* db = open_writable(file.path());
+	create_datas_texts_schema(db);
+	for(auto [id, type] : {std::pair<std::uint32_t, std::uint32_t>{1, kTypeSpell},
+						   {2, kTypeSpell | kTypeQuickPlay},
+						   {3, kTypeMonster}}) {
+		DataRow row{id};
+		row.type = type;
+		insert_data_row(db, row);
+		TextRow text;
+		text.id = id;
+		text.name = "card" + std::to_string(id);
+		insert_text_row(db, text);
+	}
+	sqlite3_close(db);
+	CardDatabase catalogue;
+	EDOPRO_DATA_CHECK(catalogue.load_database(file.path()).ok);
+	CardSearchIndex index;
+	index.rebuild(catalogue);
+
+	SearchQuery normal_spell;
+	normal_spell.type_equals = kTypeSpell;
+	EDOPRO_DATA_CHECK_EQ(codes(index.search(normal_spell)), (std::vector<CardCode>{CardCode{1}}));
+	// The all-bits `type` filter with the same value finds both Spells.
+	SearchQuery any_spell;
+	any_spell.type = BitmaskFilter{kTypeSpell};
+	EDOPRO_DATA_CHECK_EQ(codes(index.search(any_spell)),
+						 (std::vector<CardCode>{CardCode{1}, CardCode{2}}));
 }
