@@ -1,3 +1,12 @@
+<!-- fw-report
+round: 022-deck-builder-filters
+role: builder
+branch: builder/022-deck-builder-filters
+head: 15b7560a579af5f7839549c8a585042d5c9b86e6
+os: macOS 27.0
+python: 3.9.6
+written: 2026-09-27T16:50:32Z
+-->
 # Builder report: 022-deck-builder-filters
 
 Evidence below is at commit `da45ceeefc62ba731a1f0468b526f27d3980c08a` (the last code/docs
