@@ -15,9 +15,10 @@ a reimplementation of them.
 It is not the complete M3 "Deck builder UI" roadmap item. Legality validation, ruleset
 selection and banlist selection are integrated (see §14 and [ADR 0010](../adr/0010-deck-builder-ruleset-and-legality-ui.md)),
 and adding a card places it in Main or Extra by upstream's rule (§7.2 and
-[ADR 0011](../adr/0011-extra-deck-classification.md)), but there is still no artwork, no
-archetype-name search, no structured filters, no controller/gamepad navigation, and no full
-keyboard parity with upstream.
+[ADR 0011](../adr/0011-extra-deck-classification.md)), and search has upstream's filter
+window (§15 and [ADR 0012](../adr/0012-deck-builder-search-filters.md)), but there is still
+no artwork, no archetype-name search or legacy search grammar, no controller/gamepad
+navigation, and no full keyboard parity with upstream.
 `docs/ROADMAP.md`'s M3 entry stays unchecked. See §12.
 
 
@@ -197,8 +198,9 @@ anywhere in this slice, since nothing in this PR's scope needs a non-default loc
 
 ## 6. Search model
 
-`SearchResultsModel::refresh()` builds a `SearchQuery{ .text = queryText_, .limit = 200 }` and
-calls `CardCatalog::searchIndex().search()` - `data/`'s own linear-scan implementation,
+`SearchResultsModel::refresh()` builds a `SearchQuery` from `queryText_` and, since round 022,
+the filter choices (§15), and calls `CardCatalog::searchIndex().search()` - `data/`'s own
+linear-scan implementation,
 unmodified and un-wrapped, matching M3D1's own instruction that the measured single-digit-
 millisecond scan (`card-search.md`§10) needs no async worker, debounce, or second index for a
 QML text field. Every keystroke updates `queryText` (`Q_PROPERTY` binding from
@@ -212,9 +214,10 @@ search algorithm exist in QML or anywhere in this UI layer - `queryText` is hand
 auxiliary `str1..str16` text columns are never searched (`data/`'s own established scope,
 `card-database.md`).
 
-Only one filter exists in this slice: free text. No structured filter fell out naturally
-enough to include without expanding scope, so none was added (`SearchQuery`'s other typed
-fields - `exact_code`, static metadata filters - are simply left unset).
+Round 022 added upstream's filter window (§15): the static metadata fields of `SearchQuery`
+are now set from the user's choices, and `policy::deck_search_admits` filters the results
+before the 200-result cap, which is applied in the model rather than through
+`SearchQuery::limit`. `exact_code` is still left unset.
 
 ---
 
