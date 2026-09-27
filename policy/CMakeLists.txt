@@ -40,6 +40,7 @@ add_library(edopro_next_legality STATIC
     src/lf_list.cpp
     src/deck_placement.cpp
     src/deck_validation.cpp
+    src/deck_search_filter.cpp
 )
 
 target_include_directories(edopro_next_legality
@@ -137,4 +138,21 @@ if(EDOPRO_NEXT_LEGALITY_TESTS)
         endif()
     endif()
     add_test(NAME deck_placement COMMAND test_deck_placement)
+
+    # The banlist-dependent half of the deck builder's search
+    # (deck_search_filter.h, ADR 0012), against a transcription of upstream.
+    add_executable(test_deck_search_filter tests/test_deck_search_filter.cpp)
+    target_link_libraries(test_deck_search_filter PRIVATE edopro_next_legality_test_main)
+    if(MSVC)
+        target_compile_options(test_deck_search_filter PRIVATE /W4)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_deck_search_filter PRIVATE /WX)
+        endif()
+    else()
+        target_compile_options(test_deck_search_filter PRIVATE -Wall -Wextra)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_deck_search_filter PRIVATE -Werror)
+        endif()
+    endif()
+    add_test(NAME deck_search_filter COMMAND test_deck_search_filter)
 endif()

@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -139,6 +140,19 @@ struct LfListLoadResult {
 // returned lists/ignored are both empty, exactly like CardDatabase's
 // LoadResult and edopro_next::data::load_ydk()'s YdkLoadResult.
 LfListLoadResult load_lflist(const std::filesystem::path& path);
+
+// The count `list` gives a card, or std::nullopt when it has no entry for
+// it. Mirrors gframe/deck_manager.h:23-30's LFList::GetLimitationIterator
+// exactly: look up by exact `code` first; only on a miss, and only if
+// `alias` is present, fall back to `alias` - and even then, only if the list
+// is not a whitelist, or the code/alias pair is within the artwork-offset
+// window (CardDataC::IsInArtworkOffsetRange, gframe/data_manager.h:76-85).
+// Used by validate_deck()'s banlist check and by the deck builder's
+// banlist-status search filter (deck_search_filter.h), which upstream both
+// resolve through that same function (deck_manager.cpp:197,
+// deck_con.cpp:1255).
+std::optional<std::int32_t> limitation_for(const LfList& list, data::CardCode code,
+											data::CardCode alias);
 
 } // namespace edopro_next::policy
 

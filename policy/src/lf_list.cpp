@@ -14,6 +14,19 @@ namespace edopro_next::policy {
 
 namespace {
 
+// Mirrors gframe/data_manager.h:76-85's CardDataC::IsInArtworkOffsetRange()
+// (the caller has already checked that `alias` is set): an
+// unsigned-subtraction idiom for "the absolute difference is less than 10",
+// correct under wraparound regardless of which of the two values is larger -
+// reproduced with the exact same two-sided check rather than a signed
+// subtraction + abs(), to match upstream's own arithmetic exactly.
+bool is_in_artwork_offset_range(data::CardCode code, data::CardCode alias) {
+	constexpr std::uint32_t kOffset = 10;
+	const auto c = data::to_number(code);
+	const auto a = data::to_number(alias);
+	return (a - c < kOffset) || (c - a < kOffset);
+}
+
 // Verified against gframe/deck_manager.cpp:57 (the `!Name` handler) and
 // :84-85 (the final flush) - upstream seeds every new section's hash with
 // this exact literal, and treats a hash still equal to 0 as "no section has
@@ -407,6 +420,21 @@ LfListLoadResult load_lflist(const std::filesystem::path& path) {
 	result.ignored = parsed.ignored;
 	return result;
 #endif
+}
+
+// This is a deliberately DIFFERENT resolution order than validate_deck()'s
+// shared copy-count key (which prefers alias first) - both are reproduced
+// exactly as upstream keeps them distinct.
+std::optional<std::int32_t> limitation_for(const LfList& list, data::CardCode code,
+											data::CardCode alias) {
+	if(auto it = list.content.find(code); it != list.content.end())
+		return it->second;
+	if(alias != data::CardCode::None) {
+		if(!list.whitelist || is_in_artwork_offset_range(code, alias))
+			if(auto it = list.content.find(alias); it != list.content.end())
+				return it->second;
+	}
+	return std::nullopt;
 }
 
 } // namespace edopro_next::policy
