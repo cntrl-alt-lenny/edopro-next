@@ -247,6 +247,9 @@ private slots:
     void searchHidesWhatUpstreamHidesByDefault();
     void limitFilterFollowsTheSelectedBanlist();
     void cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes();
+    // Round 023: each number box reaches its own card field, read as
+    // upstream types it (deck_con.h:115-122).
+    void numberBoxesReadTheFieldUpstreamReads();
 
     // Round 021: no legality message claims anything about upstream's duel
     // entry, which re-derives Main and Extra from card type and drops tokens
@@ -1612,6 +1615,66 @@ void TestDeckBuilder::cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes() {
     QCOMPARE(model.attackText(), QString());
     QCOMPARE(model.levelText(), QString());
     QCOMPARE(model.scaleText(), QString());
+}
+
+void TestDeckBuilder::numberBoxesReadTheFieldUpstreamReads() {
+    // Cards that tell the four boxes apart: a "?" DEF, a "?" ATK, a negative
+    // packed level (data_manager.cpp:146-150 stores level -1 as the unsigned
+    // 4294967041), and a Pendulum card whose left and right scales differ
+    // (:152-153).
+    QList<SyntheticCard> cards;
+    cards.push_back(SyntheticCard{601, QStringLiteral("Card601"), kMonster | kEffect, 1500, -2, 4});
+    cards.push_back(SyntheticCard{602, QStringLiteral("Card602"), kMonster | kEffect, -2, 1500, 4});
+    cards.push_back(SyntheticCard{603, QStringLiteral("Card603"), kMonster | kEffect, 1000, 1000, -1});
+    cards.push_back(SyntheticCard{604, QStringLiteral("Card604"), kMonster | kEffect | kPendulum, 1000, 1000,
+                                  (2 << 24) | (7 << 16) | 4});
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards)}));
+    SearchResultsModel model;
+    model.setCatalog(&catalog);
+    model.setCardType(indexOf(model.cardTypeNames(), "Monster"));
+
+    using L = QList<quint32>;
+    QCOMPARE(resultCodes(model), (L{601, 602, 603, 604}));
+
+    // ATK and DEF are signed, and "?" and the "at most" forms treat -2 as
+    // upstream does (deck_con.cpp:1203-1213); each box reads its own field.
+    model.setAttackText("?");
+    QCOMPARE(resultCodes(model), (L{602}));
+    model.setAttackText("<=1500");
+    QCOMPARE(resultCodes(model), (L{601, 603, 604}));
+    model.setAttackText(QString());
+    model.setDefenseText("?");
+    QCOMPARE(resultCodes(model), (L{601}));
+    model.setDefenseText("<=1500");
+    QCOMPARE(resultCodes(model), (L{602, 603, 604}));
+    model.setDefenseText(QString());
+
+    // Level is unsigned (filter_lv is uint32_t): the wrapped negative level
+    // is found by its unsigned value, and ">=2147483648" does not wrap into
+    // a negative bound that keeps every card (:1216-1218).
+    model.setLevelText("4");
+    QCOMPARE(resultCodes(model), (L{601, 602, 604}));
+    model.setLevelText("4294967041");
+    QCOMPARE(resultCodes(model), (L{603}));
+    model.setLevelText(">=2147483648");
+    QCOMPARE(resultCodes(model), (L{603}));
+    model.setLevelText(QString());
+
+    // Scale reads the left scale only, unsigned, Pendulum cards only
+    // (:1222-1224).
+    model.setScaleText("2");
+    QCOMPARE(resultCodes(model), (L{604}));
+    model.setScaleText("7");
+    QCOMPARE(resultCodes(model), L{});
+    model.setScaleText(">=5");
+    QCOMPARE(resultCodes(model), L{});
+    model.setScaleText("<=2");
+    QCOMPARE(resultCodes(model), (L{604}));
+    model.setScaleText(">=2147483648");
+    QCOMPARE(resultCodes(model), L{});
 }
 
 QTEST_MAIN(TestDeckBuilder)
