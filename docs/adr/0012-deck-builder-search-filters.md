@@ -127,10 +127,15 @@ marker bits, limit filters) are upstream's, in upstream's order, cited in
 
 ## Decision 6 — What deliberately differs from upstream's filter window
 
-- **When the search runs.** Upstream runs it on Enter, on a combo box change, on the category
-  and marker OK buttons, and on typing in ATK/DEF only once the text is longer than two
-  characters (`deck_con.cpp:471-516`). Here every change re-runs it. The cards found for a
-  given set of choices are the same.
+- **When the search runs.** Upstream runs it on its Search button (`deck_con.cpp:338-341`);
+  on Enter in the name, ATK, DEF, Level or Scale box (`:471-481`); on every change to the
+  Level or Scale box (`:498-501`); on a change to the ATK, DEF or name box only once its text
+  is longer than two characters (`:486-497`); on a change of card type, sub-type, attribute,
+  race, limit or banlist (`:512-515`, `:525-586`); on the non-official switch (`:607-612`);
+  and on the link markers' OK button (`:446-466`). The effect categories' OK button does not
+  run it: it records the chosen categories and closes the window, and they apply at the next
+  search (`:346-354`). Here every change re-runs it, the categories included. The cards found
+  for a given set of choices are the same.
 - **Clear.** Upstream's Clear resets the filters and the name box and empties the result list
   until the next search (`deck_con.cpp:1363-1397`). Here Clear resets the same filters and the
   search text, and the list shows every visible card, as it does whenever nothing is typed
