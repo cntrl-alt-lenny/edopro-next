@@ -1027,9 +1027,63 @@ button folds the grid away.
   `Qt.TabFocus`, pinned by `filterControlsReachTheSearchModel`). Full keyboard parity for the
   screen is still open (§12).
 - **Tests.** `searchFiltersDriveEveryUpstreamControl`, `searchHidesWhatUpstreamHidesByDefault`,
-  `limitFilterFollowsTheSelectedBanlist` and `cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes`
-  (`ui/tests/test_deckbuilder.cpp`) drive every control through the adapter against a
-  synthetic database; `filterControlsReachTheSearchModel` (`ui/tests/test_deckbuilder_screen.cpp`)
+  `limitFilterFollowsTheSelectedBanlist`, `cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes`
+  and `numberBoxesReadTheFieldUpstreamReads` (`ui/tests/test_deckbuilder.cpp`) drive every
+  control through the adapter against a synthetic database - the last with cards that tell
+  the four number boxes apart, so a box wired to the wrong field (Scale to the right scale) or
+  read as the wrong kind (Level as signed ATK) fails; `filterControlsReachTheSearchModel` (`ui/tests/test_deckbuilder_screen.cpp`)
   drives the real screen's controls.
 - **Visual check** (round 022): a `--capture` of the Decks screen with a synthetic database and
-  banlist, at the default 1280x800 window, showing the filter grid in its default state.
+  banlist, at the default 1280x800 window, showing the filter grid in its default state. It
+  did not look at the 960x600 minimum, where round 022's grid did not fit; §15.1 records the
+  correction.
+
+### 15.1 The filters at the 960x600 minimum (round 023)
+
+**What was wrong.** Round 022's grid was a plain `GridLayout` in the search column, four
+columns wide, at its natural height. Two things made it overflow at 960x600, where the screen
+beside the compact nav rail is 896x600 and the search column's share is 277 pixels:
+
+- *Width.* The "Show non-official cards" check box had no `Layout.fillWidth`, so the grid gave
+  it its full text width, wider than the column. The grid, and with it the column's contents,
+  grew past the column (the search box measured 314 pixels wide in a 277-pixel column): the search box, Clear, the right-hand filter column, the limit list and
+  "Link markers…" ran over the divider into the deck column. At 1280x800 the column is wide
+  enough, which is why round 022's capture looked right.
+- *Height.* The grid took its full height, about 300 pixels in the capture, before the results list got any,
+  so on a 600-pixel window the results were left about one row.
+
+**What this round does**, all in `DeckBuilderScreen.qml`:
+
+1. The grid is as wide as the column and never wider. The check box fills its row and wraps
+   its label instead of widening the grid.
+2. The grid has four columns when the column is at least 300 pixels wide, and two below that.
+   At 300 pixels four columns leave each control about 80 pixels, enough for the ">=1500, ?"
+   hint (measured in the 1280x800 capture, where the column is about 303 pixels and four
+   columns are used). Two columns at 960x600 leave each control about 120 pixels.
+3. The grid sits in a `ScrollView` that is never taller than the grid, can shrink to about two
+   rows, and gives up height before the results do: the results frame has a floor of 160 pixels,
+   about three result rows. On a tall window nothing scrolls; on a short one the filters scroll
+   and a vertical bar is shown, in its own gutter, whenever rows are hidden.
+4. A `Flickable` does not follow keyboard focus, so when Tab moves focus to a filter control
+   below or above the visible rows, the screen scrolls it into view. Every control keeps its
+   Tab focus.
+
+**Alternatives not taken.** Hiding the filters by default on a small window would have kept the
+results large, but the brief asks for the layout with the filters shown, and a user who never
+presses "Show filters" would not know they exist. Narrowing the card-details pane to widen the
+search column would have undone §10.6's floor for the preview. A second window or popup for the
+filters, as upstream has, would have been a larger change than the defect needs.
+
+**How it is checked.** `searchPaneFitsItsColumnAtMinimumAndDefaultSizes`
+(`ui/tests/test_deckbuilder_screen.cpp`) loads the real screen in the Basic style the shell
+uses, at the screen sizes 960x600 and 1280x800 give beside the nav rail, and requires that every
+search-column control lies inside the column, that the column ends before the deck column
+starts, that the result list shows a second row, and that focusing the last and first filter
+controls scrolls each into view. Run against round 022's layout it fails on the search box
+(wider than the column at 960x600); with the filter area not allowed to shrink it fails on the
+result rows; without the focus handling it fails on "Link markers…". Captures at both sizes, with
+a synthetic database, are described in round 023's builder report.
+
+**Not changed.** The pane shares (§10.6) and the deck column: at 960x600 the Ruleset and Banlist
+boxes cut their current text short ("Standar", "No ban"), in round 022's capture and in this
+round's alike. That is truncation inside the box, not overlap, and this round leaves it.

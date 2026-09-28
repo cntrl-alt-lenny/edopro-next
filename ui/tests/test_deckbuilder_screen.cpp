@@ -21,6 +21,8 @@
 #include <QPair>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickItem>
+#include <QQuickStyle>
 #include <QQuickWindow>
 #include <QTemporaryDir>
 #include <QTest>
@@ -197,6 +199,11 @@ class TestDeckBuilderScreen : public QObject {
     Q_OBJECT
 
 private slots:
+    // The shell draws every control in the Basic style (main.cpp); load the
+    // screen in that style too, so sizes measured here are the shipped ones
+    // and not the platform style's.
+    void initTestCase() { QQuickStyle::setStyle(QStringLiteral("Basic")); }
+
     // A) no-catalog editor remains usable
     void noCatalogDeckEditorStaysFunctional();
 
@@ -286,6 +293,9 @@ private slots:
     // Round 022 (ADR 0012): the real screen's filter controls reach
     // SearchResultsModel, and are reachable by keyboard.
     void filterControlsReachTheSearchModel();
+    // The filters and the results fit the search column at the shell's
+    // smallest and default screen sizes (deck-builder-ui.md §15.1).
+    void searchPaneFitsItsColumnAtMinimumAndDefaultSizes();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -879,6 +889,103 @@ void TestDeckBuilderScreen::filterControlsReachTheSearchModel() {
         QObject* control = h.child(name);
         QVERIFY2(control, name);
         QVERIFY2(control->property("focusPolicy").toInt() & Qt::TabFocus, name);
+    }
+}
+
+namespace {
+
+// Every control in the search column that round 022 added or moved.
+constexpr const char* kSearchColumnControls[] = {
+    "searchField", "filtersToggle", "clearFiltersButton", "cardTypeCombo", "subTypeCombo",
+    "attributeCombo", "raceCombo", "attackField", "defenseField", "levelField", "scaleField",
+    "limitationCombo", "nonOfficialCheck", "categoriesButton", "linkMarkersButton"};
+
+QQuickItem* item(const Harness& h, const char* name) {
+    return qobject_cast<QQuickItem*>(h.child(name));
+}
+
+} // namespace
+
+void TestDeckBuilderScreen::searchPaneFitsItsColumnAtMinimumAndDefaultSizes() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    for (quint32 code = 501; code <= 530; ++code)
+        cards.push_back(SyntheticCard{code, QStringLiteral("Synthetic %1").arg(code)});
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    QVERIFY(window);
+    QVERIFY(h.child("filtersToggle")->property("checked").toBool()); // filters shown, the default
+
+    // The screen's share of Main.qml's window: the window minus the nav
+    // rail, compact below Theme.breakpointCompact (Theme.qml, NavRail.qml).
+    // 960x600 is Main.qml's minimumWidth/minimumHeight; 1280x800 its default.
+    struct Size {
+        int window_width;
+        int rail_width;
+        int height;
+    };
+    for (const Size size : {Size{960, 64, 600}, Size{1280, 216, 800}}) {
+        const QString at = QStringLiteral("%1x%2").arg(size.window_width).arg(size.height);
+        window->resize(size.window_width - size.rail_width, size.height);
+        // Nested layouts settle over more than one polish pass; wait until
+        // the deck pane has been placed for the new width.
+        QTRY_VERIFY(qobject_cast<QQuickItem*>(h.child("deckPane"))->x() > 0
+                    && qFuzzyCompare(qobject_cast<QQuickItem*>(h.screen())->width(),
+                                     qreal(size.window_width - size.rail_width)));
+        QTest::qWait(100);
+        QQuickItem* pane = item(h, "searchPane");
+        QQuickItem* deckPane = item(h, "deckPane");
+        QVERIFY(pane && deckPane);
+        const QRectF paneRect = pane->mapRectToScene(QRectF(0, 0, pane->width(), pane->height()));
+        const qreal deckLeft = deckPane->mapToScene(QPointF(0, 0)).x();
+        QVERIFY2(paneRect.right() <= deckLeft,
+                 qPrintable(at + QStringLiteral(" search pane %1..%2, deck pane from %3")
+                                     .arg(paneRect.left()).arg(paneRect.right()).arg(deckLeft)));
+
+        // Nothing runs past the column, horizontally or vertically.
+        for (const char* name : kSearchColumnControls) {
+            QQuickItem* control = item(h, name);
+            QVERIFY2(control, name);
+            const QRectF r = control->mapRectToScene(QRectF(0, 0, control->width(), control->height()));
+            const QString where = at + QStringLiteral(" %1 %2,%3 %4x%5 in pane %6..%7")
+                                           .arg(QString::fromLatin1(name))
+                                           .arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height())
+                                           .arg(paneRect.left()).arg(paneRect.right());
+            QVERIFY2(r.width() > 0, qPrintable(where));
+            QVERIFY2(r.left() >= paneRect.left() - 0.5 && r.right() <= paneRect.right() + 0.5, qPrintable(where));
+        }
+
+        // More than one result row is visible: the bottom of the list is not
+        // still showing the first row.
+        QQuickItem* list = item(h, "resultsList");
+        QVERIFY(list);
+        int bottomRow = -1;
+        QVERIFY(QMetaObject::invokeMethod(list, "indexAt", Q_RETURN_ARG(int, bottomRow),
+                                          Q_ARG(qreal, 1.0), Q_ARG(qreal, list->height() - 1.0)));
+        QVERIFY2(bottomRow >= 1, qPrintable(at + QStringLiteral(" bottom row %1").arg(bottomRow)));
+
+        // Every filter can be brought into view: focusing a control moves the
+        // scroll area to show it, the last one included.
+        QQuickItem* scroll = item(h, "filterScroll");
+        QVERIFY(scroll);
+        const QRectF viewport = scroll->mapRectToScene(QRectF(0, 0, scroll->width(), scroll->height()));
+        window->requestActivate();
+        for (const char* name : {"linkMarkersButton", "cardTypeCombo"}) {
+            QQuickItem* control = item(h, name);
+            control->forceActiveFocus(Qt::TabFocusReason);
+            QTRY_VERIFY2(control->hasActiveFocus(), name);
+            window->grabWindow();
+            const QRectF r = control->mapRectToScene(QRectF(0, 0, control->width(), control->height()));
+            const QString where = at + QStringLiteral(" %1 at %2..%3, viewport %4..%5")
+                                           .arg(QString::fromLatin1(name))
+                                           .arg(r.top()).arg(r.bottom()).arg(viewport.top()).arg(viewport.bottom());
+            QVERIFY2(r.top() >= viewport.top() - 0.5 && r.bottom() <= viewport.bottom() + 0.5, qPrintable(where));
+        }
     }
 }
 

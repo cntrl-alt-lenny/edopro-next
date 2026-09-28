@@ -223,10 +223,24 @@ Item {
     // Basic style draws a CheckBox label in its palette's window-text
     // colour, which is dark and unreadable on this theme; set that colour
     // from Theme rather than replacing the control's own label item.
+    // The label wraps rather than eliding, so a narrow pane still shows all
+    // of it; otherwise it is laid out as Basic style lays out its own.
     component FilterCheck: CheckBox {
+        id: filterCheck
         font.family: Theme.fontFamily
         font.pointSize: Theme.textCaption
         palette.windowText: enabled ? Theme.textPrimary : Theme.textTertiary
+        contentItem: Text {
+            leftPadding: filterCheck.indicator && !filterCheck.mirrored
+                         ? filterCheck.indicator.width + filterCheck.spacing : 0
+            rightPadding: filterCheck.indicator && filterCheck.mirrored
+                          ? filterCheck.indicator.width + filterCheck.spacing : 0
+            text: filterCheck.text
+            font: filterCheck.font
+            color: filterCheck.palette.windowText
+            wrapMode: Text.WordWrap
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     component FilterLabel: Text {
@@ -367,6 +381,7 @@ Item {
 
         // -- Search pane --
         ColumnLayout {
+            objectName: "searchPane"
             // 0.32/0.34, not the original 0.34/0.36, and the preview pane
             // below carries an explicit Layout.minimumWidth - found via
             // visual verification: at the default 1280x800 window, this
@@ -499,121 +514,185 @@ Item {
                     }
                 }
 
-                GridLayout {
-                    objectName: "filterGrid"
+                // The grid sits in its own scroll area so that, on a short
+                // window, the filters give up height before the results do:
+                // the area is never taller than the grid, may shrink to a few
+                // rows, and the results list below keeps a floor of its own
+                // (deck-builder-ui.md §15.1). The grid is as wide as the
+                // pane, never wider, and drops from four columns to two when
+                // the pane is too narrow for four.
+                ScrollView {
+                    id: filterScroll
+                    objectName: "filterScroll"
                     visible: filtersToggle.checked
                     Layout.fillWidth: true
-                    columns: 4
-                    columnSpacing: Theme.space2
-                    rowSpacing: Theme.space1
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: Math.min(filterGrid.implicitHeight, 96)
+                    Layout.preferredHeight: filterGrid.implicitHeight
+                    Layout.maximumHeight: filterGrid.implicitHeight
+                    contentWidth: availableWidth
+                    contentHeight: filterGrid.implicitHeight
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    // Shown whenever the grid does not fit, not only while
+                    // scrolling, so the hidden rows are visibly there.
+                    ScrollBar.vertical.policy: filterGrid.implicitHeight > filterScroll.availableHeight
+                                               ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
 
-                    FilterLabel { text: "Type" }
-                    FilterCombo {
-                        objectName: "cardTypeCombo"
-                        model: searchResults.cardTypeNames
-                        boundIndex: searchResults.cardType
-                        onPicked: function(index) { searchResults.cardType = index; }
+                    // Tab moves focus through the grid in reading order, but a
+                    // Flickable does not follow focus by itself: bring the
+                    // newly focused control into view, so keyboard use never
+                    // lands on a hidden one.
+                    function revealFocused(item) {
+                        let p = item;
+                        while (p && p !== filterGrid)
+                            p = p.parent;
+                        if (!p)
+                            return;
+                        const flick = filterScroll.contentItem;
+                        const top = item.mapToItem(filterGrid, 0, 0).y;
+                        if (top < flick.contentY)
+                            flick.contentY = top;
+                        else if (top + item.height > flick.contentY + flick.height)
+                            flick.contentY = top + item.height - flick.height;
                     }
-                    FilterLabel { text: "Sub-type"; enabled: searchResults.subTypeEnabled }
-                    FilterCombo {
-                        objectName: "subTypeCombo"
-                        enabled: searchResults.subTypeEnabled
-                        model: searchResults.subTypeNames
-                        boundIndex: searchResults.subType
-                        onPicked: function(index) { searchResults.subType = index; }
-                    }
-
-                    FilterLabel { text: "Attribute"; enabled: searchResults.monsterFiltersEnabled }
-                    FilterCombo {
-                        objectName: "attributeCombo"
-                        enabled: searchResults.monsterFiltersEnabled
-                        model: searchResults.attributeNames
-                        boundIndex: searchResults.attribute
-                        onPicked: function(index) { searchResults.attribute = index; }
-                    }
-                    FilterLabel { text: "Type/race"; enabled: searchResults.monsterFiltersEnabled }
-                    FilterCombo {
-                        objectName: "raceCombo"
-                        enabled: searchResults.monsterFiltersEnabled
-                        model: searchResults.raceNames
-                        boundIndex: searchResults.race
-                        onPicked: function(index) { searchResults.race = index; }
-                    }
-
-                    FilterLabel { text: "ATK"; enabled: searchResults.monsterFiltersEnabled }
-                    FilterField {
-                        objectName: "attackField"
-                        enabled: searchResults.monsterFiltersEnabled
-                        boundText: searchResults.attackText
-                        onEdited: function(value) { searchResults.attackText = value; }
-                    }
-                    FilterLabel { text: "DEF"; enabled: searchResults.defenseEnabled }
-                    FilterField {
-                        objectName: "defenseField"
-                        enabled: searchResults.defenseEnabled
-                        boundText: searchResults.defenseText
-                        onEdited: function(value) { searchResults.defenseText = value; }
-                    }
-
-                    FilterLabel { text: "Level/Rank"; enabled: searchResults.monsterFiltersEnabled }
-                    FilterField {
-                        objectName: "levelField"
-                        enabled: searchResults.monsterFiltersEnabled
-                        placeholderText: "4, <=3"
-                        boundText: searchResults.levelText
-                        onEdited: function(value) { searchResults.levelText = value; }
-                    }
-                    FilterLabel { text: "Scale"; enabled: searchResults.monsterFiltersEnabled }
-                    FilterField {
-                        objectName: "scaleField"
-                        enabled: searchResults.monsterFiltersEnabled
-                        placeholderText: ">=5"
-                        boundText: searchResults.scaleText
-                        onEdited: function(value) { searchResults.scaleText = value; }
-                    }
-
-                    FilterLabel { text: "Limit" }
-                    FilterCombo {
-                        objectName: "limitationCombo"
-                        Layout.columnSpan: 3
-                        model: searchResults.limitationNames
-                        boundIndex: searchResults.limitation
-                        onPicked: function(index) { searchResults.limitation = index; }
-                    }
-
-                    FilterCheck {
-                        objectName: "nonOfficialCheck"
-                        Layout.columnSpan: 4
-                        text: "Show non-official cards (anime, custom, …)"
-                        enabled: searchResults.nonOfficialSwitchEnabled
-                        checked: searchResults.showNonOfficial
-                        onToggled: {
-                            searchResults.showNonOfficial = checked;
-                            checked = Qt.binding(function() { return searchResults.showNonOfficial; });
+                    Connections {
+                        target: root.Window.window
+                        function onActiveFocusItemChanged() {
+                            if (root.Window.window.activeFocusItem)
+                                filterScroll.revealFocused(root.Window.window.activeFocusItem);
                         }
-                        font.family: Theme.fontFamily
-                        font.pointSize: Theme.textCaption
                     }
 
-                    Button {
-                        objectName: "categoriesButton"
-                        Layout.columnSpan: 2
-                        Layout.fillWidth: true
-                        text: searchResults.selectedCategoryCount > 0
-                              ? ("Effects (" + searchResults.selectedCategoryCount + ")…") : "Effects…"
-                        onClicked: categoriesPopup.open()
-                        font.family: Theme.fontFamily
-                        font.pointSize: Theme.textCaption
-                    }
-                    Button {
-                        id: markersButton
-                        objectName: "linkMarkersButton"
-                        Layout.columnSpan: 2
-                        Layout.fillWidth: true
-                        text: "Link markers…"
-                        onClicked: markersPopup.open()
-                        font.family: Theme.fontFamily
-                        font.pointSize: Theme.textCaption
+                    GridLayout {
+                        id: filterGrid
+                        objectName: "filterGrid"
+                        // The vertical bar, when shown, gets its own gutter
+                        // rather than covering the controls' right edge.
+                        width: filterScroll.availableWidth
+                               - (filterScroll.ScrollBar.vertical.policy === ScrollBar.AlwaysOn
+                                  ? filterScroll.ScrollBar.vertical.width : 0)
+                        // Four columns (label, control, label, control) leave
+                        // each control about 80 pixels at this width, enough
+                        // for ">=1500, ?"; below it, two (deck-builder-ui.md
+                        // §15.1). Read from the scroll area, not from `width`,
+                        // so the bar's gutter cannot flip the column count.
+                        columns: filterScroll.availableWidth >= 300 ? 4 : 2
+                        columnSpacing: Theme.space2
+                        rowSpacing: Theme.space1
+
+                        FilterLabel { text: "Type" }
+                        FilterCombo {
+                            objectName: "cardTypeCombo"
+                            model: searchResults.cardTypeNames
+                            boundIndex: searchResults.cardType
+                            onPicked: function(index) { searchResults.cardType = index; }
+                        }
+                        FilterLabel { text: "Sub-type"; enabled: searchResults.subTypeEnabled }
+                        FilterCombo {
+                            objectName: "subTypeCombo"
+                            enabled: searchResults.subTypeEnabled
+                            model: searchResults.subTypeNames
+                            boundIndex: searchResults.subType
+                            onPicked: function(index) { searchResults.subType = index; }
+                        }
+
+                        FilterLabel { text: "Attribute"; enabled: searchResults.monsterFiltersEnabled }
+                        FilterCombo {
+                            objectName: "attributeCombo"
+                            enabled: searchResults.monsterFiltersEnabled
+                            model: searchResults.attributeNames
+                            boundIndex: searchResults.attribute
+                            onPicked: function(index) { searchResults.attribute = index; }
+                        }
+                        FilterLabel { text: "Type/race"; enabled: searchResults.monsterFiltersEnabled }
+                        FilterCombo {
+                            objectName: "raceCombo"
+                            enabled: searchResults.monsterFiltersEnabled
+                            model: searchResults.raceNames
+                            boundIndex: searchResults.race
+                            onPicked: function(index) { searchResults.race = index; }
+                        }
+
+                        FilterLabel { text: "ATK"; enabled: searchResults.monsterFiltersEnabled }
+                        FilterField {
+                            objectName: "attackField"
+                            enabled: searchResults.monsterFiltersEnabled
+                            boundText: searchResults.attackText
+                            onEdited: function(value) { searchResults.attackText = value; }
+                        }
+                        FilterLabel { text: "DEF"; enabled: searchResults.defenseEnabled }
+                        FilterField {
+                            objectName: "defenseField"
+                            enabled: searchResults.defenseEnabled
+                            boundText: searchResults.defenseText
+                            onEdited: function(value) { searchResults.defenseText = value; }
+                        }
+
+                        FilterLabel { text: "Level/Rank"; enabled: searchResults.monsterFiltersEnabled }
+                        FilterField {
+                            objectName: "levelField"
+                            enabled: searchResults.monsterFiltersEnabled
+                            placeholderText: "4, <=3"
+                            boundText: searchResults.levelText
+                            onEdited: function(value) { searchResults.levelText = value; }
+                        }
+                        FilterLabel { text: "Scale"; enabled: searchResults.monsterFiltersEnabled }
+                        FilterField {
+                            objectName: "scaleField"
+                            enabled: searchResults.monsterFiltersEnabled
+                            placeholderText: ">=5"
+                            boundText: searchResults.scaleText
+                            onEdited: function(value) { searchResults.scaleText = value; }
+                        }
+
+                        FilterLabel { text: "Limit" }
+                        FilterCombo {
+                            objectName: "limitationCombo"
+                            Layout.columnSpan: filterGrid.columns - 1
+                            model: searchResults.limitationNames
+                            boundIndex: searchResults.limitation
+                            onPicked: function(index) { searchResults.limitation = index; }
+                        }
+
+                        FilterCheck {
+                            objectName: "nonOfficialCheck"
+                            Layout.columnSpan: filterGrid.columns
+                            // Given the grid's width rather than its own text's,
+                            // so a narrow pane wraps the label instead of
+                            // widening the grid past the pane.
+                            Layout.fillWidth: true
+                            text: "Show non-official cards (anime, custom, …)"
+                            enabled: searchResults.nonOfficialSwitchEnabled
+                            checked: searchResults.showNonOfficial
+                            onToggled: {
+                                searchResults.showNonOfficial = checked;
+                                checked = Qt.binding(function() { return searchResults.showNonOfficial; });
+                            }
+                            font.family: Theme.fontFamily
+                            font.pointSize: Theme.textCaption
+                        }
+
+                        Button {
+                            objectName: "categoriesButton"
+                            Layout.columnSpan: filterGrid.columns / 2
+                            Layout.fillWidth: true
+                            text: searchResults.selectedCategoryCount > 0
+                                  ? ("Effects (" + searchResults.selectedCategoryCount + ")…") : "Effects…"
+                            onClicked: categoriesPopup.open()
+                            font.family: Theme.fontFamily
+                            font.pointSize: Theme.textCaption
+                        }
+                        Button {
+                            id: markersButton
+                            objectName: "linkMarkersButton"
+                            Layout.columnSpan: filterGrid.columns / 2
+                            Layout.fillWidth: true
+                            text: "Link markers…"
+                            onClicked: markersPopup.open()
+                            font.family: Theme.fontFamily
+                            font.pointSize: Theme.textCaption
+                        }
                     }
                 }
 
@@ -737,8 +816,12 @@ Item {
                 }
 
                 Rectangle {
+                    objectName: "resultsFrame"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    // A floor of about three result rows: on a short window
+                    // the filter area above shrinks and scrolls first.
+                    Layout.minimumHeight: 160
                     radius: Theme.radiusMd
                     color: Theme.surface
                     border.width: 1
@@ -853,6 +936,7 @@ Item {
 
         // -- Deck pane --
         ColumnLayout {
+            objectName: "deckPane"
             Layout.preferredWidth: parent.width * 0.34 // see the search pane's own comment above
             Layout.fillHeight: true
             spacing: Theme.space3
