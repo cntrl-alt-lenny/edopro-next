@@ -24,6 +24,7 @@
 #include <QQuickItem>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QSet>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QUrl>
@@ -296,6 +297,8 @@ private slots:
     // The filters and the results fit the search column at the shell's
     // smallest and default screen sizes (deck-builder-ui.md §15.1).
     void searchPaneFitsItsColumnAtMinimumAndDefaultSizes();
+    void filterTabTraversalStaysVisible_data();
+    void filterTabTraversalStaysVisible();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -881,7 +884,7 @@ void TestDeckBuilderScreen::filterControlsReachTheSearchModel() {
     QCOMPARE(h.child("attackField")->property("text").toString(), QString());
     QCOMPARE(count(), 4);
 
-    // Keyboard: every filter control takes focus by Tab (Qt::TabFocus bit).
+    // Focus capability only; actual traversal is checked separately below.
     for (const char* name : {"cardTypeCombo", "subTypeCombo", "attributeCombo", "raceCombo", "attackField",
                               "defenseField", "levelField", "scaleField", "limitationCombo",
                               "nonOfficialCheck", "categoriesButton", "linkMarkersButton",
@@ -900,8 +903,23 @@ constexpr const char* kSearchColumnControls[] = {
     "attributeCombo", "raceCombo", "attackField", "defenseField", "levelField", "scaleField",
     "limitationCombo", "nonOfficialCheck", "categoriesButton", "linkMarkersButton"};
 
+QQuickItem* visualItem(QQuickItem* parent, const QString& name) {
+    if (parent->objectName() == name)
+        return parent;
+    for (QQuickItem* child : parent->childItems()) {
+        if (QQuickItem* found = visualItem(child, name))
+            return found;
+    }
+    return nullptr;
+}
+
 QQuickItem* item(const Harness& h, const char* name) {
-    return qobject_cast<QQuickItem*>(h.child(name));
+    if (auto* found = qobject_cast<QQuickItem*>(h.child(name)))
+        return found;
+    // Repeater delegates and popup overlays may have visual parents outside
+    // the screen's QObject ownership tree. Search the real window, not a copy.
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    return visualItem(window->contentItem(), QString::fromLatin1(name));
 }
 
 } // namespace
@@ -986,6 +1004,180 @@ void TestDeckBuilderScreen::searchPaneFitsItsColumnAtMinimumAndDefaultSizes() {
                                            .arg(r.top()).arg(r.bottom()).arg(viewport.top()).arg(viewport.bottom());
             QVERIFY2(r.top() >= viewport.top() - 0.5 && r.bottom() <= viewport.bottom() + 0.5, qPrintable(where));
         }
+    }
+}
+
+void TestDeckBuilderScreen::filterTabTraversalStaysVisible_data() {
+    QTest::addColumn<QSize>("screenSize");
+    QTest::addColumn<bool>("reverse");
+    QTest::newRow("minimum-forward") << QSize(896, 600) << false;
+    QTest::newRow("minimum-reverse") << QSize(896, 600) << true;
+    QTest::newRow("default-forward") << QSize(1064, 800) << false;
+    QTest::newRow("default-reverse") << QSize(1064, 800) << true;
+}
+
+void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
+    QFETCH(QSize, screenSize);
+    QFETCH(bool, reverse);
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    for (quint32 code = 1; code <= 40; ++code)
+        cards.push_back(SyntheticCard{code, QStringLiteral("Synthetic %1").arg(code)});
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards)}));
+    QVERIFY(QMetaObject::invokeMethod(h.child("cardTypeCombo"), "activated", Q_ARG(int, 1)));
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    QVERIFY(window);
+    window->resize(screenSize);
+    window->requestActivate();
+    QTest::qWait(100);
+    const auto bounds = [](QQuickItem* i) {
+        return i->mapRectToScene(QRectF(0, 0, i->width(), i->height()));
+    };
+    const auto visibleBounds = [&](QQuickItem* control, QQuickItem* surface) {
+        // Check every clipping ancestor as well as the named surface: a
+        // ScrollView's padded frame is not necessarily its real viewport.
+        QRectF viewport = bounds(surface);
+        for (auto* p = control->parentItem(); p; p = p->parentItem()) {
+            if (p->clip())
+                viewport = viewport.intersected(bounds(p));
+        }
+        return viewport;
+    };
+    const auto isVisible = [&](QQuickItem* control, QQuickItem* surface) {
+        const QRectF r = bounds(control);
+        const QRectF viewport = visibleBounds(control, surface);
+        return control->isVisible() && r.width() > 0 && r.height() > 0
+            && viewport.adjusted(-0.5, -0.5, 0.5, 0.5).contains(r);
+    };
+    const auto location = [&](QQuickItem* control, QQuickItem* surface) {
+        const QRectF r = bounds(control), v = visibleBounds(control, surface);
+        return QStringLiteral("%1 bounds %2,%3 %4x%5 viewport %6,%7 %8x%9")
+            .arg(control->objectName()).arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height())
+            .arg(v.x()).arg(v.y()).arg(v.width()).arg(v.height());
+    };
+    const auto capture = [&](const QString& state) {
+        const QString path = qEnvironmentVariable("EDOPRO_FOCUS_CAPTURES");
+        if (!path.isEmpty() && !reverse) {
+            const QString file = QStringLiteral("%1/%2-%3.png").arg(path).arg(screenSize.width()).arg(state);
+            QVERIFY(window->grabWindow().save(file));
+        }
+    };
+    const auto traverse = [&](const QSet<QString>& expected, QQuickItem* surface,
+                              const QString& label) {
+        QSet<QString> reached;
+        for (int step = 0; step < 100 && reached != expected; ++step) {
+            QTest::keyClick(window, Qt::Key_Tab, reverse ? Qt::ShiftModifier : Qt::NoModifier);
+            QTest::qWait(20);
+            QQuickItem* active = window->activeFocusItem();
+            QVERIFY(active);
+            if (!expected.contains(active->objectName()))
+                continue;
+            QQuickItem* clippingSurface = surface;
+            if (!clippingSurface) {
+                clippingSurface = item(h, "searchPane");
+                for (auto* p = active->parentItem(); p; p = p->parentItem()) {
+                    if (p == item(h, "filterScroll")) {
+                        clippingSurface = p;
+                        break;
+                    }
+                }
+            }
+            QTRY_VERIFY2(isVisible(active, clippingSurface), qPrintable(location(active, clippingSurface)));
+            reached.insert(active->objectName());
+            qInfo().noquote() << label << (reverse ? "Shift+Tab" : "Tab")
+                              << location(active, clippingSurface);
+            if (active->objectName() == "linkMarkersButton" && !surface)
+                capture("main-lower");
+            if (active->objectName() == "categoryCheck31")
+                capture("effects-lower");
+        }
+        QStringList missing = (expected - reached).values();
+        missing.sort();
+        QVERIFY2(reached == expected, qPrintable(label + " missing: " + missing.join(", ")));
+        qInfo().noquote() << label << "reached" << reached.size() << "of" << expected.size();
+    };
+    QSet<QString> mainControls;
+    for (const char* name : kSearchColumnControls) {
+        QVERIFY2(item(h, name)->isEnabled(), name);
+        mainControls.insert(QString::fromLatin1(name));
+    }
+    // Only initial placement is explicit. Every destination above is reached
+    // by a real key event; omitting even one expected control fails.
+    item(h, "searchField")->forceActiveFocus(Qt::TabFocusReason);
+    traverse(mainControls, nullptr, "main");
+    QVERIFY(!QTest::currentTestFailed());
+
+    for (const auto& popup : {QPair{"categories", "categoriesButton"}, QPair{"markers", "linkMarkersButton"}}) {
+        const QByteArray popupName = QByteArray(popup.first) + "Popup";
+        const QByteArray doneName = QByteArray(popup.first) + "Done";
+        QObject* popupObject = h.child(popupName.constData());
+        QSet<QString> controls{QString::fromLatin1(doneName)};
+        const bool categories = QByteArray(popup.first) == "categories";
+        for (int i = 0; i < (categories ? 32 : 8); ++i)
+            controls.insert(QStringLiteral("%1%2").arg(categories ? "categoryCheck" : "markerButton").arg(i));
+        // Open via the keyboard, then seed traversal at Done (not at each
+        // destination). Reverse and forward must both reach all controls.
+        item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
+        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_VERIFY(popupObject->property("opened").toBool());
+        auto* popupContent = qvariant_cast<QQuickItem*>(popupObject->property("contentItem"));
+        QVERIFY(popupContent);
+        // Older production QML leaves Done unnamed. Label it in the test
+        // for accounting, without changing that QML during regression probes.
+        if (!h.child(doneName.constData())) {
+            for (QObject* child : popupContent->findChildren<QObject*>()) {
+                if (child->property("text").toString() == "Done") {
+                    child->setObjectName(QString::fromLatin1(doneName));
+                    break;
+                }
+            }
+        }
+        QVERIFY(item(h, doneName.constData()));
+        item(h, doneName.constData())->forceActiveFocus(Qt::TabFocusReason);
+        traverse(controls, popupContent, QString::fromLatin1(popup.first));
+        QVERIFY(!QTest::currentTestFailed());
+        if (categories) {
+            // Reach the lower category with keys from wherever traversal ended.
+            for (int step = 0; step < 40 && window->activeFocusItem() != item(h, "categoryCheck31"); ++step)
+                QTest::keyClick(window, Qt::Key_Tab);
+            QTRY_COMPARE(window->activeFocusItem(), item(h, "categoryCheck31"));
+            QTRY_VERIFY(isVisible(item(h, "categoryCheck31"), popupContent));
+            const bool before = item(h, "categoryCheck31")->property("checked").toBool();
+            QTest::keyClick(window, Qt::Key_Space);
+            QCOMPARE(item(h, "categoryCheck31")->property("checked").toBool(), !before);
+            bool selected = before;
+            QVERIFY(QMetaObject::invokeMethod(h.child("searchResults"), "categorySelected",
+                                              Q_RETURN_ARG(bool, selected), Q_ARG(int, 31)));
+            QCOMPARE(selected, !before);
+            qInfo() << "lower category Space changed model selection";
+        } else {
+            capture("markers");
+        }
+        // Reach Done with keys, close using Space, and reopen using the same
+        // trigger. Any focus automatically restored inside must be visible.
+        for (int step = 0; step < 40 && window->activeFocusItem() != item(h, doneName.constData()); ++step)
+            QTest::keyClick(window, Qt::Key_Tab);
+        QTRY_COMPARE(window->activeFocusItem(), item(h, doneName.constData()));
+        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_VERIFY(!popupObject->property("visible").toBool());
+        QVERIFY(window->activeFocusItem() != item(h, doneName.constData()));
+        item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
+        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_VERIFY(popupObject->property("opened").toBool());
+        QTest::qWait(30);
+        if (controls.contains(window->activeFocusItem()->objectName()))
+            QTRY_VERIFY2(isVisible(window->activeFocusItem(), popupContent),
+                         qPrintable(location(window->activeFocusItem(), popupContent)));
+        QTest::keyClick(window, Qt::Key_Tab);
+        QTRY_VERIFY(controls.contains(window->activeFocusItem()->objectName()));
+        QTRY_VERIFY(isVisible(window->activeFocusItem(), popupContent));
+        QTest::keyClick(window, Qt::Key_Escape);
+        QTRY_VERIFY(!popupObject->property("visible").toBool());
+        QVERIFY(!controls.contains(window->activeFocusItem()->objectName()));
+        qInfo() << popup.first << "Done/Space close, Space reopen, Tab visible, Escape close";
     }
 }
 

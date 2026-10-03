@@ -185,6 +185,58 @@ Item {
         queryText: searchField.text
     }
 
+    // All scrollable filter surfaces follow focus through the same mechanism.
+    // Focus outside this view (including a popup layered above it) is ignored.
+    component FocusScrollView: ScrollView {
+        id: focusScroll
+        required property Item focusContent
+
+        function revealFocused(item) {
+            let ancestor = item;
+            while (ancestor && ancestor !== focusContent)
+                ancestor = ancestor.parent;
+            if (!ancestor)
+                return;
+            const flick = contentItem;
+            const top = item.mapToItem(focusContent, 0, 0).y;
+            let offset = flick.contentY;
+            if (top < offset)
+                offset = top;
+            else if (top + item.height > offset + flick.height)
+                offset = top + item.height - flick.height;
+            flick.contentY = Math.max(0, Math.min(offset, flick.contentHeight - flick.height));
+        }
+        function revealCurrent() {
+            if (root.Window.window && root.Window.window.activeFocusItem)
+                revealFocused(root.Window.window.activeFocusItem);
+        }
+        // Popup opening and label wrapping can change geometry after focus
+        // arrives. Recheck after layout, not just at the focus notification.
+        function scheduleReveal() { Qt.callLater(revealCurrent); }
+        Connections {
+            target: root.Window.window
+            function onActiveFocusItemChanged() {
+                focusScroll.revealCurrent();
+                focusScroll.scheduleReveal();
+            }
+        }
+        Connections {
+            target: focusScroll.focusContent
+            function onImplicitHeightChanged() { focusScroll.scheduleReveal(); }
+            function onWidthChanged() { focusScroll.scheduleReveal(); }
+        }
+        Connections {
+            target: focusScroll.contentItem
+            function onHeightChanged() { focusScroll.scheduleReveal(); }
+            function onContentHeightChanged() { focusScroll.scheduleReveal(); }
+        }
+        Connections {
+            target: root.Window.window ? root.Window.window.activeFocusItem : null
+            function onHeightChanged() { focusScroll.scheduleReveal(); }
+            function onYChanged() { focusScroll.scheduleReveal(); }
+        }
+    }
+
     // A filter drop-down bound to one index on searchResults. The binding is
     // restored after each user pick, because a user choice assigns
     // currentIndex and would otherwise break it (the same reason the
@@ -521,7 +573,8 @@ Item {
                 // (deck-builder-ui.md §15.1). The grid is as wide as the
                 // pane, never wider, and drops from four columns to two when
                 // the pane is too narrow for four.
-                ScrollView {
+                FocusScrollView {
+                    focusContent: filterGrid
                     id: filterScroll
                     objectName: "filterScroll"
                     visible: filtersToggle.checked
@@ -538,31 +591,6 @@ Item {
                     // scrolling, so the hidden rows are visibly there.
                     ScrollBar.vertical.policy: filterGrid.implicitHeight > filterScroll.availableHeight
                                                ? ScrollBar.AlwaysOn : ScrollBar.AsNeeded
-
-                    // Tab moves focus through the grid in reading order, but a
-                    // Flickable does not follow focus by itself: bring the
-                    // newly focused control into view, so keyboard use never
-                    // lands on a hidden one.
-                    function revealFocused(item) {
-                        let p = item;
-                        while (p && p !== filterGrid)
-                            p = p.parent;
-                        if (!p)
-                            return;
-                        const flick = filterScroll.contentItem;
-                        const top = item.mapToItem(filterGrid, 0, 0).y;
-                        if (top < flick.contentY)
-                            flick.contentY = top;
-                        else if (top + item.height > flick.contentY + flick.height)
-                            flick.contentY = top + item.height - flick.height;
-                    }
-                    Connections {
-                        target: root.Window.window
-                        function onActiveFocusItemChanged() {
-                            if (root.Window.window.activeFocusItem)
-                                filterScroll.revealFocused(root.Window.window.activeFocusItem);
-                        }
-                    }
 
                     GridLayout {
                         id: filterGrid
@@ -721,16 +749,27 @@ Item {
                             font.pointSize: Theme.textCaption
                             color: Theme.textSecondary
                         }
-                        ScrollView {
+                        FocusScrollView {
+                            id: categoriesScroll
+                            objectName: "categoriesScroll"
+                            focusContent: categoriesGrid
+                            contentWidth: availableWidth
+                            contentHeight: categoriesGrid.implicitHeight
+                            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             clip: true
                             GridLayout {
+                                id: categoriesGrid
+                                width: categoriesScroll.availableWidth
                                 columns: 2
                                 Repeater {
                                     model: searchResults.categoryNames
                                     FilterCheck {
                                         id: categoryCheck
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
+                                        Layout.preferredWidth: (categoriesScroll.availableWidth - categoriesGrid.columnSpacing) / 2
                                         required property int index
                                         required property string modelData
                                         objectName: "categoryCheck" + index
@@ -751,6 +790,7 @@ Item {
                         }
                         Button {
                             Layout.alignment: Qt.AlignRight
+                            objectName: "categoriesDone"
                             text: "Done"
                             onClicked: categoriesPopup.close()
                         }
@@ -809,6 +849,7 @@ Item {
                         }
                         Button {
                             Layout.alignment: Qt.AlignRight
+                            objectName: "markersDone"
                             text: "Done"
                             onClicked: markersPopup.close()
                         }
