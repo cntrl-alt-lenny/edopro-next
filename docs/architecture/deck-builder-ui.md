@@ -1023,9 +1023,10 @@ button folds the grid away.
   rather than on Enter or a button; Clear leaves every visible card listed rather than an
   empty list; a limit choice survives a change of list only if it is still offered; the
   switch is not saved between runs; card labels are English and not upstream's strings.
-- **Keyboard.** Every filter control takes focus with Tab (`focusPolicy` includes
-  `Qt.TabFocus`, pinned by `filterControlsReachTheSearchModel`). Full keyboard parity for the
-  screen is still open (§12).
+- **Keyboard.** Every filter control declares Tab focus capability (`focusPolicy` includes
+  `Qt.TabFocus`, pinned by `filterControlsReachTheSearchModel`). Capability alone does not
+  establish traversal or visibility. Round 024's real-screen key-event coverage and native
+  platform limits are described in §15.2. Full keyboard parity for the screen is still open (§12).
 - **Tests.** `searchFiltersDriveEveryUpstreamControl`, `searchHidesWhatUpstreamHidesByDefault`,
   `limitFilterFollowsTheSelectedBanlist`, `cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes`
   and `numberBoxesReadTheFieldUpstreamReads` (`ui/tests/test_deckbuilder.cpp`) drive every
@@ -1057,16 +1058,16 @@ beside the compact nav rail is 896x600 and the search column's share is 277 pixe
 1. The grid is as wide as the column and never wider. The check box fills its row and wraps
    its label instead of widening the grid.
 2. The grid has four columns when the column is at least 300 pixels wide, and two below that.
-   At 300 pixels four columns leave each control about 80 pixels, enough for the ">=1500, ?"
-   hint (measured in the 1280x800 capture, where the column is about 303 pixels and four
-   columns are used). Two columns at 960x600 leave each control about 120 pixels.
+   At 300 pixels four columns leave each numeric control about 80 pixels; the ATK/DEF hints
+   are elided in the full-shell 1280x800 capture. The fields remain editable and inside their
+   column. Two columns at 960x600 leave each control about 120 pixels.
 3. The grid sits in a `ScrollView` that is never taller than the grid, can shrink to about two
    rows, and gives up height before the results do: the results frame has a floor of 160 pixels,
    about three result rows. On a tall window nothing scrolls; on a short one the filters scroll
    and a vertical bar is shown, in its own gutter, whenever rows are hidden.
-4. A `Flickable` does not follow keyboard focus, so when Tab moves focus to a filter control
-   below or above the visible rows, the screen scrolls it into view. Every control keeps its
-   Tab focus.
+4. The main filter grid follows focus above or below the visible rows. Round 023's handler
+   did not cover the separate Effects scroll area; round 024 replaces it with the shared
+   mechanism described in §15.2. Every control keeps its Tab focus capability.
 
 **Alternatives not taken.** Hiding the filters by default on a small window would have kept the
 results large, but the brief asks for the layout with the filters shown, and a user who never
@@ -1087,3 +1088,44 @@ a synthetic database, are described in round 023's builder report.
 **Not changed.** The pane shares (§10.6) and the deck column: at 960x600 the Ruleset and Banlist
 boxes cut their current text short ("Standar", "No ban"), in round 022's capture and in this
 round's alike. That is truncation inside the box, not overlap, and this round leaves it.
+
+### 15.2 Focus visibility across filter surfaces (round 024)
+
+Round 023's Verifier and Brain reproduced Tab focus entering clipped Effects rows. The
+main-grid handler ignored controls outside that grid, so the popup never followed its focused
+category. `FocusScrollView`, an inline presentation component in `DeckBuilderScreen.qml`, now
+serves both scrollable filter surfaces: the main grid and the Effects category grid. It ignores
+focus outside its own content, maps the focused control into that content, and clamps the
+vertical offset to reveal its bounds. It rechecks after focus and layout geometry changes:
+popup opening and wrapping labels can settle after focus arrives. Effects cells share the
+available width and wrap their labels, preventing horizontal clipping as well. No matching,
+choices, numeric parsing or game rules change.
+
+The Link-marker popup has a fixed eight-button grid and Done, with no scrollable content.
+The search results scroll separately and are not filter controls; drop-down option lists use
+Qt's ComboBox popup navigation. Neither is replaced by this filter-content mechanism.
+
+`filterTabTraversalStaysVisible` loads the actual screen with synthetic cards and enables
+Monster filters. Four data rows exercise forward Tab and reverse Shift+Tab at screen areas
+896x600 and 1064x800 (the 960x600 and 1280x800 shells minus their nav rails). Only initial
+focus placement is explicit. The test requires all 15 named search controls, all 32 Effects
+categories plus Done, and all eight markers plus Done to be reached by key events. Every
+reached control must fit completely within its named surface intersected with every clipping
+ancestor after layout settles. Missing a control fails independently of visibility. Space on
+a revealed Category 32 must update the model's selection; Done/Space closing, Space reopening,
+visible Tab focus after reopening and Escape closing are also checked. The existing column
+and multiple-result-row expectations remain intact. These are offscreen key-event checks,
+not proof of native platform parity. The regression and diagnostic mutations are recorded in
+round 024's Builder report.
+
+Visual inspection distinguishes the shell's default-state captures from screen-only harness
+captures of scrolled filters and open popups; their dimensions and inspected states are in
+that report. Round 023's Verifier reported native macOS Tab skipping non-text controls and
+not reaching Effects checkboxes. Brain did not reproduce that native observation or establish
+its cause. It remains an attributed, unresolved limitation: no system keyboard preference or
+platform navigation policy is changed, and no universal native traversal claim follows from
+Tab capability or offscreen events. Round 024's Builder also ran the minimum-size forward
+key-event test with Qt's native Cocoa plugin: it reached Search and the four numeric fields,
+but missed ten non-text controls and failed its accounting assertion. This is a programmatic
+native-plugin observation, not physical keyboard verification; its cause remains unresolved.
+Full keyboard/controller parity remains open (§12).
