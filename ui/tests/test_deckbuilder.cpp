@@ -16,6 +16,7 @@
 #include <QUrl>
 #include <sqlite3.h>
 
+#include <algorithm>
 #include <fstream>
 
 #include "banlist_store.h"
@@ -61,6 +62,11 @@ struct SyntheticCard {
     // `datas.ot` - 0 unless a test needs a scope bit (SCOPE_RUSH, 0x200,
     // gframe/data_manager.h:29, for the Rush Ritual placement test).
     quint32 scope = 0;
+    // `datas.race`/`attribute`/`category` - 0 unless a search-filter test
+    // needs them (round 022).
+    quint64 race = 0;
+    quint32 attribute = 0;
+    quint32 category = 0;
 };
 
 // A distinct name, not an overload of writeSyntheticDatabase() below: a
@@ -86,13 +92,16 @@ QString writeSyntheticDatabaseWithFields(const QString& path, const QList<Synthe
     for (const auto& card : cards) {
         run(db, qPrintable(QStringLiteral("INSERT INTO datas (id,ot,alias,setcode,type,atk,def,"
                                            "level,race,attribute,category) VALUES (%1,%6,0,0,%2,"
-                                           "%3,%4,%5,0,0,0);")
+                                           "%3,%4,%5,%7,%8,%9);")
                                 .arg(card.code)
                                 .arg(card.type)
                                 .arg(card.attack)
                                 .arg(card.defenseOrLinkMarker)
                                 .arg(card.level)
-                                .arg(card.scope)));
+                                .arg(card.scope)
+                                .arg(card.race)
+                                .arg(card.attribute)
+                                .arg(card.category)));
         // str1..str16 are left at their column default (NULL - the schema
         // above does not mark them NOT NULL) by omitting them from the
         // column list entirely, rather than hand-counting sixteen '' value
@@ -231,6 +240,16 @@ private slots:
     void noBanlistSelectionDisclosesSkippedChecksForExtraDeckMonsterInMain();
     void noBanlistSelectionDisclosesSkippedChecksWhenAlsoIllegal();
     void concreteBanlistSelectionCarriesNoSkippedChecksDisclosure();
+
+    // Round 022 (ADR 0012): every upstream filter control, driven through
+    // SearchResultsModel, finds the cards upstream's filter would.
+    void searchFiltersDriveEveryUpstreamControl();
+    void searchHidesWhatUpstreamHidesByDefault();
+    void limitFilterFollowsTheSelectedBanlist();
+    void cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes();
+    // Round 023: each number box reaches its own card field, read as
+    // upstream types it (deck_con.h:115-122).
+    void numberBoxesReadTheFieldUpstreamReads();
 
     // Round 021: no legality message claims anything about upstream's duel
     // entry, which re-derives Main and Extra from card type and drops tokens
@@ -1308,6 +1327,354 @@ void TestDeckBuilder::everyLegalityMessageSpeaksAboutTheDeckAsArrangedOnly() {
         // Upstream's duel entry is not something this editor can speak for.
         QVERIFY2(!message.contains(QStringLiteral("duel entry")), qPrintable(message));
     }
+}
+
+namespace {
+
+// ocgcore/ocgapi_constants.h:44-56 and gframe/data_manager.h:36, beside
+// the type bits declared earlier in this file.
+constexpr quint32 kTuner = 0x1000;
+constexpr quint32 kQuickPlay = 0x10000;
+constexpr quint32 kContinuous = 0x20000;
+constexpr quint32 kPendulum = 0x1000000;
+constexpr quint32 kSkill = 0x8000000;
+
+// The search fixture: every card a filter below should find or skip.
+QList<SyntheticCard> filterFixture() {
+    QList<SyntheticCard> cards;
+    auto add = [&](quint32 code, quint32 type, qint32 atk, qint32 def, qint32 level) -> SyntheticCard& {
+        cards.push_back(SyntheticCard{code, QStringLiteral("Card%1").arg(code), type, atk, def, level});
+        return cards.back();
+    };
+    add(101, kMonster | kNormal, 1500, 1200, 4).attribute = 0x10;               // LIGHT, Warrior
+    cards.back().race = 0x1;
+    add(102, kMonster | kEffect, 2500, 2000, 7).attribute = 0x20;               // DARK, Dragon
+    cards.back().race = 0x2000;
+    cards.back().category = 0x1;
+    add(103, kMonster | kEffect | kFusion, 3000, 2500, 8).attribute = 0x20;     // DARK, Dragon
+    cards.back().race = 0x2000;
+    cards.back().category = 0x2 | 0x4;
+    add(104, kMonster | kNormal | kTuner, 1000, 0, 2).attribute = 0x10;         // LIGHT, Warrior|Machine
+    cards.back().race = 0x1 | 0x20;
+    add(105, kMonster | kEffect, -2, -2, 4).attribute = 0x10;                   // "?" stats
+    cards.back().race = 0x1;
+    add(106, kMonster | kEffect | kLink, 2300, 0x1 | 0x40 | 0x100, 3);          // Link, markers
+    add(107, kMonster | kEffect | kPendulum, 1600, 1000, (5 << 24) | (5 << 16) | 4);
+    add(108, kSpell, 0, 0, 0);
+    add(109, kSpell | kQuickPlay, 0, 0, 0);
+    add(110, kTrap, 0, 0, 0);
+    add(111, kTrap | kContinuous, 0, 0, 0);
+    add(112, kSkill, 0, 0, 0);
+    add(113, kSpell | kLink, 0, 0x2, 0);                                        // Link Spell, one marker
+    return cards;
+}
+
+QList<quint32> resultCodes(const SearchResultsModel& model) {
+    QList<quint32> out;
+    for (int i = 0; i < model.resultCount(); ++i)
+        out.push_back(model.cardCodeAt(i));
+    std::sort(out.begin(), out.end());
+    return out;
+}
+
+int indexOf(const QStringList& labels, const QString& label) {
+    const int i = labels.indexOf(label);
+    if (i < 0)
+        qFatal("no choice labelled %s", qPrintable(label));
+    return i;
+}
+
+} // namespace
+
+void TestDeckBuilder::searchFiltersDriveEveryUpstreamControl() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), filterFixture());
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    SearchResultsModel model;
+    model.setCatalog(&catalog);
+    model.setDeckController(&controller);
+
+    using L = QList<quint32>;
+    QCOMPARE(resultCodes(model), (L{101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113}));
+
+    // Card type (deck_con.cpp:1194-1249).
+    model.setCardType(indexOf(model.cardTypeNames(), "Monster"));
+    QCOMPARE(resultCodes(model), (L{101, 102, 103, 104, 105, 106, 107}));
+    model.setCardType(indexOf(model.cardTypeNames(), "Spell"));
+    QCOMPARE(resultCodes(model), (L{108, 109, 113}));
+    // Spell sub-type compares the whole type word (:1233): Normal is only 108.
+    model.setSubType(indexOf(model.subTypeNames(), "Normal"));
+    QCOMPARE(resultCodes(model), (L{108}));
+    model.setSubType(indexOf(model.subTypeNames(), "Quick-Play"));
+    QCOMPARE(resultCodes(model), (L{109}));
+    model.setCardType(indexOf(model.cardTypeNames(), "Trap"));
+    QCOMPARE(resultCodes(model), (L{110, 111}));
+    model.setSubType(indexOf(model.subTypeNames(), "Normal"));
+    QCOMPARE(resultCodes(model), (L{110}));
+    model.setCardType(indexOf(model.cardTypeNames(), "Skill"));
+    QCOMPARE(resultCodes(model), (L{112}));
+    QVERIFY(!model.subTypeEnabled());
+
+    // Monster sub-type is all-bits (:1196): Normal finds 101 and the Normal Tuner.
+    model.setCardType(indexOf(model.cardTypeNames(), "Monster"));
+    model.setSubType(indexOf(model.subTypeNames(), "Normal"));
+    QCOMPARE(resultCodes(model), (L{101, 104}));
+    model.setSubType(indexOf(model.subTypeNames(), "Normal|Tuner"));
+    QCOMPARE(resultCodes(model), (L{104}));
+    model.setSubType(0);
+
+    // Attribute and race are exact (:1198-1201): Warrior does not find the
+    // Warrior|Machine card 104.
+    model.setAttribute(indexOf(model.attributeNames(), "DARK"));
+    QCOMPARE(resultCodes(model), (L{102, 103}));
+    model.setAttribute(0);
+    model.setRace(indexOf(model.raceNames(), "Warrior"));
+    QCOMPARE(resultCodes(model), (L{101, 105}));
+    model.setRace(0);
+
+    // ATK text, the forms parse_numeric_filter reproduces.
+    model.setAttackText(">=1500");
+    QCOMPARE(resultCodes(model), (L{101, 102, 103, 106, 107}));
+    model.setAttackText(">1500");
+    QCOMPARE(resultCodes(model), (L{102, 103, 106, 107}));
+    model.setAttackText("<=1500");
+    QCOMPARE(resultCodes(model), (L{101, 104})); // not 105's "?"
+    model.setAttackText("?");
+    QCOMPARE(resultCodes(model), (L{105}));
+    model.setAttackText("1500");
+    QCOMPARE(resultCodes(model), (L{101}));
+    model.setAttackText("1500a"); // trailing text: equal to 0
+    QCOMPARE(resultCodes(model), L{});
+    model.setAttackText(" 1500"); // no recognised first character: no filter
+    QCOMPARE(resultCodes(model), (L{101, 102, 103, 104, 105, 106, 107}));
+    model.setAttackText(QString());
+
+    // DEF never matches a Link monster (:1212).
+    model.setDefenseText(">=0");
+    QCOMPARE(resultCodes(model), (L{101, 102, 103, 104, 107}));
+    model.setDefenseText(QString());
+
+    // Level, and "?" on Level matches nothing (:1218).
+    model.setLevelText("<=4");
+    QCOMPARE(resultCodes(model), (L{101, 104, 105, 106, 107}));
+    model.setLevelText("?");
+    QCOMPARE(resultCodes(model), L{});
+    model.setLevelText(QString());
+
+    // Scale: Pendulum only (:1225).
+    model.setScaleText(">=0");
+    QCOMPARE(resultCodes(model), (L{107}));
+    model.setScaleText(QString());
+
+    // Effect categories: any selected bit (:1250), for every card type.
+    model.setCardType(0);
+    model.setCategorySelected(1, true); // 0x2
+    QCOMPARE(resultCodes(model), (L{103}));
+    model.setCategorySelected(0, true); // 0x1 too: either
+    QCOMPARE(resultCodes(model), (L{102, 103}));
+    QCOMPARE(model.selectedCategoryCount(), 2);
+    model.setCategorySelected(0, false);
+    model.setCategorySelected(1, false);
+
+    // Link markers: every selected marker (:1252), Link Spells included.
+    const int bottomLeft = model.linkMarkerGlyphs().indexOf(QStringLiteral("↙")); // 0x1
+    const int topLeft = model.linkMarkerGlyphs().indexOf(QStringLiteral("↖"));    // 0x40
+    const int bottom = model.linkMarkerGlyphs().indexOf(QStringLiteral("↓"));     // 0x2
+    model.setLinkMarkerSelected(bottomLeft, true);
+    model.setLinkMarkerSelected(topLeft, true);
+    QCOMPARE(resultCodes(model), (L{106}));
+    model.setLinkMarkerSelected(bottomLeft, false);
+    model.setLinkMarkerSelected(topLeft, false);
+    model.setLinkMarkerSelected(bottom, true);
+    QCOMPARE(resultCodes(model), (L{113}));
+    QVERIFY(model.filtersActive());
+
+    // Clear (deck_con.cpp:1363-1397).
+    model.clearFilters();
+    QVERIFY(!model.filtersActive());
+    QCOMPARE(resultCodes(model).size(), 13);
+}
+
+void TestDeckBuilder::searchHidesWhatUpstreamHidesByDefault() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    cards.push_back(SyntheticCard{201, "Official", kMonster});
+    cards.back().scope = 0x3;
+    cards.push_back(SyntheticCard{202, "Token", kMonster | kToken});
+    cards.back().scope = 0x3;
+    cards.push_back(SyntheticCard{203, "Hidden", kMonster});
+    cards.back().scope = 0x1000 | 0x3;
+    cards.push_back(SyntheticCard{204, "Anime", kMonster});
+    cards.back().scope = 0x4;
+    cards.push_back(SyntheticCard{205, "Prerelease", kMonster});
+    cards.back().scope = 0x100;
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    SearchResultsModel model;
+    model.setCatalog(&catalog);
+    model.setDeckController(&controller);
+
+    using L = QList<quint32>;
+    // deck_con.cpp:1192: no token, no hidden card, no non-official card.
+    QCOMPARE(resultCodes(model), (L{201, 205}));
+    // Name search does not bring them back either.
+    model.setQueryText(QStringLiteral("Token"));
+    QCOMPARE(resultCodes(model), L{});
+    model.setQueryText(QString());
+    // The switch shows non-official cards, never tokens or hidden ones.
+    QVERIFY(model.nonOfficialSwitchEnabled());
+    model.setShowNonOfficial(true);
+    QCOMPARE(resultCodes(model), (L{201, 204, 205}));
+    // With it on, the limit list offers the non-official categories
+    // (game.cpp:3429-3434).
+    QVERIFY(model.limitationNames().contains(QStringLiteral("Anime")));
+    model.setLimitation(indexOf(model.limitationNames(), "Anime"));
+    QCOMPARE(resultCodes(model), (L{204}));
+    // Switching it off drops the choice no longer offered back to "Any".
+    model.setShowNonOfficial(false);
+    QCOMPARE(model.limitation(), 0);
+    QCOMPARE(resultCodes(model), (L{201, 205}));
+}
+
+void TestDeckBuilder::limitFilterFollowsTheSelectedBanlist() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    for (quint32 code : {301u, 302u, 303u, 304u, 305u}) {
+        cards.push_back(SyntheticCard{code, QStringLiteral("Card%1").arg(code), kMonster});
+        cards.back().scope = 0x3;
+    }
+    cards[4].scope = 0x1; // 305: OCG only
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({dbPath}));
+    DeckController controller;
+    controller.setCatalog(&catalog);
+    SearchResultsModel model;
+    model.setCatalog(&catalog);
+    model.setDeckController(&controller);
+
+    using L = QList<quint32>;
+    // No banlist: the four counts are not offered (ADR 0012).
+    QVERIFY(!model.limitationNames().contains(QStringLiteral("Banned")));
+    model.setLimitation(indexOf(model.limitationNames(), "OCG"));
+    QCOMPARE(resultCodes(model), (L{305}));
+    model.setLimitation(0);
+
+    controller.loadBanlistFromText("!Black\n301 0\n302 1\n303 2\n!White\n$whitelist\n301 3\n302 3\n");
+    controller.setSelectedBanlistIndex(indexOf(controller.banlistNames(), "Black"));
+    QVERIFY(model.limitationNames().contains(QStringLiteral("Banned")));
+    model.setLimitation(indexOf(model.limitationNames(), "Banned"));
+    QCOMPARE(resultCodes(model), (L{301}));
+    model.setLimitation(indexOf(model.limitationNames(), "Limited"));
+    QCOMPARE(resultCodes(model), (L{302}));
+    model.setLimitation(indexOf(model.limitationNames(), "Semi-limited"));
+    QCOMPARE(resultCodes(model), (L{303}));
+    model.setLimitation(indexOf(model.limitationNames(), "Unlimited"));
+    QCOMPARE(resultCodes(model), (L{304, 305}));
+
+    // A whitelist shows only its cards unless "All cards" is chosen
+    // (deck_con.cpp:1254, :1320-1321), and disables the non-official switch.
+    model.setLimitation(0);
+    controller.setSelectedBanlistIndex(indexOf(controller.banlistNames(), "White"));
+    QVERIFY(!model.nonOfficialSwitchEnabled());
+    QCOMPARE(model.limitationNames().first(), QStringLiteral("On the whitelist"));
+    QCOMPARE(resultCodes(model), (L{301, 302}));
+    model.setLimitation(indexOf(model.limitationNames(), "All cards"));
+    QCOMPARE(resultCodes(model), (L{301, 302, 303, 304, 305}));
+}
+
+void TestDeckBuilder::cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes() {
+    SearchResultsModel model;
+    model.setCardType(indexOf(model.cardTypeNames(), "Monster"));
+    QVERIFY(model.monsterFiltersEnabled());
+    model.setAttribute(2);
+    model.setRace(3);
+    model.setAttackText(">=1");
+    model.setDefenseText(">=1");
+    model.setLevelText("4");
+    model.setScaleText("5");
+    // deck_con.cpp:577-583: the Link sub-type disables and clears DEF.
+    model.setSubType(indexOf(model.subTypeNames(), "Link"));
+    QVERIFY(!model.defenseEnabled());
+    QCOMPARE(model.defenseText(), QString());
+    // deck_con.cpp:525-532: a new card type clears the rest.
+    model.setCardType(indexOf(model.cardTypeNames(), "Spell"));
+    QVERIFY(!model.monsterFiltersEnabled());
+    QCOMPARE(model.subType(), 0);
+    QCOMPARE(model.attribute(), 0);
+    QCOMPARE(model.race(), 0);
+    QCOMPARE(model.attackText(), QString());
+    QCOMPARE(model.levelText(), QString());
+    QCOMPARE(model.scaleText(), QString());
+}
+
+void TestDeckBuilder::numberBoxesReadTheFieldUpstreamReads() {
+    // Cards that tell the four boxes apart: a "?" DEF, a "?" ATK, a negative
+    // packed level (data_manager.cpp:146-150 stores level -1 as the unsigned
+    // 4294967041), and a Pendulum card whose left and right scales differ
+    // (:152-153).
+    QList<SyntheticCard> cards;
+    cards.push_back(SyntheticCard{601, QStringLiteral("Card601"), kMonster | kEffect, 1500, -2, 4});
+    cards.push_back(SyntheticCard{602, QStringLiteral("Card602"), kMonster | kEffect, -2, 1500, 4});
+    cards.push_back(SyntheticCard{603, QStringLiteral("Card603"), kMonster | kEffect, 1000, 1000, -1});
+    cards.push_back(SyntheticCard{604, QStringLiteral("Card604"), kMonster | kEffect | kPendulum, 1000, 1000,
+                                  (2 << 24) | (7 << 16) | 4});
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    CardCatalog catalog;
+    QVERIFY(catalog.loadDatabases({writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards)}));
+    SearchResultsModel model;
+    model.setCatalog(&catalog);
+    model.setCardType(indexOf(model.cardTypeNames(), "Monster"));
+
+    using L = QList<quint32>;
+    QCOMPARE(resultCodes(model), (L{601, 602, 603, 604}));
+
+    // ATK and DEF are signed, and "?" and the "at most" forms treat -2 as
+    // upstream does (deck_con.cpp:1203-1213); each box reads its own field.
+    model.setAttackText("?");
+    QCOMPARE(resultCodes(model), (L{602}));
+    model.setAttackText("<=1500");
+    QCOMPARE(resultCodes(model), (L{601, 603, 604}));
+    model.setAttackText(QString());
+    model.setDefenseText("?");
+    QCOMPARE(resultCodes(model), (L{601}));
+    model.setDefenseText("<=1500");
+    QCOMPARE(resultCodes(model), (L{602, 603, 604}));
+    model.setDefenseText(QString());
+
+    // Level is unsigned (filter_lv is uint32_t): the wrapped negative level
+    // is found by its unsigned value, and ">=2147483648" does not wrap into
+    // a negative bound that keeps every card (:1216-1218).
+    model.setLevelText("4");
+    QCOMPARE(resultCodes(model), (L{601, 602, 604}));
+    model.setLevelText("4294967041");
+    QCOMPARE(resultCodes(model), (L{603}));
+    model.setLevelText(">=2147483648");
+    QCOMPARE(resultCodes(model), (L{603}));
+    model.setLevelText(QString());
+
+    // Scale reads the left scale only, unsigned, Pendulum cards only
+    // (:1222-1224).
+    model.setScaleText("2");
+    QCOMPARE(resultCodes(model), (L{604}));
+    model.setScaleText("7");
+    QCOMPARE(resultCodes(model), L{});
+    model.setScaleText(">=5");
+    QCOMPARE(resultCodes(model), L{});
+    model.setScaleText("<=2");
+    QCOMPARE(resultCodes(model), (L{604}));
+    model.setScaleText(">=2147483648");
+    QCOMPARE(resultCodes(model), L{});
 }
 
 QTEST_MAIN(TestDeckBuilder)

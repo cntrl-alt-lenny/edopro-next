@@ -88,6 +88,7 @@ endif()
 add_library(edopro_next_search STATIC
     src/text_normalize.cpp
     src/card_search_index.cpp
+    src/numeric_filter_text.cpp
 )
 
 target_include_directories(edopro_next_search
@@ -181,6 +182,21 @@ if(EDOPRO_NEXT_DATA_TESTS)
         endif()
     endif()
     add_test(NAME card_search COMMAND test_card_search)
+
+    add_executable(test_numeric_filter_text tests/test_numeric_filter_text.cpp)
+    target_link_libraries(test_numeric_filter_text PRIVATE edopro_next_search_test_main SQLite::SQLite3)
+    if(MSVC)
+        target_compile_options(test_numeric_filter_text PRIVATE /W4)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_numeric_filter_text PRIVATE /WX)
+        endif()
+    else()
+        target_compile_options(test_numeric_filter_text PRIVATE -Wall -Wextra)
+        if(EDOPRO_NEXT_WERROR)
+            target_compile_options(test_numeric_filter_text PRIVATE -Werror)
+        endif()
+    endif()
+    add_test(NAME numeric_filter_text COMMAND test_numeric_filter_text)
 
     # A non-gating measurement executable, not a CTest case: see
     # docs/architecture/card-search.md#performance for why wall-clock
