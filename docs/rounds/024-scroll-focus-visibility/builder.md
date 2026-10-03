@@ -2,10 +2,10 @@
 round: 024-scroll-focus-visibility
 role: builder
 branch: brain/024-scroll-focus-visibility
-head: 762e938db016d30105b281d63c3ccc57a0a20147
+head: 4dea14dde78ada30abaf85af0dfb03ab5d8a849c
 os: macOS 27.0
 python: 3.9.6
-written: 2026-10-03T20:02:18Z
+written: 2026-10-03T20:03:38Z
 -->
 Implementation/evidence commit: `762e938db016d30105b281d63c3ccc57a0a20147`.
 Builder delivery only; no acceptance or merge. Draft PR: https://github.com/cntrl-alt-lenny/edopro-next/pull/42.
@@ -175,10 +175,11 @@ matching Linux `timeout`; this is the macOS adaptation, not a literal shell exit
 ```text
 survival assertion: 124 PASS
 empty-stderr assertion: FAIL
-qt.qpa.fonts: Populating font family aliases took 54 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+qt.qpa.fonts: Populating font family aliases took 54 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.
 
 ```
 
+The diagnostic line above is rendered without its trailing space.
 The collecting wrapper exits 0; that does not make the empty-stderr assertion
 pass. This host's platform font diagnostic is preserved literally and is separate
 from CI's strict Linux survival/empty-stderr assertion. No QML, TypeError or
