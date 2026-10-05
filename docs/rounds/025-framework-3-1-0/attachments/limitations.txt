@@ -1,0 +1,5 @@
+Fingerprint verification helper attempts failed with NameError: name Path is not defined, then AttributeError: Item object has no attribute text. Corrected the local helper to pathlib.Path and Item.data; no repository implementation changed. Final comparison of all 10 copies to release and manifest succeeded.
+
+Unqualified merged-round delivery limitation: RoundIndex.branches_with_reports excludes report blobs already present in origin/master. The successful round 024 review blob is merged, so its branch is omitted; the older differing report remains a candidate. Explicit delivery --branch origin/verifier/024-scroll-focus-visibility-2 selects the successful review. No framework patch or old-branch deletion performed.
+
+Superseded round 023 delivery exits 1 and prompt exits 2 with an explanatory superseded message. These expected refusals are diagnostics; no seat was restarted.

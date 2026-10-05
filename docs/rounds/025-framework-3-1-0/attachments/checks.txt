@@ -1,0 +1,196 @@
+Implementation SHA: e59cbec5d47a47ee713dfba4c74b4daf0b6f5041
+$ python3.13 --version
+Python 3.13.15
+exit: 0
+
+$ sw_vers
+ProductName:		macOS
+ProductVersion:		27.0.1
+BuildVersion:		26A434
+exit: 0
+
+$ python3.13 tools/fw.py check
+0 error(s), 0 warning(s)
+exit: 0
+
+$ python3.13 tools/generate_messages.py --check
+message table up to date (96 ids)
+exit: 0
+
+$ python3.13 tools/generate_protocol_constants.py --check
+protocol constants up to date (187 values)
+exit: 0
+
+$ python3.13 tools/generate_readme_status.py --check
+README status block is up to date
+exit: 0
+
+$ python3.13 -m unittest discover -s tests -v
+test_workflow_still_produces_the_required_check_names (test_ci_required_checks.RequiredCheckContextsTest.test_workflow_still_produces_the_required_check_names) ... ok
+test_project_checks (test_framework.FrameworkHygiene.test_project_checks) ... ok
+test_check_fails_when_a_relevant_constant_is_unresolvable (test_generate_protocol_constants.TestCheckDetectsUnresolvableConstants.test_check_fails_when_a_relevant_constant_is_unresolvable) ... ok
+test_check_passes_when_nothing_is_skipped (test_generate_protocol_constants.TestCheckDetectsUnresolvableConstants.test_check_passes_when_nothing_is_skipped) ... ok
+test_the_real_repository_has_nothing_to_skip_right_now (test_generate_protocol_constants.TestCheckDetectsUnresolvableConstants.test_the_real_repository_has_nothing_to_skip_right_now) ... ok
+test_unresolvable_constant_never_reaches_the_generated_header (test_generate_protocol_constants.TestCheckDetectsUnresolvableConstants.test_unresolvable_constant_never_reaches_the_generated_header) ... ok
+test_hex_octal_decimal_literals_resolve (test_generate_protocol_constants.TestEvaluate.test_hex_octal_decimal_literals_resolve) ... ok
+test_or_composition_of_known_names_resolves (test_generate_protocol_constants.TestEvaluate.test_or_composition_of_known_names_resolves) ... ok
+test_shift_expression_is_unresolvable (test_generate_protocol_constants.TestEvaluate.test_shift_expression_is_unresolvable) ... ok
+test_unknown_name_is_unresolvable (test_generate_protocol_constants.TestEvaluate.test_unknown_name_is_unresolvable) ... ok
+test_exits_zero_on_the_committed_files_and_one_on_a_stale_copy (test_home_status.CommandLine.test_exits_zero_on_the_committed_files_and_one_on_a_stale_copy) ... ok
+test_every_milestone_has_exactly_one_row (test_home_status.CommittedFilesAgree.test_every_milestone_has_exactly_one_row) ... ok
+test_home_screen_matches_roadmap (test_home_status.CommittedFilesAgree.test_home_screen_matches_roadmap) ... ok
+test_a_milestone_missing_from_the_screen_fails (test_home_status.TheCheckCanFail.test_a_milestone_missing_from_the_screen_fails) ... ok
+test_a_renamed_milestone_title_fails (test_home_status.TheCheckCanFail.test_a_renamed_milestone_title_fails) ... ok
+test_a_roadmap_change_the_screen_does_not_follow_fails (test_home_status.TheCheckCanFail.test_a_roadmap_change_the_screen_does_not_follow_fails) ... ok
+test_a_row_for_a_milestone_that_does_not_exist_fails (test_home_status.TheCheckCanFail.test_a_row_for_a_milestone_that_does_not_exist_fails) ... ok
+test_a_row_without_a_milestone_fails (test_home_status.TheCheckCanFail.test_a_row_without_a_milestone_fails) ... ok
+test_a_screen_with_no_rows_fails_instead_of_passing_vacuously (test_home_status.TheCheckCanFail.test_a_screen_with_no_rows_fails_instead_of_passing_vacuously) ... ok
+test_a_stale_status_on_the_home_screen_fails (test_home_status.TheCheckCanFail.test_a_stale_status_on_the_home_screen_fails) ... ok
+test_a_status_word_in_free_text_fails (test_home_status.TheCheckCanFail.test_a_status_word_in_free_text_fails) ... ok
+test_the_duel_field_finishing_fails_while_the_screen_says_not_started (test_home_status.TheCheckCanFail.test_the_duel_field_finishing_fails_while_the_screen_says_not_started) ... ok
+test_all_fixtures_present (test_pr_evidence.PrEvidenceCorpusTest.test_all_fixtures_present) ... ok
+test_clean_corpus_bodies_pass_cleanly (test_pr_evidence.PrEvidenceCorpusTest.test_clean_corpus_bodies_pass_cleanly)
+PRs #24-#28 contain rerunnable commands and no measured figures; they must pass with 0 findings. ... ok
+test_corpus_other_measured_figures (test_pr_evidence.PrEvidenceCorpusTest.test_corpus_other_measured_figures)
+Verify line-level expectations for other measured figures across the corpus. ... ok
+test_corpus_pr_verdicts (test_pr_evidence.PrEvidenceCorpusTest.test_corpus_pr_verdicts)
+Every corpus PR body must match its judged expected verdict. ... ok
+test_e4_and_e5_line_level_expectations (test_pr_evidence.PrEvidenceCorpusTest.test_e4_and_e5_line_level_expectations)
+Verify the exact figure and false-alarm lines named in E4 and E5. ... ok
+test_no_body_fails_solely_on_non_measured_figure_lines (test_pr_evidence.PrEvidenceCorpusTest.test_no_body_fails_solely_on_non_measured_figure_lines)
+Ensure no body fails solely due to a false alarm on non-measured figure lines. ... ok
+test_accepts_command_based_evidence (test_pr_evidence.PrEvidenceTest.test_accepts_command_based_evidence) ... ok
+test_ignores_identifiers_and_version_numbers (test_pr_evidence.PrEvidenceTest.test_ignores_identifiers_and_version_numbers) ... ok
+test_rejects_numeric_test_count_even_with_a_command (test_pr_evidence.PrEvidenceTest.test_rejects_numeric_test_count_even_with_a_command) ... ok
+test_rejects_pr19_historical_figures (test_pr_evidence.PrEvidenceTest.test_rejects_pr19_historical_figures) ... ok
+test_rejects_repository_body_measurement_shapes (test_pr_evidence.PrEvidenceTest.test_rejects_repository_body_measurement_shapes) ... ok
+test_requires_a_rerunnable_command (test_pr_evidence.PrEvidenceTest.test_requires_a_rerunnable_command) ... ok
+test_version_prose_is_not_a_measurement_but_still_needs_a_command (test_pr_evidence.PrEvidenceTest.test_version_prose_is_not_a_measurement_but_still_needs_a_command) ... ok
+test_semantic_model_chip_is_not_drawn_as_unbuilt_while_m2_is_done (test_presentation_assets.BannerDoesNotDenyWhatExists.test_semantic_model_chip_is_not_drawn_as_unbuilt_while_m2_is_done) ... ok
+test_the_check_can_fail (test_presentation_assets.BannerDoesNotDenyWhatExists.test_the_check_can_fail) ... ok
+test_both_svgs_draw_all_four_chips (test_presentation_assets.ChipsStayInStep.test_both_svgs_draw_all_four_chips) ... ok
+test_social_preview_chips_match_the_banner (test_presentation_assets.ChipsStayInStep.test_social_preview_chips_match_the_banner) ... ok
+test_the_comparison_can_fail (test_presentation_assets.ChipsStayInStep.test_the_comparison_can_fail) ... ok
+test_canvas_is_1280_by_640_and_stands_alone (test_presentation_assets.SocialPreviewSource.test_canvas_is_1280_by_640_and_stands_alone) ... ok
+test_push_to_master_from_a_bare_repository_is_rejected (test_push_guard.BareRepositoryTest.test_push_to_master_from_a_bare_repository_is_rejected) ... ok
+test_colon_refspec (test_push_guard.HistoricalBypassTest.test_colon_refspec) ... ok
+test_force_shorthand_resolves_to_the_same_ref (test_push_guard.HistoricalBypassTest.test_force_shorthand_resolves_to_the_same_ref) ... ok
+test_fully_qualified_force_ref (test_push_guard.HistoricalBypassTest.test_fully_qualified_force_ref) ... ok
+test_allows_empty_input (test_push_guard.PushGuardTest.test_allows_empty_input) ... ok
+test_allows_meta_branch (test_push_guard.PushGuardTest.test_allows_meta_branch) ... ok
+test_allows_task_branch (test_push_guard.PushGuardTest.test_allows_task_branch) ... ok
+test_branch_merely_containing_master_is_allowed (test_push_guard.PushGuardTest.test_branch_merely_containing_master_is_allowed) ... ok
+test_hook_exists_and_is_executable (test_push_guard.PushGuardTest.test_hook_exists_and_is_executable) ... ok
+test_message_names_the_branch (test_push_guard.PushGuardTest.test_message_names_the_branch) ... ok
+test_rejects_deleting_master (test_push_guard.PushGuardTest.test_rejects_deleting_master) ... ok
+test_rejects_master_among_several_refs (test_push_guard.PushGuardTest.test_rejects_master_among_several_refs) ... ok
+test_rejects_push_to_master (test_push_guard.PushGuardTest.test_rejects_push_to_master) ... ok
+test_load_contracts_enumerate_failure_stages_without_a_false_biconditional (test_read_failure_contract.ReadFailureContractTests.test_load_contracts_enumerate_failure_stages_without_a_false_biconditional) ... ok
+test_rejects_contradictory_positive_predicate (test_read_failure_contract.ReadFailureContractTests.test_rejects_contradictory_positive_predicate) ... ok
+test_rejects_contradictory_status_error_exception (test_read_failure_contract.ReadFailureContractTests.test_rejects_contradictory_status_error_exception) ... ok
+test_ci_first_license_last (test_readme_standard.BadgeTest.test_ci_first_license_last) ... ok
+test_every_badge_links_to_evidence_that_exists (test_readme_standard.BadgeTest.test_every_badge_links_to_evidence_that_exists) ... ok
+test_four_or_five_badges (test_readme_standard.BadgeTest.test_four_or_five_badges) ... ok
+test_license_badge_is_static_and_links_to_license (test_readme_standard.BadgeTest.test_license_badge_is_static_and_links_to_license) ... ok
+test_license_file_is_untouched_upstream_text (test_readme_standard.BadgeTest.test_license_file_is_untouched_upstream_text)
+Non-scope check: the static badge exists because LICENSE must stay verbatim. ... ok
+test_no_development_stage_or_milestone_badge (test_readme_standard.BadgeTest.test_no_development_stage_or_milestone_badge)
+Owner's ruling: both are changeable facts, and nothing may state one by hand. ... ok
+test_shields_badges_are_flat (test_readme_standard.BadgeTest.test_shields_badges_are_flat) ... ok
+test_hero_banner_is_kept_and_present (test_readme_standard.LandingPageShapeTest.test_hero_banner_is_kept_and_present) ... ok
+test_no_news_style_panels (test_readme_standard.LandingPageShapeTest.test_no_news_style_panels) ... ok
+test_quick_start_build_targets_exist (test_readme_standard.LandingPageShapeTest.test_quick_start_build_targets_exist) ... ok
+test_sections_appear_in_the_standards_order (test_readme_standard.LandingPageShapeTest.test_sections_appear_in_the_standards_order) ... ok
+test_visible_word_count_is_within_the_standard (test_readme_standard.LandingPageShapeTest.test_visible_word_count_is_within_the_standard) ... ok
+test_word_counter_ignores_what_is_not_visible (test_readme_standard.LandingPageShapeTest.test_word_counter_ignores_what_is_not_visible) ... ok
+test_moved_pages_links_and_images_resolve (test_readme_standard.LinkTest.test_moved_pages_links_and_images_resolve) ... ok
+test_readme_links_and_images_resolve (test_readme_standard.LinkTest.test_readme_links_and_images_resolve) ... ok
+test_slug_function_matches_github_for_a_known_heading (test_readme_standard.LinkTest.test_slug_function_matches_github_for_a_known_heading) ... ok
+test_credits (test_readme_standard.NoticesTest.test_credits) ... ok
+test_license_statement (test_readme_standard.NoticesTest.test_license_statement) ... ok
+test_no_game_data_is_included (test_readme_standard.NoticesTest.test_no_game_data_is_included) ... ok
+test_trademark_and_non_affiliation (test_readme_standard.NoticesTest.test_trademark_and_non_affiliation) ... ok
+test_png_exists_and_is_exactly_1280_by_640 (test_readme_standard.SocialPreviewTest.test_png_exists_and_is_exactly_1280_by_640) ... ok
+test_apply_block_refuses_a_readme_without_markers (test_readme_status.CheckTest.test_apply_block_refuses_a_readme_without_markers) ... ok
+test_apply_block_then_check_is_a_fixed_point (test_readme_status.CheckTest.test_apply_block_then_check_is_a_fixed_point) ... ok
+test_checking_an_item_off_without_a_readme_change_fails (test_readme_status.CheckTest.test_checking_an_item_off_without_a_readme_change_fails) ... ok
+test_crlf_readme_passes (test_readme_status.CheckTest.test_crlf_readme_passes) ... ok
+test_current_readme_passes (test_readme_status.CheckTest.test_current_readme_passes) ... ok
+test_duplicate_or_unpaired_markers_fail (test_readme_status.CheckTest.test_duplicate_or_unpaired_markers_fail) ... ok
+test_hand_edited_readme_block_fails (test_readme_status.CheckTest.test_hand_edited_readme_block_fails) ... ok
+test_readme_with_no_block_fails (test_readme_status.CheckTest.test_readme_with_no_block_fails)
+This is the state the repository was in before the block existed. ... ok
+test_status_change_in_the_roadmap_without_a_readme_change_fails (test_readme_status.CheckTest.test_status_change_in_the_roadmap_without_a_readme_change_fails)
+The demonstration the brief asks for: source moves, README does not. ... ok
+test_a_contradictory_roadmap_is_a_tool_error (test_readme_status.CommandLineTest.test_a_contradictory_roadmap_is_a_tool_error) ... ok
+test_check_fails_on_a_stale_copy_and_update_repairs_it (test_readme_status.CommandLineTest.test_check_fails_on_a_stale_copy_and_update_repairs_it) ... ok
+test_check_entry_point (test_readme_status.CommittedFilesTest.test_check_entry_point) ... ok
+test_committed_readme_block_is_current (test_readme_status.CommittedFilesTest.test_committed_readme_block_is_current) ... ok
+test_crlf_roadmap_parses_the_same (test_readme_status.ParseTest.test_crlf_roadmap_parses_the_same) ... ok
+test_real_roadmap_parses_and_is_self_consistent (test_readme_status.ParseTest.test_real_roadmap_parses_and_is_self_consistent) ... ok
+test_statuses_and_open_items (test_readme_status.ParseTest.test_statuses_and_open_items) ... ok
+test_unnumbered_sections_are_not_milestones (test_readme_status.ParseTest.test_unnumbered_sections_are_not_milestones) ... ok
+test_duel_answer_follows_the_duel_milestone (test_readme_status.RenderTest.test_duel_answer_follows_the_duel_milestone) ... ok
+test_groups_are_kept_separate (test_readme_status.RenderTest.test_groups_are_kept_separate) ... ok
+test_done_with_an_unchecked_item (test_readme_status.RoadmapContradictionTest.test_done_with_an_unchecked_item) ... ok
+test_in_progress_with_everything_checked (test_readme_status.RoadmapContradictionTest.test_in_progress_with_everything_checked) ... ok
+test_milestone_without_items (test_readme_status.RoadmapContradictionTest.test_milestone_without_items) ... ok
+test_no_duel_milestone (test_readme_status.RoadmapContradictionTest.test_no_duel_milestone) ... ok
+test_no_marker_with_a_checked_item (test_readme_status.RoadmapContradictionTest.test_no_marker_with_a_checked_item) ... ok
+test_no_environmental_leakage (test_replay_trace.TestDeterminism.test_no_environmental_leakage)
+Traces must not embed paths, absolute times, or addresses. ... ok
+test_parse_is_byte_exact (test_replay_trace.TestDeterminism.test_parse_is_byte_exact)
+Every replay body must be fully consumed - including embedded ones. ... ok
+test_repeated_render_is_identical (test_replay_trace.TestDeterminism.test_repeated_render_is_identical) ... ok
+test_fixtures_are_small (test_replay_trace.TestFixtureHygiene.test_fixtures_are_small) ... ok
+test_fixtures_carry_no_player_identity (test_replay_trace.TestFixtureHygiene.test_fixtures_carry_no_player_identity)
+Applies recursively: an embedded replay carries its own names. ... ok
+test_both_formats_are_covered (test_replay_trace.TestGoldenTraces.test_both_formats_are_covered)
+Guards against the .yrp glob silently matching nothing. ... ok
+test_fixtures_exist (test_replay_trace.TestGoldenTraces.test_fixtures_exist) ... ok
+test_traces_match_golden (test_replay_trace.TestGoldenTraces.test_traces_match_golden) ... ok
+test_detects_truncated_body (test_replay_trace.TestReaderRobustness.test_detects_truncated_body) ... ok
+test_rejects_absurd_length_field (test_replay_trace.TestReaderRobustness.test_rejects_absurd_length_field)
+A corrupt count must fail fast, not drive a huge loop first. ... ok
+test_rejects_invalid_lzma_properties (test_replay_trace.TestReaderRobustness.test_rejects_invalid_lzma_properties)
+Corrupt props must be caught here, not inside Python's lzma API. ... ok
+test_rejects_non_replay (test_replay_trace.TestReaderRobustness.test_rejects_non_replay) ... ok
+test_rejects_truncated_header (test_replay_trace.TestReaderRobustness.test_rejects_truncated_header) ... ok
+test_standalone_and_embedded_yrp1_agree (test_replay_trace.TestYrp1Parsing.test_standalone_and_embedded_yrp1_agree)
+The same parser must read both, so a shared duel reads identically. ... ok
+test_yrp1_content_is_populated (test_replay_trace.TestYrp1Parsing.test_yrp1_content_is_populated) ... ok
+test_build_output_is_not_counted_as_source (test_semantic_trace.TestBinaryFreshness.test_build_output_is_not_counted_as_source) ... ok
+test_find_binary_accepts_fresh_search_candidate (test_semantic_trace.TestBinaryFreshness.test_find_binary_accepts_fresh_search_candidate) ... ok
+test_find_binary_rejects_stale_search_candidate (test_semantic_trace.TestBinaryFreshness.test_find_binary_rejects_stale_search_candidate) ... ok
+test_fresh_binary_is_accepted (test_semantic_trace.TestBinaryFreshness.test_fresh_binary_is_accepted) ... ok
+test_stale_binary_is_rejected (test_semantic_trace.TestBinaryFreshness.test_stale_binary_is_rejected) ... ok
+test_unreadable_source_tree_fails_closed (test_semantic_trace.TestBinaryFreshness.test_unreadable_source_tree_fails_closed) ... skipped 'Windows ACL denial is required for this enumeration test'
+test_fixtures_exist (test_semantic_trace.TestSemanticGoldens.test_fixtures_exist) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_rendering_is_deterministic (test_semantic_trace.TestSemanticGoldens.test_rendering_is_deterministic) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_traces_match_golden (test_semantic_trace.TestSemanticGoldens.test_traces_match_golden) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_committed_fixtures_are_semantically_complete (test_semantic_trace.TestSemanticQuality.test_committed_fixtures_are_semantically_complete) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_coverage_accounts_for_every_packet (test_semantic_trace.TestSemanticQuality.test_coverage_accounts_for_every_packet) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_model_invariants_hold_at_the_end (test_semantic_trace.TestSemanticQuality.test_model_invariants_hold_at_the_end) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_no_environmental_leakage (test_semantic_trace.TestSemanticQuality.test_no_environmental_leakage) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_no_packet_is_malformed_or_unknown (test_semantic_trace.TestSemanticQuality.test_no_packet_is_malformed_or_unknown) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_query_stream_coverage_is_real_and_clean (test_semantic_trace.TestSemanticQuality.test_query_stream_coverage_is_real_and_clean) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+test_something_is_actually_decoded (test_semantic_trace.TestSemanticQuality.test_something_is_actually_decoded) ... skipped 'no semantic-trace binary is present and newer than every client source file; configure and build client/, or set EDOPRO_NEXT_SEMANTIC_TRACE to a fresh binary'
+
+----------------------------------------------------------------------
+Ran 133 tests in 1.722s
+
+OK (skipped=11)
+exit: 0
+
+$ python3.13 tests/test_replay_trace.py --update
+wrote tests/golden/duel-chains-battle-yrpX.trace
+wrote tests/golden/duel-extended-yrpX.trace
+wrote tests/golden/duel-chains-battle-yrp.trace
+exit: 0
+
+$ git diff --exit-code -- tests/golden
+exit: 0
+
+$ git diff --check
+exit: 0
+

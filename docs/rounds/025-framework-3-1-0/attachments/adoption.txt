@@ -1,0 +1,107 @@
+$ python3 tools/adopt.py <seat-checkout> --update --dry-run [before]
+update: <seat-checkout> -> agentic-framework 3.1.0 (from 3.0.0)
+  replace docs/agents/FRAMEWORK.md
+  replace docs/agents/roles/brain.md
+  replace docs/agents/roles/worker.md
+  replace docs/agents/roles/verifier.md
+  replace tools/fw.py
+  replace tests/test_framework.py
+  same    .gitattributes
+  same    .claude/agents/brain.md
+  same    .claude/agents/verifier.md
+  same    .claude/agents/worker.md
+  same    .claude/commands/status.md
+  keep    AGENTS.md  (project-owned)
+  keep    docs/state.md  (project-owned)
+  keep    docs/rounds/README.md  (project-owned)
+  keep    .githooks/pre-push  (project-owned)
+  keep    CLAUDE.md  (project-owned)
+  record  docs/agents/framework.json
+
+What each release asks of this project:
+
+--- 3.1.0 ---
+Run this as one Tier 1 round (Worker, then Brain re-derives), with no other
+round in flight.
+
+1. From a clone of the framework at `v3.1.0`, run
+   `python3 tools/adopt.py <project> --update --dry-run`, then without
+   `--dry-run`. Expect `replace` lines for framework files. A `gone` line is a
+   file the project deleted, and stays deleted. For each `other` line in
+   `.claude/agents/`, if it is a second seat file for one seat, delete one of
+   the two.
+2. If the project's `AGENTS.md` has its own prompt-header rule (from issue
+   #26), delete it: `FRAMEWORK.md` now carries it.
+3. Optionally, if the project has a fast check that reports can break (a
+   link test, say), name it in `docs/agents/framework.json` under
+   `settings`, as `"report_check": "<command>"`.
+4. Run `python3 tools/fw.py status` and check that each round in flight is
+   shown seat by seat and that the last line starts with `next:`.
+
+dry run: nothing written
+exit: 0
+
+$ python3 tools/adopt.py <seat-checkout> --update  [apply]
+update: <seat-checkout> -> agentic-framework 3.1.0 (from 3.0.0)
+  replace docs/agents/FRAMEWORK.md
+  replace docs/agents/roles/brain.md
+  replace docs/agents/roles/worker.md
+  replace docs/agents/roles/verifier.md
+  replace tools/fw.py
+  replace tests/test_framework.py
+  same    .gitattributes
+  same    .claude/agents/brain.md
+  same    .claude/agents/verifier.md
+  same    .claude/agents/worker.md
+  same    .claude/commands/status.md
+  keep    AGENTS.md  (project-owned)
+  keep    docs/state.md  (project-owned)
+  keep    docs/rounds/README.md  (project-owned)
+  keep    .githooks/pre-push  (project-owned)
+  keep    CLAUDE.md  (project-owned)
+  record  docs/agents/framework.json
+
+What each release asks of this project:
+
+--- 3.1.0 ---
+Run this as one Tier 1 round (Worker, then Brain re-derives), with no other
+round in flight.
+
+1. From a clone of the framework at `v3.1.0`, run
+   `python3 tools/adopt.py <project> --update --dry-run`, then without
+   `--dry-run`. Expect `replace` lines for framework files. A `gone` line is a
+   file the project deleted, and stays deleted. For each `other` line in
+   `.claude/agents/`, if it is a second seat file for one seat, delete one of
+   the two.
+2. If the project's `AGENTS.md` has its own prompt-header rule (from issue
+   #26), delete it: `FRAMEWORK.md` now carries it.
+3. Optionally, if the project has a fast check that reports can break (a
+   link test, say), name it in `docs/agents/framework.json` under
+   `settings`, as `"report_check": "<command>"`.
+4. Run `python3 tools/fw.py status` and check that each round in flight is
+   shown seat by seat and that the last line starts with `next:`.
+exit: 0
+
+$ python3 tools/adopt.py <seat-checkout> --update --dry-run [after]
+update: <seat-checkout> -> agentic-framework 3.1.0 (from 3.1.0)
+  same    docs/agents/FRAMEWORK.md
+  same    docs/agents/roles/brain.md
+  same    docs/agents/roles/worker.md
+  same    docs/agents/roles/verifier.md
+  same    tools/fw.py
+  same    tests/test_framework.py
+  same    .gitattributes
+  same    .claude/agents/brain.md
+  same    .claude/agents/verifier.md
+  same    .claude/agents/worker.md
+  same    .claude/commands/status.md
+  keep    AGENTS.md  (project-owned)
+  keep    docs/state.md  (project-owned)
+  keep    docs/rounds/README.md  (project-owned)
+  keep    .githooks/pre-push  (project-owned)
+  keep    CLAUDE.md  (project-owned)
+nothing to do: this project already matches agentic-framework 3.1.0
+
+dry run: nothing written
+exit: 0
+
