@@ -38,4 +38,3 @@ exit: 1
 $ defaults read com.apple.universalaccess fullKeyboardAccessEnabled
 Error: Could not find key 'fullKeyboardAccessEnabled' in domain 'com.apple.universalaccess'.
 exit: 1
-

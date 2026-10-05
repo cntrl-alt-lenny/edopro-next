@@ -12,8 +12,8 @@
 -- Found WrapAtomic: TRUE
 -- Found OpenGL: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework
 -- Found WrapOpenGL: TRUE
--- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
--- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)\x20
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR)\x20
 -- Found SQLite3: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libsqlite3.tbd (found version "3.26.0")
 CMake Warning (author) at /opt/homebrew/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:3565 (message):
   Qt policy QTP0004 is not set: You need qmldir files for each extra

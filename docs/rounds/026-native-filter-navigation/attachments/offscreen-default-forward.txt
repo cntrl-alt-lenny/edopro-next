@@ -2,7 +2,7 @@ $ ui/build/tests/test_deckbuilder_screen filterTabTraversalStaysVisible:default-
 ********* Start testing of TestDeckBuilderScreen *********
 Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
 PASS   : TestDeckBuilderScreen::initTestCase()
-QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.fonts: Populating font family aliases took 79 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.fonts: Populating font family aliases took 79 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.\x20
 QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab filtersToggle bounds 16,96 135x40 viewport 16,16 311x768
 QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab clearFiltersButton bounds 227,96 100x40 viewport 16,16 311x768
 QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab cardTypeCombo bounds 91,148 80x40 viewport 16,148 311x308

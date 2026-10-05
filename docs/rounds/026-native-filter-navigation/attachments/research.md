@@ -5,7 +5,11 @@
 Production starting master: `812f5a38214b377fa09efac9a556334cac54cf3b`.
 Seat start selected Brain brief `88a169c5ce8a9339f19fe4e317c6a9a1b54af3c5`;
 production UI bytes are identical to starting master. Environment commands and
-literal results are in environment.txt. macOS 27.0.1/26A434, Apple clang
+literal results are in environment.txt. In committed text logs, trailing spaces
+are represented as `\x20` and trailing tabs as `\t`, and terminal blank lines
+are trimmed so `git diff --check` can pass; diagnostic text is otherwise retained
+apart from private-path redaction. The initial final-diff check caught log
+whitespace (exit 2); this encoding corrected it without suppressing diagnostics. macOS 27.0.1/26A434, Apple clang
 21.0.0, Qt runtime/QtTest 6.11.1, Basic Controls style, Python suite 3.13.15.
 Default Python is 3.9.6 and was used only for compatible framework commands.
 
