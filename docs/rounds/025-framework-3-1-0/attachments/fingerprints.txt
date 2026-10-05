@@ -1,0 +1,16 @@
+Release source: v3.1.0
+Peeled HEAD: eca1306dc43cb81f0df3ee42f841812da68e8b1e
+All 10 installed copy fingerprints match manifest.
+Options and settings equal pre-adoption manifest.
+No .framework, gone or other adoption results.
+No redundant seat file or AGENTS.md prompt-header rule.
+docs/agents/FRAMEWORK.md: matches verified release bytes and manifest
+docs/agents/roles/brain.md: matches verified release bytes and manifest
+docs/agents/roles/worker.md: matches verified release bytes and manifest
+docs/agents/roles/verifier.md: matches verified release bytes and manifest
+tools/fw.py: matches verified release bytes and manifest
+tests/test_framework.py: matches verified release bytes and manifest
+.claude/agents/brain.md: matches verified release bytes and manifest
+.claude/agents/verifier.md: matches verified release bytes and manifest
+.claude/agents/worker.md: matches verified release bytes and manifest
+.claude/commands/status.md: matches verified release bytes and manifest

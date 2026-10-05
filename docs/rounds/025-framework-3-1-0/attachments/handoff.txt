@@ -1,0 +1,83 @@
+$ python3 tools/fw.py status
+Framework
+  pinned to agentic-framework 3.1.0 (https://github.com/cntrl-alt-lenny/agentic-framework)
+  up to date with the latest release (3.1.0)
+Merge rule
+  owner-approves
+Rounds
+  in flight: 025-framework-3-1-0 (Tier 1)
+    builder: started on builder/025-framework-3-1-0, no report yet
+  7 round(s) merged under docs/rounds/, latest by name: 024-scroll-focus-visibility
+This machine
+  on builder/025-framework-3-1-0; 10 uncommitted change(s)
+  finished seat checkouts (clean, and their work is merged) that can be removed: <primary-checkout>/.worktrees/builder-023 -- git worktree remove <folder>
+  safe to leave this machine: NO -- push or deal with the items above first
+Checks
+  all project checks pass
+Command form on this machine: python3 tools/fw.py <command>
+next: wait for the Builder of round 025-framework-3-1-0 to finish; if its chat has stopped, send it the same prompt again as message 2
+exit: 0
+
+$ python3 tools/fw.py status --offline
+Framework
+  pinned to agentic-framework 3.1.0 (https://github.com/cntrl-alt-lenny/agentic-framework)
+  newer releases: not checked
+Merge rule
+  owner-approves
+Rounds
+  in flight: 025-framework-3-1-0 (Tier 1)
+    builder: started on builder/025-framework-3-1-0, no report yet
+  7 round(s) merged under docs/rounds/, latest by name: 024-scroll-focus-visibility
+This machine
+  on builder/025-framework-3-1-0; 10 uncommitted change(s)
+  finished seat checkouts (clean, and their work is merged) that can be removed: <primary-checkout>/.worktrees/builder-023 -- git worktree remove <folder>
+  safe to leave this machine: NO -- push or deal with the items above first
+Checks
+  all project checks pass
+Command form on this machine: python3 tools/fw.py <command>
+next: wait for the Builder of round 025-framework-3-1-0 to finish; if its chat has stopped, send it the same prompt again as message 2
+exit: 0
+
+$ python3 tools/fw.py prompt --round 025-framework-3-1-0 --role builder
+edopro-next · ROUND 025 · BUILDER
+
+You are the Builder for edopro-next, round 025-framework-3-1-0. Work inside this project's folder on this machine (clone https://github.com/cntrl-alt-lenny/edopro-next if it is not here): from its main checkout run git worktree add --detach .worktrees/builder-025 origin/master and work in that folder, never in a copy beside the project. In a cloud workspace, work in the clone it gives you.
+
+In that folder, first run python3 tools/fw.py start --role builder --round 025-framework-3-1-0 (use py -3 or python if python3 is not found) and stop if it fails. Then read AGENTS.md, docs/agents/FRAMEWORK.md, docs/agents/roles/worker.md and docs/rounds/025-framework-3-1-0/brief.md, and carry out the brief.
+
+Finish, even if you stop early, by writing docs/rounds/025-framework-3-1-0/builder.md and running python3 tools/fw.py report --role builder --round 025-framework-3-1-0 --push. End your final reply with exactly one line: edopro-next · ROUND 025 · BUILDER · DONE — report pushed at <commit>, or STOPPED or BLOCKED with the reason.
+exit: 0
+
+$ python3 tools/fw.py prompt --round 024-scroll-focus-visibility --role verifier
+edopro-next · ROUND 024 · VERIFIER
+
+You are the Verifier for edopro-next, round 024-scroll-focus-visibility. Work inside this project's folder on this machine (clone https://github.com/cntrl-alt-lenny/edopro-next if it is not here): from its main checkout run git worktree add --detach .worktrees/verifier-024-3 origin/master and work in that folder, never in a copy beside the project. In a cloud workspace, work in the clone it gives you.
+
+In that folder, first run python3 tools/fw.py start --role verifier --round 024-scroll-focus-visibility (use py -3 or python if python3 is not found) and stop if it fails. Then read AGENTS.md, docs/agents/FRAMEWORK.md, docs/agents/roles/verifier.md and docs/rounds/024-scroll-focus-visibility/brief.md, and carry out the brief.
+
+Finish, even if you stop early, by writing docs/rounds/024-scroll-focus-visibility/verifier.md and running python3 tools/fw.py report --role verifier --round 024-scroll-focus-visibility --push. End your final reply with exactly one line: edopro-next · ROUND 024 · VERIFIER · DONE — report pushed at <commit>, or STOPPED or BLOCKED with the reason.
+exit: 0
+
+$ python3 tools/fw.py delivery --round 024-scroll-focus-visibility
+origin/verifier/024-scroll-focus-visibility (d396bc5a25e6): delivered
+  verifier: report describes a1306f93883e (written 2026-10-03T20:11:39Z on macOS 27.0)
+exit: 0
+
+$ python3 tools/fw.py check
+0 error(s), 0 warning(s)
+exit: 0
+
+$ python3 tools/fw.py delivery --round 023-filter-layout-correction
+round 023-filter-layout-correction was superseded by round 024-scroll-focus-visibility (its brief says so): nothing more is due for 023-filter-layout-correction, and none of its reports needs rewriting. Work on 024-scroll-focus-visibility instead.
+exit: 1
+
+$ python3 tools/fw.py prompt --round 023-filter-layout-correction --role builder
+fw: round 023-filter-layout-correction was superseded by round 024-scroll-focus-visibility (its brief says so): nothing more is due for 023-filter-layout-correction, and none of its reports needs rewriting. Work on 024-scroll-focus-visibility instead.
+exit: 2
+
+$ python3 tools/fw.py delivery --round 024-scroll-focus-visibility --branch origin/verifier/024-scroll-focus-visibility-2
+origin/verifier/024-scroll-focus-visibility-2 (91bcc988a3ae): delivered
+  builder: report describes 4dea14dde78a (written 2026-10-03T20:03:38Z on macOS 27.0)
+  verifier: report describes 6b9c661ccc51 (written 2026-10-03T20:36:28Z on macOS 27.0)
+exit: 0
+
