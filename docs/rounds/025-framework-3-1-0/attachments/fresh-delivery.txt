@@ -1,0 +1,43 @@
+$ git rev-parse HEAD
+bac51050a4e8958cde59359052115dc2264fa92c
+exit: 0
+
+$ git ls-tree --name-only HEAD docs/rounds/025-framework-3-1-0/brief.md docs/rounds/025-framework-3-1-0/builder.md
+docs/rounds/025-framework-3-1-0/brief.md
+docs/rounds/025-framework-3-1-0/builder.md
+exit: 0
+
+$ python3 tools/fw.py delivery --round 025-framework-3-1-0
+origin/builder/025-framework-3-1-0 (bac51050a4e8): delivered
+  builder: report describes 2ddf00a3fe25 (written 2026-10-05T08:22:48Z on macOS 27.0.1)
+exit: 0
+
+$ python3 tools/fw.py status --offline
+Framework
+  pinned to agentic-framework 3.1.0 (https://github.com/cntrl-alt-lenny/agentic-framework)
+  newer releases: not checked
+Merge rule
+  owner-approves
+Rounds
+  in flight: 025-framework-3-1-0 (Tier 1)
+    builder: reported at 2ddf00a3fe25
+  7 round(s) merged under docs/rounds/, latest by name: 024-scroll-focus-visibility
+This machine
+  on (detached HEAD); no uncommitted changes
+  submodule(s) not initialised here: ocgcore -- run: git submodule update --init (a search here would wrongly find those files missing)
+  safe to leave this machine: yes
+Checks
+  all project checks pass
+Command form on this machine: python3 tools/fw.py <command>
+next: ask Brain to judge round 025-framework-3-1-0: every seat has reported
+exit: 0
+
+CI snapshot at first report-only SHA bac51050a4e8958cde59359052115dc2264fa92c
+$ gh api repos/cntrl-alt-lenny/edopro-next/commits/bac51050a4e8/check-runs
+Upstream EDOPro baseline (observer=${{ matrix.observer }})	completed	skipped	https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37283261398/job/111676068935
+Regression harness (3.10)	completed	success	https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37283261398/job/111676067091
+Qt 6 shell (Linux)	in_progress		https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37283261398/job/111676067056
+Semantic client model	completed	success	https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37283261398/job/111676067016
+Regression harness (3.12)	completed	success	https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37283261398/job/111676066988
+Card and deck data	completed	success	https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37283261398/job/111676066765
+exit: 0
