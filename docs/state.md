@@ -32,8 +32,8 @@ controller navigation, Steam Deck and accessibility still open.
   see `docs/architecture/current-edopro.md`.
 - **Do not delete Irrlicht code** before its replacement demonstrably
   reaches parity.
-- **This project runs agentic-framework 3.0.0** as of round
-  018-framework-3-0-0. Merge rule: owner-approves (declared in
+- **This project runs agentic-framework 3.1.0** as of round
+  025-framework-3-1-0. Merge rule: owner-approves (declared in
   `AGENTS.md`).
 
 ## Not proven, and must not be claimed
