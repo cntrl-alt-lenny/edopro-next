@@ -2,10 +2,10 @@
 round: 025-framework-3-1-0
 role: builder
 branch: builder/025-framework-3-1-0
-head: 2ddf00a3fe250a118cb92cfba3bca7e83f87764b
+head: c9c71885602babe9a43eb3627bedc4e7535fe6f1
 os: macOS 27.0.1
 python: 3.9.6
-written: 2026-10-05T08:22:48Z
+written: 2026-10-05T08:23:55Z
 -->
 ## Verified
 
@@ -66,6 +66,19 @@ while the project suite used Python 3.13.15 (`python3.13 --version`, exit 0).
   report/evidence. No product code, hook, adapter, AGENTS.md, merge authority,
   remote or repository setting changed. No PR was opened or updated.
 
+- Disposable fresh HTTPS clone fetched both brief and report without local files.
+  After selecting origin/builder/025-framework-3-1-0, `python3 tools/fw.py delivery
+  --round 025-framework-3-1-0` returned 0: branch at
+  `bac51050a4e8958cde59359052115dc2264fa92c` delivered, report describes
+  `2ddf00a3fe250a118cb92cfba3bca7e83f87764b`. Fresh offline status returned 0:
+  `builder: reported at 2ddf00a3fe25`, ending with `next: ask Brain to judge round
+  025-framework-3-1-0: every seat has reported`. Its submodule-uninitialised
+  warning is expected in a delivery-only clone. [Fresh delivery and CI](attachments/fresh-delivery.txt).
+- First report-only SHA CI snapshot: the two regression jobs succeeded;
+  other deterministic jobs were pending or succeeded as listed in that snapshot.
+  Upstream baseline skipped on this branch push as configured. This snapshot is
+  not final delivered-SHA CI evidence.
+
 ## Not verified
 
 - Final delivered-commit CI remains unknown until observed; implementation
@@ -104,6 +117,7 @@ while the project suite used Python 3.13.15 (`python3.13 --version`, exit 0).
 - attachments/handoff.txt: status, prompt and historical delivery diagnostics.
 - attachments/limitations.txt: merged-round delivery mechanism and corrected
   local evidence-helper errors; helpers changed no framework implementation.
+- attachments/fresh-delivery.txt: disposable clone handoff and first report-only CI snapshot.
 - builder.md: this report, stamped/pushed by the released reporting tool.
 - brief.md is inherited unchanged from Brain, not a Builder edit.
 
@@ -112,4 +126,4 @@ while the project suite used Python 3.13.15 (`python3.13 --version`, exit 0).
 The merged-round unqualified delivery limitation needs Brain's assessment.
 No new Verifier is due in this Tier 1 round. Historical blocked reports must
 remain evidence, not be deleted to improve diagnostic output. Fresh-clone
-round 025 delivery evidence will be appended after the first report push.
+round 025 handoff succeeded. Final report-only CI completion remains unknown.
