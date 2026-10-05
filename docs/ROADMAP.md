@@ -176,7 +176,10 @@ already presentation-independent, so it can be built without touching the duel p
       [ADR 0008](adr/0008-upstream-ydk-interop-harness.md).
 - [ ] Deck builder UI in QML: filters, legality, preview, keyboard parity
       **A functional core with legality exists, not the complete item.** A real `DeckBuilderScreen`
-      wires `CardCatalog`/`CardSearchIndex` text search, a Main/Extra/Side editor over one
+      wires `CardCatalog`/`CardSearchIndex` text search with upstream's filter window (card type,
+      sub-type, attribute, race, ATK/DEF/Level/Scale in upstream's input forms, effect
+      categories, link markers, the banlist-dependent limit list and default card visibility -
+      [ADR 0012](adr/0012-deck-builder-search-filters.md)), a Main/Extra/Side editor over one
       canonical `Deck` that adds a card to Main or Extra by upstream's Extra Deck rule
       (one definition, in `policy/`, which validation also calls -
       [ADR 0011](adr/0011-extra-deck-classification.md)) and to Side on request, `.ydk`
@@ -184,13 +187,15 @@ already presentation-independent, so it can be built without touching the duel p
       sections), and user-visible ruleset and banlist selection with advisory legality validation
       driven by `policy::validate_deck()` ([ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md)),
       through a small Qt adapter layer (`ui/src/deckbuilder/`) that keeps `data/` and `policy/`
-      Qt-free. Still missing: artwork, the legacy sigil search grammar and structured filters
-      beyond plain text, and full keyboard/controller parity. Design and the deliberate
+      Qt-free. Still missing: artwork, the legacy sigil search grammar (with archetype-name
+      search and card-code lookup), descriptive labels for the 32 effect-category filters, and
+      full keyboard/controller parity. Design and the deliberate
       exclusions: [deck-builder-ui.md](architecture/deck-builder-ui.md),
       [deck-placement.md](architecture/deck-placement.md),
       [ADR 0006](adr/0006-deck-builder-qt-adapter-boundary.md),
-      [ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md), and
-      [ADR 0011](adr/0011-extra-deck-classification.md).
+      [ADR 0010](adr/0010-deck-builder-ruleset-and-legality-ui.md),
+      [ADR 0011](adr/0011-extra-deck-classification.md), and
+      [ADR 0012](adr/0012-deck-builder-search-filters.md).
 
 **Exit criterion:** a deck can be built and saved in the new client, and opened by
 upstream EDOPro unchanged.

@@ -121,8 +121,11 @@ Further divergences from the push cascade, each deliberate:
   available to a future drag-and-drop); the screen offers no Main/Extra override.
 - **No side-decking mode**, since this editor has no between-games side-decking.
 - **Tokens are never placed**, in Main, Extra or Side. Upstream never offers a token to add
-  (`deck_con.cpp:1192`); this project's search does list tokens (search is out of this
-  round's scope), so both add buttons are disabled for one and `addCardToDeck()` refuses it.
+  (`deck_con.cpp:1192`); this project's search did list tokens when this ADR was written
+  (search was out of that round's scope), so both add buttons are disabled for one and
+  `addCardToDeck()` refuses it. *Superseded in part by
+  [ADR 0012](0012-deck-builder-search-filters.md), Decision 4* (round 022): the search now
+  hides tokens as upstream's does; the refusal stays.
 
 ## Decision 3 — A card deliberately put in the "wrong" section stays there
 

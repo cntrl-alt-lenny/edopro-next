@@ -21,7 +21,10 @@
 #include <QPair>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickItem>
+#include <QQuickStyle>
 #include <QQuickWindow>
+#include <QSet>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QUrl>
@@ -197,6 +200,11 @@ class TestDeckBuilderScreen : public QObject {
     Q_OBJECT
 
 private slots:
+    // The shell draws every control in the Basic style (main.cpp); load the
+    // screen in that style too, so sizes measured here are the shipped ones
+    // and not the platform style's.
+    void initTestCase() { QQuickStyle::setStyle(QStringLiteral("Basic")); }
+
     // A) no-catalog editor remains usable
     void noCatalogDeckEditorStaysFunctional();
 
@@ -282,6 +290,15 @@ private slots:
     // Round 020 / ADR 0011: the real screen's add buttons render and use
     // the controller's placement; QML decides nothing.
     void addButtonsFollowTheControllersPlacement();
+
+    // Round 022 (ADR 0012): the real screen's filter controls reach
+    // SearchResultsModel, and are reachable by keyboard.
+    void filterControlsReachTheSearchModel();
+    // The filters and the results fit the search column at the shell's
+    // smallest and default screen sizes (deck-builder-ui.md §15.1).
+    void searchPaneFitsItsColumnAtMinimumAndDefaultSizes();
+    void filterTabTraversalStaysVisible_data();
+    void filterTabTraversalStaysVisible();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -818,6 +835,350 @@ void TestDeckBuilderScreen::addButtonsFollowTheControllersPlacement() {
     QCOMPARE(h.controller.mainCount(), 1);
     QCOMPARE(h.controller.extraCount(), 1);
     QCOMPARE(h.controller.sideCount(), 1);
+}
+
+void TestDeckBuilderScreen::filterControlsReachTheSearchModel() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    cards.push_back(SyntheticCard{401, QStringLiteral("Low"), 0x1, 1000});
+    cards.push_back(SyntheticCard{402, QStringLiteral("Mid"), 0x1, 2000});
+    cards.push_back(SyntheticCard{403, QStringLiteral("High"), 0x1, 3000});
+    cards.push_back(SyntheticCard{404, QStringLiteral("Spell"), 0x2, 0, 0, 0});
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+    QObject* results = h.child("searchResults");
+    QVERIFY(results);
+    auto count = [&]() { return h.child("resultsList")->property("count").toInt(); };
+    QCOMPARE(count(), 4);
+
+    // Each control, as a user drives it: ComboBox::activated and
+    // TextField::textEdited are the signals a real pick and keystroke emit.
+    QVERIFY(QMetaObject::invokeMethod(h.child("cardTypeCombo"), "activated", Q_ARG(int, 1)));
+    QCOMPARE(results->property("cardType").toInt(), 1);
+    QCOMPARE(h.child("cardTypeCombo")->property("currentIndex").toInt(), 1);
+    QCOMPARE(count(), 3);
+    QVERIFY(h.child("attackField")->property("enabled").toBool());
+
+    h.child("attackField")->setProperty("text", QStringLiteral(">=2000"));
+    QVERIFY(QMetaObject::invokeMethod(h.child("attackField"), "textEdited"));
+    QCOMPARE(results->property("attackText").toString(), QStringLiteral(">=2000"));
+    QCOMPARE(count(), 2);
+
+    // The Link sub-type (index 8) disables DEF, as upstream does.
+    QVERIFY(h.child("defenseField")->property("enabled").toBool());
+    QVERIFY(QMetaObject::invokeMethod(h.child("subTypeCombo"), "activated", Q_ARG(int, 8)));
+    QVERIFY(!h.child("defenseField")->property("enabled").toBool());
+    QCOMPARE(count(), 0);
+
+    QVERIFY(QMetaObject::invokeMethod(h.child("limitationCombo"), "activated", Q_ARG(int, 0)));
+    QVERIFY(h.child("nonOfficialCheck")->property("enabled").toBool());
+
+    // Clear resets every control and the result list.
+    QVERIFY(QMetaObject::invokeMethod(h.child("clearFiltersButton"), "clicked"));
+    QCOMPARE(results->property("cardType").toInt(), 0);
+    QCOMPARE(h.child("cardTypeCombo")->property("currentIndex").toInt(), 0);
+    QCOMPARE(h.child("attackField")->property("text").toString(), QString());
+    QCOMPARE(count(), 4);
+
+    // Focus capability only; actual traversal is checked separately below.
+    for (const char* name : {"cardTypeCombo", "subTypeCombo", "attributeCombo", "raceCombo", "attackField",
+                              "defenseField", "levelField", "scaleField", "limitationCombo",
+                              "nonOfficialCheck", "categoriesButton", "linkMarkersButton",
+                              "clearFiltersButton", "filtersToggle"}) {
+        QObject* control = h.child(name);
+        QVERIFY2(control, name);
+        QVERIFY2(control->property("focusPolicy").toInt() & Qt::TabFocus, name);
+    }
+}
+
+namespace {
+
+// Every control in the search column that round 022 added or moved.
+constexpr const char* kSearchColumnControls[] = {
+    "searchField", "filtersToggle", "clearFiltersButton", "cardTypeCombo", "subTypeCombo",
+    "attributeCombo", "raceCombo", "attackField", "defenseField", "levelField", "scaleField",
+    "limitationCombo", "nonOfficialCheck", "categoriesButton", "linkMarkersButton"};
+
+QQuickItem* visualItem(QQuickItem* parent, const QString& name) {
+    if (parent->objectName() == name)
+        return parent;
+    for (QQuickItem* child : parent->childItems()) {
+        if (QQuickItem* found = visualItem(child, name))
+            return found;
+    }
+    return nullptr;
+}
+
+QQuickItem* item(const Harness& h, const char* name) {
+    if (auto* found = qobject_cast<QQuickItem*>(h.child(name)))
+        return found;
+    // Repeater delegates and popup overlays may have visual parents outside
+    // the screen's QObject ownership tree. Search the real window, not a copy.
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    return visualItem(window->contentItem(), QString::fromLatin1(name));
+}
+
+} // namespace
+
+void TestDeckBuilderScreen::searchPaneFitsItsColumnAtMinimumAndDefaultSizes() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    for (quint32 code = 501; code <= 530; ++code)
+        cards.push_back(SyntheticCard{code, QStringLiteral("Synthetic %1").arg(code)});
+    const QString dbPath = writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards);
+
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({dbPath}));
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    QVERIFY(window);
+    QVERIFY(h.child("filtersToggle")->property("checked").toBool()); // filters shown, the default
+
+    // The screen's share of Main.qml's window: the window minus the nav
+    // rail, compact below Theme.breakpointCompact (Theme.qml, NavRail.qml).
+    // 960x600 is Main.qml's minimumWidth/minimumHeight; 1280x800 its default.
+    struct Size {
+        int window_width;
+        int rail_width;
+        int height;
+    };
+    for (const Size size : {Size{960, 64, 600}, Size{1280, 216, 800}}) {
+        const QString at = QStringLiteral("%1x%2").arg(size.window_width).arg(size.height);
+        window->resize(size.window_width - size.rail_width, size.height);
+        // Nested layouts settle over more than one polish pass; wait until
+        // the deck pane has been placed for the new width.
+        QTRY_VERIFY(qobject_cast<QQuickItem*>(h.child("deckPane"))->x() > 0
+                    && qFuzzyCompare(qobject_cast<QQuickItem*>(h.screen())->width(),
+                                     qreal(size.window_width - size.rail_width)));
+        QTest::qWait(100);
+        QQuickItem* pane = item(h, "searchPane");
+        QQuickItem* deckPane = item(h, "deckPane");
+        QVERIFY(pane && deckPane);
+        const QRectF paneRect = pane->mapRectToScene(QRectF(0, 0, pane->width(), pane->height()));
+        const qreal deckLeft = deckPane->mapToScene(QPointF(0, 0)).x();
+        QVERIFY2(paneRect.right() <= deckLeft,
+                 qPrintable(at + QStringLiteral(" search pane %1..%2, deck pane from %3")
+                                     .arg(paneRect.left()).arg(paneRect.right()).arg(deckLeft)));
+
+        // Nothing runs past the column, horizontally or vertically.
+        for (const char* name : kSearchColumnControls) {
+            QQuickItem* control = item(h, name);
+            QVERIFY2(control, name);
+            const QRectF r = control->mapRectToScene(QRectF(0, 0, control->width(), control->height()));
+            const QString where = at + QStringLiteral(" %1 %2,%3 %4x%5 in pane %6..%7")
+                                           .arg(QString::fromLatin1(name))
+                                           .arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height())
+                                           .arg(paneRect.left()).arg(paneRect.right());
+            QVERIFY2(r.width() > 0, qPrintable(where));
+            QVERIFY2(r.left() >= paneRect.left() - 0.5 && r.right() <= paneRect.right() + 0.5, qPrintable(where));
+        }
+
+        // More than one result row is visible: the bottom of the list is not
+        // still showing the first row.
+        QQuickItem* list = item(h, "resultsList");
+        QVERIFY(list);
+        int bottomRow = -1;
+        QVERIFY(QMetaObject::invokeMethod(list, "indexAt", Q_RETURN_ARG(int, bottomRow),
+                                          Q_ARG(qreal, 1.0), Q_ARG(qreal, list->height() - 1.0)));
+        QVERIFY2(bottomRow >= 1, qPrintable(at + QStringLiteral(" bottom row %1").arg(bottomRow)));
+
+        // Every filter can be brought into view: focusing a control moves the
+        // scroll area to show it, the last one included.
+        QQuickItem* scroll = item(h, "filterScroll");
+        QVERIFY(scroll);
+        const QRectF viewport = scroll->mapRectToScene(QRectF(0, 0, scroll->width(), scroll->height()));
+        window->requestActivate();
+        for (const char* name : {"linkMarkersButton", "cardTypeCombo"}) {
+            QQuickItem* control = item(h, name);
+            control->forceActiveFocus(Qt::TabFocusReason);
+            QTRY_VERIFY2(control->hasActiveFocus(), name);
+            window->grabWindow();
+            const QRectF r = control->mapRectToScene(QRectF(0, 0, control->width(), control->height()));
+            const QString where = at + QStringLiteral(" %1 at %2..%3, viewport %4..%5")
+                                           .arg(QString::fromLatin1(name))
+                                           .arg(r.top()).arg(r.bottom()).arg(viewport.top()).arg(viewport.bottom());
+            QVERIFY2(r.top() >= viewport.top() - 0.5 && r.bottom() <= viewport.bottom() + 0.5, qPrintable(where));
+        }
+    }
+}
+
+void TestDeckBuilderScreen::filterTabTraversalStaysVisible_data() {
+    QTest::addColumn<QSize>("screenSize");
+    QTest::addColumn<bool>("reverse");
+    QTest::newRow("minimum-forward") << QSize(896, 600) << false;
+    QTest::newRow("minimum-reverse") << QSize(896, 600) << true;
+    QTest::newRow("default-forward") << QSize(1064, 800) << false;
+    QTest::newRow("default-reverse") << QSize(1064, 800) << true;
+}
+
+void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
+    QFETCH(QSize, screenSize);
+    QFETCH(bool, reverse);
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QList<SyntheticCard> cards;
+    for (quint32 code = 1; code <= 40; ++code)
+        cards.push_back(SyntheticCard{code, QStringLiteral("Synthetic %1").arg(code)});
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({writeSyntheticDatabaseWithFields(dir.filePath("cards.cdb"), cards)}));
+    QVERIFY(QMetaObject::invokeMethod(h.child("cardTypeCombo"), "activated", Q_ARG(int, 1)));
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    QVERIFY(window);
+    window->resize(screenSize);
+    window->requestActivate();
+    QTest::qWait(100);
+    const auto bounds = [](QQuickItem* i) {
+        return i->mapRectToScene(QRectF(0, 0, i->width(), i->height()));
+    };
+    const auto visibleBounds = [&](QQuickItem* control, QQuickItem* surface) {
+        // Check every clipping ancestor as well as the named surface: a
+        // ScrollView's padded frame is not necessarily its real viewport.
+        QRectF viewport = bounds(surface);
+        for (auto* p = control->parentItem(); p; p = p->parentItem()) {
+            if (p->clip())
+                viewport = viewport.intersected(bounds(p));
+        }
+        return viewport;
+    };
+    const auto isVisible = [&](QQuickItem* control, QQuickItem* surface) {
+        const QRectF r = bounds(control);
+        const QRectF viewport = visibleBounds(control, surface);
+        return control->isVisible() && r.width() > 0 && r.height() > 0
+            && viewport.adjusted(-0.5, -0.5, 0.5, 0.5).contains(r);
+    };
+    const auto location = [&](QQuickItem* control, QQuickItem* surface) {
+        const QRectF r = bounds(control), v = visibleBounds(control, surface);
+        return QStringLiteral("%1 bounds %2,%3 %4x%5 viewport %6,%7 %8x%9")
+            .arg(control->objectName()).arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height())
+            .arg(v.x()).arg(v.y()).arg(v.width()).arg(v.height());
+    };
+    const auto capture = [&](const QString& state) {
+        const QString path = qEnvironmentVariable("EDOPRO_FOCUS_CAPTURES");
+        if (!path.isEmpty() && !reverse) {
+            const QString file = QStringLiteral("%1/%2-%3.png").arg(path).arg(screenSize.width()).arg(state);
+            QVERIFY(window->grabWindow().save(file));
+        }
+    };
+    const auto traverse = [&](const QSet<QString>& expected, QQuickItem* surface,
+                              const QString& label) {
+        QSet<QString> reached;
+        for (int step = 0; step < 100 && reached != expected; ++step) {
+            QTest::keyClick(window, Qt::Key_Tab, reverse ? Qt::ShiftModifier : Qt::NoModifier);
+            QTest::qWait(20);
+            QQuickItem* active = window->activeFocusItem();
+            QVERIFY(active);
+            if (!expected.contains(active->objectName()))
+                continue;
+            QQuickItem* clippingSurface = surface;
+            if (!clippingSurface) {
+                clippingSurface = item(h, "searchPane");
+                for (auto* p = active->parentItem(); p; p = p->parentItem()) {
+                    if (p == item(h, "filterScroll")) {
+                        clippingSurface = p;
+                        break;
+                    }
+                }
+            }
+            QTRY_VERIFY2(isVisible(active, clippingSurface), qPrintable(location(active, clippingSurface)));
+            reached.insert(active->objectName());
+            qInfo().noquote() << label << (reverse ? "Shift+Tab" : "Tab")
+                              << location(active, clippingSurface);
+            if (active->objectName() == "linkMarkersButton" && !surface)
+                capture("main-lower");
+            if (active->objectName() == "categoryCheck31")
+                capture("effects-lower");
+        }
+        QStringList missing = (expected - reached).values();
+        missing.sort();
+        QVERIFY2(reached == expected, qPrintable(label + " missing: " + missing.join(", ")));
+        qInfo().noquote() << label << "reached" << reached.size() << "of" << expected.size();
+    };
+    QSet<QString> mainControls;
+    for (const char* name : kSearchColumnControls) {
+        QVERIFY2(item(h, name)->isEnabled(), name);
+        mainControls.insert(QString::fromLatin1(name));
+    }
+    // Only initial placement is explicit. Every destination above is reached
+    // by a real key event; omitting even one expected control fails.
+    item(h, "searchField")->forceActiveFocus(Qt::TabFocusReason);
+    traverse(mainControls, nullptr, "main");
+    QVERIFY(!QTest::currentTestFailed());
+
+    for (const auto& popup : {QPair{"categories", "categoriesButton"}, QPair{"markers", "linkMarkersButton"}}) {
+        const QByteArray popupName = QByteArray(popup.first) + "Popup";
+        const QByteArray doneName = QByteArray(popup.first) + "Done";
+        QObject* popupObject = h.child(popupName.constData());
+        QSet<QString> controls{QString::fromLatin1(doneName)};
+        const bool categories = QByteArray(popup.first) == "categories";
+        for (int i = 0; i < (categories ? 32 : 8); ++i)
+            controls.insert(QStringLiteral("%1%2").arg(categories ? "categoryCheck" : "markerButton").arg(i));
+        // Open via the keyboard, then seed traversal at Done (not at each
+        // destination). Reverse and forward must both reach all controls.
+        item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
+        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_VERIFY(popupObject->property("opened").toBool());
+        auto* popupContent = qvariant_cast<QQuickItem*>(popupObject->property("contentItem"));
+        QVERIFY(popupContent);
+        // Older production QML leaves Done unnamed. Label it in the test
+        // for accounting, without changing that QML during regression probes.
+        if (!h.child(doneName.constData())) {
+            for (QObject* child : popupContent->findChildren<QObject*>()) {
+                if (child->property("text").toString() == "Done") {
+                    child->setObjectName(QString::fromLatin1(doneName));
+                    break;
+                }
+            }
+        }
+        QVERIFY(item(h, doneName.constData()));
+        item(h, doneName.constData())->forceActiveFocus(Qt::TabFocusReason);
+        traverse(controls, popupContent, QString::fromLatin1(popup.first));
+        QVERIFY(!QTest::currentTestFailed());
+        if (categories) {
+            // Reach the lower category with keys from wherever traversal ended.
+            for (int step = 0; step < 40 && window->activeFocusItem() != item(h, "categoryCheck31"); ++step)
+                QTest::keyClick(window, Qt::Key_Tab);
+            QTRY_COMPARE(window->activeFocusItem(), item(h, "categoryCheck31"));
+            QTRY_VERIFY(isVisible(item(h, "categoryCheck31"), popupContent));
+            const bool before = item(h, "categoryCheck31")->property("checked").toBool();
+            QTest::keyClick(window, Qt::Key_Space);
+            QCOMPARE(item(h, "categoryCheck31")->property("checked").toBool(), !before);
+            bool selected = before;
+            QVERIFY(QMetaObject::invokeMethod(h.child("searchResults"), "categorySelected",
+                                              Q_RETURN_ARG(bool, selected), Q_ARG(int, 31)));
+            QCOMPARE(selected, !before);
+            qInfo() << "lower category Space changed model selection";
+        } else {
+            capture("markers");
+        }
+        // Reach Done with keys, close using Space, and reopen using the same
+        // trigger. Any focus automatically restored inside must be visible.
+        for (int step = 0; step < 40 && window->activeFocusItem() != item(h, doneName.constData()); ++step)
+            QTest::keyClick(window, Qt::Key_Tab);
+        QTRY_COMPARE(window->activeFocusItem(), item(h, doneName.constData()));
+        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_VERIFY(!popupObject->property("visible").toBool());
+        QVERIFY(window->activeFocusItem() != item(h, doneName.constData()));
+        item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
+        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_VERIFY(popupObject->property("opened").toBool());
+        QTest::qWait(30);
+        if (controls.contains(window->activeFocusItem()->objectName()))
+            QTRY_VERIFY2(isVisible(window->activeFocusItem(), popupContent),
+                         qPrintable(location(window->activeFocusItem(), popupContent)));
+        QTest::keyClick(window, Qt::Key_Tab);
+        QTRY_VERIFY(controls.contains(window->activeFocusItem()->objectName()));
+        QTRY_VERIFY(isVisible(window->activeFocusItem(), popupContent));
+        QTest::keyClick(window, Qt::Key_Escape);
+        QTRY_VERIFY(!popupObject->property("visible").toBool());
+        QVERIFY(!controls.contains(window->activeFocusItem()->objectName()));
+        qInfo() << popup.first << "Done/Space close, Space reopen, Tab visible, Escape close";
+    }
 }
 
 QTEST_MAIN(TestDeckBuilderScreen)

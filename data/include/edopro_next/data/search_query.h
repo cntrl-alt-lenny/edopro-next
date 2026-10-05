@@ -34,18 +34,17 @@ enum class TextScope {
 	NameOrText,
 };
 
-// A comparison against a single numeric CardRecord field. Deliberately
-// three operators, not upstream's six-way per-field filter-type scheme
-// (exact / at-least / at-most / at-most-excluding-"?" / at-least-
-// excluding-"?" / exactly-"?" - gframe/deck_con.cpp's CheckCardProperties)
-// - seeing whether a "?" stat (attack/defense == -1 or -2) satisfies a
-// comparison is just ordinary signed-integer comparison against whichever
-// threshold the caller picked, with no special-casing needed: `AtLeast`
-// with a realistic positive threshold already excludes "?" cards without
-// this type knowing what "?" means, exactly reproducing upstream's own
-// observable filtering result for that case. A caller that specifically
-// wants only "?" cards can use `EqualTo` with -1 or -2 directly. See
-// card-search.md for the fuller comparison against upstream's scheme.
+// A comparison against a single numeric CardRecord field: three
+// comparisons plus `excludes_negative` below. Upstream's deck search reads
+// six input forms per field (`parse_filter`, gframe/deck_con.cpp:21-51, and
+// the comparisons in CheckCardProperties, :1202-1227); every one of them
+// maps onto this shape with the same result - strict `>`/`<` become
+// AtLeast/AtMost one step further, "at most" on ATK/DEF also sets
+// `excludes_negative`, and "?" becomes EqualTo(-2) on ATK/DEF or a
+// comparison no stored value satisfies on Level/Scale. The mapping itself
+// is parse_numeric_filter() (numeric_filter_text.h), pinned against a
+// transcription of upstream in data/tests/test_numeric_filter_text.cpp;
+// card-search.md §2.1 and §9 record it.
 enum class NumericComparison {
 	EqualTo,
 	AtLeast,
@@ -76,6 +75,13 @@ enum class NumericComparison {
 struct NumericFilter {
 	std::int64_t value = 0;
 	NumericComparison comparison = NumericComparison::EqualTo;
+	// When true, a stored value below zero never matches, whatever
+	// `comparison` says. Upstream's "at most" forms on ATK and DEF reject a
+	// negative ("?") stat explicitly - `(attack > filter_atk || attack < 0)`
+	// (gframe/deck_con.cpp:1204-1205, :1210-1211) - which a plain AtMost
+	// cannot express. It has no effect on the unsigned fields (level,
+	// scales), whose widened value is never negative.
+	bool excludes_negative = false;
 };
 
 // "This field's bits must include every bit set in `require_all_bits`" -
@@ -147,6 +153,13 @@ struct SearchQuery {
 	std::optional<CardCode> exact_code;
 
 	std::optional<BitmaskFilter> type;
+	// "`type` equals this value exactly". Upstream's Spell and Trap sub-type
+	// filters compare the whole type word, not a subset of its bits -
+	// `if(filter_type2 && data._data.type != filter_type2) return false;`
+	// (gframe/deck_con.cpp:1233, :1240) - so its "Normal Spell" (TYPE_SPELL,
+	// game.cpp:3396) finds only cards whose type is exactly TYPE_SPELL,
+	// which `type`'s all-bits shape cannot express.
+	std::optional<std::uint32_t> type_equals;
 	// ANY of the selected category bits, not all of them - see
 	// AnyBitmaskFilter's own comment for the exact source behaviour this
 	// reproduces.

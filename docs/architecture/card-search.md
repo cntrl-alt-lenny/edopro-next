@@ -82,8 +82,11 @@ has nothing to do with what a card *is*:
   `LFList`'s ban/limit/semi-limit counts - and separately branches on `SCOPE_OCG`/
   `SCOPE_TCG`/`SCOPE_ANIME`/`SCOPE_ILLEGAL`/etc. as named legality categories, not raw bits.
 
-This module reproduces only the first half. §2 states exactly which pieces of
-`CheckCardProperties` have a `SearchQuery` equivalent and which are deliberately absent.
+`data/` reproduces only the first half. Since round 022 the second half, which depends on
+the selected banlist, is reproduced in `policy/` by `policy::deck_search_admits` (§2.3,
+[ADR 0012](../adr/0012-deck-builder-search-filters.md)), and the deck builder applies both.
+§2 states exactly which pieces of `CheckCardProperties` have a `SearchQuery` equivalent and
+which are deliberately absent from `data/`.
 
 ### 1.3 `CheckCardText` and `Utils::ContainsSubstring`: text matching, and one real quirk
 
@@ -193,9 +196,9 @@ per card, into `Entry::effective_setcodes` (§6), rather than resolving it per q
 
 | Upstream policy (`CheckCardProperties`/`filter_lm`) | `SearchQuery` equivalent |
 |---|---|
-| `TYPE_TOKEN`/`SCOPE_HIDDEN` unconditional exclusion, anime-mode/whitelist-scoped `ot` exception | **None.** Not search - visibility policy. `CardSearchIndex` never excludes Token or Hidden-scope cards (or anything else) automatically - upstream's own exclusion of them is unconditional too (§1.2), not something "anime mode" or a whitelist ever reveals. `type`'s `BitmaskFilter` is a positive "must include these bits" predicate - it has no way to express "must *not* include this bit", so it cannot be used to exclude tokens either; a caller/higher layer that wants Token-exclusion has to filter the returned `CardCode`s itself (e.g. against `CardDatabase::find(code)->type`), which is exactly the kind of visibility/policy decision this module deliberately leaves to its caller rather than baking in. |
-| `LFList` ban/limit/semi-limit counts, whitelist | **None.** Legality, explicitly out of scope (§0, CLAUDE.md). |
-| `LIMITATION_FILTER_OCG`/`TCG`/`ANIME`/`ILLEGAL`/etc. named scope categories | **None**, as named categories - `scope` exposes the same underlying bits as a raw filter, with no "this means legal" interpretation attached. |
+| `TYPE_TOKEN`/`SCOPE_HIDDEN` unconditional exclusion, anime-mode/whitelist-scoped `ot` exception | **None in `data/`.** Not search - visibility policy, and the whitelist part depends on the banlist. `CardSearchIndex` never excludes Token or Hidden-scope cards (or anything else) automatically. `type`'s `BitmaskFilter` is a positive "must include these bits" predicate - it has no way to express "must *not* include this bit". Reproduced for the deck builder by `policy::deck_search_admits` (§2.3), which filters `search()`'s results. |
+| `LFList` ban/limit/semi-limit counts, whitelist | **None in `data/`** (legality, §0). Reproduced by `policy::deck_search_admits` (§2.3). |
+| `LIMITATION_FILTER_OCG`/`TCG`/`ANIME`/`ILLEGAL`/etc. named scope categories | **None in `data/`**, as named categories - `scope` exposes the same underlying bits as a raw filter. Reproduced, inside the same banlist-dependent branch upstream runs them in, by `policy::deck_search_admits` (§2.3). |
 
 ### 2.1 Operator-level audit: does the *comparison*, not just the field, match?
 
@@ -205,20 +208,98 @@ Audited individually, against the exact source lines:
 
 | Field | Upstream operator | `SearchQuery` operator | Classification |
 |---|---|---|---|
-| `type` | **Category-conditional**: all-bits for Monster (`(type & filter_type2) != filter_type2`); *exact value* for Spell/Trap (`type != filter_type2`); no sub-type filter at all for Skill (`gframe/deck_con.cpp:1194-1249`) | All-bits, uniformly | **Deliberate divergence.** Upstream's own operator already differs by card category - there is no single "the" upstream type operator to match. All-bits (the Monster case, upstream's most detailed one) is the uniform rule chosen; reproducing three different category-conditional operators for one field was judged not worth the complexity for this slice. |
+| `type` | **Category-conditional**: all-bits for Monster (`(type & filter_type2) != filter_type2`); *exact value* for Spell/Trap (`type != filter_type2`); no sub-type filter at all for Skill (`gframe/deck_con.cpp:1194-1249`) | All-bits (`type`), and exact value (`type_equals`, round 022) | **Matches**, as the deck builder uses them: `type` for the Monster sub-type and the category bit, `type_equals` for a Spell or Trap sub-type (ADR 0012, Decision 2). Before round 022 only all-bits existed, recorded here as a deliberate uniform rule; with it, upstream's "Normal Spell" (`TYPE_SPELL`, `game.cpp:3396`) would have found every Spell. |
 | `race` | **Exact equality** against one selected bit (`data.race != filter_race`, `:1198`) | Exact equality (`std::uint64_t`) | **Now correct.** Originally implemented as an all-bits filter (a genuine mismatch) - fixed; see ADR 0005. |
 | `attribute` | Exact equality (`data.attribute != filter_attrib`, `:1200`) | Exact equality | Matches. |
-| `attack`/`defense` | Six-way per-field scheme: exact / at-least / at-most / at-most-excluding-"?" / at-least-excluding-"?" / exactly-"?" (`:1202-1214`) | Three general comparisons (`EqualTo`/`AtLeast`/`AtMost`), §9 | **Deliberate simplification**, already reviewed - the "?" sentinel needs no dedicated case (§9). `defense`'s Link-monster exclusion (`:1212`'s `\|\| (type & TYPE_LINK)`) *is* reproduced exactly. |
-| `level` | Same six-way scheme (`:1216-1219`) | Three general comparisons | Same deliberate simplification as attack/defense. |
-| `left_scale`/`right_scale` | Same six-way scheme, plus a Pendulum-only gate (`:1222-1226`'s `\|\| !(type & TYPE_PENDULUM)`) | Three general comparisons; Pendulum-only gate reproduced exactly | Comparison count is the same deliberate simplification; the Pendulum gate matches exactly. |
+| `attack`/`defense` | Six filter types, from the box text (`parse_filter`, `:21-51`): equal / at least / greater than / at most, rejecting a negative stat / less than, rejecting a negative stat / equal to -2 (`:1202-1214`) | Three comparisons plus `excludes_negative`, built from the text by `parse_numeric_filter` (§2.2, §9) | **Matches every input form** (§2.2), checked form by form against a transcription of upstream. Before round 022 this row said the three comparisons were a deliberate simplification needing no "?" case; that was not true for "at most" (upstream drops "?" stats, `AtMost` kept them) or for "?" itself (-2 only, not -1). `defense`'s Link-monster exclusion (`:1212`'s `\|\| (type & TYPE_LINK)`) is reproduced exactly. |
+| `level` | Same six filter types, unsigned, with no negative rejection, and "?" matching nothing (`:1216-1219`) | Three comparisons, via `parse_numeric_filter` | **Matches every input form** (§2.2). |
+| `left_scale`/`right_scale` | Same six filter types on the left scale only, and "?" matching nothing, plus a Pendulum-only gate (`:1222-1226`'s `\|\| !(type & TYPE_PENDULUM)`) | Three comparisons, via `parse_numeric_filter`; Pendulum-only gate reproduced exactly | **Matches every input form** (§2.2). Upstream's box filters `lscale` only; the deck builder sets `left_scale`. `right_scale` has no upstream control. |
 | `category`/effect | **Any-of**: `filter_effect && !(category & filter_effect)` rejects only when *none* of the selected bits are present (`:1250-1251`) | Any-of (`AnyBitmaskFilter`) | **Now correct.** Originally implemented as an all-bits filter (a genuine mismatch, the same class of bug as `race`) - fixed; see ADR 0005. |
 | `link_marker` | All-bits (`(link_marker & filter_marks) != filter_marks`, `:1252-1253`) | All-bits | Matches. |
-| `scope` (raw) | No direct upstream analogue - upstream only ever treats `ot` through the named `LIMITATION_FILTER_*` legality categories (`:1254-1322`), never as a plain "require these bits" search filter | All-bits, this module's own design | Not a reproduction of an upstream operator (there isn't one to reproduce) - a new capability, deliberately kept as raw data filtering rather than legality (§0). |
+| `scope` (raw) | No direct upstream analogue - upstream only ever treats `ot` through the named `LIMITATION_FILTER_*` categories (`:1254-1322`), never as a plain "require these bits" search filter | All-bits, this module's own design | Not a reproduction of an upstream operator (there isn't one to reproduce) - a new capability, deliberately kept as raw data filtering rather than legality (§0). The deck builder does not use it: the named categories are reproduced in `policy/` (§2.3). |
 | `setcodes` | Any-of, alias-resolved (`check_set_code`/`CardSetcodes`, `gframe/deck_con.cpp:1325-1340`) | Any-of, alias-resolved once at `rebuild()` (§1.5, §6) | Matches. |
 
-Two accidental mismatches were found and fixed by this audit (`race`, `category`); everything
-else was either already correct or is a previously-reviewed, documented simplification kept
-as-is.
+Two accidental mismatches were found and fixed by this audit (`race`, `category`). Round 022
+checked the two rows this audit had kept as deliberate (`type`, and the numeric comparisons)
+against every upstream input and found both gave different cards for inputs upstream's filter
+window offers; both now match (ADR 0012, Decisions 1 and 2).
+
+### 2.2 Upstream's filter window, control by control (round 022)
+
+The controls are built in `gframe/game.cpp:661-743` and filled by `Game::ReloadCBCardType`,
+`ReloadCBCardType2`, `ReloadCBLimit`, `ReloadCBAttribute` and `ReloadCBRace`
+(`:3350-3462`). `DeckBuilder::StartFilter` reads them (`gframe/deck_con.cpp:1040-1058`),
+and `CheckCardProperties` applies them (`:1191-1324`). The deck builder here offers every
+one (`ui/src/deckbuilder/search_filters.cpp`, `SearchResultsModel`), with the values below;
+labels are this project's (ADR 0012, Decision 5).
+
+| Control | What upstream offers | How it is applied |
+|---|---|---|
+| Card type (`cbCardType`) | All, Monster, Spell, Trap, Skill (`game.cpp:3351-3357`) | Monster: `!(type & TYPE_MONSTER) \|\| (type & filter_type2) != filter_type2` rejects (`:1196`). Spell/Trap: the type bit, then `filter_type2 && type != filter_type2` rejects (`:1231-1241`). Skill: `type & TYPE_SKILL` (`:1245`). All: no type check. |
+| Sub-type (`cbCardType2`) | Monster: any, Normal, Effect, Fusion, Ritual, Synchro, Xyz, Pendulum, Link, Special Summon, Normal+Tuner, Normal+Pendulum, Synchro+Tuner, Tuner, Gemini, Union, Spirit, Flip, Toon, Maximum, each `TYPE_MONSTER` plus those bits (`:3372-3393`). Spell: any, Normal (`TYPE_SPELL`), Quick-Play, Continuous, Ritual, Equip, Field, Link (`:3394-3403`). Trap: any, Normal (`TYPE_TRAP`), Continuous, Counter (`:3404-3409`). Disabled for All and Skill (`:3367-3371`). | As the card-type row. Choosing the Monster sub-type at position 8 (Link) disables and clears DEF (`deck_con.cpp:577-583`). |
+| Attribute (`cbAttribute`) | any, then `0x1 << i` up to `ATTRIBUTE_DIVINE` (`game.cpp:3443-3448`) | `filter_attrib && attribute != filter_attrib` rejects (`:1200`). Monster only. |
+| Race (`cbRace`) | any, then item `i + 1` for bits 0-31, and bits 32-63 when the string resource names them (`game.cpp:3449-3462`); `filter_race = UINT64_C(1) << (selected - 1)` (`deck_con.cpp:1046-1050`) | `filter_race && race != filter_race` rejects (`:1198`): exact, one race. Monster only. |
+| ATK, DEF, Level/Rank, Scale (`ebAttack`, `ebDefense`, `ebStar`, `ebScale`) | free text, read by `parse_filter` (below) | `:1202-1227`, below. Monster only; Scale reads `lscale` only. |
+| Effect categories (`wCategories`) | 32 check boxes, bit `0x1 << i` (`game.cpp:721-724`, `deck_con.cpp:346-353`) | `filter_effect && !(category & filter_effect)` rejects (`:1250`): any selected bit. Every card type. |
+| Link markers (`wLinkMarks`) | 8 push buttons, bits `0100 0200 0400 0010 0040 0001 0002 0004` in the order ↖ ↑ ↗ ← → ↙ ↓ ↘ (`game.cpp:734-741`, `deck_con.cpp:447-463`) | `filter_marks && (link_marker & filter_marks) != filter_marks` rejects (`:1252`): every selected marker. Every card type, so Link Spells too. |
+| Limit (`cbLimit`) | §2.3 | §2.3 |
+| Show non-official cards (`chkAnime`) | default off (`show_unofficial`, `gframe/game_config.inl:73`); disabled with a whitelist (`game.cpp:3420-3436`) | §2.3 |
+
+**The number boxes.** `parse_filter` (`deck_con.cpp:21-51`) reads the first one or two
+characters: `=` or a digit gives type 1 (equal), `>=` type 2, `>` type 3, `<=` type 4, `<`
+type 5, `?` type 6, anything else (including an empty box, a space or a minus sign) type 0,
+no filter. The number after the prefix is `BufferIO::GetVal` (`gframe/bufferio.h:240-249`):
+digits accumulate in `uint32_t`, wrapping on overflow, and the result is 0 unless the digits
+run to the end of the text - so "1500a" is "equal to 0", and "=" or ">" alone compare with 0.
+`parse_filter` returns `int`; ATK and DEF store it in `int32_t` and Level and Scale in
+`uint32_t` (`gframe/deck_con.h:115-122`). `CheckCardProperties` then rejects a card when:
+
+| Type | ATK / DEF (`:1203-1205`, `:1209-1212`) | Level (`:1216-1218`) | Scale (`:1222-1225`) |
+|---|---|---|---|
+| 1 | `value != n` | `level != n` | `lscale != n` |
+| 2 | `value < n` | `level < n` | `lscale < n` |
+| 3 | `value <= n` | `level <= n` | `lscale <= n` |
+| 4 | `value > n \|\| value < 0` | `level > n` | `lscale > n` |
+| 5 | `value >= n \|\| value < 0` | `level >= n` | `lscale >= n` |
+| 6 | `value != -2` | always | always |
+| any | DEF also: `type & TYPE_LINK` | - | also: `!(type & TYPE_PENDULUM)` |
+
+`data::parse_numeric_filter` (`data/include/edopro_next/data/numeric_filter_text.h`) maps
+these to `NumericFilter`: type 1 `EqualTo n`, 2 `AtLeast n`, 3 `AtLeast n + 1`, 4 `AtMost n`,
+5 `AtMost n - 1` (with `excludes_negative` on ATK/DEF for 4 and 5), 6 `EqualTo -2` on ATK/DEF
+and `EqualTo -1` on Level/Scale, which no widened unsigned value equals (§9.1); type 0 no
+filter. `data/tests/test_numeric_filter_text.cpp` requires, for 184 inputs on each of the four
+boxes, that the cards kept equal the cards a transcription of `parse_filter`, `GetVal`, the
+comparisons above and upstream's card decode (`gframe/data_manager.cpp:137-153`) keeps.
+
+### 2.3 Hidden cards and the limit list: `policy::deck_search_admits` (round 022)
+
+`CheckCardProperties` first hides, before any filter (`deck_con.cpp:1192-1193`):
+
+```cpp
+if(data._data.type & TYPE_TOKEN || data._data.ot & SCOPE_HIDDEN || ((data._data.ot & SCOPE_OFFICIAL) != data._data.ot && (!mainGame->chkAnime->isChecked() && !filterList->whitelist)))
+    return false;
+```
+
+`SCOPE_OFFICIAL` is `SCOPE_OCG | SCOPE_TCG | SCOPE_PRERELEASE` (`gframe/data_manager.h:34`).
+Then, when `(filter_lm != LIMITATION_FILTER_NONE || filterList->whitelist) && filter_lm !=
+LIMITATION_FILTER_ALL` (`:1254`), it reads the card's count in the selected list through
+`GetLimitationIterator` (3 with no entry, -1 with no entry in a whitelist, `:1255-1261`) and
+rejects: Banned, Limited, Semi-limited when `count != filter_lm - 1` (0, 1, 2); Unlimited
+when `count < 3`; OCG, TCG, TCG/OCG, Anime, Illegal, Video game when `ot` is not exactly that
+value; Prerelease, Speed, Rush, Legend, Custom when `ot` lacks that bit (`:1262-1319`); and,
+with a whitelist, any card with `count < 0` (`:1320-1321`). The list offers None, the four
+counts, then either OCG, TCG, TCG/OCG, Prerelease, Speed, Rush, Legend (and Anime, Illegal,
+Video game, Custom while the switch is on), or, with a whitelist, Legend, Illegal,
+Prerelease, All (`game.cpp:3412-3442`).
+
+`policy::deck_search_admits` and `policy::limitation_filter_choices`
+(`policy/include/edopro_next/policy/deck_search_filter.h`) reproduce this, and
+`policy/tests/test_deck_search_filter.cpp` compares them with a transcription over every
+combination of the eleven scope bits, token or not, every count including one reached through
+an alias, a blacklist, a whitelist and no list, both switch states and all 17 filters. With
+this project's "No banlist" choice, which upstream does not have, the four counts are not
+offered and the list behaves as an empty blacklist (ADR 0012, Decision 3).
 
 ---
 
@@ -278,13 +359,15 @@ See ADR 0005, Decision 1 for the fuller reasoning.
   single-value equality check (§2.1) - deliberately not a bitmask-containment filter, since
   upstream's own UI only ever selects one race value at a time.
 - **`attribute`: exact match**, matching upstream's own single-attribute selector.
-- **`attack`/`defense`/`level`/`left_scale`/`right_scale`: `NumericFilter{value, comparison}`.**
-  Three comparisons - `EqualTo`/`AtLeast`/`AtMost` - not upstream's six-way per-field
-  filter-type scheme (exact / at-least / at-most / at-most-excluding-"?" /
-  at-least-excluding-"?" / exactly-"?", `gframe/deck_con.cpp:1202-1226`). See §9 for why the
-  "?" sentinel needs no special case here. `defense` never matches a Link monster (§9);
-  `left_scale`/`right_scale` never match a non-Pendulum card (§9) - both mirroring
-  `CheckCardProperties`'s own unconditional exclusions.
+- **`attack`/`defense`/`level`/`left_scale`/`right_scale`: `NumericFilter{value, comparison,
+  excludes_negative}`.** Three comparisons - `EqualTo`/`AtLeast`/`AtMost` - and a flag that
+  makes a negative stored value never match. Together they express every one of upstream's
+  six filter types (§2.2); `parse_numeric_filter` builds them from a number box's text.
+  `defense` never matches a Link monster (§9); `left_scale`/`right_scale` never match a
+  non-Pendulum card (§9) - both mirroring `CheckCardProperties`'s own unconditional
+  exclusions.
+- **`type_equals`.** "`type` is exactly this value" - upstream's Spell/Trap sub-type check
+  (§2.1, §2.2).
 - **`setcodes`.** "At least one of these" (OR), alias-resolved once at `rebuild()` time
   (§1.5, §6) - not an archetype-name lookup (§1.5, §9).
 - **`limit`.** Applied after ranking (§8), never before.
@@ -434,13 +517,13 @@ column selection, not by relevance to a text query - see ADR 0005, Decision 1.
 
 ## 9. Numeric filters: sentinels, Link monsters, Pendulum scales
 
-`NumericFilter` has three comparisons - `EqualTo`/`AtLeast`/`AtMost` - deliberately smaller
-than upstream's six-way per-field filter-type scheme (§4). The "?" ATK/DEF sentinel (`-1`/
-`-2`, real displayed values, not decode errors - `card_record.h`) needs no special case: a
-realistic `AtLeast` threshold already excludes it via ordinary signed comparison (`-2 >=
-2500` is false), exactly reproducing upstream's own observable result for that case without
-this module knowing what "?" means; a caller specifically wanting only "?" cards uses
-`EqualTo` with `-1` or `-2` directly.
+`NumericFilter` has three comparisons - `EqualTo`/`AtLeast`/`AtMost` - and
+`excludes_negative`. The "?" ATK/DEF values (`-1`/`-2`, real displayed values, not decode
+errors - `card_record.h`) are ordinary signed values to `AtLeast` and `EqualTo`: a realistic
+`AtLeast` threshold excludes them (`-2 >= 2500` is false), as upstream's "at least" does.
+Upstream's "at most" forms reject them explicitly (§2.2), which `AtMost` alone does not; that
+is what `excludes_negative` is for. Upstream's "?" input matches `-2` only, not `-1`
+(`deck_con.cpp:1205`, `:1211`), so `parse_numeric_filter` turns it into `EqualTo -2`.
 
 `defense` never matches a Link monster (`type & TYPE_LINK`, `0x4000000` -
 `ocgcore/ocgapi_constants.h:58`, same citation precedent as `card_database.cpp`'s

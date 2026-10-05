@@ -68,39 +68,6 @@ int count_legends(const std::vector<data::CardCode>& cards, const data::CardData
 	return count;
 }
 
-// Mirrors gframe/data_manager.h:74-85's CardDataC::IsInArtworkOffsetRange():
-// an unsigned-subtraction idiom for "the absolute difference is less than
-// 10", correct under wraparound regardless of which of the two values is
-// larger - reproduced with the exact same two-sided check rather than a
-// signed subtraction + abs(), to match upstream's own arithmetic exactly
-// (both give the same answer for any inputs that do not overflow a
-// int64_t, but the unsigned form is what upstream's source actually says).
-bool is_in_artwork_offset_range(data::CardCode code, data::CardCode alias) {
-	constexpr std::uint32_t kOffset = 10;
-	const auto c = data::to_number(code);
-	const auto a = data::to_number(alias);
-	return (a - c < kOffset) || (c - a < kOffset);
-}
-
-// Mirrors gframe/deck_manager.h:23-30's LFList::GetLimitationIterator
-// exactly: look up by exact `code` first; only on a miss, and only if
-// `alias` is present, fall back to `alias` - and even then, only if the
-// list is not a whitelist, or the code/alias pair is within the artwork-
-// offset window. This is deliberately a DIFFERENT resolution order than
-// the shared copy-count key below (which prefers alias first) - both are
-// reproduced exactly as upstream keeps them distinct.
-std::optional<std::int32_t> limitation_for(const LfList& list, data::CardCode code,
-											data::CardCode alias) {
-	if(auto it = list.content.find(code); it != list.content.end())
-		return it->second;
-	if(alias != data::CardCode::None) {
-		if(!list.whitelist || is_in_artwork_offset_range(code, alias))
-			if(auto it = list.content.find(alias); it != list.content.end())
-				return it->second;
-	}
-	return std::nullopt;
-}
-
 // Mirrors gframe/deck_manager.cpp:157-203's CheckCards - one section's
 // worth of scope + zone(via zone_check) + copy-count + banlist checking,
 // against a SHARED copy-count map threaded across all three sections
@@ -156,7 +123,7 @@ DeckValidationError check_cards(const std::vector<data::CardCode>& cards,
 
 		// gframe/deck_manager.cpp:192: `cit->alias ? cit->alias : cit->code`
 		// - alias-preferred, the OPPOSITE resolution order from
-		// limitation_for()'s code-first lookup above. Both are upstream's
+		// limitation_for()'s code-first lookup (lf_list.h). Both are upstream's
 		// own, reproduced exactly as distinct.
 		const auto count_key = record->alias != data::CardCode::None ? record->alias : code;
 		const int dc = ++ccount[count_key];

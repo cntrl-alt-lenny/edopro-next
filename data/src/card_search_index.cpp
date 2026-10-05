@@ -39,6 +39,8 @@ bool passes_any_bitmask(const std::optional<AnyBitmaskFilter>& filter, std::uint
 }
 
 bool passes_numeric(const NumericFilter& filter, std::int64_t field) {
+	if(filter.excludes_negative && field < 0)
+		return false;
 	switch(filter.comparison) {
 	case NumericComparison::EqualTo:
 		return field == filter.value;
@@ -149,6 +151,8 @@ void CardSearchIndex::rebuild(const CardDatabase& database) {
 std::vector<SearchResult> CardSearchIndex::search(const SearchQuery& query) const {
 	const auto passes_filters = [&query](const Entry& e) {
 		if(!passes_bitmask(query.type, e.type))
+			return false;
+		if(query.type_equals && e.type != *query.type_equals)
 			return false;
 		if(!passes_any_bitmask(query.category, e.category))
 			return false;

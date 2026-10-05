@@ -15,9 +15,10 @@ a reimplementation of them.
 It is not the complete M3 "Deck builder UI" roadmap item. Legality validation, ruleset
 selection and banlist selection are integrated (see §14 and [ADR 0010](../adr/0010-deck-builder-ruleset-and-legality-ui.md)),
 and adding a card places it in Main or Extra by upstream's rule (§7.2 and
-[ADR 0011](../adr/0011-extra-deck-classification.md)), but there is still no artwork, no
-archetype-name search, no structured filters, no controller/gamepad navigation, and no full
-keyboard parity with upstream.
+[ADR 0011](../adr/0011-extra-deck-classification.md)), and search has upstream's filter
+window (§15 and [ADR 0012](../adr/0012-deck-builder-search-filters.md)), but there is still
+no artwork, no archetype-name search or legacy search grammar, no controller/gamepad
+navigation, and no full keyboard parity with upstream.
 `docs/ROADMAP.md`'s M3 entry stays unchecked. See §12.
 
 
@@ -197,8 +198,9 @@ anywhere in this slice, since nothing in this PR's scope needs a non-default loc
 
 ## 6. Search model
 
-`SearchResultsModel::refresh()` builds a `SearchQuery{ .text = queryText_, .limit = 200 }` and
-calls `CardCatalog::searchIndex().search()` - `data/`'s own linear-scan implementation,
+`SearchResultsModel::refresh()` builds a `SearchQuery` from `queryText_` and, since round 022,
+the filter choices (§15), and calls `CardCatalog::searchIndex().search()` - `data/`'s own
+linear-scan implementation,
 unmodified and un-wrapped, matching M3D1's own instruction that the measured single-digit-
 millisecond scan (`card-search.md`§10) needs no async worker, debounce, or second index for a
 QML text field. Every keystroke updates `queryText` (`Q_PROPERTY` binding from
@@ -212,9 +214,10 @@ search algorithm exist in QML or anywhere in this UI layer - `queryText` is hand
 auxiliary `str1..str16` text columns are never searched (`data/`'s own established scope,
 `card-database.md`).
 
-Only one filter exists in this slice: free text. No structured filter fell out naturally
-enough to include without expanding scope, so none was added (`SearchQuery`'s other typed
-fields - `exact_code`, static metadata filters - are simply left unset).
+Round 022 added upstream's filter window (§15): the static metadata fields of `SearchQuery`
+are now set from the user's choices, and `policy::deck_search_admits` filters the results
+before the 200-result cap, which is applied in the model rather than through
+`SearchQuery::limit`. `exact_code` is still left unset.
 
 ---
 
@@ -854,8 +857,10 @@ is driven by the nav rail), and not part of ordinary interactive use.
 ## 12. What remains before the M3 roadmap item can be checked
 
 - Artwork: no image loading, downloading, or caching of any kind.
-- The legacy sigil search grammar / archetype-name resolution (`card-search.md`§1.1), and
-  structured filters - only plain text search is wired up.
+- The legacy sigil search grammar / archetype-name resolution (`card-search.md`§1.1),
+  including upstream's card-code lookup from the search box. Upstream's filter window is
+  wired up since round 022 (§15), with non-descriptive labels for the 32 effect categories,
+  whose names are in a string resource this repository does not have (ADR 0012, Decision 5).
 - Full keyboard and controller parity (§11 covers only the core interactions).
 - `.ydke`/Base64 import-export (`deck-model.md`§8).
 - An end-to-end proof through upstream's own GUI/file-picker interaction - still not
@@ -991,3 +996,136 @@ In accordance with ADR 0010 Decision 3:
 - Below the section headers, a `legalityBox` status banner displays `deckController.legalityMessage`,
   styled with `Theme.warning` when illegal and `Theme.success` when legal.
 
+## 15. Search filters (round 022, ADR 0012)
+
+The search pane has upstream's filter window (`gframe/game.cpp:661-743`): card type and
+sub-type, attribute, race, ATK, DEF, Level/Rank and Scale boxes, an "Effects…" popup with the
+32 effect-category check boxes, a "Link markers…" popup with the eight markers in upstream's
+3x3 layout, the limit list, the "Show non-official cards" switch, and Clear. A "Hide filters"
+button folds the grid away.
+
+- **Who decides what.** `SearchResultsModel` (`ui/src/deckbuilder/search_results_model.h`)
+  holds the user's choices as indexes and text and offers the labels.
+  `ui/src/deckbuilder/search_filters.{h,cpp}` holds upstream's option tables (values and
+  order, cited) and copies the choices into a `data::SearchQuery`; the text of a number box
+  becomes a comparison in `data::parse_numeric_filter`, and `CardSearchIndex` matches. The
+  banlist-dependent part - hidden cards, the whitelist, the limit list - is
+  `policy::deck_search_admits`, applied to the ranked results before the 200-result cap,
+  against `deckController`'s selected banlist. QML sets indexes and text and renders labels;
+  it inspects no card.
+- **Upstream's own interplay, reproduced in the model:** changing the card type clears the
+  sub-type, attribute, race and number boxes (`deck_con.cpp:525-532`); the Monster-only
+  controls are disabled unless the card type is Monster; choosing the Link sub-type disables
+  and clears DEF (`:577-583`); the non-official switch is disabled with a whitelist
+  (`game.cpp:3420-3436`); the limit list's choices follow the banlist and the switch
+  (`:3412-3442`).
+- **What differs from upstream** (ADR 0012, Decision 6): the search re-runs on every change
+  rather than on Enter or a button; Clear leaves every visible card listed rather than an
+  empty list; a limit choice survives a change of list only if it is still offered; the
+  switch is not saved between runs; card labels are English and not upstream's strings.
+- **Keyboard.** Every filter control declares Tab focus capability (`focusPolicy` includes
+  `Qt.TabFocus`, pinned by `filterControlsReachTheSearchModel`). Capability alone does not
+  establish traversal or visibility. Round 024's real-screen key-event coverage and native
+  platform limits are described in §15.2. Full keyboard parity for the screen is still open (§12).
+- **Tests.** `searchFiltersDriveEveryUpstreamControl`, `searchHidesWhatUpstreamHidesByDefault`,
+  `limitFilterFollowsTheSelectedBanlist`, `cardTypeChangeResetsTheMonsterControlsAsUpstreamDoes`
+  and `numberBoxesReadTheFieldUpstreamReads` (`ui/tests/test_deckbuilder.cpp`) drive every
+  control through the adapter against a synthetic database - the last with cards that tell
+  the four number boxes apart, so a box wired to the wrong field (Scale to the right scale) or
+  read as the wrong kind (Level as signed ATK) fails; `filterControlsReachTheSearchModel` (`ui/tests/test_deckbuilder_screen.cpp`)
+  drives the real screen's controls.
+- **Visual check** (round 022): a `--capture` of the Decks screen with a synthetic database and
+  banlist, at the default 1280x800 window, showing the filter grid in its default state. It
+  did not look at the 960x600 minimum, where round 022's grid did not fit; §15.1 records the
+  correction.
+
+### 15.1 The filters at the 960x600 minimum (round 023)
+
+**What was wrong.** Round 022's grid was a plain `GridLayout` in the search column, four
+columns wide, at its natural height. Two things made it overflow at 960x600, where the screen
+beside the compact nav rail is 896x600 and the search column's share is 277 pixels:
+
+- *Width.* The "Show non-official cards" check box had no `Layout.fillWidth`, so the grid gave
+  it its full text width, wider than the column. The grid, and with it the column's contents,
+  grew past the column (the search box measured 314 pixels wide in a 277-pixel column): the search box, Clear, the right-hand filter column, the limit list and
+  "Link markers…" ran over the divider into the deck column. At 1280x800 the column is wide
+  enough, which is why round 022's capture looked right.
+- *Height.* The grid took its full height, about 300 pixels in the capture, before the results list got any,
+  so on a 600-pixel window the results were left about one row.
+
+**What this round does**, all in `DeckBuilderScreen.qml`:
+
+1. The grid is as wide as the column and never wider. The check box fills its row and wraps
+   its label instead of widening the grid.
+2. The grid has four columns when the column is at least 300 pixels wide, and two below that.
+   At 300 pixels four columns leave each numeric control about 80 pixels; the ATK/DEF hints
+   are elided in the full-shell 1280x800 capture. The fields remain editable and inside their
+   column. Two columns at 960x600 leave each control about 120 pixels.
+3. The grid sits in a `ScrollView` that is never taller than the grid, can shrink to about two
+   rows, and gives up height before the results do: the results frame has a floor of 160 pixels,
+   about three result rows. On a tall window nothing scrolls; on a short one the filters scroll
+   and a vertical bar is shown, in its own gutter, whenever rows are hidden.
+4. The main filter grid follows focus above or below the visible rows. Round 023's handler
+   did not cover the separate Effects scroll area; round 024 replaces it with the shared
+   mechanism described in §15.2. Every control keeps its Tab focus capability.
+
+**Alternatives not taken.** Hiding the filters by default on a small window would have kept the
+results large, but the brief asks for the layout with the filters shown, and a user who never
+presses "Show filters" would not know they exist. Narrowing the card-details pane to widen the
+search column would have undone §10.6's floor for the preview. A second window or popup for the
+filters, as upstream has, would have been a larger change than the defect needs.
+
+**How it is checked.** `searchPaneFitsItsColumnAtMinimumAndDefaultSizes`
+(`ui/tests/test_deckbuilder_screen.cpp`) loads the real screen in the Basic style the shell
+uses, at the screen sizes 960x600 and 1280x800 give beside the nav rail, and requires that every
+search-column control lies inside the column, that the column ends before the deck column
+starts, that the result list shows a second row, and that focusing the last and first filter
+controls scrolls each into view. Run against round 022's layout it fails on the search box
+(wider than the column at 960x600); with the filter area not allowed to shrink it fails on the
+result rows; without the focus handling it fails on "Link markers…". Captures at both sizes, with
+a synthetic database, are described in round 023's builder report.
+
+**Not changed.** The pane shares (§10.6) and the deck column: at 960x600 the Ruleset and Banlist
+boxes cut their current text short ("Standar", "No ban"), in round 022's capture and in this
+round's alike. That is truncation inside the box, not overlap, and this round leaves it.
+
+### 15.2 Focus visibility across filter surfaces (round 024)
+
+Round 023's Verifier and Brain reproduced Tab focus entering clipped Effects rows. The
+main-grid handler ignored controls outside that grid, so the popup never followed its focused
+category. `FocusScrollView`, an inline presentation component in `DeckBuilderScreen.qml`, now
+serves both scrollable filter surfaces: the main grid and the Effects category grid. It ignores
+focus outside its own content, maps the focused control into that content, and clamps the
+vertical offset to reveal its bounds. It rechecks after focus and layout geometry changes:
+popup opening and wrapping labels can settle after focus arrives. Effects cells share the
+available width and wrap their labels, preventing horizontal clipping as well. No matching,
+choices, numeric parsing or game rules change.
+
+The Link-marker popup has a fixed eight-button grid and Done, with no scrollable content.
+The search results scroll separately and are not filter controls; drop-down option lists use
+Qt's ComboBox popup navigation. Neither is replaced by this filter-content mechanism.
+
+`filterTabTraversalStaysVisible` loads the actual screen with synthetic cards and enables
+Monster filters. Four data rows exercise forward Tab and reverse Shift+Tab at screen areas
+896x600 and 1064x800 (the 960x600 and 1280x800 shells minus their nav rails). Only initial
+focus placement is explicit. The test requires all 15 named search controls, all 32 Effects
+categories plus Done, and all eight markers plus Done to be reached by key events. Every
+reached control must fit completely within its named surface intersected with every clipping
+ancestor after layout settles. Missing a control fails independently of visibility. Space on
+a revealed Category 32 must update the model's selection; Done/Space closing, Space reopening,
+visible Tab focus after reopening and Escape closing are also checked. The existing column
+and multiple-result-row expectations remain intact. These are offscreen key-event checks,
+not proof of native platform parity. The regression and diagnostic mutations are recorded in
+round 024's Builder report.
+
+Visual inspection distinguishes the shell's default-state captures from screen-only harness
+captures of scrolled filters and open popups; their dimensions and inspected states are in
+that report. Round 023's Verifier reported native macOS Tab skipping non-text controls and
+not reaching Effects checkboxes. Brain did not reproduce that native observation or establish
+its cause. It remains an attributed, unresolved limitation: no system keyboard preference or
+platform navigation policy is changed, and no universal native traversal claim follows from
+Tab capability or offscreen events. Round 024's Builder also ran the minimum-size forward
+key-event test with Qt's native Cocoa plugin: it reached Search and the four numeric fields,
+but missed ten non-text controls and failed its accounting assertion. This is a programmatic
+native-plugin observation, not physical keyboard verification; its cause remains unresolved.
+Full keyboard/controller parity remains open (§12).
