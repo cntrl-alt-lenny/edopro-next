@@ -1,0 +1,64 @@
+Removed sentence:
+This is a programmatic native-plugin observation, not physical keyboard verification; its cause remains unresolved.
+
+Replacement sentence:
+That round's result is a programmatic native-plugin observation, not physical keyboard verification; §15.3 records the later investigation.
+
+All added documentation sentences (complete new section, no other architecture edits):
+
+
+### 15.3 Native macOS focus policy investigation (round 026)
+
+The unchanged shell reproduces the non-text filter exclusion in a native macOS
+session using desktop-delivered keys, beyond the earlier Cocoa QTest observation.
+At both 960x600 and 1280x800, forward Tab cycles Search → ATK → DEF → Level →
+Scale → Search, while Shift+Tab follows the reverse cycle.
+Ten enabled non-text filter controls are omitted from that cycle, including both
+popup triggers.
+Both popups were therefore investigated with explicitly separate initial seeds;
+that does not establish end-to-end keyboard reachability.
+
+The investigation used macOS 27.0.1, Qt 6.11.1 and the application's Basic style.
+Version-matched [Cocoa theme source](https://github.com/qt/qtbase/blob/59c81a3c2247b821b9b84b4eb8d939b77e07e276/src/plugins/platforms/cocoa/qcocoatheme.mm#L440)
+queries `NSApplication.isFullKeyboardAccessEnabled` to choose all-controls or
+text/list Tab policy.
+[Qt Quick candidate filtering](https://github.com/qt/qtdeclarative/blob/a02bed441965ee1f18f856352c7d5ee5ba35d795/src/quick/items/qquickitem.cpp#L2462)
+then applies that policy beyond an item's focus-capability bit.
+The effective runtime getter reported text/list flags 3 in both disposable
+screen-harness and full-shell probes; absent preference keys were not treated
+as proof of an OS default.
+No system setting or shipped navigation policy changed.
+
+Changing only the diagnostic process to all-controls allowed the previously
+omitted main controls to be reached in both sizes and directions with the
+existing destination and clipping assertions intact.
+Fresh default/all/default comparisons restored the literal default failure,
+supporting policy as the cause of that exclusion rather than a missing QML
+TabFocus declaration or a screen-harness-only defect.
+This is a counterfactual diagnostic, not a production fix or native parity claim.
+The all-controls matrix also retains intermittent null-focus and popup-close
+failures, including in a repeat without concurrent desktop automation, whose
+activation/input-delivery/restoration causes remain unresolved.
+The [research record](../rounds/026-native-filter-navigation/attachments/research.md)
+and per-row outputs distinguish those failures from successful reached sets.
+
+Desktop observations at both shell sizes found Tab/Shift+Tab staying on the
+seeded popup container rather than category/marker children.
+Escape closed each popup and restored the prior numeric field; click reopening
+and Done-click closing worked, while default-policy Space/Done keyboard operation
+and keyboard reopening were not established.
+Category 32 keyboard/model operation is supported only by passing diagnostic
+all-controls QTest rows, not by the production-policy desktop session.
+Images inspected the visible numeric focus and seeded popup frames; full
+category traversal, physical hardware input and controller parity remain unproven.
+
+The next product brief should decide whether this client deliberately overrides
+macOS text/list preference for consistent all-controls navigation or supplies
+an explicit keyboard route while retaining it.
+An override would be a compatibility decision to record and verify, not a reason
+to change the user's OS setting.
+The experimental setter is declared in the installed header but documented as
+internal in [Qt source](https://github.com/qt/qtbase/blob/59c81a3c2247b821b9b84b4eb8d939b77e07e276/src/gui/kernel/qstylehints.cpp#L582),
+so production API compatibility across the supported Qt floor needs assessment.
+Native activation and popup-operation failures need independent investigation
+before any broad native correctness claim; strict reached sets must not be softened.

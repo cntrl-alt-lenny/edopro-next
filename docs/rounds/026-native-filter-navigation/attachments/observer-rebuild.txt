@@ -1,0 +1,2 @@
+[1/2] Building CXX object CMakeFiles/edopro_next_shell.dir/src/main.cpp.o
+[2/2] Linking CXX executable edopro_next_shell

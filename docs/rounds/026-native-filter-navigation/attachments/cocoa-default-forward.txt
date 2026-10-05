@@ -1,0 +1,53 @@
+$ ui/build/tests/test_deckbuilder_screen filterTabTraversalStaysVisible:default-forward
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.fonts: Populating font family aliases took 69 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost. 
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,44 309x40 viewport 16,16 309x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 91,236 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 247,236 78x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 91,280 79x40 viewport 16,148 309x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 247,280 78x40 viewport 16,148 309x308
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'active' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/tests/test_deckbuilder_screen.cpp(1075)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/tests/test_deckbuilder_screen.cpp(1111)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 2301ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 1

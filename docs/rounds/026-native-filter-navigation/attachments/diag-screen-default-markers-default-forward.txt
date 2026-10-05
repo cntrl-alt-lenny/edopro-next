@@ -1,0 +1,63 @@
+Disposable diagnostic, production QML unchanged.
+host=screen policy=default isolated=markers row=default-forward
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.fonts: Populating font family aliases took 125 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost. 
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG initial policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG isolated popup seed; main end-to-end path not tested
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG null focus; missing QList("markerButton2", "markerButton6", "markerButton3", "markerButton4", "markerButton1", "markerButton7", "markerButton0", "markerButton5")
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'active' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1087)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1156)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 2192ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 1

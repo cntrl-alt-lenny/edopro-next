@@ -1,0 +1,41 @@
+$ sw_vers
+ProductName:		macOS
+ProductVersion:		27.0.1
+BuildVersion:		26A434
+exit: 0
+
+$ clang --version
+Apple clang version 21.0.0 (clang-2100.3.34.2)
+Target: arm64-apple-darwin27.0.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+exit: 0
+
+$ python3 --version
+Python 3.9.6
+exit: 0
+
+$ python3.13 --version
+Python 3.13.15
+exit: 0
+
+$ qmake -query QT_VERSION
+6.11.1
+exit: 0
+
+$ git rev-parse HEAD
+88a169c5ce8a9339f19fe4e317c6a9a1b54af3c5
+exit: 0
+
+$ git submodule status
+ 46779fbe40e6a9bd8967f5dc6a03f4eaa6550d57 ocgcore (v11.0-86-g46779fb)
+exit: 0
+
+$ defaults read -g AppleKeyboardUIMode
+Error: Could not find key 'AppleKeyboardUIMode' in domain 'kCFPreferencesAnyApplication'.
+exit: 1
+
+$ defaults read com.apple.universalaccess fullKeyboardAccessEnabled
+Error: Could not find key 'fullKeyboardAccessEnabled' in domain 'com.apple.universalaccess'.
+exit: 1
+

@@ -1,0 +1,26 @@
+Disposable diagnostic, production QML unchanged.
+host=screen policy=all isolated=markers row=default-reverse
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) qt.qpa.fonts: Populating font family aliases took 79 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost. 
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG initial policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG isolated popup seed; main end-to-end path not tested
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton7 bounds 198,170 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton6 bounds 153,170 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton5 bounds 108,170 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton4 bounds 198,125 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton3 bounds 108,125 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton2 bounds 198,80 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton1 bounds 153,80 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton0 bounds 108,80 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers reached 9 of 9
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Done/Space close, Space reopen, Tab visible, Escape close
+PASS   : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse)
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 808ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 0
