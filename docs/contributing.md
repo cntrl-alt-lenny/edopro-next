@@ -6,11 +6,10 @@ model (Brain, Builder, Verifier), and the evidence each kind of change must prod
 rehydration doc for a fresh session; [`agents/FRAMEWORK.md`](agents/FRAMEWORK.md) is the
 framework this project runs on.
 
-A Builder or Verifier round starts with `python3 tools/fw.py start --role <role> --round
-<id>`, which puts that seat on its own branch at the right commit — any clone, cloud
-workspace or linked checkout works. After it, run `git submodule update --init` for
-`ocgcore`, which `fw.py start` does not do itself. Run `git config core.hooksPath
-.githooks` once per clone to enable the local push guard.
+A Builder batch runs on its own `worker/<batch>` branch (see
+[`agents/FRAMEWORK.md`](agents/FRAMEWORK.md)) — any clone, cloud workspace or linked
+checkout works. After checking it out, run `git submodule update --init` for `ocgcore`.
+Run `git config core.hooksPath .githooks` once per clone to enable the local push guard.
 
 [`.githooks/pre-push`](../.githooks/pre-push) rejects a push to `master` or one that would
 ship drift in the derived protocol tables. It is a local convenience, not a control — it

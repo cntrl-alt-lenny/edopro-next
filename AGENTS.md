@@ -30,28 +30,27 @@ is right.
 
 ## Roles
 
-The framework's high-assurance triangle: Owner → Brain → Builder and
-Verifier, reporting independently to Brain.
+Owner → Brain → Builder, with a Verifier on Checked batches reporting
+independently to Brain.
 
 | Role | Holds | Scope |
 |---|---|---|
 | **Owner** | Direction, priorities, scope. Veto and reversal. | — |
-| **Brain** | Context, sequencing, briefs, adjudication, routine merge. | Coordination and acceptance |
-| **Builder** | This project's name for the framework's Worker (`docs/agents/roles/worker.md`). One bounded round at a time; never self-accepts or merges. | Implementation, research or documentation a brief assigns |
+| **Brain** | Context, sequencing, prompts, adjudication, routine merge. | Coordination and acceptance |
+| **Builder** | This project's name for the framework's Worker (`docs/agents/roles/worker.md`). One batch at a time; never self-accepts or merges. | Implementation, research or documentation a prompt assigns |
 | **Verifier** | Independent review of an exact SHA; findings only, never merges. | Read-only review |
 
 Verifier's value is not sharing Brain and Builder's blind spots: prefer a
 different model family for it when convenient (a preference, not a
 correctness dependency — the framework must be correct under any
-permutation). Briefs describe the problem, not the solution — see
-`docs/agents/FRAMEWORK.md`'s brief template and rule 1.
+permutation). Prompts describe the problem, not the solution.
 
-After `fw.py start`, run `git submodule update --init` for `ocgcore` — the
-tool does not do this itself (framework issue 19).
+In every fresh clone or worktree, run `git submodule update --init` for
+`ocgcore`; nothing does it automatically.
 
 ## Invariants
 
-These outrank everything below them, including a brief that conflicts with
+These outrank everything below them, including a prompt that conflicts with
 them.
 
 - **Authoritative and not ours to modify:** `ocgcore/` (submodule), Project
@@ -91,8 +90,8 @@ them.
   `travis/*.sh`; never build on `/mnt/c` under WSL) are in
   [`docs/BASELINE.md`](docs/BASELINE.md). Upstream has **no test suite** —
   never report "tests pass" when only a build succeeded.
-- Framework files (`docs/agents/`, `tools/fw.py`) change only as a framework
-  release's adopter steps say (framework rule 14); project rules go here or
+- Framework files (`docs/agents/`, `tools/fw.py`) change only through a
+  framework update (framework rule 10); project rules go here or
   in `docs/agents/local/`.
 
 ## Evidence
@@ -113,6 +112,11 @@ the class, not the instance. Before opening or updating a PR, run
 `python tools/check_pr_evidence.py` — PR bodies must not quote measured
 figures that a branch update can make stale; name a rerunnable command
 instead.
+
+**Checked path** (Builder, Verifier, then Brain): `gframe/`,
+`integration/legacy/` or anything touching duel behaviour; protocol tables;
+upstream merges; licensing; a new dependency or ADR. No check here can catch
+those mistakes. Other code is Normal; notes and framework updates are Small.
 
 | Changed | Required evidence |
 |---|---|
@@ -156,9 +160,9 @@ CI requires those tests to actually run rather than skip.
 
 ## Working discipline
 
-- **One coherent task at a time.** If the real fix is bigger than a brief's
+- **One coherent task at a time.** If the real fix is bigger than a prompt's
   scope, stop and report rather than expanding.
-- **Branches.** `fw.py start` creates `<role>/<round-id>` automatically.
+- **Branches.** Builders work on `worker/<batch>`, Brain on `brain/<topic>`.
   Historical branches under the retired `m<N>/` and `meta/` convention are
   left alone.
 - **Protect unrelated work.** Before anything destructive, check `git
@@ -179,7 +183,8 @@ CI requires those tests to actually run rather than skip.
 - Decisions and their reasoning: [`docs/adr/`](docs/adr/)
 - Per-subsystem source research and deliberate upstream divergences:
   [`docs/architecture/`](docs/architecture/)
-- Rounds, one folder each: [`docs/rounds/`](docs/rounds/); completed
-  pre-3.0.0 work in [`docs/briefs/archive/`](docs/briefs/archive/)
+- Batch summaries and reviews: [`docs/batches/`](docs/batches/); 3.x rounds
+  in [`docs/rounds/`](docs/rounds/) and pre-3.0.0 work in
+  [`docs/briefs/archive/`](docs/briefs/archive/), kept as history
 - Windows/MSVC build notes: [`docs/agents/local/windows-notes.md`](docs/agents/local/windows-notes.md)
 - Build baseline and its two gotchas: [`docs/BASELINE.md`](docs/BASELINE.md)
