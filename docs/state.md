@@ -32,9 +32,14 @@ controller navigation, Steam Deck and accessibility still open.
   see `docs/architecture/current-edopro.md`.
 - **Do not delete Irrlicht code** before its replacement demonstrably
   reaches parity.
-- **This project runs agentic-framework 3.1.0** as of round
-  025-framework-3-1-0. Merge rule: owner-approves (declared in
-  `AGENTS.md`).
+- **This project runs agentic-framework 4.0.0** (batches) from
+  2026-10-06. Merge rule: owner-approves (declared in `AGENTS.md`).
+
+## Scorecard
+
+Every two weeks, Brain adds one line: dates, product progress, prompts the
+owner relayed, and batches that only fixed an earlier batch. First line due
+2026-10-20.
 
 ## Not proven, and must not be claimed
 
@@ -86,7 +91,7 @@ than upstream's push cascade, and never reclassifying an opened `.ydk`
 
 - Fork point and other fixed facts: **Historical anchors**, below.
 - Round-by-round history (pre-3.0.0): [`state-history.md`](state-history.md).
-  Current and future rounds: [`docs/rounds/`](rounds/).
+  3.x rounds: [`docs/rounds/`](rounds/); batches since 4.0: [`docs/batches/`](batches/).
 - Windows/MSVC build detail: [`agents/local/windows-notes.md`](agents/local/windows-notes.md).
 - **Recommended next slice**: M3's remaining deck-builder parts (structured
   filters and the legacy sigil search grammar, keyboard parity, artwork).
