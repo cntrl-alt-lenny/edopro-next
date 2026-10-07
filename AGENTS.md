@@ -115,14 +115,15 @@ instead.
 
 **Checked path** (Builder, Verifier, then Brain): `gframe/`,
 `integration/legacy/` or anything touching duel behaviour; protocol tables;
-upstream merges; licensing; a new dependency or ADR. No check here can catch
-those mistakes. Other code is Normal; notes and framework updates are Small.
+upstream merges; licensing; a new dependency. No check here can catch those
+mistakes. An ADR alone does not make a batch Checked. Other code is Normal;
+notes and framework updates are Small.
 
 | Changed | Required evidence |
 |---|---|
 | `client/` | configure/build `-S client -B client/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON`, `ctest --test-dir client/build --output-on-failure`, `python tests/test_semantic_trace.py --require -v` |
 | `data/`, `policy/` | same cycle under `-S data`/`-S policy -B */build`, plus `ctest` |
-| `ui/` | add `-DEDOPRO_NEXT_UI_TESTS=ON`, build, `ctest`, and the offscreen clean-QML-load check from `.github/workflows/edopro-next.yml` |
+| `ui/` | add `-DEDOPRO_NEXT_UI_TESTS=ON`, build, `ctest`, and the offscreen clean-QML-load check from `.github/workflows/edopro-next.yml`. A new control joins the screen test's layout and keyboard checks; CI saves its screenshots as the `ui-screenshots` artifact |
 | `tools/`, `tests/`, protocol tables | `generate_messages.py --check`, `generate_protocol_constants.py --check`, `python -m unittest discover -s tests -v`, golden reproduction (`--update` then `git diff --exit-code -- tests/golden`) |
 | `gframe/`, `integration/legacy/`, duel behaviour | upstream baseline still builds (state the platform) **and** the observer-enabled fixture equivalence still holds, per the `upstream-baseline` job; say in words how unchanged behaviour was established — never the replay harness |
 | Presentation only | state explicitly what was verified visually, and what was not |
@@ -169,6 +170,9 @@ CI requires those tests to actually run rather than skip.
   status` and whether other work is in flight; stash or branch, do not
   clobber.
 - **Never push to `master`.** Every change is a pull request.
+- **Shared pages are Brain's.** Builders leave `docs/ROADMAP.md`,
+  `docs/capabilities.md`, `docs/state.md` and `README.md` alone and say under
+  Done what should change; Brain updates them once, after merging.
 - **Focused commits**, never one giant commit.
 - **Nothing personal in any tracked document**, archived ones included: no
   home-folder or drive paths, no email addresses.
