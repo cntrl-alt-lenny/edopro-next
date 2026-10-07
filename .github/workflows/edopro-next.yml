@@ -206,8 +206,22 @@ jobs:
       # Covers the deck-builder Qt C++ adapter layer (CardCatalog,
       # SearchResultsModel, DeckSectionModel, DeckController) - every
       # fixture is synthetic data built at runtime, never a committed .cdb.
+      # The screen test saves what keyboard focus looks like at each window
+      # size; the screenshots are kept so a reviewer can look, not re-run.
       - name: Deck builder adapter unit tests
-        run: ctest --test-dir ui/build --output-on-failure
+        env:
+          EDOPRO_FOCUS_CAPTURES: ${{ runner.temp }}/ui-screenshots
+        run: |
+          mkdir -p "$EDOPRO_FOCUS_CAPTURES"
+          ctest --test-dir ui/build --output-on-failure
+
+      - name: Keep the screen test's screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: ${{ runner.temp }}/ui-screenshots
+          if-no-files-found: warn
 
       - name: Launch offscreen and require a clean QML load
         # Two independent assertions, because either alone can pass falsely:
