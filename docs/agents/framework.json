@@ -64,7 +64,7 @@
     }
   },
   "framework": {
-    "release": "4.0.0",
+    "release": "4.0.1",
     "repository": "https://github.com/cntrl-alt-lenny/agentic-framework"
   },
   "options": {
