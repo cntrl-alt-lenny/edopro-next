@@ -8,8 +8,7 @@ Fetch origin. Read the current AGENTS.md, framework, Worker role and state.
 Create `worker/27-native-filter-navigation` from latest `origin/master` in
 `.worktrees/worker-27-native-filter-navigation`; initialise `ocgcore` and run
 `python3 tools/fw.py status`. Its fictitious "EADME" batch is documented in
-`docs/framework-feedback/2026-10-08-legacy-round-status.md` on
-`origin/brain/project-refresh-2026-10-08`; inspect git for actual work.
+`docs/framework-feedback/2026-10-08-legacy-round-status.md`; inspect git for actual work.
 Never use the retired `fw.py start/report` commands.
 
 Goal: every enabled deck-builder filter is reachable and operable by Tab
