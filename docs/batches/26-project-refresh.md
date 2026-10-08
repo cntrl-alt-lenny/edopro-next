@@ -21,8 +21,9 @@ seat checkouts and branches were preserved.
 
 Recorded the independently reproduced fictitious "EADME" batch in
 `docs/framework-feedback/2026-10-08-legacy-round-status.md`. No framework patch
-was made here. Brain recommends app-local all-controls keyboard navigation
-using supported APIs; this is a proposal, not an owner-approved policy record.
+was made here. At initial preparation, app-local all-controls keyboard
+navigation using supported APIs was Brain's proposal. The owner selected
+that approach on 2026-10-08; the decision and batch prompt now record it.
 
 ## Checked
 

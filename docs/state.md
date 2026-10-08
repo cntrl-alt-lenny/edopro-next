@@ -33,6 +33,10 @@ controller navigation, Steam Deck and accessibility still open.
   see `docs/architecture/current-edopro.md`.
 - **Do not delete Irrlicht code** before its replacement demonstrably
   reaches parity.
+- **Deck-builder Tab navigation should reach every enabled control inside
+  the application.** Use supported public Qt APIs compatible with the
+  supported Qt floor; leave macOS keyboard settings untouched. The owner
+  selected this approach on 2026-10-08.
 - **Use the framework's batch workflow.** The current release pin is in
   `agents/framework.json`. Merge rule: owner-approves (declared in `AGENTS.md`).
 

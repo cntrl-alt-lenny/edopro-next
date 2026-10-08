@@ -16,7 +16,7 @@ Goal: every enabled deck-builder filter is reachable and operable by Tab
 and Shift+Tab on native macOS, with visible focus at 960x600 and 1280x800.
 Main filters, Effects and Link markers must work through the real shell,
 including lower Effects categories, close/reopen and restored focus.
-Brain recommends consistent all-controls navigation inside this application;
+The owner selected consistent all-controls navigation inside this application;
 leave the user's system settings untouched. Use only supported public APIs
 compatible with the declared Qt floor and CI's pinned Qt. If that cannot be
 established, report the alternatives to Brain before implementing an override.
