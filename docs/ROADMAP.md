@@ -201,8 +201,9 @@ already presentation-independent, so it can be built without touching the duel p
 upstream EDOPro unchanged.
 **Pending** - the card database facade, the deck model/`.ydk` codec, fast search, and the
 deck legality/policy foundation above are all done, and a functional deck-builder core
-with advisory legality validation and automatic Main/Extra placement exists; artwork,
-structured/legacy search parity and full keyboard/controller parity remain, so the milestone
+with advisory legality validation, automatic Main/Extra placement and structured filter
+controls exists; artwork, legacy search grammar, descriptive effect labels and full
+keyboard/controller parity remain, so the milestone
 is not complete.
 Current serializer -> real upstream `LoadDeckFromFile` compatibility is now **CI-proven**
 against deterministic synthetic card data (M3D3, above) - a real improvement over "supported
