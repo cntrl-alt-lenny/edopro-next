@@ -19,8 +19,9 @@ Level 1 (recorded-protocol regression) done and Level 2 (re-simulation
 through `ocgcore`) not started — that is what "duel behaviour is unchanged"
 actually needs; **M3** (deck/card data) has `data/`, `.ydk`, search,
 `policy/`, advisory deck-builder legality and Main/Extra placement by
-upstream's rule done, with artwork, the legacy sigil search grammar,
-structured filters and full keyboard/controller parity still open; **M4** and **M5**
+upstream's rule and structured filter controls done, with artwork, the legacy
+sigil search grammar, descriptive effect labels and full keyboard/controller
+parity still open; **M4** and **M5**
 not started, M5 (duel field) deliberately last; **M6** (platform and input)
 has local Windows and macOS builds evidenced, with Windows and macOS CI,
 controller navigation, Steam Deck and accessibility still open.
@@ -32,8 +33,8 @@ controller navigation, Steam Deck and accessibility still open.
   see `docs/architecture/current-edopro.md`.
 - **Do not delete Irrlicht code** before its replacement demonstrably
   reaches parity.
-- **This project runs agentic-framework 4.0.0** (batches) from
-  2026-10-06. Merge rule: owner-approves (declared in `AGENTS.md`).
+- **Use the framework's batch workflow.** The current release pin is in
+  `agents/framework.json`. Merge rule: owner-approves (declared in `AGENTS.md`).
 
 ## Scorecard
 
@@ -93,8 +94,8 @@ than upstream's push cascade, and never reclassifying an opened `.ydk`
 - Round-by-round history (pre-3.0.0): [`state-history.md`](state-history.md).
   3.x rounds: [`docs/rounds/`](rounds/); batches since 4.0: [`docs/batches/`](batches/).
 - Windows/MSVC build detail: [`agents/local/windows-notes.md`](agents/local/windows-notes.md).
-- **Recommended next slice**: M3's remaining deck-builder parts (structured
-  filters and the legacy sigil search grammar, keyboard parity, artwork).
+- **Recommended next slice**: M3's native deck-builder keyboard navigation,
+  followed by the legacy sigil search grammar, descriptive effect labels and artwork.
   Still not the duel field.
 
 ## Historical anchors
@@ -105,3 +106,9 @@ than upstream's push cascade, and never reclassifying an opened `.ydk`
 - GitHub branch protection on `master` (PR required, `enforce_admins`,
   `strict`, five required checks) was enabled 2026-08-31 — re-verify live
   per `AGENTS.md`, do not trust this date going forward.
+- Refresh on 2026-10-08: merged structured filters and focus-visibility work
+  were present on the default branch. Round 026's native investigation and
+  both reports were pushed but unmerged; it shipped no navigation fix.
+  Its required macOS empty-stderr assertion failed, and intermittent popup
+  failures remained unresolved. Preserve that evidence when continuing;
+  a successful diagnostic policy override is not a product result.

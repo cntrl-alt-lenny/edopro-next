@@ -3,7 +3,8 @@
 The detail behind the landing page's generated status block. **[`ROADMAP.md`](ROADMAP.md)
 is the authority for status**; the landing page derives from it by
 `tools/generate_readme_status.py`. This table is a hand-written, finer-grained snapshot,
-last checked 2026-09-21, and nothing generates or checks it. If it disagrees with the
+whose deck-builder status was reconciled with the merged roadmap on 2026-10-08;
+build claims retain the dated evidence linked below. Nothing generates or checks it. If it disagrees with the
 roadmap, the roadmap wins and this page is stale.
 
 Nothing here is rounded up.
