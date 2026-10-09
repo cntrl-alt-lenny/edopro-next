@@ -13,8 +13,8 @@ uses the same resolver. Sizes/weights/tracking and layout tokens are unchanged.
 Separate test-module scope avoids the prior registration collision. Existing
 navigation harness/driver and search adapters are untouched.
 
-Disposition: **implementation accepted for owner-approved merge once PR checks
-are green at this exact delivery**. Search/navigation still require integration
+Disposition: **accepted for owner-approved merge; PR checks are green at this
+exact delivery**. Search/navigation still require integration
 and new-head verification; no old review is carried over blindly.
 
 ## Checked
@@ -31,9 +31,9 @@ exit 0. Inspected minimum-size preview/focus and Effects popup: title/body wrap,
 result elision, numeric mono text, focused search outline and popup text/bounds
 are readable. This is headless real-QML evidence, not native-input verification.
 
-Final-head Linux CI run `37938111899` succeeded at the delivery SHA, including
-all required jobs and literal strict shell smoke. New PR CI is checked
-separately before merging. Linux uses the existing Release configuration;
+Final-head Linux CI runs `37938111899` (branch) and `37939170538` (PR #50)
+succeeded at the delivery SHA, including all required jobs and literal strict
+shell smoke. PR #50 reports CLEAN. Linux uses the existing Release configuration;
 Linux Debug execution is not inferred.
 
 Re-read Qt 6.5.3's primary
@@ -55,5 +55,6 @@ Latin proportional/monospace font fail explicitly; this limit is documented.
 No remaining product-font failure observed at this head. The original screen
 test executable still uses its old default-font bootstrap; its macOS diagnostic
 is retained and is distinct from the now-clean real-shell smoke. Batch 27 owns
-any screen-driver bootstrap integration. Owner approval and PR checks remain
-merge gates; no setting or assertion waiver is requested.
+any screen-driver bootstrap integration. Owner approval remains the merge gate;
+recheck the exact head/checks immediately before merging. No setting or assertion
+waiver is requested.

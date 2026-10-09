@@ -1,5 +1,5 @@
 SOURCE fbbfcacba9f2221dd0bc9067261423916a2bc69c
-COMMAND UI Debug/WERROR/UI_TESTS configure
+COMMAND cmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DEDOPRO_NEXT_WERROR=ON -DEDOPRO_NEXT_UI_TESTS=ON -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
 -- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
 -- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
 CMake Warning (author) at /opt/homebrew/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:3565 (message):

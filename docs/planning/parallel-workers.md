@@ -87,3 +87,20 @@ when Brain checked. Overlap is a possible confound, not an established cause
 of historical failures. Controlled interference can explain a failure
 signature without proving what initiated an earlier window resignation.
 Assertions and acceptance requirements remain intact.
+
+### Delivery review completed, 2026-10-09
+
+Both follow-ups have finished. Font batch 29 is independently accepted for
+owner-approved merge in PR #50, with green required checks and a clean strict
+macOS real-shell smoke. Navigation follow-up review found no blocking defect
+in the new tracing/activation latch; controlled native rows pass, including
+two preselected rows without passive tracing. Historical activation initiation
+remains unknown and must stay explicit.
+
+The next genuine integration dependency is the font delivery: search #49 and
+navigation #48 need it and checks at their new heads before acceptance. Search
+does not wait for native historical attribution. The planning PR need not merge
+first. Brain owns integration order, exact-head reviews and owner merge cards;
+Workers have released the desktop slot. No extra task is assigned solely to
+keep two seats occupied. See the independent batch 29 and batch 27 follow-up
+Brain reviews for checked outcomes and remaining limits.
