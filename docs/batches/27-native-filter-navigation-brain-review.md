@@ -39,6 +39,14 @@ sources, so this is a shared existing gate, not a navigation regression claim.
 Inspected the stored minimum-size Effects capture: lower focused category is
 visible with a focus outline. See the adjacent Brain evidence directory.
 
+Coordination addendum: Brain's two offscreen smoke processes were terminated
+and reaped before launching the three failing native rows. Brain launched no
+competing Cocoa peer during that matrix, but recorded no foreground PID
+history; other desktop activity remains unknown. Later follow-up diagnostic
+files reproduce the failure signature with a deliberate Cocoa peer launch.
+That establishes a possible cause class, not attribution of historical failures
+or acceptance of the still-in-flight follow-up source.
+
 ## Not checked
 
 Physical keyboard, fresh desktop-delivered shell interaction, controller,
