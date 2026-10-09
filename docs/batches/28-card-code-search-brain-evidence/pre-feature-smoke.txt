@@ -1,0 +1,8 @@
+SOURCE 3da9b9d1b5bbb4c851a9470909e17e46d32b9789; production UI sources identical to origin/master at 1068ee31
+COMMAND launch ui/build/edopro_next_shell with QT_QPA_PLATFORM=offscreen, wait 20 seconds; independently assert survival and empty stderr, then terminate/reap
+SURVIVAL ASSERTION EXIT 0 (still running at timeout; normalized status 124)
+EMPTY STDERR ASSERTION EXIT 1
+STDERR
+qt.qpa.fonts: Populating font family aliases took 57 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+
+WRAPPER EXIT 1

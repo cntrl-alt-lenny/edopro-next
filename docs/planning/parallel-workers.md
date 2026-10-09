@@ -47,3 +47,22 @@ and coordination effort, corrective batches and review/approval waits. Do not
 count unmerged implementation as shipped or token use as value. Retain two
 Builders only while their independent work is reducing the delivery queue;
 choose a single Builder when decomposition would create churn or idle tasks.
+
+## Follow-up after delivery review, 2026-10-09
+
+Brain reviewed both deliveries; neither is accepted. Native activation loss
+was reproduced across multiple Cocoa rows. Card-code implementation review
+found no blocking code defect, but the strict macOS font-smoke gate is red
+on both deliveries and unchanged baseline production sources.
+
+| Active Worker | Ownership now | Entry point |
+|---|---|---|
+| Navigation Worker | Continue batch 27: navigation QML, screen tests/TestHarness, causal activation diagnosis | [Follow-up brief](../batches/27-native-filter-navigation-followup-brief.md) |
+| Previous search Worker | New batch 29: Theme typography, font startup/helper, dedicated new font test and scoped CMake registration | [Font-resolution brief](../batches/29-platform-font-resolution-brief.md) |
+
+This transfers font-related Theme/startup ownership from the original broad
+navigation allocation to batch 29; navigation tests remain with batch 27.
+Brain coordinates any shared bootstrap/helper requirement. Batch 28 stays
+frozen in draft PR #49. Its acceptance depends on an accepted font fix and
+new-head checks, not on completing native navigation. Both follow-ups can
+start now. Only integration/revalidation waits for the relevant delivery.
