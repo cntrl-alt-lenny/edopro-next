@@ -158,3 +158,18 @@ add_test(NAME deckbuilder_screen COMMAND test_deckbuilder_screen)
 # engine at all) - offscreen matches the platform the shell's own smoke
 # test and visual-verification captures already use successfully in CI.
 set_tests_properties(deckbuilder_screen PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Dedicated input-contract regressions, without QML or native focus interaction.
+add_executable(test_card_code_search
+    test_card_code_search.cpp
+    ${EDOPRO_NEXT_SHELL_DECKBUILDER_SOURCES}
+)
+target_include_directories(test_card_code_search PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/deckbuilder
+)
+target_link_libraries(test_card_code_search PRIVATE
+    Qt6::Test Qt6::Qml edopro_next_data edopro_next_deck
+    edopro_next_search edopro_next_legality SQLite::SQLite3
+)
+add_test(NAME card_code_search COMMAND test_card_code_search)
