@@ -158,3 +158,15 @@ add_test(NAME deckbuilder_screen COMMAND test_deckbuilder_screen)
 # engine at all) - offscreen matches the platform the shell's own smoke
 # test and visual-verification captures already use successfully in CI.
 set_tests_properties(deckbuilder_screen PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Isolated typography regression: real Theme plus ordinary Qt Quick controls.
+qt_add_executable(test_platform_fonts test_platform_fonts.cpp)
+target_include_directories(test_platform_fonts PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+qt_add_qml_module(test_platform_fonts
+    URI EdoproNext VERSION 1.0 NO_CACHEGEN
+    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/font-module/EdoproNext
+    QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../qml/Theme.qml
+)
+target_link_libraries(test_platform_fonts PRIVATE Qt6::Test Qt6::Quick Qt6::QuickControls2)
+add_test(NAME platform_fonts COMMAND test_platform_fonts)
+set_tests_properties(platform_fonts PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
