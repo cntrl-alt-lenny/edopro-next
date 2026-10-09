@@ -1,0 +1,75 @@
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) qt.qpa.fonts: Populating font family aliases took 55 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) native activation changed true
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab linkMarkersButton bounds 179,416 148x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab categoriesButton bounds 16,416 155x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab nonOfficialCheck bounds 16,368 311x44 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab limitationCombo bounds 91,324 236x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab scaleField bounds 248,280 79x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab levelField bounds 91,280 80x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab defenseField bounds 248,236 79x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab attackField bounds 91,236 80x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab raceCombo bounds 248,192 79x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab attributeCombo bounds 91,192 80x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab subTypeCombo bounds 248,148 79x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab cardTypeCombo bounds 91,148 80x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab clearFiltersButton bounds 227,96 100x40 viewport 16,16 311x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab filtersToggle bounds 16,96 135x40 viewport 16,16 311x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab searchField bounds 16,44 311x40 viewport 16,16 311x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck31 bounds 229,300 195x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck30 bounds 28,300 196x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck29 bounds 229,251 195x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck28 bounds 28,251 196x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck27 bounds 229,202 195x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck26 bounds 28,202 196x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck25 bounds 229,153 195x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck24 bounds 28,153 196x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck23 bounds 229,104 195x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck22 bounds 28,104 196x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck21 bounds 229,80 195x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck20 bounds 28,80 196x44 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck19 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck18 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck17 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck16 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck15 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck14 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck13 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck12 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck11 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck10 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck9 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck8 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck7 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck6 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck5 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck4 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck3 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck2 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck1 bounds 229,80 195x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Shift+Tab categoryCheck0 bounds 28,80 196x40 viewport 28,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) lower category Space changed model selection
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories Done/Space close, Space reopen, Tab visible, Escape close
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markersDone bounds 218,218 100x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton7 bounds 198,170 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton6 bounds 153,170 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton5 bounds 108,170 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton4 bounds 198,125 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton3 bounds 108,125 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton2 bounds 198,80 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton1 bounds 153,80 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Shift+Tab markerButton0 bounds 108,80 40x40 viewport 28,56 290x202
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers reached 9 of 9
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) marker Space changed model selection
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers Done/Space close, Space reopen, Tab visible, Escape close
+PASS   : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse)
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 1861ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+EXIT 0

@@ -1,0 +1,18 @@
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) qt.qpa.fonts: Populating font family aliases took 55 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) native activation changed true
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab linkMarkersButton bounds 179,416 148x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab categoriesButton bounds 16,416 155x40 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab nonOfficialCheck bounds 16,368 311x44 viewport 16,148 311x308
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main Shift+Tab limitationCombo bounds 91,324 236x40 viewport 16,148 311x308
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'active->property("visualFocus").toBool()' returned FALSE. (scaleField)
+   Loc: [<repository>/ui/tests/test_deckbuilder_screen.cpp(1099)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<repository>/ui/tests/test_deckbuilder_screen.cpp(1122)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 662ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+EXIT 1

@@ -1,0 +1,256 @@
+SOURCE 4d1a7e2c30965e31ee85d2e550a48f5480fa02a0
+COMMAND EDOPRO_DIAG_FULL_SHELL=1 QT_QPA_PLATFORM=cocoa ui/build/b27-followup/probe-build/tests/test_deckbuilder_screen filterTabTraversalStaysVisible:minimum-reverse
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.fonts: Populating font family aliases took 57 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552853175 QEvent::WindowActivate Main_QMLTYPE_0 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) native activation changed true
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552853210 QEvent::ApplicationActivate QGuiApplication "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation runtime 6.11.1 "cocoa" "Basic" QSize(960, 600) active true Tab policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG initial policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853505 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "searchField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853505 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "searchField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853532 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "resultsList"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853534 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "resultsList"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab linkMarkersButton bounds 214,320 135x40 viewport 104,144 255x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853556 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853558 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab categoriesButton bounds 94,320 103x40 viewport 94,144 258x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853580 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853580 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab nonOfficialCheck bounds 83,276 251x40 viewport 83,144 261x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853604 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "nonOfficialCheck"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853604 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "nonOfficialCheck"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab limitationCombo bounds 193,232 140x40 viewport 81,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853625 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853626 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 193,188 140x40 viewport 81,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853648 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "scaleField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853648 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "scaleField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853673 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "levelField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853673 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "levelField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853695 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "defenseField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853695 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "defenseField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853717 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attackField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853717 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attackField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab raceCombo bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853739 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "raceCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853739 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "raceCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attributeCombo bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853760 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attributeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853761 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attributeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab subTypeCombo bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853783 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "subTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853783 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "subTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab cardTypeCombo bounds 192,144 140x40 viewport 80,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853805 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "cardTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853805 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "cardTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab clearFiltersButton bounds 242,92 100x40 viewport 80,16 262x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853827 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853827 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab filtersToggle bounds 80,92 111x40 viewport 80,16 262x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853850 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853850 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 80,40 262x40 viewport 80,16 262x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853872 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853895 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853895 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoriesDone bounds 388,348 100x40 viewport 92,52 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853919 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853921 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck31 bounds 293,300 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853943 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853943 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck30 bounds 92,300 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853964 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck30"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853964 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck30"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck29 bounds 293,255 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853986 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck29"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552853988 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck29"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck28 bounds 92,255 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854009 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck28"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854009 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck28"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck27 bounds 293,210 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854030 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck27"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854031 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck27"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck26 bounds 92,210 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854053 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck26"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854054 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck26"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck25 bounds 293,165 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854076 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck25"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854076 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck25"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck24 bounds 92,165 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854098 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck24"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854098 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck24"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck23 bounds 293,120 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854120 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck23"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854120 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck23"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck22 bounds 92,120 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854142 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck22"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854143 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck22"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck21 bounds 293,75 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854164 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck21"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854164 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck21"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck20 bounds 92,75 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854186 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck20"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854186 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck20"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck19 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854208 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck19"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854208 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck19"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck18 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854230 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck18"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854230 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck18"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck17 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854251 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck17"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854252 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck17"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck16 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854273 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck16"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854273 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck16"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck15 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854295 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck15"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854295 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck15"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck14 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854317 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck14"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854317 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck14"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck13 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854339 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck13"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854339 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck13"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck12 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854361 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck12"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854361 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck12"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck11 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854383 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck11"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854384 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck11"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck10 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854405 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck10"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854405 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck10"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck9 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854427 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck9"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854428 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck9"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck8 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854449 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck8"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854449 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck8"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck7 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854472 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854472 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck6 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854494 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854494 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck5 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854515 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854516 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck4 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854538 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854538 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck3 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854560 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854560 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck2 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854582 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854582 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck1 bounds 293,72 195x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854604 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854605 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck0 bounds 92,72 196x40 viewport 92,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854629 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854651 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854675 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854700 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854723 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854744 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854767 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854789 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854812 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck8"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854835 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck9"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854858 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck10"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854880 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck11"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854902 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck12"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854925 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck13"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854947 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck14"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854969 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck15"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552854992 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck16"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855014 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck17"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855036 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck18"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855058 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck19"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855079 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck20"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855100 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck21"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855122 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck22"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855144 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck23"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855166 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck24"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855188 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck25"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855210 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck26"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855232 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck27"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855254 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck28"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855275 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck29"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855297 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck30"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855321 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) lower category Space changed model selection
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855343 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855365 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoriesDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855387 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855411 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855432 16777216 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Done/Space close, Space reopen, Tab visible, Escape close
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855455 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855478 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855478 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markersDone bounds 224,210 100x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855499 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markersDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855500 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markersDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton7 bounds 233,162 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855521 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855521 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton6 bounds 188,162 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855542 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855542 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton5 bounds 143,162 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855564 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855564 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton4 bounds 233,117 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855586 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855586 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton3 bounds 143,117 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855607 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855607 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton2 bounds 233,72 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855629 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855629 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton1 bounds 188,72 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855651 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855651 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton0 bounds 143,72 40x40 viewport 92,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers reached 9 of 9
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855673 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855694 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855716 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855738 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855759 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855781 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855803 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855825 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) marker Space changed model selection
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855847 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855869 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markersDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855892 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855914 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552855936 16777216 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Done/Space close, Space reopen, Tab visible, Escape close
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) null focus; window active false
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552855972 QEvent::WindowDeactivate QQuickWindowQmlImpl "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) native activation changed false
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552856012 QEvent::Hide QQuickWindowQmlImpl "" application Qt::ApplicationActive
+PASS   : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse)
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 3567ms
+********* Finished testing of TestDeckBuilderScreen *********
+navigation process 17624 1791552852161
+screen test exit 0
+
+EXIT 0

@@ -17,12 +17,16 @@
 // (fragile and platform-dependent for no additional coverage) - these are
 // the exact same functions the real buttons and shortcuts call.
 
+#include <QDateTime>
 #include <QGuiApplication>
+#include <QKeyEvent>
 #include <QPair>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickItem>
 #include <QQuickStyle>
+#include <QStyleHints>
+#include <QTimer>
 #include <QQuickWindow>
 #include <QSet>
 #include <QTemporaryDir>
@@ -36,6 +40,66 @@
 #include "deck_controller.h"
 
 namespace {
+
+// Passive input/application observer: no activation or event consumption.
+class NavigationObserver : public QObject {
+public:
+    bool eventFilter(QObject* object, QEvent* event) override {
+        if (event->type() == QEvent::ApplicationDeactivate
+            || event->type() == QEvent::ApplicationActivate
+            || event->type() == QEvent::WindowDeactivate
+            || event->type() == QEvent::WindowActivate
+            || event->type() == QEvent::Hide || event->type() == QEvent::Close) {
+            if (!qobject_cast<QWindow*>(object) && object != qApp)
+                return false;
+            qInfo() << "navigation event" << QDateTime::currentMSecsSinceEpoch()
+                    << event->type() << object->metaObject()->className()
+                    << object->objectName() << "application" << QGuiApplication::applicationState();
+        } else if (event->type() == QEvent::KeyPress && qobject_cast<QQuickWindow*>(object)) {
+            const auto* key = static_cast<QKeyEvent*>(event);
+            const auto* window = qobject_cast<QQuickWindow*>(object);
+            qInfo() << "navigation input" << QDateTime::currentMSecsSinceEpoch()
+                    << key->key() << key->modifiers() << "spontaneous" << key->spontaneous()
+                    << "active" << window->isActive() << "focus"
+                    << (window->activeFocusItem() ? window->activeFocusItem()->objectName() : QStringLiteral("null"));
+        }
+        return false;
+    }
+};
+
+// A native row needs one uninterrupted active session. Latch loss after
+// initial activation: a later reacquisition must never turn that row green.
+// The receiver dies before Harness, so teardown is outside the session.
+class NavigationSession : public QObject {
+public:
+    explicit NavigationSession(QQuickWindow* window) : window_(window) {
+        QObject::connect(window, &QWindow::activeChanged, this, [this] {
+            lostActivation_ |= !window_->isActive();
+        });
+        QObject::connect(qGuiApp, &QGuiApplication::applicationStateChanged, this,
+                         [this](Qt::ApplicationState state) {
+            lostActivation_ |= state != Qt::ApplicationActive;
+        });
+    }
+
+    bool active() const {
+        return QGuiApplication::platformName() == QStringLiteral("offscreen")
+            || (!lostActivation_ && window_->isActive()
+                && QGuiApplication::applicationState() == Qt::ApplicationActive);
+    }
+
+    bool keyClick(Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
+        if (!active())
+            return false;
+        QTest::keyClick(window_, key, modifiers);
+        QTest::qWait(20);
+        return active();
+    }
+
+private:
+    QQuickWindow* window_;
+    bool lostActivation_ = false;
+};
 
 // Same minimal synthetic-.cdb builder as test_deckbuilder.cpp, duplicated
 // rather than shared - see that file's own doc comment for why a tiny
@@ -299,6 +363,7 @@ private slots:
     void searchPaneFitsItsColumnAtMinimumAndDefaultSizes();
     void filterTabTraversalStaysVisible_data();
     void filterTabTraversalStaysVisible();
+    void filterNavigationSkipsUnavailableControls();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -1031,8 +1096,24 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
     auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
     QVERIFY(window);
     window->resize(screenSize);
+    QObject::connect(window, &QWindow::activeChanged, window, [window] {
+        qInfo() << "native activation changed" << window->isActive();
+    });
+    QObject::connect(window, &QQuickWindow::activeFocusItemChanged, window, [window] {
+        if (!window->activeFocusItem())
+            qInfo() << "null focus; window active" << window->isActive();
+    });
     window->requestActivate();
+    if (QGuiApplication::platformName() != QStringLiteral("offscreen")) {
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QVERIFY(QTest::qWaitForWindowActive(window));
+        QTRY_COMPARE(QGuiApplication::applicationState(), Qt::ApplicationActive);
+    }
+    NavigationSession session(window);
     QTest::qWait(100);
+    qInfo() << "navigation runtime" << qVersion() << QGuiApplication::platformName()
+            << QQuickStyle::name() << window->size() << "active" << window->isActive()
+            << "Tab policy" << QGuiApplication::styleHints()->tabFocusBehavior();
     const auto bounds = [](QQuickItem* i) {
         return i->mapRectToScene(QRectF(0, 0, i->width(), i->height()));
     };
@@ -1069,8 +1150,10 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
                               const QString& label) {
         QSet<QString> reached;
         for (int step = 0; step < 100 && reached != expected; ++step) {
-            QTest::keyClick(window, Qt::Key_Tab, reverse ? Qt::ShiftModifier : Qt::NoModifier);
-            QTest::qWait(20);
+            if (QGuiApplication::platformName() != QStringLiteral("offscreen"))
+                QVERIFY2(window->isActive(), "native input requires an active window");
+            QVERIFY2(session.keyClick(Qt::Key_Tab, reverse ? Qt::ShiftModifier : Qt::NoModifier),
+                         "native navigation lost activation; row invalid");
             QQuickItem* active = window->activeFocusItem();
             QVERIFY(active);
             if (!expected.contains(active->objectName()))
@@ -1086,6 +1169,11 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
                 }
             }
             QTRY_VERIFY2(isVisible(active, clippingSurface), qPrintable(location(active, clippingSurface)));
+            // TextField derives from TextInput and draws from activeFocus;
+            // button/checkbox Controls expose visualFocus for keyboard rings.
+            if (active->metaObject()->indexOfProperty("visualFocus") >= 0)
+                QVERIFY2(active->property("visualFocus").toBool(), qPrintable(active->objectName()));
+            QVERIFY(active->hasActiveFocus());
             reached.insert(active->objectName());
             qInfo().noquote() << label << (reverse ? "Shift+Tab" : "Tab")
                               << location(active, clippingSurface);
@@ -1121,7 +1209,8 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
         // Open via the keyboard, then seed traversal at Done (not at each
         // destination). Reverse and forward must both reach all controls.
         item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
-        QTest::keyClick(window, Qt::Key_Space);
+        QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
         QTRY_VERIFY(popupObject->property("opened").toBool());
         auto* popupContent = qvariant_cast<QQuickItem*>(popupObject->property("contentItem"));
         QVERIFY(popupContent);
@@ -1136,17 +1225,21 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
             }
         }
         QVERIFY(item(h, doneName.constData()));
-        item(h, doneName.constData())->forceActiveFocus(Qt::TabFocusReason);
+        const char* firstName = categories ? "categoryCheck0" : "markerButton0";
+        QTRY_COMPARE(window->activeFocusItem(), item(h, firstName));
+        QTRY_VERIFY(isVisible(item(h, firstName), popupContent));
         traverse(controls, popupContent, QString::fromLatin1(popup.first));
         QVERIFY(!QTest::currentTestFailed());
         if (categories) {
             // Reach the lower category with keys from wherever traversal ended.
             for (int step = 0; step < 40 && window->activeFocusItem() != item(h, "categoryCheck31"); ++step)
-                QTest::keyClick(window, Qt::Key_Tab);
+                QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
             QTRY_COMPARE(window->activeFocusItem(), item(h, "categoryCheck31"));
             QTRY_VERIFY(isVisible(item(h, "categoryCheck31"), popupContent));
             const bool before = item(h, "categoryCheck31")->property("checked").toBool();
-            QTest::keyClick(window, Qt::Key_Space);
+            QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
             QCOMPARE(item(h, "categoryCheck31")->property("checked").toBool(), !before);
             bool selected = before;
             QVERIFY(QMetaObject::invokeMethod(h.child("searchResults"), "categorySelected",
@@ -1154,32 +1247,128 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
             QCOMPARE(selected, !before);
             qInfo() << "lower category Space changed model selection";
         } else {
+            for (int step = 0; step < 10 && window->activeFocusItem() != item(h, "markerButton7"); ++step)
+                QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
+            QTRY_COMPARE(window->activeFocusItem(), item(h, "markerButton7"));
+            const bool before = item(h, "markerButton7")->property("checked").toBool();
+            QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
+            QCOMPARE(item(h, "markerButton7")->property("checked").toBool(), !before);
+            bool selected = before;
+            QVERIFY(QMetaObject::invokeMethod(h.child("searchResults"), "linkMarkerSelected",
+                                              Q_RETURN_ARG(bool, selected), Q_ARG(int, 7)));
+            QCOMPARE(selected, !before);
+            qInfo() << "marker Space changed model selection";
             capture("markers");
         }
         // Reach Done with keys, close using Space, and reopen using the same
         // trigger. Any focus automatically restored inside must be visible.
         for (int step = 0; step < 40 && window->activeFocusItem() != item(h, doneName.constData()); ++step)
-            QTest::keyClick(window, Qt::Key_Tab);
+            QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
         QTRY_COMPARE(window->activeFocusItem(), item(h, doneName.constData()));
-        QTest::keyClick(window, Qt::Key_Space);
+        QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
         QTRY_VERIFY(!popupObject->property("visible").toBool());
-        QVERIFY(window->activeFocusItem() != item(h, doneName.constData()));
-        item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
-        QTest::keyClick(window, Qt::Key_Space);
+        QTRY_COMPARE(window->activeFocusItem(), item(h, popup.second));
+        QTRY_VERIFY(isVisible(item(h, popup.second), item(h, "filterScroll")));
+        QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
         QTRY_VERIFY(popupObject->property("opened").toBool());
-        QTest::qWait(30);
+        QTRY_COMPARE(window->activeFocusItem(), item(h, firstName));
         if (controls.contains(window->activeFocusItem()->objectName()))
             QTRY_VERIFY2(isVisible(window->activeFocusItem(), popupContent),
                          qPrintable(location(window->activeFocusItem(), popupContent)));
-        QTest::keyClick(window, Qt::Key_Tab);
+        QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
         QTRY_VERIFY(controls.contains(window->activeFocusItem()->objectName()));
         QTRY_VERIFY(isVisible(window->activeFocusItem(), popupContent));
-        QTest::keyClick(window, Qt::Key_Escape);
+        QVERIFY2(session.keyClick(Qt::Key_Escape),
+                         "native navigation lost activation; row invalid");
         QTRY_VERIFY(!popupObject->property("visible").toBool());
-        QVERIFY(!controls.contains(window->activeFocusItem()->objectName()));
+        QTRY_COMPARE(window->activeFocusItem(), item(h, popup.second));
+        QTRY_VERIFY(isVisible(item(h, popup.second), item(h, "filterScroll")));
         qInfo() << popup.first << "Done/Space close, Space reopen, Tab visible, Escape close";
+        QVERIFY2(session.active(),
+                         "native navigation lost activation; row invalid");
     }
 }
 
-QTEST_MAIN(TestDeckBuilderScreen)
+void TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({writeSyntheticDatabase(dir.filePath("cards.cdb"), 1, QStringLiteral("Synthetic"))}));
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    QVERIFY(window);
+    window->requestActivate();
+    if (QGuiApplication::platformName() != QStringLiteral("offscreen")) {
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QVERIFY(QTest::qWaitForWindowActive(window));
+        QTRY_COMPARE(QGuiApplication::applicationState(), Qt::ApplicationActive);
+    }
+    NavigationSession session(window);
+    // Any type disables the intervening monster-only filters. Both backward
+    // encodings must skip the whole disabled stretch and return to Type.
+    item(h, "cardTypeCombo")->forceActiveFocus(Qt::TabFocusReason);
+    QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "limitationCombo"));
+    QVERIFY2(session.keyClick(Qt::Key_Backtab, Qt::ShiftModifier),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "cardTypeCombo"));
+    QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "limitationCombo"));
+    QVERIFY2(session.keyClick(Qt::Key_Tab, Qt::ShiftModifier),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "cardTypeCombo"));
+    // Hiding filters skips their whole surface while preserving entry/exit.
+    item(h, "filtersToggle")->forceActiveFocus(Qt::TabFocusReason);
+    QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
+    QTRY_VERIFY(!h.child("filterScroll")->property("visible").toBool());
+    QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "clearFiltersButton"));
+    QVERIFY2(session.keyClick(Qt::Key_Tab),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "resultsList"));
+    QVERIFY2(session.keyClick(Qt::Key_Backtab, Qt::ShiftModifier),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "clearFiltersButton"));
+    QVERIFY2(session.keyClick(Qt::Key_Tab, Qt::ShiftModifier),
+                         "native navigation lost activation; row invalid");
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "filtersToggle"));
+    QVERIFY2(session.keyClick(Qt::Key_Space),
+                         "native navigation lost activation; row invalid");
+    QTRY_VERIFY(h.child("filterScroll")->property("visible").toBool());
+    QVERIFY2(session.active(),
+                         "native navigation lost activation; row invalid");
+}
+
+// Launch Services waits for a native test bundle but does not propagate the
+// process exit. Log qExec's exact return before returning it, so those runs
+// retain a real verdict independently of the launcher's success.
+int main(int argc, char** argv) {
+    QGuiApplication app(argc, argv);
+    if (qEnvironmentVariableIsSet("EDOPRO_NAVIGATION_TRACE"))
+        qInfo() << "navigation process" << QCoreApplication::applicationPid()
+                << QDateTime::currentMSecsSinceEpoch();
+    NavigationObserver observer;
+    if (qEnvironmentVariableIsSet("EDOPRO_NAVIGATION_TRACE"))
+        app.installEventFilter(&observer);
+    app.setQuitOnLastWindowClosed(false);
+    // Use the same running GUI event loop as main.cpp. Native application
+    // launch/activation is asynchronous; qExec before exec() can race it.
+    QTimer::singleShot(0, &app, [&app, argc, argv] {
+        TestDeckBuilderScreen test;
+        const int result = QTest::qExec(&test, argc, argv);
+        qInfo() << "screen test exit" << result;
+        app.exit(result);
+    });
+    return app.exec();
+}
 #include "test_deckbuilder_screen.moc"

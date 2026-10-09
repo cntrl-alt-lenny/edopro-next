@@ -1,0 +1,12 @@
+FOREGROUND 1791552649.12262 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791552666.933646 16087 none test_deckbuilder_screen
+FOREGROUND 1791552670.177674 419 com.apple.loginwindow loginwindow
+FOREGROUND 1791552670.1832662 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791552672.664372 16344 none test_deckbuilder_screen
+FOREGROUND 1791552676.0790958 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791552681.8022962 16509 none test_deckbuilder_screen
+FOREGROUND 1791552686.26969 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791552689.597176 16715 none test_deckbuilder_screen
+FOREGROUND 1791552694.147068 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791552697.607919 16763 none test_deckbuilder_screen
+FOREGROUND 1791552697.680193 16772 org.edopronext.batch27.navigation Batch27Navigation

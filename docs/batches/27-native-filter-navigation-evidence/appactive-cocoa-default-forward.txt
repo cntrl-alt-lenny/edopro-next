@@ -1,0 +1,116 @@
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.fonts: Populating font family aliases took 56 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::QCocoaWindow TestHarness_QMLTYPE_0(0x7a46c13300)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::initialize TestHarness_QMLTYPE_0(0x7a46c13300)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Did hide <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setGeometry TestHarness_QMLTYPE_0(0x7a46c13300) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setCocoaGeometry TestHarness_QMLTYPE_0(0x7a46c13300) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSViewFrameDidChangeNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7a46c13300) current QRect(0,0 1280x800) new QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Window still initializing, skipping event
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setMask TestHarness_QMLTYPE_0(0x7a46c13300) QRegion(null)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::recreateWindowIfNeeded TestHarness_QMLTYPE_0(0x7a46c13300) QFlags<QCocoaWindow::RecreationReason>(MissingWindow|ContentViewChanged)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Ensuring that <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))> is content view for <QNSWindow: 0x7a47080a00; contentView=NSObject(0x0)>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Re-parenting <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))> from NSObject(0x0) to <NSThemeFrame: 0x7a4729cc00>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Done re-parenting <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))> into <NSThemeFrame: 0x7a4729cc00>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Moving <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))> from NSObject(0x0) to <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Done moving <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))> to <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: TestHarness_QMLTYPE_0(0x7a46c13300) did change <NSScreen: 0x7a47078480>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Screen changed for TestHarness_QMLTYPE_0(0x7a46c13300) from QCocoaScreen(0x7a47410a80, "Built-in Retina Display", QRect(0,0 1440x900), dpr=2, displayId=1, <NSScreen: 0x7a47078480>) to QCocoaScreen(0x7a47410a80, "Built-in Retina Display", QRect(0,0 1440x900), dpr=2, displayId=1, <NSScreen: 0x7a47078480>)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Reflecting TestHarness_QMLTYPE_0(0x7a46c13300) state to <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::propagateSizeHints TestHarness_QMLTYPE_0(0x7a46c13300) min: QSize(0, 0) max: QSize(16777215, 16777215) increment: QSize(-1, -1) base: QSize(-1, -1)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setOpacity 1
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setGeometry TestHarness_QMLTYPE_0(0x7a46c13300) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setCocoaGeometry TestHarness_QMLTYPE_0(0x7a46c13300) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setVisible TestHarness_QMLTYPE_0(0x7a46c13300) true
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Window still initializing, skipping setting visibility
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setVisible TestHarness_QMLTYPE_0(0x7a46c13300) true
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::recreateWindowIfNeeded TestHarness_QMLTYPE_0(0x7a46c13300) QFlags<QCocoaWindow::RecreationReason>(RecreationNotNeeded)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7a46c13300) current QRect(0,0 1280x800) new QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Did unhide <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidMoveNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7a46c13300) current QRect(0,0 1280x800) new QRect(0,62 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setGeometry TestHarness_QMLTYPE_0(0x7a46c13300) QRect(0,62 1064x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setCocoaGeometry TestHarness_QMLTYPE_0(0x7a46c13300) QRect(0,62 1064x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSViewFrameDidChangeNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7a46c13300) current QRect(0,62 1064x800) new QRect(0,62 1064x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidResizeNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7a46c13300) current QRect(0,62 1064x800) new QRect(0,62 1064x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidBecomeKeyNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>> became key window. Updating focus window to QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)) with view <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) native activation changed true
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidChangeOcclusionStateNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Occlusion state of <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>> for TestHarness_QMLTYPE_0(0x7a46c13300) changed to visible
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) navigation runtime 6.11.1 "cocoa" "Basic" QSize(1064, 800) active true Tab policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab filtersToggle bounds 16,92 111x40 viewport 16,16 319x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab clearFiltersButton bounds 235,92 100x40 viewport 16,16 319x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab cardTypeCombo bounds 78,144 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab subTypeCombo bounds 239,144 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attributeCombo bounds 78,188 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab raceCombo bounds 239,188 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab attackField bounds 78,232 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab defenseField bounds 239,232 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab levelField bounds 78,276 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab scaleField bounds 239,276 96x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab limitationCombo bounds 78,320 257x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab nonOfficialCheck bounds 16,364 319x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab categoriesButton bounds 16,408 158x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab linkMarkersButton bounds 182,408 153x40 viewport 16,144 319x304
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main Tab searchField bounds 16,40 319x40 viewport 16,16 319x768
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck1 bounds 228,72 196x40 viewport 28,72 396x268
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidOrderOnScreenAndFinishAnimatingNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck2 bounds 28,117 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck3 bounds 229,117 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck4 bounds 28,162 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck5 bounds 229,162 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck6 bounds 28,207 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck7 bounds 229,207 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck8 bounds 28,252 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck9 bounds 229,252 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck10 bounds 28,297 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck11 bounds 229,297 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck12 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck13 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck14 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck15 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck16 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck17 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck18 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck19 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck20 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck21 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck22 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck23 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck24 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck25 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck26 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck27 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck28 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories Tab categoryCheck29 bounds 229,300 195x40 viewport 28,72 396x268
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidResignKeyNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>> resigned key window. Clearing focus window QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300)) with view <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=TestHarness_QMLTYPE_0(0x7a46c13300))>
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) null focus; window active false
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) native activation changed false
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'active' returned FALSE. ()
+   Loc: [<repository>/ui/tests/test_deckbuilder_screen.cpp(1094)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<repository>/ui/tests/test_deckbuilder_screen.cpp(1167)]
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::setVisible QQuickWindowQmlImpl(0x7a46c13300) false
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.cocoa.notifications: Forwarding NSWindowDidOrderOffScreenNotification to QList(QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300)))
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Did hide <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: QCocoaWindow::~QCocoaWindow QQuickWindowQmlImpl(0x7a46c13300)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Removing <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))> from <NSThemeFrame: 0x7a4729cc00>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Re-parenting <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))> from <NSThemeFrame: 0x7a4729cc00> to NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Done re-parenting <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))> into NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Moving <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))> from <QNSWindow: 0x7a47080a00; contentView=<QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))>> to NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Done moving <QNSView: 0x7a47141800; QCocoaWindow(0x7a47d2d7c0, window=QQuickWindowQmlImpl(0x7a46c13300))> to NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) qt.qpa.window: Closing and releasing <QNSWindow: 0x7a47080a00; contentView=NSObject(0x0)>
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 1681ms
+********* Finished testing of TestDeckBuilderScreen *********
+screen test exit 1
+
+EXIT 1

@@ -1,0 +1,9 @@
+COMMAND python3 tools/fw.py check
+0 error(s), 0 warning(s)
+EXIT 0
+
+COMMAND git diff --check
+EXIT 0
+
+COMMAND git diff --exit-code origin/master HEAD -- ui/src ui/CMakeLists.txt ui/tests/CMakeLists.txt client data policy gframe integration ocgcore
+EXIT 0

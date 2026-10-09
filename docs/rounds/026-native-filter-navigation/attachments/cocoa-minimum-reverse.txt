@@ -1,0 +1,48 @@
+$ ui/build/tests/test_deckbuilder_screen filterTabTraversalStaysVisible:minimum-reverse
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.fonts: Populating font family aliases took 131 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,44 265x40 viewport 16,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,44 265x40 viewport 16,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,44 265x40 viewport 16,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,44 265x40 viewport 16,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,44 265x40 viewport 16,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,44 265x40 viewport 16,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 142,320 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 142,276 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 142,232 129x40 viewport 16,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 142,188 129x40 viewport 16,148 265x212
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'active' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/tests/test_deckbuilder_screen.cpp(1075)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/tests/test_deckbuilder_screen.cpp(1111)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 3229ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 1

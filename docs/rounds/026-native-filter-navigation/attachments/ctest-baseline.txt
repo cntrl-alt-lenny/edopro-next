@@ -1,0 +1,12 @@
+$ ctest --test-dir ui/build --output-on-failure
+Test project <seat-checkout>/ui/build
+    Start 1: deckbuilder
+1/2 Test #1: deckbuilder ......................   Passed    1.80 sec
+    Start 2: deckbuilder_screen
+2/2 Test #2: deckbuilder_screen ...............   Passed   11.18 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =  13.00 sec
+
+exit: 0

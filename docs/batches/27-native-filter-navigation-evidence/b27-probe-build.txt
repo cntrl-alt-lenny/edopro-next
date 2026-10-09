@@ -1,0 +1,107 @@
+[1/105] Copying edopro_next_shell qml resources into build dir
+[2/105] Copying edopro_next_shell qml sources into build dir
+[3/105] Copying test_deckbuilder_screen qml resources into build dir
+[4/105] Copying test_deckbuilder_screen qml sources into build dir
+[5/105] Automatic MOC and UIC for target edopro_next_deck
+[6/105] Automatic MOC and UIC for target edopro_next_data
+[7/105] Populating .qmlls.ini file at <repository>/ui/build/b27-probe-build/.qt/.qmlls.build.ini
+[8/105] Building CXX object data/CMakeFiles/edopro_next_deck.dir/edopro_next_deck_autogen/mocs_compilation.cpp.o
+[9/105] Building CXX object data/CMakeFiles/edopro_next_data.dir/edopro_next_data_autogen/mocs_compilation.cpp.o
+[10/105] Running qmlimportscanner for edopro_next_shell
+[11/105] Building CXX object data/CMakeFiles/edopro_next_deck.dir/src/ydk.cpp.o
+[12/105] Building CXX object data/CMakeFiles/edopro_next_data.dir/src/card_database.cpp.o
+[13/105] Linking CXX static library data/libedopro_next_deck.a
+[14/105] Linking CXX static library data/libedopro_next_data.a
+[15/105] Automatic MOC and UIC for target edopro_next_search
+[16/105] Automatic MOC and UIC for target edopro_next_legality
+[17/105] Building CXX object data/CMakeFiles/edopro_next_search.dir/edopro_next_search_autogen/mocs_compilation.cpp.o
+[18/105] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/edopro_next_legality_autogen/mocs_compilation.cpp.o
+[19/105] Building CXX object data/CMakeFiles/edopro_next_search.dir/src/text_normalize.cpp.o
+[20/105] Building CXX object data/CMakeFiles/edopro_next_search.dir/src/numeric_filter_text.cpp.o
+[21/105] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/deck_placement.cpp.o
+[22/105] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/deck_search_filter.cpp.o
+[23/105] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/deck_validation.cpp.o
+[24/105] Building CXX object data/CMakeFiles/edopro_next_search.dir/src/card_search_index.cpp.o
+[25/105] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/lf_list.cpp.o
+[26/105] Linking CXX static library data/libedopro_next_search.a
+[27/105] Linking CXX static library policy/libedopro_next_legality.a
+[28/105] Automatic MOC and UIC for target test_deckbuilder
+[29/105] Automatic MOC and UIC for target edopro_next_shell
+[30/105] Running AUTOMOC file extraction for target edopro_next_shell
+[31/105] Automatic MOC and UIC for target test_deckbuilder_screen
+[32/105] Running moc --collect-json for target edopro_next_shell
+[33/105] Running AUTOMOC file extraction for target test_deckbuilder_screen
+[34/105] Running moc --collect-json for target test_deckbuilder_screen
+[35/105] Running rcc for resource qmake_EdoproNext
+[36/105] Automatic QML type registration for target edopro_next_shell
+[37/105] Generating .rcc/qmlcache/edopro_next_shell_qmlcache_loader.cpp
+[38/105] Generating .rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp.aotstats
+[39/105] Generating .rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp.aotstats
+[40/105] Generating .rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp.aotstats
+[41/105] Generating .rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp.aotstats
+[42/105] Generating .rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp.aotstats
+[43/105] Generating .rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp.aotstats
+[44/105] Generating .rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp.aotstats
+[45/105] Generating .rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp.aotstats
+[46/105] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp.aotstats
+[47/105] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp.aotstats
+[48/105] Running rcc for resource edopro_next_shell_raw_qml_0
+[49/105] Automatic QML type registration for target test_deckbuilder_screen
+[50/105] Running rcc for resource qmake_EdoproNext
+[51/105] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.aotstats
+[52/105] Running rcc for resource test_deckbuilder_screen_raw_qml_0
+[53/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/card_entry.cpp.o
+[54/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/search_filters.cpp.o
+[55/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/card_catalog.cpp.o
+[56/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/deck_section_model.cpp.o
+[57/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/search_results_model.cpp.o
+[58/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/test_deckbuilder_autogen/mocs_compilation.cpp.o
+[59/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/deck_controller.cpp.o
+[60/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/appcontext.cpp.o
+[61/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/card_entry.cpp.o
+[62/105] Building CXX object CMakeFiles/edopro_next_shell.dir/edopro_next_shell_autogen/mocs_compilation.cpp.o
+[63/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/test_deckbuilder.cpp.o
+[64/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.qt/rcc/qrc_qmake_EdoproNext.cpp.o
+[65/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/card_catalog.cpp.o
+[66/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/main.cpp.o
+[67/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/search_filters.cpp.o
+[68/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/search_results_model.cpp.o
+[69/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/deck_section_model.cpp.o
+[70/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/ruleset.cpp.o
+[71/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/deck_controller.cpp.o
+[72/105] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/banlist_store.cpp.o
+[73/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qmlcache_loader.cpp.o
+[74/105] Building CXX object CMakeFiles/edopro_next_shell.dir/edopro_next_shell_qmltyperegistrations.cpp.o
+[75/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp.o
+[76/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp.o
+[77/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.qt/rcc/qrc_edopro_next_shell_raw_qml_0.cpp.o
+[78/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp.o
+[79/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp.o
+[80/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp.o
+[81/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp.o
+[82/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp.o
+[83/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp.o
+[84/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/ruleset.cpp.o
+[85/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp.o
+[86/105] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/banlist_store.cpp.o
+[87/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp.o
+[88/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/card_entry.cpp.o
+[89/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/card_catalog.cpp.o
+[90/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen_autogen/mocs_compilation.cpp.o
+[91/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/search_filters.cpp.o
+[92/105] Building CXX object CMakeFiles/edopro_next_shell.dir/.rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.o
+[93/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/.qt/rcc/qrc_qmake_EdoproNext.cpp.o
+[94/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/.qt/rcc/qrc_test_deckbuilder_screen_raw_qml_0.cpp.o
+[95/105] Linking CXX executable tests/test_deckbuilder
+ld: warning: ignoring duplicate libraries: 'data/libedopro_next_data.a', 'data/libedopro_next_deck.a'
+[96/105] Linking CXX executable edopro_next_shell
+[97/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/search_results_model.cpp.o
+[98/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/ruleset.cpp.o
+[99/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/banlist_store.cpp.o
+[100/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/deck_section_model.cpp.o
+[101/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/deck_controller.cpp.o
+[102/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/appcontext.cpp.o
+[103/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen.cpp.o
+[104/105] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen_qmltyperegistrations.cpp.o
+[105/105] Linking CXX executable tests/test_deckbuilder_screen
+ld: warning: ignoring duplicate libraries: 'data/libedopro_next_data.a', 'data/libedopro_next_deck.a'

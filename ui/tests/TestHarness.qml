@@ -10,10 +10,11 @@
 // ancestor at all.
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import EdoproNext
 
-Window {
+ApplicationWindow {
     id: window
     width: 1280
     height: 800
