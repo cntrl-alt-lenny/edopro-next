@@ -1,0 +1,35 @@
+REVIEWED DELIVERY c647e663233705425aeea8fd70199792a0615361
+COMMAND ui/build/tests/test_card_code_search at pre-feature SHA 3da9b9d1b5bbb4c851a9470909e17e46d32b9789
+********* Start testing of TestCardCodeSearch *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestCardCodeSearch::initTestCase()
+QWARN  : TestCardCodeSearch::knownCodesAndClearing() Trying to construct an instance of an invalid type, type id: 4097
+FAIL!  : TestCardCodeSearch::knownCodesAndClearing() Compared lists differ at index 0.
+   Actual   (codes(model)): 600
+   Expected (QList<quint32>{123}): 123
+   Loc: [<repository>/.worktrees/brain-review-28-before-feature/ui/tests/test_card_code_search.cpp(70)]
+PASS   : TestCardCodeSearch::fallback(0)
+PASS   : TestCardCodeSearch::fallback(999)
+PASS   : TestCardCodeSearch::fallback(4294967296)
+PASS   : TestCardCodeSearch::fallback(4294967419)
+PASS   : TestCardCodeSearch::fallback(+123)
+PASS   : TestCardCodeSearch::fallback(-123)
+PASS   : TestCardCodeSearch::fallback(12x)
+PASS   : TestCardCodeSearch::fallback(12 3)
+PASS   : TestCardCodeSearch::fallback(123x)
+PASS   : TestCardCodeSearch::fallback(１２３)
+PASS   : TestCardCodeSearch::fallback(١٢٣)
+PASS   : TestCardCodeSearch::fallback( 999 )
+FAIL!  : TestCardCodeSearch::filtersAndVisibility() Compared lists differ at index 0.
+   Actual   (codes(model)): 600
+   Expected (QList<quint32>{123}): 123
+   Loc: [<repository>/.worktrees/brain-review-28-before-feature/ui/tests/test_card_code_search.cpp(114)]
+FAIL!  : TestCardCodeSearch::reloadReevaluatesMode() Compared lists differ at index 0.
+   Actual   (codes(model)): 600
+   Expected (QList<quint32>{123}): 123
+   Loc: [<repository>/.worktrees/brain-review-28-before-feature/ui/tests/test_card_code_search.cpp(164)]
+PASS   : TestCardCodeSearch::cleanupTestCase()
+Totals: 14 passed, 3 failed, 0 skipped, 0 blacklisted, 2360ms
+********* Finished testing of TestCardCodeSearch *********
+
+EXIT 3

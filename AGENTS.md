@@ -161,8 +161,14 @@ CI requires those tests to actually run rather than skip.
 
 ## Working discipline
 
-- **One coherent task at a time.** If the real fix is bigger than a prompt's
+- **One coherent task per Builder.** If the real fix is bigger than a prompt's
   scope, stop and report rather than expanding.
+- **Plan for two active Builders when useful independent work is available.**
+  Brain assigns separate ownership and provides both prompts together. A
+  pending review, owner approval or planning-document merge blocks only work
+  that actually depends on it. Brain owns shared integration decisions;
+  existing review and merge rules still apply. Judge success by useful
+  project progress and reduced owner effort, never agent occupancy.
 - **Branches.** Builders work on `worker/<batch>`, Brain on `brain/<topic>`.
   Historical branches under the retired `m<N>/` and `meta/` convention are
   left alone.

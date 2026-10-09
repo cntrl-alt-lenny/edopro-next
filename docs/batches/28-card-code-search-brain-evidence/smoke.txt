@@ -1,0 +1,8 @@
+REVIEWED DELIVERY c647e663233705425aeea8fd70199792a0615361
+COMMAND launch ui/build/edopro_next_shell with QT_QPA_PLATFORM=offscreen, wait 20 seconds; independently assert survival and empty stderr, then terminate/reap
+SURVIVAL ASSERTION EXIT 0 (still running at timeout; normalized status 124)
+EMPTY STDERR ASSERTION EXIT 1
+STDERR
+qt.qpa.fonts: Populating font family aliases took 74 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+
+WRAPPER EXIT 1

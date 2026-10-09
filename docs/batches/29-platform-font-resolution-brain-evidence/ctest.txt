@@ -1,0 +1,15 @@
+SOURCE fbbfcacba9f2221dd0bc9067261423916a2bc69c
+COMMAND ctest --test-dir ui/build --output-on-failure
+Test project <repository>/ui/build
+    Start 1: deckbuilder
+1/3 Test #1: deckbuilder ......................   Passed    0.21 sec
+    Start 2: deckbuilder_screen
+2/3 Test #2: deckbuilder_screen ...............   Passed    8.37 sec
+    Start 3: platform_fonts
+3/3 Test #3: platform_fonts ...................   Passed    0.50 sec
+
+100% tests passed out of 3
+
+Total Test time (real) =   9.09 sec
+
+EXIT 0
