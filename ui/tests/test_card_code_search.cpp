@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include <QAbstractItemModelTester>
-#include <QFile>
 #include <QTemporaryDir>
 #include <QTest>
 #include <sqlite3.h>
@@ -76,6 +75,8 @@ private slots:
         QCOMPARE(codes(model), QList<quint32>{4294967295u});
         model.setQueryText("");
         QCOMPARE(model.resultCount(), 200);
+        model.setQueryText(" \t\n");
+        QCOMPARE(model.resultCount(), 200);
         model.setQueryText("Common");
         QCOMPARE(model.resultCount(), 200);
         model.setQueryText("Alpha");
@@ -148,6 +149,7 @@ private slots:
         model.setLimitation(choice(model.limitationNames(), "All cards"));
         QCOMPARE(codes(model), QList<quint32>{123});
         controller.loadBanlistFromText("!Replacement\n$whitelist\n123 3\n");
+        controller.setSelectedBanlistIndex(choice(controller.banlistNames(), "Replacement"));
         model.setLimitation(0);
         QCOMPARE(codes(model), QList<quint32>{123});
     }
