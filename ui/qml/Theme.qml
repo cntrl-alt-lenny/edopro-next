@@ -12,6 +12,7 @@
 
 pragma Singleton
 import QtQuick
+import EdoproNext
 
 QtObject {
     id: theme
@@ -62,8 +63,8 @@ QtObject {
     // ---- Typography -------------------------------------------------------
     // Sizes are in points so they track the platform's DPI scaling.
 
-    readonly property string fontFamily: "Inter, Segoe UI, Noto Sans, DejaVu Sans, sans-serif"
-    readonly property string fontFamilyMono: "JetBrains Mono, Cascadia Mono, DejaVu Sans Mono, monospace"
+    readonly property string fontFamily: PlatformFonts.proportional
+    readonly property string fontFamilyMono: PlatformFonts.monospace
 
     readonly property int textDisplay: 30
     readonly property int textTitle:   19

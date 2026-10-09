@@ -10,6 +10,7 @@
 #include <QQuickWindow>
 #include <QTimer>
 
+#include "platform_fonts.h"
 #include "deckbuilder/card_catalog.h"
 #include "deckbuilder/deck_controller.h"
 
@@ -36,6 +37,7 @@ int screenIndexForName(const QString& name) {
 
 int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
+    PlatformFonts::initializeApplicationFont();
 
     QGuiApplication::setApplicationName(QStringLiteral("edopro-next"));
     QGuiApplication::setOrganizationName(QStringLiteral("edopro-next"));

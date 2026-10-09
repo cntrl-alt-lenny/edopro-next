@@ -99,7 +99,13 @@ set(EDOPRO_NEXT_SHELL_DECKBUILDER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deckbuilder/banlist_store.cpp
 )
 
+set(EDOPRO_NEXT_FONT_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_fonts.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_fonts.cpp
+)
+
 qt_add_executable(edopro_next_shell
+    ${EDOPRO_NEXT_FONT_SOURCES}
     src/main.cpp
     src/appcontext.cpp
     src/appcontext.h
