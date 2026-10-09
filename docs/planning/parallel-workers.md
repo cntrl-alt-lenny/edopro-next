@@ -66,3 +66,24 @@ Brain coordinates any shared bootstrap/helper requirement. Batch 28 stays
 frozen in draft PR #49. Its acceptance depends on an accepted font fix and
 new-head checks, not on completing native navigation. Both follow-ups can
 start now. Only integration/revalidation waits for the relevant delivery.
+
+### Shared macOS desktop sequence
+
+Batch 27 takes the first exclusive Cocoa/native interaction slot for its
+controlled activation diagnosis and shell traversal. Batch 29 continues
+compilation, explicitly offscreen tests/smoke/captures and inspection of saved
+images. It defers foreground Cocoa launches and desktop automation until
+batch 27 releases the slot. Then batch 29 can perform any necessary native
+font/visual check while batch 27 returns to headless work.
+
+Before native runs, identify other project GUI processes and their actual
+platform; record unexpected overlap rather than killing another Worker's
+process. Release the slot after owned GUI processes exit and input/capture
+work finishes, preserving both passing and failing output. Brain coordinates
+the handoff through the owner or explicitly authorised chat messages.
+
+A simultaneous shell was observed during diagnosis; it was no longer running
+when Brain checked. Overlap is a possible confound, not an established cause
+of historical failures. Controlled interference can explain a failure
+signature without proving what initiated an earlier window resignation.
+Assertions and acceptance requirements remain intact.
