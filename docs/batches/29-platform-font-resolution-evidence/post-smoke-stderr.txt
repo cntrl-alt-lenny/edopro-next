@@ -1,0 +1,2 @@
+qrc:/qt/qml/EdoproNext/qml/Theme.qml:66: ReferenceError: PlatformFonts is not defined
+qrc:/qt/qml/EdoproNext/qml/Theme.qml:65: ReferenceError: PlatformFonts is not defined

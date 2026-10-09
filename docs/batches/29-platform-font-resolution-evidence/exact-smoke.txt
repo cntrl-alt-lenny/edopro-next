@@ -1,0 +1,3 @@
+survival assertion exit 0: status 124
+empty-stderr assertion exit 0
+shell ran for the full timeout with no QML diagnostics

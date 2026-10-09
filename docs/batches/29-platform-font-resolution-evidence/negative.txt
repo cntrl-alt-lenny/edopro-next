@@ -1,0 +1,9 @@
+********* Start testing of PlatformFontTest *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : PlatformFontTest::initTestCase()
+QINFO  : PlatformFontTest::themeFamiliesAreAvailable() Theme families: "Inter, Segoe UI, Noto Sans, DejaVu Sans, sans-serif" "JetBrains Mono, Cascadia Mono, DejaVu Sans Mono, monospace"
+FAIL!  : PlatformFontTest::themeFamiliesAreAvailable() 'families.contains(proportional)' returned FALSE. (Inter, Segoe UI, Noto Sans, DejaVu Sans, sans-serif)
+   Loc: [[worktree]/ui/tests/test_platform_fonts.cpp(31)]
+PASS   : PlatformFontTest::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 61ms
+********* Finished testing of PlatformFontTest *********
