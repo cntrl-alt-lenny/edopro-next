@@ -1,0 +1,126 @@
+Test project [worktree]/ui/build
+    Start 1: deckbuilder
+1/3 Test #1: deckbuilder ......................   Passed    0.48 sec
+    Start 2: deckbuilder_screen
+2/3 Test #2: deckbuilder_screen ...............***Failed    0.34 sec
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(306)]
+QWARN  : TestDeckBuilderScreen::unknownCardDeckIsSelectableWithNoCatalog() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::unknownCardDeckIsSelectableWithNoCatalog() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::unknownCardDeckIsSelectableWithNoCatalog() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(331)]
+QWARN  : TestDeckBuilderScreen::selectingOneSectionClearsAllOthers() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::selectingOneSectionClearsAllOthers() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::selectingOneSectionClearsAllOthers() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(348)]
+QWARN  : TestDeckBuilderScreen::clearAllSelectionClearsEveryList() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::clearAllSelectionClearsEveryList() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::clearAllSelectionClearsEveryList() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(372)]
+QWARN  : TestDeckBuilderScreen::newDeckClearsStaleSelection() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::newDeckClearsStaleSelection() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::newDeckClearsStaleSelection() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(393)]
+QWARN  : TestDeckBuilderScreen::loadDeckClearsStaleSelection() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::loadDeckClearsStaleSelection() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::loadDeckClearsStaleSelection() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(415)]
+QWARN  : TestDeckBuilderScreen::aboveIntMaxCardCodeSurvivesSelection() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::aboveIntMaxCardCodeSurvivesSelection() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::aboveIntMaxCardCodeSurvivesSelection() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(437)]
+QWARN  : TestDeckBuilderScreen::populatingASectionNeverAutoSelectsItsFirstRow() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::populatingASectionNeverAutoSelectsItsFirstRow() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::populatingASectionNeverAutoSelectsItsFirstRow() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(452)]
+QWARN  : TestDeckBuilderScreen::populatingSearchResultsNeverAutoSelectsTheFirstRow() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::populatingSearchResultsNeverAutoSelectsTheFirstRow() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::populatingSearchResultsNeverAutoSelectsTheFirstRow() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(470)]
+QWARN  : TestDeckBuilderScreen::keyboardRemovalOneRowSectionClearsSelection() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::keyboardRemovalOneRowSectionClearsSelection() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::keyboardRemovalOneRowSectionClearsSelection() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(485)]
+QWARN  : TestDeckBuilderScreen::keyboardRemovalMultiRowSectionRemovesOnlyTheIntendedCard() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::keyboardRemovalMultiRowSectionRemovesOnlyTheIntendedCard() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::keyboardRemovalMultiRowSectionRemovesOnlyTheIntendedCard() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(501)]
+QWARN  : TestDeckBuilderScreen::selectedResultClearsOnDifferentQuery() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::selectedResultClearsOnDifferentQuery() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::selectedResultClearsOnDifferentQuery() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(533)]
+QWARN  : TestDeckBuilderScreen::selectedResultClearsOnZeroResultQuery() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::selectedResultClearsOnZeroResultQuery() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::selectedResultClearsOnZeroResultQuery() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(557)]
+QWARN  : TestDeckBuilderScreen::selectedResultClearsOnCatalogReplacement() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::selectedResultClearsOnCatalogReplacement() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::selectedResultClearsOnCatalogReplacement() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(579)]
+QWARN  : TestDeckBuilderScreen::ordinaryMonsterPreviewLabelsItsLevelCorrectly() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::ordinaryMonsterPreviewLabelsItsLevelCorrectly() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::ordinaryMonsterPreviewLabelsItsLevelCorrectly() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(604)]
+QWARN  : TestDeckBuilderScreen::xyzMonsterPreviewLabelsItsRankNotLevel() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::xyzMonsterPreviewLabelsItsRankNotLevel() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::xyzMonsterPreviewLabelsItsRankNotLevel() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(631)]
+QWARN  : TestDeckBuilderScreen::linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::linkMonsterPreviewHidesDefenseAndShowsLinkRatingAndMarkers() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(665)]
+QWARN  : TestDeckBuilderScreen::negativeCombatStatsRenderAsQuestionMarksInPreview() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::negativeCombatStatsRenderAsQuestionMarksInPreview() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::negativeCombatStatsRenderAsQuestionMarksInPreview() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(700)]
+QWARN  : TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::legalityStatusBoxIsRenderedAndUpdatesReactively() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(716)]
+QWARN  : TestDeckBuilderScreen::addButtonsFollowTheControllersPlacement() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::addButtonsFollowTheControllersPlacement() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::addButtonsFollowTheControllersPlacement() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(800)]
+QWARN  : TestDeckBuilderScreen::filterControlsReachTheSearchModel() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::filterControlsReachTheSearchModel() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::filterControlsReachTheSearchModel() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(851)]
+QWARN  : TestDeckBuilderScreen::searchPaneFitsItsColumnAtMinimumAndDefaultSizes() QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::searchPaneFitsItsColumnAtMinimumAndDefaultSizes() <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::searchPaneFitsItsColumnAtMinimumAndDefaultSizes() 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(936)]
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(1028)]
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(1028)]
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(1028)]
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) QQmlApplicationEngine failed to load component
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) <Unknown File>: Module "EdoproNext" contains no type named "TestHarness"
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'h.valid()' returned FALSE. ()
+   Loc: [[worktree]/ui/tests/test_deckbuilder_screen.cpp(1028)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 26 failed, 0 skipped, 0 blacklisted, 71ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+    Start 3: platform_fonts
+3/3 Test #3: platform_fonts ...................   Passed    0.57 sec
+
+67% tests passed, 1 tests failed out of 3
+
+Total Test time (real) =   1.40 sec
+
+The following tests FAILED:
+	  2 - deckbuilder_screen (Failed)
+Errors while running CTest
