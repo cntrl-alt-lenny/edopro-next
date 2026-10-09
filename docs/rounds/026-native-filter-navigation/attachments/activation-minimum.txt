@@ -1,0 +1,7 @@
+sandbox_extension_issue_file_to_process failed for /tmp/EDOProFocus026.app: 1 (Operation not permitted)
+qt.qpa.fonts: Populating font family aliases took 58 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+DIAG runtime Qt 6.11.1 platform "cocoa" style "Basic" active true size QSize(960, 600) policy Qt::TabFocusBehavior(3)
+DIAG focus "searchField" TextField_QMLTYPE_41 bounds QRectF(80,40 259x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::MouseFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "searchField" TextField_QMLTYPE_41 bounds QRectF(80,40 259x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::MouseFocusReason)
