@@ -23,6 +23,8 @@
 #include <QQmlContext>
 #include <QQuickItem>
 #include <QQuickStyle>
+#include <QStyleHints>
+#include <QTimer>
 #include <QQuickWindow>
 #include <QSet>
 #include <QTemporaryDir>
@@ -299,6 +301,7 @@ private slots:
     void searchPaneFitsItsColumnAtMinimumAndDefaultSizes();
     void filterTabTraversalStaysVisible_data();
     void filterTabTraversalStaysVisible();
+    void filterNavigationSkipsUnavailableControls();
 };
 
 void TestDeckBuilderScreen::noCatalogDeckEditorStaysFunctional() {
@@ -1031,8 +1034,23 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
     auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
     QVERIFY(window);
     window->resize(screenSize);
+    QObject::connect(window, &QWindow::activeChanged, window, [window] {
+        qInfo() << "native activation changed" << window->isActive();
+    });
+    QObject::connect(window, &QQuickWindow::activeFocusItemChanged, window, [window] {
+        if (!window->activeFocusItem())
+            qInfo() << "null focus; window active" << window->isActive();
+    });
     window->requestActivate();
+    if (QGuiApplication::platformName() != QStringLiteral("offscreen")) {
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QVERIFY(QTest::qWaitForWindowActive(window));
+        QTRY_COMPARE(QGuiApplication::applicationState(), Qt::ApplicationActive);
+    }
     QTest::qWait(100);
+    qInfo() << "navigation runtime" << qVersion() << QGuiApplication::platformName()
+            << QQuickStyle::name() << window->size() << "active" << window->isActive()
+            << "Tab policy" << QGuiApplication::styleHints()->tabFocusBehavior();
     const auto bounds = [](QQuickItem* i) {
         return i->mapRectToScene(QRectF(0, 0, i->width(), i->height()));
     };
@@ -1069,6 +1087,8 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
                               const QString& label) {
         QSet<QString> reached;
         for (int step = 0; step < 100 && reached != expected; ++step) {
+            if (QGuiApplication::platformName() != QStringLiteral("offscreen"))
+                QVERIFY2(window->isActive(), "native input requires an active window");
             QTest::keyClick(window, Qt::Key_Tab, reverse ? Qt::ShiftModifier : Qt::NoModifier);
             QTest::qWait(20);
             QQuickItem* active = window->activeFocusItem();
@@ -1086,6 +1106,11 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
                 }
             }
             QTRY_VERIFY2(isVisible(active, clippingSurface), qPrintable(location(active, clippingSurface)));
+            // TextField derives from TextInput and draws from activeFocus;
+            // button/checkbox Controls expose visualFocus for keyboard rings.
+            if (active->metaObject()->indexOfProperty("visualFocus") >= 0)
+                QVERIFY2(active->property("visualFocus").toBool(), qPrintable(active->objectName()));
+            QVERIFY(active->hasActiveFocus());
             reached.insert(active->objectName());
             qInfo().noquote() << label << (reverse ? "Shift+Tab" : "Tab")
                               << location(active, clippingSurface);
@@ -1136,7 +1161,9 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
             }
         }
         QVERIFY(item(h, doneName.constData()));
-        item(h, doneName.constData())->forceActiveFocus(Qt::TabFocusReason);
+        const char* firstName = categories ? "categoryCheck0" : "markerButton0";
+        QTRY_COMPARE(window->activeFocusItem(), item(h, firstName));
+        QTRY_VERIFY(isVisible(item(h, firstName), popupContent));
         traverse(controls, popupContent, QString::fromLatin1(popup.first));
         QVERIFY(!QTest::currentTestFailed());
         if (categories) {
@@ -1154,6 +1181,17 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
             QCOMPARE(selected, !before);
             qInfo() << "lower category Space changed model selection";
         } else {
+            for (int step = 0; step < 10 && window->activeFocusItem() != item(h, "markerButton7"); ++step)
+                QTest::keyClick(window, Qt::Key_Tab);
+            QTRY_COMPARE(window->activeFocusItem(), item(h, "markerButton7"));
+            const bool before = item(h, "markerButton7")->property("checked").toBool();
+            QTest::keyClick(window, Qt::Key_Space);
+            QCOMPARE(item(h, "markerButton7")->property("checked").toBool(), !before);
+            bool selected = before;
+            QVERIFY(QMetaObject::invokeMethod(h.child("searchResults"), "linkMarkerSelected",
+                                              Q_RETURN_ARG(bool, selected), Q_ARG(int, 7)));
+            QCOMPARE(selected, !before);
+            qInfo() << "marker Space changed model selection";
             capture("markers");
         }
         // Reach Done with keys, close using Space, and reopen using the same
@@ -1163,11 +1201,11 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
         QTRY_COMPARE(window->activeFocusItem(), item(h, doneName.constData()));
         QTest::keyClick(window, Qt::Key_Space);
         QTRY_VERIFY(!popupObject->property("visible").toBool());
-        QVERIFY(window->activeFocusItem() != item(h, doneName.constData()));
-        item(h, popup.second)->forceActiveFocus(Qt::TabFocusReason);
+        QTRY_COMPARE(window->activeFocusItem(), item(h, popup.second));
+        QTRY_VERIFY(isVisible(item(h, popup.second), item(h, "filterScroll")));
         QTest::keyClick(window, Qt::Key_Space);
         QTRY_VERIFY(popupObject->property("opened").toBool());
-        QTest::qWait(30);
+        QTRY_COMPARE(window->activeFocusItem(), item(h, firstName));
         if (controls.contains(window->activeFocusItem()->objectName()))
             QTRY_VERIFY2(isVisible(window->activeFocusItem(), popupContent),
                          qPrintable(location(window->activeFocusItem(), popupContent)));
@@ -1176,10 +1214,67 @@ void TestDeckBuilderScreen::filterTabTraversalStaysVisible() {
         QTRY_VERIFY(isVisible(window->activeFocusItem(), popupContent));
         QTest::keyClick(window, Qt::Key_Escape);
         QTRY_VERIFY(!popupObject->property("visible").toBool());
-        QVERIFY(!controls.contains(window->activeFocusItem()->objectName()));
+        QTRY_COMPARE(window->activeFocusItem(), item(h, popup.second));
+        QTRY_VERIFY(isVisible(item(h, popup.second), item(h, "filterScroll")));
         qInfo() << popup.first << "Done/Space close, Space reopen, Tab visible, Escape close";
     }
 }
 
-QTEST_MAIN(TestDeckBuilderScreen)
+void TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    Harness h;
+    QVERIFY(h.valid());
+    QVERIFY(h.catalog.loadDatabases({writeSyntheticDatabase(dir.filePath("cards.cdb"), 1, QStringLiteral("Synthetic"))}));
+    auto* window = qobject_cast<QQuickWindow*>(h.engine.rootObjects().constFirst());
+    QVERIFY(window);
+    window->requestActivate();
+    if (QGuiApplication::platformName() != QStringLiteral("offscreen")) {
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QVERIFY(QTest::qWaitForWindowActive(window));
+        QTRY_COMPARE(QGuiApplication::applicationState(), Qt::ApplicationActive);
+    }
+    // Any type disables the intervening monster-only filters. Both backward
+    // encodings must skip the whole disabled stretch and return to Type.
+    item(h, "cardTypeCombo")->forceActiveFocus(Qt::TabFocusReason);
+    QTest::keyClick(window, Qt::Key_Tab);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "limitationCombo"));
+    QTest::keyClick(window, Qt::Key_Backtab, Qt::ShiftModifier);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "cardTypeCombo"));
+    QTest::keyClick(window, Qt::Key_Tab);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "limitationCombo"));
+    QTest::keyClick(window, Qt::Key_Tab, Qt::ShiftModifier);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "cardTypeCombo"));
+    // Hiding filters skips their whole surface while preserving entry/exit.
+    item(h, "filtersToggle")->forceActiveFocus(Qt::TabFocusReason);
+    QTest::keyClick(window, Qt::Key_Space);
+    QTRY_VERIFY(!h.child("filterScroll")->property("visible").toBool());
+    QTest::keyClick(window, Qt::Key_Tab);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "clearFiltersButton"));
+    QTest::keyClick(window, Qt::Key_Tab);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "resultsList"));
+    QTest::keyClick(window, Qt::Key_Backtab, Qt::ShiftModifier);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "clearFiltersButton"));
+    QTest::keyClick(window, Qt::Key_Tab, Qt::ShiftModifier);
+    QTRY_COMPARE(window->activeFocusItem(), item(h, "filtersToggle"));
+    QTest::keyClick(window, Qt::Key_Space);
+    QTRY_VERIFY(h.child("filterScroll")->property("visible").toBool());
+}
+
+// Launch Services waits for a native test bundle but does not propagate the
+// process exit. Log qExec's exact return before returning it, so those runs
+// retain a real verdict independently of the launcher's success.
+int main(int argc, char** argv) {
+    QGuiApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
+    // Use the same running GUI event loop as main.cpp. Native application
+    // launch/activation is asynchronous; qExec before exec() can race it.
+    QTimer::singleShot(0, &app, [&app, argc, argv] {
+        TestDeckBuilderScreen test;
+        const int result = QTest::qExec(&test, argc, argv);
+        qInfo() << "screen test exit" << result;
+        app.exit(result);
+    });
+    return app.exec();
+}
 #include "test_deckbuilder_screen.moc"
