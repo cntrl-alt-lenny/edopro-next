@@ -1,0 +1,11 @@
+[1/11] Copying test_deckbuilder_screen qml sources into build dir
+[2/11] Automatic MOC and UIC for target test_deckbuilder_screen
+[3/10] Running AUTOMOC file extraction for target test_deckbuilder_screen
+[4/10] Running moc --collect-json for target test_deckbuilder_screen
+[5/10] Running rcc for resource test_deckbuilder_screen_raw_qml_0
+[6/10] Automatic QML type registration for target test_deckbuilder_screen
+[7/10] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/.qt/rcc/qrc_test_deckbuilder_screen_raw_qml_0.cpp.o
+[8/10] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen_qmltyperegistrations.cpp.o
+[9/10] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen.cpp.o
+[10/10] Linking CXX executable tests/test_deckbuilder_screen
+ld: warning: ignoring duplicate libraries: 'data/libedopro_next_data.a', 'data/libedopro_next_deck.a'

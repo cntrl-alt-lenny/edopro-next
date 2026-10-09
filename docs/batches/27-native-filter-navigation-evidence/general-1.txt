@@ -1,0 +1,4 @@
+COMMAND python3.13 tools/generate_protocol_constants.py --check
+protocol constants up to date (187 values)
+
+EXIT 0

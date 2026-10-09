@@ -1,0 +1,3 @@
+COMMAND git diff --exit-code -- tests/golden
+
+EXIT 0

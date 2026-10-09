@@ -1,0 +1,11 @@
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() qt.qpa.fonts: Populating font family aliases took 897 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.\x20
+PASS   : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls()
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 4770ms
+********* Finished testing of TestDeckBuilderScreen *********
+screen test exit 0
+
+EXIT 0

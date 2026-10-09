@@ -1,0 +1,12 @@
+[1/11] Copying edopro_next_shell qml sources into build dir
+[2/11] Copying test_deckbuilder_screen qml sources into build dir
+[3/11] Running rcc for resource test_deckbuilder_screen_raw_qml_0
+[4/11] Running qmlimportscanner for edopro_next_shell
+[5/11] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/.qt/rcc/qrc_test_deckbuilder_screen_raw_qml_0.cpp.o
+[6/11] Running rcc for resource edopro_next_shell_raw_qml_0
+[7/11] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.aotstats
+[8/11] Linking CXX executable tests/test_deckbuilder_screen
+ld: warning: ignoring duplicate libraries: 'data/libedopro_next_data.a', 'data/libedopro_next_deck.a'
+[9/11] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.qt/rcc/qrc_edopro_next_shell_raw_qml_0.cpp.o
+[10/11] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.o
+[11/11] Linking CXX executable edopro_next_shell

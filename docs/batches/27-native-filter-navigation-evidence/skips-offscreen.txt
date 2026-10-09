@@ -1,0 +1,13 @@
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() qt.qpa.fonts: Populating font family aliases took 53 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.\x20
+FAIL!  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() Compared QObject pointers are not the same
+   Actual   (window->activeFocusItem()) : FilterCombo/"cardTypeCombo"
+   Expected (item(h, "limitationCombo")): FilterCombo/"limitationCombo"
+   Loc: [<repository>/ui/tests/test_deckbuilder_screen.cpp(1207)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 15582ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+EXIT 1

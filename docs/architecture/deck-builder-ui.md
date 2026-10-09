@@ -1127,5 +1127,106 @@ platform navigation policy is changed, and no universal native traversal claim f
 Tab capability or offscreen events. Round 024's Builder also ran the minimum-size forward
 key-event test with Qt's native Cocoa plugin: it reached Search and the four numeric fields,
 but missed ten non-text controls and failed its accounting assertion. This is a programmatic
-native-plugin observation, not physical keyboard verification; its cause remains unresolved.
+native-plugin observation, not physical keyboard verification; §15.3 records the later investigation.
 Full keyboard/controller parity remains open (§12).
+
+
+### 15.3 Native macOS focus policy investigation (round 026)
+
+The unchanged shell reproduces the non-text filter exclusion in a native macOS
+session using desktop-delivered keys, beyond the earlier Cocoa QTest observation.
+At both 960x600 and 1280x800, forward Tab cycles Search → ATK → DEF → Level →
+Scale → Search, while Shift+Tab follows the reverse cycle.
+Ten enabled non-text filter controls are omitted from that cycle, including both
+popup triggers.
+Both popups were therefore investigated with explicitly separate initial seeds;
+that does not establish end-to-end keyboard reachability.
+
+The investigation used macOS 27.0.1, Qt 6.11.1 and the application's Basic style.
+Version-matched [Cocoa theme source](https://github.com/qt/qtbase/blob/59c81a3c2247b821b9b84b4eb8d939b77e07e276/src/plugins/platforms/cocoa/qcocoatheme.mm#L440)
+queries `NSApplication.isFullKeyboardAccessEnabled` to choose all-controls or
+text/list Tab policy.
+[Qt Quick candidate filtering](https://github.com/qt/qtdeclarative/blob/a02bed441965ee1f18f856352c7d5ee5ba35d795/src/quick/items/qquickitem.cpp#L2462)
+then applies that policy beyond an item's focus-capability bit.
+The effective runtime getter reported text/list flags 3 in both disposable
+screen-harness and full-shell probes; absent preference keys were not treated
+as proof of an OS default.
+No system setting or shipped navigation policy changed.
+
+Changing only the diagnostic process to all-controls allowed the previously
+omitted main controls to be reached in both sizes and directions with the
+existing destination and clipping assertions intact.
+Fresh default/all/default comparisons restored the literal default failure,
+supporting policy as the cause of that exclusion rather than a missing QML
+TabFocus declaration or a screen-harness-only defect.
+This is a counterfactual diagnostic, not a production fix or native parity claim.
+The all-controls matrix also retains intermittent null-focus and popup-close
+failures, including in a repeat without concurrent desktop automation, whose
+activation/input-delivery/restoration causes remain unresolved.
+The [research record](../rounds/026-native-filter-navigation/attachments/research.md)
+and per-row outputs distinguish those failures from successful reached sets.
+
+Desktop observations at both shell sizes found Tab/Shift+Tab staying on the
+seeded popup container rather than category/marker children.
+Escape closed each popup and restored the prior numeric field; click reopening
+and Done-click closing worked, while default-policy Space/Done keyboard operation
+and keyboard reopening were not established.
+Category 32 keyboard/model operation is supported only by passing diagnostic
+all-controls QTest rows, not by the production-policy desktop session.
+Images inspected the visible numeric focus and seeded popup frames; full
+category traversal, physical hardware input and controller parity remain unproven.
+
+Round 026 recommended that the next product brief decide whether this client deliberately overrides
+macOS text/list preference for consistent all-controls navigation or supplies
+an explicit keyboard route while retaining it.
+An override would be a compatibility decision to record and verify, not a reason
+to change the user's OS setting.
+The experimental setter is declared in the installed header but documented as
+internal in [Qt source](https://github.com/qt/qtbase/blob/59c81a3c2247b821b9b84b4eb8d939b77e07e276/src/gui/kernel/qstylehints.cpp#L582),
+so production API compatibility across the supported Qt floor needs assessment.
+Native activation and popup-operation failures need independent investigation
+before any broad native correctness claim; strict reached sets must not be softened.
+
+### 15.4 Application-local filter traversal (batch 27)
+
+[ADR 0013](../adr/0013-native-filter-navigation.md) records the owner's selected
+all-enabled-filter policy. `navigateFilter` handles Tab, Backtab and Shift+Tab
+using explicit public QML links. The main chain is Search, Hide/Show, Clear,
+Type, Sub-type, Attribute, Race, ATK, DEF, Level/Rank, Scale, Limit,
+Non-official, Effects, Link markers, then Results. Disabled and hidden links
+are skipped. The results ListView declares `Accessible.List`: Qt's implicit
+Cocoa chain recognizes that role at the boundary. No system preference or
+`QStyleHints` policy is modified; implicit navigation outside this column
+continues to use the platform policy.
+
+Effects cycles through categories 1–32 and Done; markers cycle through eight
+buttons and Done, skipping the disabled centre. `onOpened` focuses the first
+control after popup transition/reparenting; `onClosed` restores its trigger.
+Each open starts at the first control rather than restoring a clipped lower
+row. `FocusScrollView` continues to reveal the focused item after geometry
+settles. The tests no longer mouse/force-seed Done or re-seed the trigger to
+hide missing lifecycle behavior. Space must change Category 32 and marker
+selection through the existing model, and closing must reveal its trigger.
+
+Compatibility was checked against the public API/source at the floor and CI
+versions: [Qt 6.5.3 KeyNavigation implementation](https://github.com/qt/qtdeclarative/blob/v6.5.3/src/quick/items/qquickitem.cpp#L655)
+checks visibility/enabled state and calls `forceActiveFocus(reason)`;
+[Qt 6.8.3 source](https://github.com/qt/qtdeclarative/blob/v6.8.3/src/quick/items/qquickitem.cpp)
+retains that API. Its key dispatch distinguishes `Key_Tab` from `Key_Backtab`
+without inspecting Shift, so the shared `Keys` handler handles both backward
+encodings explicitly. [The public KeyNavigation documentation](https://doc.qt.io/qt-6/qml-qtquick-keynavigation.html)
+describes the link/skip contract. No private headers or internally documented
+setter are used. Local Qt execution and exact check results are in the
+[batch evidence](../batches/27-native-filter-navigation-evidence/README.md).
+
+Native shell desktop-delivered traversal and operation passed at both sizes on
+macOS 27.0.1 / Qt 6.11.1 without a policy override. Final full-shell QTest rows
+also passed. The separately required screen-harness Cocoa minimum-forward row
+failed after native window deactivation; that failure remains a delivery gate.
+The harness now uses ApplicationWindow and executes qExec within the running
+GUI event loop. A controlled event-loop/window-type comparison passed in every
+combination, so neither change establishes the cause or a cure for intermittent
+activation loss. Earlier Cocoa notification logs show native key-window
+resignation before null focus; they do not identify what initiated it. Strict
+survival passed, while empty stderr failed on a Qt font-family warning. These
+are unresolved failures, not hidden by successful repeats or quieter logging.
