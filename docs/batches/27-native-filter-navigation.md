@@ -2,48 +2,59 @@
 
 ## Done
 
-Implemented public QML navigation across enabled filters and popup controls,
-both backward key encodings, unavailable-control skipping, first-control popup
-entry and trigger restoration. Strengthened strict screen assertions and aligned
-the test window/event loop with GUI startup. Added proposed ADR 0013 and
-architecture limits. Preserved round 026 verbatim and unsuccessful batch 27
-attempts. No batch 28 boundary changes were needed. Brain should update shared
-status only after adjudicating this incomplete native reliability gate.
+Retained the public QML navigation implementation and all historical evidence.
+Follow-up adds passive timestamped native application/window/input tracing and
+an uninterrupted-activation latch across every navigation key, including popup
+operation/restoration. Later reacquisition cannot hide a loss. No production
+navigation, startup/font/Theme, CMake, adapter, engine or system changes in this
+follow-up. Brain should keep shared status incomplete until historical activation
+initiation is established; PR #48 remains draft.
 
 ## Checked
 
-Implementation source: `54ed9d8d9ebcd91e0ccafea9496135cf7173e9d1`, based on
-`1068ee315006c5d3599e5c2100435aa8b9441967`. Documentation commits add no code.
-[Evidence and rerunnable commands](27-native-filter-navigation-evidence/README.md)
-record output, exits, environments, skips and failed attempts.
+Exact follow-up test source: `4d1a7e2c30965e31ee85d2e550a48f5480fa02a0`, continuing
+`c78b1485d40f5ed73da405eabd78a9c9536e6977`. Subsequent commits are documentation
+and evidence. [Follow-up commands, outputs and limits](27-native-filter-navigation-followup-evidence/README.md)
+retain actual exits, skips and failed attempts.
 
-UI Debug/WERROR/UI_TESTS configure/build and CTest succeeded. Every traversal
-row ran separately offscreen and Cocoa; full-shell probe rows passed on both.
-Actual native desktop-delivered Tab/Shift+Tab, popup Space/Done/Escape,
-close/reopen and model operation passed at both sizes with default policy.
-Inspected focus and popup captures; databases/captures remain untracked.
-Removing popup opening focus or the Results accessibility role makes relevant
-strict assertions fail. Generators, README check, Python discovery, golden
-reproduction/unchanged diff and framework/diff checks passed. Discovery retains
-Windows ACL and absent semantic-trace skips; replay is not duel evidence.
+UI Debug/WERROR/UI_TESTS configure/build and offscreen CTest passed. Every
+traversal row ran separately offscreen/Cocoa and passed, as did byte-matched
+full-shell rows. Unavailable controls passed offscreen; the initial Cocoa run
+failed an attributed diagnostic launch conflict, preserved verbatim. A separate
+isolated Cocoa run passed after removing that known conflict.
+
+Controlled peer Cocoa launch during Effects switches macOS foreground PID,
+then resigns the native key window and fails every row. The new latch fails
+all corresponding trials. Removing popup entry focus or category-model update
+still fails distinct strict product assertions; restoration build passed.
+Actual desktop-delivered main/popup routes, operations and restoration were
+observed at both sizes. Inspected native focus/selected popup states and four
+QTest focus captures; no broad visual-parity claim.
+
+Generators, README check, Python discovery, golden reproduction/unchanged diff,
+framework and whitespace passed. Discovery keeps Windows ACL/semantic-trace
+skips. PR-evidence check passed with the real/proposed body after an empty-stdin
+invocation failed. Replay does not establish engine behaviour. Delivery CI is
+reported separately at the pushed SHA.
 
 ## Not checked
 
-Physical keyboard hardware, controllers, Windows, actual Qt 6.5/6.8.3 execution,
-all controls' visual appearance and broad native/accessibility parity. Public
-API source compatibility was inspected at floor/CI versions. Engine behavior
-was not tested or changed. CI at the pushed delivery SHA is reported in the
-handoff; it cannot replace native evidence.
+The initiating event in the earlier delivery/Brain failures: foreground history
+was absent. Neither quiet passes nor injected peer launches identify it.
+Physical keyboard, controller, Windows, actual Qt-floor execution, every visual
+state and engine behaviour remain unverified. Targeted desktop automation does
+not establish uninterrupted native activation.
 
 ## Failed or blocked
 
-STOPPED for Brain review: final screen-harness Cocoa minimum-forward lost native
-activation after Clear and failed strict traversal. Other final rows passed;
-full-shell and controlled startup comparisons also passed, which does not
-explain the intermittent failure. Native key-window resignation precedes null
-focus, but its initiating cause remains unresolved. Startup changes are not
-claimed as a causal fix.
+**STOPPED, unresolved historical cause.** The controlled external-launch class
+is established and activation-precondition enforcement strengthened, but no
+product/environment change is claimed to cure the uninstrumented historical
+failures. Brain confirms historical foreground activity is unknown. A new
+Builder-caused launch overlap is preserved with direct PID attribution; native
+processes/desktop interaction are finished and the slot released through Brain.
 
-Strict smoke survival passed; independent empty-stderr assertion failed on Qt's
-missing Sans Serif alias warning. No suppression or system-setting change.
-The useful implementation is pushed for exact review, not self-accepted.
+Strict smoke: survival exit 0, empty-stderr exit 1, wrapper exit 1 for the missing
+Sans Serif alias; batch 29 owns that gate. Setup errors and unsuccessful controls
+remain recorded. No retries-until-green, softened assertions, self-acceptance or
+merge.

@@ -1230,3 +1230,24 @@ activation loss. Earlier Cocoa notification logs show native key-window
 resignation before null focus; they do not identify what initiated it. Strict
 survival passed, while empty stderr failed on a Qt font-family warning. These
 are unresolved failures, not hidden by successful repeats or quieter logging.
+
+### 15.5 Native activation evidence (batch 27 follow-up)
+
+The screen test's native navigation session now latches any window/application
+activation loss after initial activation. Every key, including popup operation
+and restoration, checks that session before and after delivery. Later activation
+cannot clear the failure. `EDOPRO_NAVIGATION_TRACE=1` adds passive timestamped
+window/application events and delivered-key focus data; it never activates a
+window or consumes an event. An independent macOS foreground-PID observer is
+carried with the [follow-up evidence](../batches/27-native-filter-navigation-followup-evidence/README.md).
+
+A controlled competing Cocoa shell launch initiates key-window resignation and
+strict failure across all traversal rows. One newly recorded startup failure
+also has foreground-PID attribution to a premature diagnostic launch. These
+establish the exclusive-foreground precondition for those trials; they do not
+identify the initiator of the earlier delivery/review failures. Successful quiet
+rows cannot resolve that missing evidence. No production startup, typography or
+navigation change is claimed as a causal cure. Native tests and desktop launches
+must be sequenced; all activation, destination, clipping and model-operation
+assertions remain fatal. Removing popup entry focus or category-model update
+still fails the corresponding product assertion.
