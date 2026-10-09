@@ -1,0 +1,10 @@
+[1/37] Automatic MOC and UIC for target edopro_next_shell
+[2/36] Running AUTOMOC file extraction for target edopro_next_shell
+[3/10] Automatic MOC and UIC for target test_deckbuilder_screen
+[4/9] Running AUTOMOC file extraction for target test_deckbuilder_screen
+[5/9] Running moc --collect-json for target test_deckbuilder_screen
+[6/9] Automatic QML type registration for target test_deckbuilder_screen
+[7/9] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen_qmltyperegistrations.cpp.o
+[8/9] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen.cpp.o
+[9/9] Linking CXX executable tests/test_deckbuilder_screen
+ld: warning: ignoring duplicate libraries: 'data/libedopro_next_data.a', 'data/libedopro_next_deck.a'

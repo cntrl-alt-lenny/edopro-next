@@ -1,0 +1,724 @@
+START 1791552343.583384
+COMMAND ui/build/tests/test_deckbuilder_screen filterTabTraversalStaysVisible:minimum-reverse
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.fonts: Populating font family aliases took 67 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::QCocoaWindow TestHarness_QMLTYPE_0(0x7bac1fbd00)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::initialize TestHarness_QMLTYPE_0(0x7bac1fbd00)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Did hide <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setGeometry TestHarness_QMLTYPE_0(0x7bac1fbd00) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setCocoaGeometry TestHarness_QMLTYPE_0(0x7bac1fbd00) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7bac1fbd00) current QRect(0,0 1280x800) new QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Window still initializing, skipping event
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setMask TestHarness_QMLTYPE_0(0x7bac1fbd00) QRegion(null)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::recreateWindowIfNeeded TestHarness_QMLTYPE_0(0x7bac1fbd00) QFlags<QCocoaWindow::RecreationReason>(MissingWindow|ContentViewChanged)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Ensuring that <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))> is content view for <QNSWindow: 0x7baccf0a00; contentView=NSObject(0x0)>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Re-parenting <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))> from NSObject(0x0) to <NSThemeFrame: 0x7bacf85000>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Done re-parenting <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))> into <NSThemeFrame: 0x7bacf85000>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Moving <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))> from NSObject(0x0) to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Done moving <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))> to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: TestHarness_QMLTYPE_0(0x7bac1fbd00) did change <NSScreen: 0x7bacce0480>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Screen changed for TestHarness_QMLTYPE_0(0x7bac1fbd00) from QCocoaScreen(0x7bace04300, "Built-in Retina Display", QRect(0,0 1440x900), dpr=2, displayId=1, <NSScreen: 0x7bacce0480>) to QCocoaScreen(0x7bace04300, "Built-in Retina Display", QRect(0,0 1440x900), dpr=2, displayId=1, <NSScreen: 0x7bacce0480>)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Reflecting TestHarness_QMLTYPE_0(0x7bac1fbd00) state to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::propagateSizeHints TestHarness_QMLTYPE_0(0x7bac1fbd00) min: QSize(0, 0) max: QSize(16777215, 16777215) increment: QSize(-1, -1) base: QSize(-1, -1)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setOpacity 1
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setGeometry TestHarness_QMLTYPE_0(0x7bac1fbd00) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setCocoaGeometry TestHarness_QMLTYPE_0(0x7bac1fbd00) QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setVisible TestHarness_QMLTYPE_0(0x7bac1fbd00) true
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Window still initializing, skipping setting visibility
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setVisible TestHarness_QMLTYPE_0(0x7bac1fbd00) true
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::recreateWindowIfNeeded TestHarness_QMLTYPE_0(0x7bac1fbd00) QFlags<QCocoaWindow::RecreationReason>(RecreationNotNeeded)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7bac1fbd00) current QRect(0,0 1280x800) new QRect(0,0 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Did unhide <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7bac1fbd00) current QRect(0,0 1280x800) new QRect(0,62 1280x800)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setGeometry TestHarness_QMLTYPE_0(0x7bac1fbd00) QRect(0,62 896x600)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setCocoaGeometry TestHarness_QMLTYPE_0(0x7bac1fbd00) QRect(0,62 896x600)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7bac1fbd00) current QRect(0,62 896x600) new QRect(0,62 896x600)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::handleGeometryChange TestHarness_QMLTYPE_0(0x7bac1fbd00) current QRect(0,62 896x600) new QRect(0,62 896x600)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>> became key window. Updating focus window to QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00)) with view <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate TestHarness_QMLTYPE_0 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickRootItem "TestHarness" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickControl "ApplicationWindowContentControl" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickContentItem "ApplicationWindow" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickStackLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate DeckBuilderScreen_QMLTYPE_3 "screen" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickRowLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickColumnLayout "searchPane" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickColumnLayout "noCatalogMessage" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate TextField_QMLTYPE_34 "searchField" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickPlaceholderText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickRowLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate Button_QMLTYPE_14 "filtersToggle" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate Button_QMLTYPE_14 "clearFiltersButton" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate FocusScrollView "filterScroll" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickFlickable "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate QQuickGridLayout "filterGrid" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344660 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterCombo "cardTypeCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterCombo "subTypeCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterCombo "attributeCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterCombo "raceCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterField "attackField" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickPlaceholderText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterField "defenseField" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickPlaceholderText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterField "levelField" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickPlaceholderText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterField "scaleField" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickPlaceholderText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterCombo "limitationCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate FilterCheck "nonOfficialCheck" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "categoriesButton" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "linkMarkersButton" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "resultsFrame" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickListView "resultsList" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ItemDelegate_QMLTYPE_7 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ItemDelegate_QMLTYPE_7 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ItemDelegate_QMLTYPE_7 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRowLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "addToDeckButton" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "addToSideButton" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "deckPane" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRowLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRowLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ComboBox_QMLTYPE_18 "rulesetCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ComboBox_QMLTYPE_18 "banlistCombo" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColorImage "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickTextField "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "legalityBox" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRowLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "legalityText" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate DeckSectionList_QMLTYPE_5 "mainList" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickListView "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate DeckSectionList_QMLTYPE_5 "extraList" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickListView "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate DeckSectionList_QMLTYPE_5 "sideList" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickListView "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate Button_QMLTYPE_14 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickIconLabel "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickMnemonicLabel "label" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate CardPreview_QMLTYPE_35 "cardPreview" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickItem "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickColumnLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickRectangle "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickGridLayout "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "atkValueText" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "defRowLabel" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "defRowValue" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "levelRankLabelText" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "levelRankValueText" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "linkMarkerRowLabel" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "linkMarkerValueText" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickText "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344661 QEvent::WindowActivate QQuickOverlay "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) native activation changed true
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552344669 QEvent::ApplicationActivate QGuiApplication "" application Qt::ApplicationActive
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.events: Sending NSEvent: type=MouseEntered loc=(173.336,227.153) time=27339.4 flags=0 win=0x7baccf0a00 winNum=4380 ctxt=0x0 evNum=0 trackNum=4d124 userData=0x0 to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.events: Sending NSEvent: type=CursorUpdate loc=(173.336,227.153) time=27339.4 flags=0x8 win=0x7baccf0a00 winNum=4380 ctxt=0x0 evNum=0 trackNum=7bad0965d0 userData=0x0 to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.events: Sending NSEvent: type=MouseEntered loc=(173.336,227.153) time=27339.4 flags=0 win=0x7baccf0a00 winNum=4380 ctxt=0x0 evNum=0 trackNum=7badacc500 userData=0x0 to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.events: Sending NSEvent: type=MouseEntered loc=(173.336,227.153) time=27339.4 flags=0 win=0x7baccf0a00 winNum=4380 ctxt=0x0 evNum=0 trackNum=7badba0a00 userData=0x0 to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.events: Sending NSEvent: type=MouseEntered loc=(173.336,227.153) time=27339.4 flags=0 win=0x7baccf0a00 winNum=4380 ctxt=0x0 evNum=0 trackNum=7bad0965d0 userData=0x0 to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Occlusion state of <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>> for TestHarness_QMLTYPE_0(0x7bac1fbd00) changed to visible
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation runtime 6.11.1 "cocoa" "Basic" QSize(896, 600) active true Tab policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552344977 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "searchField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552344977 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "searchField"
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.events: Sending NSEvent: type=KitDefined loc=(0,632) time=27339.4 flags=0 win=0x7baccf0a00 winNum=4380 ctxt=0x0 subtype=4 data1=1147142144 data2=1142816768 to <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=TestHarness_QMLTYPE_0(0x7bac1fbd00))>>
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552344998 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "resultsList"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552344999 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "resultsList"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab linkMarkersButton bounds 128,320 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345020 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345020 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab categoriesButton bounds 16,320 104x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345041 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345041 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab nonOfficialCheck bounds 16,276 252x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345063 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "nonOfficialCheck"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345063 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "nonOfficialCheck"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab limitationCombo bounds 128,232 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345085 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345085 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab scaleField bounds 128,188 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345107 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "scaleField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345107 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "scaleField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab levelField bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345129 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "levelField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345130 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "levelField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab defenseField bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345152 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "defenseField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345152 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "defenseField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attackField bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345174 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attackField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345174 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attackField"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab raceCombo bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345196 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "raceCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345196 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "raceCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab attributeCombo bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345218 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attributeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345218 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "attributeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab subTypeCombo bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345240 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "subTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345240 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "subTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab cardTypeCombo bounds 128,144 140x40 viewport 16,144 262x216
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345261 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "cardTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345262 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "cardTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab clearFiltersButton bounds 178,92 100x40 viewport 16,16 262x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345285 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345285 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab filtersToggle bounds 16,92 111x40 viewport 16,16 262x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345307 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345307 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main Shift+Tab searchField bounds 16,40 262x40 viewport 16,16 262x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345329 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345332 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345332 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoriesDone bounds 324,348 100x40 viewport 28,52 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345354 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345354 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoriesDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck31 bounds 229,300 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345376 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345376 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck30 bounds 28,300 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345397 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck30"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345397 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck30"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck29 bounds 229,255 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345419 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck29"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345419 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck29"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck28 bounds 28,255 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345441 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck28"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345441 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck28"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck27 bounds 229,210 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345463 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck27"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345463 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck27"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck26 bounds 28,210 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345485 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck26"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345485 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck26"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck25 bounds 229,165 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345507 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck25"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345508 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck25"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck24 bounds 28,165 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345529 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck24"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345529 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck24"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck23 bounds 229,120 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345551 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck23"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345551 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck23"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck22 bounds 28,120 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345573 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck22"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345573 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck22"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck21 bounds 229,75 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345595 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck21"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345595 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck21"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck20 bounds 28,75 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345616 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck20"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345616 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck20"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck19 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345638 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck19"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345638 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck19"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck18 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345659 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck18"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345660 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck18"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck17 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345681 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck17"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345682 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck17"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck16 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345704 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck16"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345704 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck16"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck15 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345726 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck15"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345726 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck15"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck14 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345748 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck14"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345748 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck14"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck13 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345770 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck13"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345770 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck13"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck12 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345792 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck12"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345792 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck12"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck11 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345813 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck11"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345814 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck11"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck10 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345835 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck10"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345835 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck10"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck9 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345857 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck9"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345857 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck9"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck8 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345879 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck8"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345879 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck8"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck7 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345901 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345902 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck6 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345924 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345925 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck5 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345947 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345949 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck4 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345971 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345972 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck3 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345994 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552345994 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck2 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346017 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346017 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck1 bounds 229,72 195x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346038 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346038 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Shift+Tab categoryCheck0 bounds 28,72 196x40 viewport 28,72 396x268
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346060 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346061 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346061 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346061 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346061 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346062 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346062 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346062 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346062 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck8"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346063 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck9"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346063 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck10"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346063 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck11"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346063 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck12"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346063 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck13"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346064 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck14"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346064 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck15"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346064 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck16"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346064 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck17"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346065 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck18"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346065 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck19"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346065 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck20"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346065 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck21"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346065 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck22"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346066 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck23"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346066 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck24"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346066 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck25"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346066 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck26"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346066 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck27"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346067 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck28"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346067 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck29"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346067 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck30"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346068 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) lower category Space changed model selection
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346069 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck31"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346069 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoriesDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346070 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoriesButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346070 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346070 16777216 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "categoryCheck1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories Done/Space close, Space reopen, Tab visible, Escape close
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346071 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346072 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346072 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markersDone bounds 160,210 100x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346094 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markersDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346094 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markersDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton7 bounds 169,162 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346116 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346116 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton6 bounds 124,162 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346138 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346138 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton5 bounds 79,162 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346159 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346159 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton4 bounds 169,117 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346181 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346181 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton3 bounds 79,117 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346203 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346203 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton2 bounds 169,72 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346225 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346225 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton1 bounds 124,72 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346246 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346246 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Shift+Tab markerButton0 bounds 79,72 40x40 viewport 28,52 232x198
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers reached 9 of 9
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346268 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346269 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346269 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton2"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346269 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton3"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346269 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton4"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346269 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton5"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346270 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton6"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346270 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) marker Space changed model selection
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346270 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton7"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346271 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markersDone"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346271 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "linkMarkersButton"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346272 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton0"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation input 1791552346272 16777216 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "markerButton1"
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers Done/Space close, Space reopen, Tab visible, Escape close
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::setVisible QQuickWindowQmlImpl(0x7bac1fbd00) false
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))>> resigned key window. Clearing focus window QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00)) with view <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))>
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) null focus; window active false
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickWindowQmlImpl "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRootItem "TestHarness" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickControl "ApplicationWindowContentControl" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickContentItem "ApplicationWindow" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickStackLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate DeckBuilderScreen_QMLTYPE_3 "screen" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRowLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColumnLayout "searchPane" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColumnLayout "noCatalogMessage" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColumnLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate TextField_QMLTYPE_34 "searchField" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickPlaceholderText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRowLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate Button_QMLTYPE_14 "filtersToggle" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate Button_QMLTYPE_14 "clearFiltersButton" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FocusScrollView "filterScroll" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickFlickable "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickGridLayout "filterGrid" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterCombo "cardTypeCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterCombo "subTypeCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterCombo "attributeCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate FilterCombo "raceCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346279 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterField "attackField" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickPlaceholderText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterField "defenseField" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickPlaceholderText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterField "levelField" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickPlaceholderText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterField "scaleField" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickPlaceholderText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterCombo "limitationCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate FilterCheck "nonOfficialCheck" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "categoriesButton" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "linkMarkersButton" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "resultsFrame" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickListView "resultsList" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRowLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "addToDeckButton" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "addToSideButton" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColumnLayout "deckPane" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColumnLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRowLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRowLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColumnLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ComboBox_QMLTYPE_18 "rulesetCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColumnLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ComboBox_QMLTYPE_18 "banlistCombo" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColorImage "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickTextField "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "legalityBox" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRowLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "legalityText" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate DeckSectionList_QMLTYPE_5 "mainList" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickListView "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate DeckSectionList_QMLTYPE_5 "extraList" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickListView "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate DeckSectionList_QMLTYPE_5 "sideList" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickListView "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate ScrollBar_QMLTYPE_6 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate Button_QMLTYPE_14 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickIconLabel "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickMnemonicLabel "label" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColumnLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate SectionHeading_QMLTYPE_4 "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate CardPreview_QMLTYPE_35 "cardPreview" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickItem "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickColumnLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickRectangle "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickGridLayout "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "atkValueText" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "defRowLabel" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "defRowValue" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "levelRankLabelText" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "levelRankValueText" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "linkMarkerRowLabel" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "linkMarkerValueText" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickText "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346280 QEvent::WindowDeactivate QQuickOverlay "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) native activation changed false
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Did hide <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))>
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) navigation event 1791552346303 QEvent::Hide QQuickWindowQmlImpl "" application Qt::ApplicationActive
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: QCocoaWindow::~QCocoaWindow QQuickWindowQmlImpl(0x7bac1fbd00)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Removing <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))> from <NSThemeFrame: 0x7bacf85000>
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Re-parenting <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))> from <NSThemeFrame: 0x7bacf85000> to NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Done re-parenting <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))> into NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Moving <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))> from <QNSWindow: 0x7baccf0a00; contentView=<QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))>> to NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Done moving <QNSView: 0x7bac811b00; QCocoaWindow(0x7babeab5c0, window=QQuickWindowQmlImpl(0x7bac1fbd00))> to NSObject(0x0)
+QDEBUG : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) qt.qpa.window: Closing and releasing <QNSWindow: 0x7baccf0a00; contentView=NSObject(0x0)>
+PASS   : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse)
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 2391ms
+********* Finished testing of TestDeckBuilderScreen *********
+screen test exit 0
+qt.qpa.window: Deallocating <QNSWindow: 0x7baccf0a00; contentView=NSObject(0x0)>
+qt.qpa.window: Deallocating <QNSView: 0x7bac811b00; QCocoaWindow(0x0)>
+
+EXIT 0
