@@ -1,0 +1,5 @@
+SOURCE 7af65e44e39ee438aecd554d23c69aeb95d83d18
+COMMAND gh pr view 49 --json headRefOid,statusCheckRollup,mergeStateStatus
+All five required checks SUCCESS at this head.
+MERGE STATE CLEAN
+EXIT 0

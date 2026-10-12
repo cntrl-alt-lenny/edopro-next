@@ -104,3 +104,31 @@ first. Brain owns integration order, exact-head reviews and owner merge cards;
 Workers have released the desktop slot. No extra task is assigned solely to
 keep two seats occupied. See the independent batch 29 and batch 27 follow-up
 Brain reviews for checked outcomes and remaining limits.
+
+### Approved font merge and new-head checks, 2026-10-12
+
+Owner approved #50, merged on default. Brain integrated it into both existing
+feature branches without changing their feature implementations. Search's
+CMake append conflict retained both test registrations. Fresh macOS Qt 6.11.2
+full UI suites and strict smoke pass on both new heads; required Linux CI is
+green. The old shared font blocker is closed. Search #49 is accepted for
+owner-approved merge independently of navigation.
+
+Navigation #48 remains draft: a fresh preselected default-forward Cocoa row
+fails with passive tracing disabled after all traced rows pass. Its foreground
+history and failure are retained; causal initiation is not established. Do not
+replace this current red evidence with earlier quiet passes.
+
+Two useful independent batches can proceed together:
+
+| Builder | Ownership | Prompt |
+|---|---|---|
+| Navigation Builder | Batch 27 current native failure; navigation QML/TestHarness/screen driver | [Current-failure continuation](../batches/27-native-filter-navigation-current-failure-brief.md) |
+| Previous font/search Builder | Batch 30 descriptive effect-category labels; filter-adapter display names, pure/dedicated label tests and label documentation | [Label brief](../batches/30-effect-category-labels-brief.md) |
+
+Label changes flow through the existing QML binding, so the label Builder
+does not edit navigation QML or its driver. Brain owns any shared registration
+or layout seam and future integration. Both start without planning/search
+approval; labels start from default with the merged font fix. Batch 27 takes
+the exclusive native slot while batch 30 remains offscreen. Neither batch
+accepts itself or merges. Full keyboard/controller parity is still open.

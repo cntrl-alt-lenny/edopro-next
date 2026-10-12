@@ -1,0 +1,5 @@
+FOREGROUND 1791790514.309857 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790515.24278 33157 none test_deckbuilder_screen
+FOREGROUND 1791790518.031054 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790518.672328 33178 none test_deckbuilder_screen
+FOREGROUND 1791790520.6034322 1057 com.anthropic.claudefordesktop Claude

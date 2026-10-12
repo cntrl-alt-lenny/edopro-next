@@ -1,0 +1,31 @@
+SOURCE 08f4e630d83918de41659d7b8c5e4667e2edbdb4
+COMMAND QT_QPA_PLATFORM=cocoa EDOPRO_NAVIGATION_TRACE=1 ui/build/integration-qt6112/tests/test_deckbuilder_screen filterNavigationSkipsUnavailableControls
+navigation process 33100 1791790512811
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.2, Qt 6.11.2 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.3.34.2)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation event 1791790513350 QEvent::WindowActivate TestHarness_QMLTYPE_0 "" application Qt::ApplicationInactive
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation event 1791790513377 QEvent::ApplicationActivate QGuiApplication "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790513973 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "cardTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514011 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514014 16777218 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514036 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "cardTypeCombo"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514058 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514058 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "limitationCombo"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514079 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514100 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514122 16777217 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514143 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "resultsList"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514144 16777218 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "resultsList"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514166 16777248 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514166 16777217 QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true active true focus "clearFiltersButton"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation input 1791790514188 32 QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true active true focus "filtersToggle"
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation event 1791790514226 QEvent::WindowDeactivate QQuickWindowQmlImpl "" application Qt::ApplicationActive
+QINFO  : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls() navigation event 1791790514252 QEvent::Hide QQuickWindowQmlImpl "" application Qt::ApplicationActive
+PASS   : TestDeckBuilderScreen::filterNavigationSkipsUnavailableControls()
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 1410ms
+********* Finished testing of TestDeckBuilderScreen *********
+screen test exit 0
+
+EXIT 0

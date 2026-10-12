@@ -1,0 +1,13 @@
+SOURCE 08f4e630d83918de41659d7b8c5e4667e2edbdb4
+COMMAND ui/build/integration-qt6112/tests/fonts/test_platform_fonts realShellTypography
+ENV QT_QPA_PLATFORM=offscreen
+********* Start testing of PlatformFontTest *********
+Config: Using QtTest library 6.11.2, Qt 6.11.2 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.3.34.2)), macos 27.0.1
+PASS   : PlatformFontTest::initTestCase()
+PASS   : PlatformFontTest::realShellTypography(minimum)
+PASS   : PlatformFontTest::realShellTypography(default)
+PASS   : PlatformFontTest::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 661ms
+********* Finished testing of PlatformFontTest *********
+
+EXIT 0
