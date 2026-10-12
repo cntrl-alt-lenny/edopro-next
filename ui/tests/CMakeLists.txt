@@ -42,6 +42,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2 QuickDialogs2)
 
 add_executable(test_deckbuilder_screen
     test_deckbuilder_screen.cpp
+    ${EDOPRO_NEXT_FONT_SOURCES}
     ${EDOPRO_NEXT_SHELL_DECKBUILDER_SOURCES}
 )
 
@@ -173,3 +174,6 @@ target_link_libraries(test_card_code_search PRIVATE
     edopro_next_search edopro_next_legality SQLite::SQLite3
 )
 add_test(NAME card_code_search COMMAND test_card_code_search)
+
+# Separate CMake scope keeps this module registration independent of the screen harness.
+add_subdirectory(fonts)
