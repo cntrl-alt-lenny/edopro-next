@@ -1,0 +1,18 @@
+SOURCE 7af65e44e39ee438aecd554d23c69aeb95d83d18
+COMMAND ctest --test-dir ui/build/integration-qt6112 --output-on-failure
+ENV QT_QPA_PLATFORM=offscreen
+Test project <repository>/ui/build/integration-qt6112
+    Start 1: deckbuilder
+1/4 Test #1: deckbuilder ......................   Passed    0.43 sec
+    Start 2: deckbuilder_screen
+2/4 Test #2: deckbuilder_screen ...............   Passed    9.60 sec
+    Start 3: card_code_search
+3/4 Test #3: card_code_search .................   Passed    5.27 sec
+    Start 4: platform_fonts
+4/4 Test #4: platform_fonts ...................   Passed    0.80 sec
+
+100% tests passed out of 4
+
+Total Test time (real) =  16.10 sec
+
+EXIT 0

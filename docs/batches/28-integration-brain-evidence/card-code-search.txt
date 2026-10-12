@@ -1,0 +1,27 @@
+SOURCE 7af65e44e39ee438aecd554d23c69aeb95d83d18
+COMMAND ui/build/integration-qt6112/tests/test_card_code_search
+ENV QT_QPA_PLATFORM=offscreen
+********* Start testing of TestCardCodeSearch *********
+Config: Using QtTest library 6.11.2, Qt 6.11.2 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.3.34.2)), macos 27.0.1
+PASS   : TestCardCodeSearch::initTestCase()
+QWARN  : TestCardCodeSearch::knownCodesAndClearing() Trying to construct an instance of an invalid type, type id: 4097
+PASS   : TestCardCodeSearch::knownCodesAndClearing()
+PASS   : TestCardCodeSearch::fallback(0)
+PASS   : TestCardCodeSearch::fallback(999)
+PASS   : TestCardCodeSearch::fallback(4294967296)
+PASS   : TestCardCodeSearch::fallback(4294967419)
+PASS   : TestCardCodeSearch::fallback(+123)
+PASS   : TestCardCodeSearch::fallback(-123)
+PASS   : TestCardCodeSearch::fallback(12x)
+PASS   : TestCardCodeSearch::fallback(12 3)
+PASS   : TestCardCodeSearch::fallback(123x)
+PASS   : TestCardCodeSearch::fallback(１２３)
+PASS   : TestCardCodeSearch::fallback(١٢٣)
+PASS   : TestCardCodeSearch::fallback( 999 )
+PASS   : TestCardCodeSearch::filtersAndVisibility()
+PASS   : TestCardCodeSearch::reloadReevaluatesMode()
+PASS   : TestCardCodeSearch::cleanupTestCase()
+Totals: 17 passed, 0 failed, 0 skipped, 0 blacklisted, 2251ms
+********* Finished testing of TestCardCodeSearch *********
+
+EXIT 0

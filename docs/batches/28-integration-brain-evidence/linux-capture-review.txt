@@ -1,0 +1,9 @@
+ARTIFACT ui-screenshots
+CI RUN 38216365472
+COMMAND gh run download 38216365472 --name ui-screenshots --dir <temporary-directory>
+DOWNLOAD EXIT 0
+Brain inspected these original Linux Qt 6.8.3 captures:
+font-shell-960-preview-focus.png SHA256 12112e25cd7bb81544315e33ae3ec8b782b3cb81aaf94f800bebd349b9f83ca8
+font-shell-1280-preview-focus.png SHA256 1cf00dc3a7dc3f1e2ff5693552d559808a8d409430379c224947293734ede85f
+Readable title/body wrapping, result elision, numeric text and blue search focus outline at both shell sizes.
+Only named states inspected; this is Linux offscreen evidence, not native input or broad visual parity.

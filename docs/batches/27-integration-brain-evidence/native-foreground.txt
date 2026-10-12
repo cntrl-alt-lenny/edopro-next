@@ -1,0 +1,12 @@
+FOREGROUND 1791790495.863261 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790498.0875201 33025 none test_deckbuilder_screen
+FOREGROUND 1791790501.686841 401 com.apple.loginwindow loginwindow
+FOREGROUND 1791790501.6967602 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790502.9073892 33070 none test_deckbuilder_screen
+FOREGROUND 1791790505.6922312 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790506.376451 33074 none test_deckbuilder_screen
+FOREGROUND 1791790509.1519651 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790509.756566 33083 none test_deckbuilder_screen
+FOREGROUND 1791790512.550461 401 com.apple.loginwindow loginwindow
+FOREGROUND 1791790512.5563169 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790513.3273082 33100 none test_deckbuilder_screen

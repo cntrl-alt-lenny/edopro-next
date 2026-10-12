@@ -1,0 +1,13 @@
+SOURCE f96ac2354f255b0d830b1219e316a14b458e6ea2
+COMMAND QT_QPA_PLATFORM=offscreen ctest --test-dir ui/build --output-on-failure
+Test project <repository>/.worktrees/worker-27-native-filter-navigation/ui/build
+    Start 1: deckbuilder
+1/2 Test #1: deckbuilder ......................   Passed    0.28 sec
+    Start 2: deckbuilder_screen
+2/2 Test #2: deckbuilder_screen ...............   Passed   13.76 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =  14.05 sec
+
+EXIT 0

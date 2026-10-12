@@ -1,0 +1,13 @@
+REVIEWED DELIVERY c78b1485d40f5ed73da405eabd78a9c9536e6977
+COMMAND ctest --test-dir ui/build --output-on-failure
+Test project <repository>/.worktrees/worker-27-native-filter-navigation/ui/build
+    Start 1: deckbuilder
+1/2 Test #1: deckbuilder ......................   Passed    0.30 sec
+    Start 2: deckbuilder_screen
+2/2 Test #2: deckbuilder_screen ...............   Passed    8.50 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   8.81 sec
+
+EXIT 0

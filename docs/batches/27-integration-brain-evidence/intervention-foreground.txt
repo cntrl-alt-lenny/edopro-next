@@ -1,0 +1,3 @@
+FOREGROUND 1791790665.031828 1057 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791790667.1488209 34364 none test_deckbuilder_screen
+FOREGROUND 1791790668.233743 34374 none edopro_next_shell

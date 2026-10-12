@@ -1,0 +1,11 @@
+Date: 2026-10-12.
+PR #50 merged with owner approval at af334154073cea5ebe7292c3d584b743ae68499b.
+Both clean feature branches integrated that default head; no feature implementation changes.
+Batch 28 CMake conflict resolved by retaining both original test registrations.
+Missing Homebrew Qt: configure exits 1 retained separately for both branches.
+Initial helper replaced periods while sanitizing output; that helper was corrected. A correct rerun of the same missing-Qt configure failure is retained.
+The aqt help command was queried before its pip installation completed (exit 127); installation and subsequent help succeeded.
+An isolated official Qt 6.8.3 package configured both branches but linking failed because its AGL framework dependency is absent from installed Apple SDKs. No package/project shim or ignored linker error was used. Failed build logs are retained. macOS Qt 6.8.3 runtime was not verified.
+Homebrew qtdeclarative and qtshadertools, with their Qt dependencies, were installed at 6.11.2 for the final fresh local builds. Final prefix: /opt/homebrew; final ignored build directory: ui/build/integration-qt6112.
+Both offscreen test processes and smoke shells exited/reaped before native runs. Native foreground ownership was monitored independently.
+Thread status API was unavailable; clean worktree/head checks and process inspection were used. No other Worker code was edited or discarded.

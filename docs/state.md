@@ -26,6 +26,11 @@ not started, M5 (duel field) deliberately last; **M6** (platform and input)
 has local Windows and macOS builds evidenced, with Windows and macOS CI,
 controller navigation, Steam Deck and accessibility still open.
 
+Shell startup and Theme resolve installed proportional/monospace families;
+strict real-shell offscreen smoke is clean on the recorded macOS and Linux
+configurations. See [platform fonts](architecture/platform-fonts.md). This
+does not establish Windows runtime or complete language-glyph coverage.
+
 ## Owner decisions
 
 - **Qt 6/QML, no Rust between the UI and the engine** (ADR 0001).
@@ -39,12 +44,19 @@ controller navigation, Steam Deck and accessibility still open.
   selected this approach on 2026-10-08.
 - **Use the framework's batch workflow.** The current release pin is in
   `agents/framework.json`. Merge rule: owner-approves (declared in `AGENTS.md`).
+- **Plan for two active Builders where useful independent work exists.**
+  Separate ownership, prompts together, shared integration decisions with
+  Brain. Reviews, approvals and planning-document merges block only genuine
+  dependencies. Measure useful progress and reduced owner effort, not usage.
 
 ## Scorecard
 
 Every two weeks, Brain adds one line: dates, product progress, prompts the
 owner relayed, and batches that only fixed an earlier batch. First line due
-2026-10-20.
+2026-10-20. Record accepted user-visible outcomes, owner relays and time spent
+coordinating, and corrective batches; distinguish implementation time from
+review/approval wait. Compare parallel work against those outcomes before
+increasing concurrency.
 
 ## Not proven, and must not be claimed
 
@@ -98,9 +110,11 @@ than upstream's push cascade, and never reclassifying an opened `.ydk`
 - Round-by-round history (pre-3.0.0): [`state-history.md`](state-history.md).
   3.x rounds: [`docs/rounds/`](rounds/); batches since 4.0: [`docs/batches/`](batches/).
 - Windows/MSVC build detail: [`agents/local/windows-notes.md`](agents/local/windows-notes.md).
-- **Recommended next slice**: M3's native deck-builder keyboard navigation,
-  followed by the legacy sigil search grammar, descriptive effect labels and artwork.
-  Still not the duel field.
+- **Independent M3 tracks**: native deck-builder keyboard navigation and
+  card-code lookup in the existing search box. Ownership and genuine
+  dependencies: [`planning/parallel-workers.md`](planning/parallel-workers.md).
+  Full sigil grammar, descriptive effect labels and artwork remain later work;
+  the duel field remains last.
 
 ## Historical anchors
 

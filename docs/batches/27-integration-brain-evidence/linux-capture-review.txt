@@ -1,0 +1,9 @@
+ARTIFACT ui-screenshots
+CI RUN 38216318162
+COMMAND gh run download 38216318162 --name ui-screenshots --dir <temporary-directory>
+DOWNLOAD EXIT 0
+Brain inspected these original Linux Qt 6.8.3 captures:
+896-effects-lower.png SHA256 5bd2fecc9c142c0b29d6583ea40308c5113dc13520c3de9670a2b27884ea3b05
+1064-effects-lower.png SHA256 b4902e9dd26d7951704808561d1a645515c254725c8741bb2a5fb0d651f45f1c
+Visible lower Effects focus/bounds at both harness sizes.
+Only named states inspected; this is Linux offscreen evidence, not native input or broad visual parity.

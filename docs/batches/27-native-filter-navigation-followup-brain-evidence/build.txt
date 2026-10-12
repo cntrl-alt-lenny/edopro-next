@@ -1,0 +1,5 @@
+SOURCE f96ac2354f255b0d830b1219e316a14b458e6ea2
+COMMAND cmake --build ui/build
+ninja: no work to do.
+
+EXIT 0

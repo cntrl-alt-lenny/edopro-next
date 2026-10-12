@@ -1,0 +1,12 @@
+SOURCE fbbfcacba9f2221dd0bc9067261423916a2bc69c
+COMMAND QT_QPA_PLATFORM=offscreen EDOPRO_FOCUS_CAPTURES=<temporary-directory> ui/build/tests/fonts/test_platform_fonts realShellTypography
+********* Start testing of PlatformFontTest *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : PlatformFontTest::initTestCase()
+PASS   : PlatformFontTest::realShellTypography(minimum)
+PASS   : PlatformFontTest::realShellTypography(default)
+PASS   : PlatformFontTest::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 861ms
+********* Finished testing of PlatformFontTest *********
+
+EXIT 0

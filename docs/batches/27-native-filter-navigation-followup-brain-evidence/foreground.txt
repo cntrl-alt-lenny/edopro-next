@@ -1,0 +1,13 @@
+SOURCE f96ac2354f255b0d830b1219e316a14b458e6ea2
+COMMAND foreground monitor compiled from the committed follow-up foreground.swift; see README.md
+FOREGROUND 1791553757.720922 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791553758.464779 19264 none test_deckbuilder_screen
+FOREGROUND 1791553761.762568 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791553762.570132 19278 none test_deckbuilder_screen
+FOREGROUND 1791553765.500752 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791553766.344339 19300 none test_deckbuilder_screen
+FOREGROUND 1791553769.230695 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791553769.894639 19305 none test_deckbuilder_screen
+FOREGROUND 1791553772.848678 -1 none none
+FOREGROUND 1791553772.8598552 3159 com.anthropic.claudefordesktop Claude
+FOREGROUND 1791553773.450366 19314 none test_deckbuilder_screen

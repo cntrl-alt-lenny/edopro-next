@@ -1,0 +1,6 @@
+SOURCE fbbfcacba9f2221dd0bc9067261423916a2bc69c
+COMMAND QT_QPA_PLATFORM=offscreen ui/build/edopro_next_shell, independently assert 20-second survival and empty stderr, then terminate/reap
+SURVIVAL ASSERTION EXIT 0 (normalized status 124)
+EMPTY STDERR ASSERTION EXIT 0
+STDERR BYTES 0
+WRAPPER EXIT 0
