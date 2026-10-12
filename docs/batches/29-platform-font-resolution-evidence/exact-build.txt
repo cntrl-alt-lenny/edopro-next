@@ -1,0 +1,33 @@
+[1/50] Automatic MOC and UIC for target test_platform_fonts
+[2/49] Running AUTOMOC file extraction for target test_platform_fonts
+[3/45] Automatic MOC and UIC for target edopro_next_shell
+[4/45] Running AUTOMOC file extraction for target edopro_next_shell
+[5/45] Running moc --collect-json for target edopro_next_shell
+[6/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/card_entry.cpp.o
+[7/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/search_filters.cpp.o
+[8/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/appcontext.cpp.o
+[9/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/card_catalog.cpp.o
+[10/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.qt/rcc/qrc_qmake_EdoproNext.cpp.o
+[11/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/platform_fonts.cpp.o
+[12/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/deck_section_model.cpp.o
+[13/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/search_results_model.cpp.o
+[14/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/deck_controller.cpp.o
+[15/33] Building CXX object CMakeFiles/edopro_next_shell.dir/edopro_next_shell_autogen/mocs_compilation.cpp.o
+[16/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/main.cpp.o
+[17/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/ruleset.cpp.o
+[18/33] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/banlist_store.cpp.o
+[19/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qmlcache_loader.cpp.o
+[20/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp.o
+[21/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp.o
+[22/33] Building CXX object CMakeFiles/edopro_next_shell.dir/edopro_next_shell_qmltyperegistrations.cpp.o
+[23/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.qt/rcc/qrc_edopro_next_shell_raw_qml_0.cpp.o
+[24/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp.o
+[25/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp.o
+[26/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp.o
+[27/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp.o
+[28/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp.o
+[29/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp.o
+[30/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp.o
+[31/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp.o
+[32/33] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.o
+[33/33] Linking CXX executable edopro_next_shell
