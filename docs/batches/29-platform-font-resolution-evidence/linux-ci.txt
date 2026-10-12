@@ -1,0 +1,281 @@
+Qt 6 shell (Linux)	Configure	﻿2026-10-09T13:33:51.0854934Z ##[group]Run cmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DEDOPRO_NEXT_UI_TESTS=ON
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0855654Z ^[[36;1mcmake -S ui -B ui/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DEDOPRO_NEXT_UI_TESTS=ON^[[0m
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0921919Z shell: /usr/bin/bash -e {0}
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0922184Z env:
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0922465Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0923136Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/pkgconfig
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0923792Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0924195Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0924578Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0925132Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0925694Z   QT_ROOT_DIR: [runner]/work/edopro-next/Qt/6.8.3/gcc_64
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0926147Z   QT_PLUGIN_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/plugins
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0926604Z   QML2_IMPORT_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/qml
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.0926972Z ##[endgroup]
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.6684527Z -- The CXX compiler identification is GNU 13.3.0
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.6925787Z -- Detecting CXX compiler ABI info
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.7925434Z -- Detecting CXX compiler ABI info - done
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.8094467Z -- Check for working CXX compiler: /usr/bin/c++ - skipped
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.8101718Z -- Detecting CXX compile features
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.8112609Z -- Detecting CXX compile features - done
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.8495615Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.9512788Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.9529355Z -- Found Threads: TRUE
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:51.9615294Z -- Performing Test HAVE_STDATOMIC
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.1281263Z -- Performing Test HAVE_STDATOMIC - Success
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.1290852Z -- Found WrapAtomic: TRUE
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.1614944Z -- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.1627048Z -- Found WrapOpenGL: TRUE
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.2025683Z -- Found XKB: /usr/lib/x86_64-linux-gnu/libxkbcommon.so (found suitable version "1.6.0", minimum required is "0.5.0")
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.2127814Z -- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.3584063Z -- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4428124Z -- Found SQLite3: /usr/include (found version "3.45.1")
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4710050Z CMake Warning (dev) at [runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:3409 (message):
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4711527Z   Qt policy QTP0004 is not set: You need qmldir files for each extra
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4712320Z   directory that contains .qml files for your module.  Check
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4713127Z   https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details.
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4714039Z   Use the qt_policy command to set the policy and suppress this warning.
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4714536Z 
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4714719Z Call Stack (most recent call first):
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4715639Z   [runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:3520 (__qt_internal_setup_policy)
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4716947Z   [runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:916 (qt6_target_qml_sources)
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4718202Z   [runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:1254 (qt6_add_qml_module)
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4719108Z   CMakeLists.txt:133 (qt_add_qml_module)
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4719751Z This warning is for project developers.  Use -Wno-dev to suppress it.
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.4720241Z 
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.7067786Z -- Configuring done (1.2s)
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.8241637Z -- Generating done (0.1s)
+Qt 6 shell (Linux)	Configure	2026-10-09T13:33:52.8250358Z -- Build files have been written to: [worktree]/ui/build
+Qt 6 shell (Linux)	Build	﻿2026-10-09T13:33:52.8426924Z ##[group]Run cmake --build ui/build --parallel
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8427612Z ^[[36;1mcmake --build ui/build --parallel^[[0m
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8498660Z shell: /usr/bin/bash -e {0}
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8498939Z env:
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8499223Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8499908Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/pkgconfig
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8500551Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8501218Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8501663Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8502240Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8502834Z   QT_ROOT_DIR: [runner]/work/edopro-next/Qt/6.8.3/gcc_64
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8503264Z   QT_PLUGIN_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/plugins
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8503754Z   QML2_IMPORT_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/qml
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8504109Z ##[endgroup]
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8756904Z [1/130] Copying edopro_next_shell qml resources into build dir
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8811891Z [2/130] Copying edopro_next_shell qml sources into build dir
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8812878Z [3/130] Copying test_deckbuilder_screen qml sources into build dir
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8900087Z [4/130] Copying test_deckbuilder_screen qml resources into build dir
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8922089Z [5/130] Copying test_platform_fonts qml resources into build dir
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8961984Z [6/130] Copying test_platform_fonts qml sources into build dir
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8993203Z [7/130] Automatic MOC and UIC for target edopro_next_data
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.8994523Z [8/130] Automatic MOC and UIC for target edopro_next_deck
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.9125067Z [9/130] Building CXX object data/CMakeFiles/edopro_next_data.dir/edopro_next_data_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.9176671Z [10/130] Building CXX object data/CMakeFiles/edopro_next_deck.dir/edopro_next_deck_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:52.9920591Z [11/130] Running qmlimportscanner for test_platform_fonts
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:53.0048524Z [12/130] Running qmlimportscanner for edopro_next_shell
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:54.2558139Z [13/130] Building CXX object data/CMakeFiles/edopro_next_deck.dir/src/ydk.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:54.8059784Z [14/130] Building CXX object data/CMakeFiles/edopro_next_data.dir/src/card_database.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.0497232Z [15/130] Linking CXX static library data/libedopro_next_deck.a
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.0505605Z [16/130] Linking CXX static library data/libedopro_next_data.a
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.0656775Z [17/130] Automatic MOC and UIC for target edopro_next_search
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.0712483Z [18/130] Automatic MOC and UIC for target edopro_next_legality
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.0902431Z [19/130] Building CXX object data/CMakeFiles/edopro_next_search.dir/edopro_next_search_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.1022451Z [20/130] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/edopro_next_legality_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:55.9582387Z [21/130] Building CXX object data/CMakeFiles/edopro_next_search.dir/src/text_normalize.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:56.0162468Z [22/130] Building CXX object data/CMakeFiles/edopro_next_search.dir/src/numeric_filter_text.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:56.3892558Z [23/130] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/deck_placement.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:56.5617460Z [24/130] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/deck_validation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:56.9705730Z [25/130] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/deck_search_filter.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:57.3617641Z [26/130] Building CXX object policy/CMakeFiles/edopro_next_legality.dir/src/lf_list.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:57.4423726Z [27/130] Linking CXX static library policy/libedopro_next_legality.a
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:57.5290198Z [28/130] Building CXX object data/CMakeFiles/edopro_next_search.dir/src/card_search_index.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:33:57.6072516Z [29/130] Linking CXX static library data/libedopro_next_search.a
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.7202262Z [30/130] Automatic MOC and UIC for target edopro_next_shell
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.7332823Z [31/130] Running AUTOMOC file extraction for target edopro_next_shell
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.7353950Z [32/130] Running rcc for resource qmake_EdoproNext
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.7432796Z [33/130] Generating .rcc/qmlcache/edopro_next_shell_qmlcache_loader.cpp
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.7504816Z [34/130] Running moc --collect-json for target edopro_next_shell
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.7892028Z [35/130] Automatic MOC and UIC for target test_deckbuilder
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.8312193Z [36/130] Automatic QML type registration for target edopro_next_shell
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.8492058Z [37/130] Running rcc for resource edopro_next_shell_raw_qml_0
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:00.9532706Z [38/130] Generating .rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.0966150Z [39/130] Generating .rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.1146491Z [40/130] Generating .rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.2051529Z [41/130] Generating .rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.2790107Z [42/130] Generating .rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.3462429Z [43/130] Automatic MOC and UIC for target test_deckbuilder_screen
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.3512235Z [44/130] Running AUTOMOC file extraction for target test_deckbuilder_screen
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.3582029Z [45/130] Running moc --collect-json for target test_deckbuilder_screen
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.3752888Z [46/130] Generating .rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.3772442Z [47/130] Generating .rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.4561852Z [48/130] Generating .rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.5104537Z [49/130] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.5372923Z [50/130] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.5492146Z [51/130] Running rcc for resource qmake_EdoproNext
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.6382362Z [52/130] Automatic QML type registration for target test_deckbuilder_screen
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.6822410Z [53/130] Running rcc for resource test_deckbuilder_screen_raw_qml_0
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.8282287Z [54/130] Automatic MOC and UIC for target test_platform_fonts
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.8341914Z [55/130] Running AUTOMOC file extraction for target test_platform_fonts
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.8401840Z [56/130] Running moc --collect-json for target test_platform_fonts
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.9091991Z [57/130] Automatic QML type registration for target test_platform_fonts
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:01.9231870Z [58/130] Running rcc for resource qmake_EdoproNext
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:02.0023154Z [59/130] Generating .rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp, .rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.aotstats
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:02.1042277Z [60/130] Running rcc for resource test_platform_fonts_raw_qml_0
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:05.1692340Z [61/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/platform_fonts.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:05.4369706Z [62/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/card_entry.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:07.2002416Z [63/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/card_catalog.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:07.3413321Z [64/130] Building CXX object CMakeFiles/edopro_next_shell.dir/edopro_next_shell_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:07.7892523Z [65/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/test_deckbuilder_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:08.9992262Z [66/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/appcontext.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:10.1522334Z [67/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/card_entry.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:12.3332374Z [68/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/card_catalog.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:13.1162341Z [69/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/main.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:13.2882381Z [70/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/test_deckbuilder.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:13.9475627Z [71/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/search_filters.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:14.3012557Z [72/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/deck_section_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:14.3642545Z [73/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.qt/rcc/qrc_qmake_EdoproNext.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:15.0542475Z [74/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/search_results_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:16.4782592Z [75/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/ruleset.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:17.1192540Z [76/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/banlist_store.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:19.5259682Z [77/130] Building CXX object CMakeFiles/edopro_next_shell.dir/edopro_next_shell_qmltyperegistrations.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:19.5422577Z [78/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qmlcache_loader.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:19.7922441Z [79/130] Building CXX object CMakeFiles/edopro_next_shell.dir/src/deckbuilder/deck_controller.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:20.0362525Z [80/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/Main_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:21.6092638Z [81/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/Theme_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:22.8022894Z [82/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/NavRail_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:24.2441562Z [83/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/SectionHeading_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:24.6562673Z [84/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/DeckSectionList_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:25.1902930Z [85/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/StatusRow_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:25.2932723Z [86/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.qt/rcc/qrc_edopro_next_shell_raw_qml_0.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:25.7642766Z [87/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/NavButton_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:28.8904178Z [88/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/NotImplementedScreen_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:29.6392747Z [89/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/HomeScreen_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:29.9525530Z [90/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/components/CardPreview_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:30.2382482Z [91/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/search_filters.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:32.0292446Z [92/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/search_results_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:33.4026983Z [93/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/ruleset.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:33.5721848Z [94/130] Building CXX object CMakeFiles/edopro_next_shell.dir/build/.rcc/qmlcache/edopro_next_shell_qml/screens/DeckBuilderScreen_qml.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:33.7742421Z [95/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/deck_section_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:34.5256055Z [96/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/banlist_store.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:34.6082643Z [97/130] Building CXX object tests/CMakeFiles/test_deckbuilder.dir/__/src/deckbuilder/deck_controller.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:37.5482887Z [98/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/card_entry.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:37.5542782Z [99/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:37.6973303Z [100/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/platform_fonts.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:40.0413161Z [101/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/card_catalog.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:41.2192965Z [102/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/search_results_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:41.5622608Z [103/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/search_filters.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:42.5332619Z [104/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/deck_section_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:42.5922445Z [105/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/.qt/rcc/qrc_qmake_EdoproNext.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:42.7572698Z [106/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/.qt/rcc/qrc_test_deckbuilder_screen_raw_qml_0.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:43.3772650Z [107/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/ruleset.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:43.9481538Z [108/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/deck_controller.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:44.4682507Z [109/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/__/src/deckbuilder/banlist_store.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:47.5029525Z [110/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/card_entry.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:47.9108995Z [111/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/platform_fonts.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:47.9704559Z [112/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:48.7539763Z [113/130] Building CXX object tests/CMakeFiles/test_deckbuilder_screen.dir/test_deckbuilder_screen_qmltyperegistrations.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:50.2262883Z [114/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/test_platform_fonts_autogen/mocs_compilation.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:51.6022710Z [115/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/card_catalog.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:52.5152565Z [116/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/search_filters.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:53.8796991Z [117/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/search_results_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:54.1282519Z [118/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/deck_section_model.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:54.7092789Z [119/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/ruleset.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:54.7722504Z [120/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/.qt/rcc/qrc_qmake_EdoproNext.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:54.9762794Z [121/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/.qt/rcc/qrc_test_platform_fonts_raw_qml_0.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:55.5592716Z [122/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/test_platform_fonts.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:55.7752998Z [123/130] Linking CXX executable tests/test_deckbuilder
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:55.9292187Z [124/130] Linking CXX executable edopro_next_shell
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:56.3217000Z [125/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/banlist_store.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:56.3242448Z [126/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/deckbuilder/deck_controller.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:56.5022035Z [127/130] Linking CXX executable tests/test_deckbuilder_screen
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:57.0383343Z [128/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/__/__/src/appcontext.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:58.0880807Z [129/130] Building CXX object tests/fonts/CMakeFiles/test_platform_fonts.dir/test_platform_fonts_qmltyperegistrations.cpp.o
+Qt 6 shell (Linux)	Build	2026-10-09T13:34:58.4359348Z [130/130] Linking CXX executable tests/fonts/test_platform_fonts
+Qt 6 shell (Linux)	Deck builder adapter unit tests	﻿2026-10-09T13:34:58.4436519Z ##[group]Run mkdir -p "$EDOPRO_FOCUS_CAPTURES"
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4436928Z ^[[36;1mmkdir -p "$EDOPRO_FOCUS_CAPTURES"^[[0m
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4437278Z ^[[36;1mctest --test-dir ui/build --output-on-failure^[[0m
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4500449Z shell: /usr/bin/bash -e {0}
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4500712Z env:
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4501281Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4502090Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/pkgconfig
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4502770Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4503154Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4503558Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4504135Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4504711Z   QT_ROOT_DIR: [runner]/work/edopro-next/Qt/6.8.3/gcc_64
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4505157Z   QT_PLUGIN_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/plugins
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4505604Z   QML2_IMPORT_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/qml
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4506039Z   EDOPRO_FOCUS_CAPTURES: [runner-temp]/ui-screenshots
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:58.4506379Z ##[endgroup]
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:59.0535906Z Internal ctest changing into directory: [worktree]/ui/build
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:59.1385834Z Test project [worktree]/ui/build
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:59.2440206Z     Start 1: deckbuilder
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:59.7178337Z 1/3 Test #1: deckbuilder ......................   Passed    0.47 sec
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:34:59.7284978Z     Start 2: deckbuilder_screen
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:07.6429749Z 2/3 Test #2: deckbuilder_screen ...............   Passed    7.91 sec
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:07.6432225Z     Start 3: platform_fonts
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:08.4398458Z 3/3 Test #3: platform_fonts ...................   Passed    0.80 sec
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:08.4402107Z 
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:08.4402345Z 100% tests passed, 0 tests failed out of 3
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:08.4402703Z 
+Qt 6 shell (Linux)	Deck builder adapter unit tests	2026-10-09T13:35:08.4402898Z Total Test time (real) =   9.30 sec
+Qt 6 shell (Linux)	Keep the screen test's screenshots	﻿2026-10-09T13:35:08.6006896Z ##[group]Run actions/upload-artifact@v4
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6007214Z with:
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6007415Z   name: ui-screenshots
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6007672Z   path: [runner-temp]/ui-screenshots
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6007984Z   if-no-files-found: warn
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6008225Z   compression-level: 6
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6008441Z   overwrite: false
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6008657Z   include-hidden-files: false
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6008891Z env:
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6009147Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6009788Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/pkgconfig
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6010430Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6010813Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6011524Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6012070Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6012658Z   QT_ROOT_DIR: [runner]/work/edopro-next/Qt/6.8.3/gcc_64
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6013073Z   QT_PLUGIN_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/plugins
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6013528Z   QML2_IMPORT_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/qml
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.6013884Z ##[endgroup]
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.7659090Z (node:4628) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.7660442Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.7755062Z With the provided path, there will be 10 files uploaded
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.7755913Z Artifact name is valid!
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:08.7756199Z Root directory input is valid!
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.1298096Z Beginning upload of artifact content to blob storage
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.1922914Z (node:4628) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.6300481Z Uploaded bytes 816746
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.6886958Z Finished uploading artifact content to blob storage!
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.6888160Z SHA256 digest of uploaded artifact zip is 788915f3a8f2ab1c3fa08d620dd272eecd1f765c6e5c78f89efc68f927c40762
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.6890035Z Finalizing artifact upload
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.9490660Z Artifact ui-screenshots.zip successfully finalized. Artifact ID 11618234872
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.9492278Z Artifact ui-screenshots has been successfully uploaded! Final size is 816746 bytes. Artifact ID is 11618234872
+Qt 6 shell (Linux)	Keep the screen test's screenshots	2026-10-09T13:35:09.9498249Z Artifact download URL: https://github.com/cntrl-alt-lenny/edopro-next/actions/runs/37937649254/artifacts/11618234872
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	﻿2026-10-09T13:35:09.9627083Z ##[group]Run set -u
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9627378Z ^[[36;1mset -u^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9627773Z ^[[36;1mQT_QPA_PLATFORM=offscreen timeout 20 ./ui/build/edopro_next_shell \^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9628317Z ^[[36;1m  > qml-stdout.log 2> qml-stderr.log && status=0 || status=$?^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9628699Z ^[[36;1mif [ "$status" -ne 124 ]; then^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9629169Z ^[[36;1m  echo "::error::shell exited early with status $status; expected it to still be running"^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9629638Z ^[[36;1m  cat qml-stderr.log^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9629886Z ^[[36;1m  exit 1^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9630093Z ^[[36;1mfi^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9630308Z ^[[36;1mif [ -s qml-stderr.log ]; then^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9630673Z ^[[36;1m  echo "::error::QML produced diagnostics on startup:"^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9631280Z ^[[36;1m  cat qml-stderr.log^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9631559Z ^[[36;1m  exit 1^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9631767Z ^[[36;1mfi^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9632065Z ^[[36;1mecho "shell ran for the full timeout with no QML diagnostics"^[[0m
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9694880Z shell: /usr/bin/bash -e {0}
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9695140Z env:
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9695415Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9696083Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib/pkgconfig
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9696749Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9697154Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9697540Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9698107Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib:[runner]/work/edopro-next/Qt/6.8.3/gcc_64/lib
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9698698Z   QT_ROOT_DIR: [runner]/work/edopro-next/Qt/6.8.3/gcc_64
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9699125Z   QT_PLUGIN_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/plugins
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9699594Z   QML2_IMPORT_PATH: [runner]/work/edopro-next/Qt/6.8.3/gcc_64/qml
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:09.9699961Z ##[endgroup]
+Qt 6 shell (Linux)	Launch offscreen and require a clean QML load	2026-10-09T13:35:29.9844359Z shell ran for the full timeout with no QML diagnostics

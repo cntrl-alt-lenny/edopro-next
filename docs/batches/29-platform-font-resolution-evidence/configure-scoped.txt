@@ -1,0 +1,29 @@
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+CMake Warning (author) at [Homebrew]/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:3565 (message):
+  Qt policy QTP0004 is not set: You need qmldir files for each extra
+  directory that contains .qml files for your module.  Check
+  https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details.
+  Use the qt_policy command to set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  [Homebrew]/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:4013 (__qt_internal_setup_policy)
+  [Homebrew]/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:1035 (qt6_target_qml_sources)
+  [Homebrew]/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:1507 (qt6_add_qml_module)
+  CMakeLists.txt:133 (qt_add_qml_module)
+This warning is for project developers.  Use -Wno-author to suppress it.
+
+CMake Error at [Homebrew]/lib/cmake/Qt6Core/Qt6CoreMacros.cmake:1953 (message):
+  The source file
+  '[worktree]/ui/tests/fonts/../../qml/Theme.qml'
+  was specified with an absolute path and is used in a Qt resource.  Please
+  set the QT_RESOURCE_ALIAS property on that source file to a relative path
+  to make the file properly accessible via the resource system.
+Call Stack (most recent call first):
+  [Homebrew]/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:3611 (__qt_get_relative_resource_path_for_file)
+  [Homebrew]/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:1035 (qt6_target_qml_sources)
+  [Homebrew]/lib/cmake/Qt6Qml/Qt6QmlMacros.cmake:1507 (qt6_add_qml_module)
+  tests/fonts/CMakeLists.txt:4 (qt_add_qml_module)
+
+
+-- Configuring incomplete, errors occurred!
