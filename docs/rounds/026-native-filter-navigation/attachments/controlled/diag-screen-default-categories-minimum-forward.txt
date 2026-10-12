@@ -1,0 +1,118 @@
+Disposable diagnostic; production QML unchanged.
+host=screen policy=default isolated=categories row=minimum-forward
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) qt.qpa.fonts: Populating font family aliases took 180 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG initial policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG isolated popup seed; main end-to-end path not tested
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoriesDone bounds 324,352 100x40 viewport 28,56 396x336
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1111)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1156)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 3548ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 1

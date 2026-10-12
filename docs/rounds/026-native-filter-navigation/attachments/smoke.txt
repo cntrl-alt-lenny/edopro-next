@@ -1,0 +1,7 @@
+Python subprocess timeout=20 adaptation of CI timeout 20.
+Survival assertion: PASS (still running after 20 seconds)
+Empty-stderr assertion: FAIL
+Literal stderr:
+qt.qpa.fonts: Populating font family aliases took 108 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost.\x20
+
+terminated process returncode: -15

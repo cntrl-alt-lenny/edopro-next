@@ -1,0 +1,17 @@
+instrumented: ui/src/main.cpp
+instrumented: ui/tests/CMakeLists.txt
+instrumented: ui/tests/test_deckbuilder_screen.cpp
+All other copied production/test bytes equal seat sources. Main.qml, DeckBuilderScreen.qml and all other production QML unchanged.
+ui/qml/Main.qml sha256 569473289cd07fb1910e7c87c80549086772922a73c396ee7737243f495f51d5
+ui/qml/Theme.qml sha256 a607187aec08f268fc409e6b606b4736fe5417bf42901b76583c2e0b94157870
+ui/qml/components/CardPreview.qml sha256 ec2ca613cf2aee9c8fe29aacd02af379bdaec2181bd9820630e1ee5e55a971b7
+ui/qml/components/DeckSectionList.qml sha256 1bcabb2e32631908b906c52d3fba5daee9272a43a3f532a72493cab3b85ecfd4
+ui/qml/components/NavButton.qml sha256 01adb1390d19d688e7cf467a18b5e9476a717e9ee90a298c172c9831e761223d
+ui/qml/components/NavRail.qml sha256 5dd17206c7c688e081eb1702280cdc586982bf6e8f99fa3a8910e549b34b8c61
+ui/qml/components/SectionHeading.qml sha256 c1d1ceeb07e83bf7d862f2db06532ea9527eba0c69f46e262f89de93d6312292
+ui/qml/components/StatusRow.qml sha256 3f9141566ca6815d87a5d22b7b6f2fc3230c21ab6bbd874b0923ea790950c44c
+ui/qml/screens/DeckBuilderScreen.qml sha256 f75c0f766db84dae6b5c9515163b20bf65eb54e2a7357b56ff8ad6f38d7a4bfa
+ui/qml/screens/HomeScreen.qml sha256 c6170ff79b7bd2bfd26e8e4ad0823ed45b69af57017cd1adfccf028901c96d4a
+ui/qml/screens/NotImplementedScreen.qml sha256 94023196f1934193bde00f66582894b37f03fd6876d2fc65e726398eeee0b029
+Added focus_observer.h in disposable source, copied from attachment.
+No tracked production or existing test file changed.

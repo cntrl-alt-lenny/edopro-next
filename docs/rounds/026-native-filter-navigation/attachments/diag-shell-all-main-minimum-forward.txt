@@ -1,0 +1,55 @@
+Disposable diagnostic, production QML unchanged.
+host=shell policy=all isolated=main row=minimum-forward
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) qt.qpa.fonts: Populating font family aliases took 85 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG initial policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab filtersToggle bounds 232,96 135x40 viewport 232,16 228x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab clearFiltersButton bounds 277,96 100x40 viewport 119,16 258x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab cardTypeCombo bounds 229,148 126x40 viewport 104,148 261x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab subTypeCombo bounds 213,192 128x40 viewport 87,148 264x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attributeCombo bounds 209,236 129x40 viewport 83,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab raceCombo bounds 207,280 129x40 viewport 81,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab limitationCombo bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab nonOfficialCheck bounds 80,316 255x44 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab categoriesButton bounds 80,320 118x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab linkMarkersButton bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck0 bounds 92,80 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck1 bounds 293,80 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck2 bounds 92,125 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck3 bounds 293,125 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck4 bounds 92,170 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck5 bounds 293,170 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck6 bounds 92,215 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck7 bounds 293,215 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck8 bounds 92,260 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck9 bounds 293,260 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck10 bounds 92,304 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck11 bounds 293,304 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck12 bounds 92,304 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck13 bounds 293,304 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck14 bounds 92,304 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck15 bounds 293,304 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck16 bounds 92,304 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck17 bounds 293,304 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck18 bounds 92,304 196x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck19 bounds 293,304 195x40 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories Tab categoryCheck20 bounds 92,300 196x44 viewport 92,80 396x264
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG null focus; missing QList("categoryCheck22", "categoryCheck23", "categoryCheck25", "categoryCheck29", "categoryCheck28", "categoryCheck31", "categoryCheck27", "categoriesDone", "categoryCheck30", "categoryCheck21", "categoryCheck26", "categoryCheck24")
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'active' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1087)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1156)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 1881ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 1

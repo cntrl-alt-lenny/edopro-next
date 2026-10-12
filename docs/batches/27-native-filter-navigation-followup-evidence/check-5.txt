@@ -1,0 +1,5 @@
+SOURCE 4d1a7e2c30965e31ee85d2e550a48f5480fa02a0
+COMMAND python3.13 tools/generate_readme_status.py --check
+README status block is up to date
+
+EXIT 0

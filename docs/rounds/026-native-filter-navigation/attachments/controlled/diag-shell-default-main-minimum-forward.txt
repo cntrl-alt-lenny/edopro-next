@@ -1,0 +1,117 @@
+Disposable diagnostic; production QML unchanged.
+host=shell policy=default isolated=main row=minimum-forward
+********* Start testing of TestDeckBuilderScreen *********
+Config: Using QtTest library 6.11.1, Qt 6.11.1 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 21.0.0 (clang-2100.0.123.102)), macos 27.0.1
+PASS   : TestDeckBuilderScreen::initTestCase()
+QWARN  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) qt.qpa.fonts: Populating font family aliases took 92 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG initial policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 355,320 118x40 viewport 232,148 251x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 355,320 118x40 viewport 232,148 251x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 318,320 118x40 viewport 195,148 251x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 286,320 118x40 viewport 163,148 251x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 119,44 258x40 viewport 119,16 258x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 244,188 123x40 viewport 119,148 258x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 229,232 126x40 viewport 104,148 261x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 219,276 128x40 viewport 94,148 263x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 213,320 128x40 viewport 87,148 264x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 83,44 265x40 viewport 83,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 207,188 129x40 viewport 81,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 207,232 129x40 viewport 81,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab attackField bounds 206,188 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab defenseField bounds 206,232 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab levelField bounds 206,276 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab scaleField bounds 206,320 129x40 viewport 80,148 265x212
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main Tab searchField bounds 80,44 265x40 viewport 80,16 265x568
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'reached == expected' returned FALSE. (main missing: attributeCombo, cardTypeCombo, categoriesButton, clearFiltersButton, filtersToggle, limitationCombo, linkMarkersButton, nonOfficialCheck, raceCombo, subTypeCombo)
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1111)]
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+   Loc: [<seat-checkout>/ui/build/diagnostic-source-v2/ui/tests/test_deckbuilder_screen.cpp(1125)]
+PASS   : TestDeckBuilderScreen::cleanupTestCase()
+Totals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 2970ms
+********* Finished testing of TestDeckBuilderScreen *********
+
+exit: 1

@@ -1,0 +1,693 @@
+qt.qpa.fonts: Populating font family aliases took 58 ms. Replace uses of missing font family "Inter, Segoe UI, Noto Sans, DejaVu Sans, Sans-serif" with one that exists to avoid this cost.\x20
+DIAG runtime Qt 6.11.1 platform "cocoa" style "Basic" active true size QSize(960, 600) policy Qt::TabFocusBehavior(3)
+DIAG focus "cardTypeCombo" FilterCombo bounds QRectF(191,144 138x40) viewport QRectF(80,144 259x216) visible true reason QVariant(Qt::FocusReason, Qt::MouseFocusReason)
+DIAG focus "cardTypeCombo" FilterCombo bounds QRectF(191,144 138x40) viewport QRectF(80,144 259x216) visible true reason QVariant(Qt::FocusReason, Qt::MouseFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777237 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777220 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "searchField" TextField_QMLTYPE_34 bounds QRectF(80,40 262x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::MouseFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "filtersToggle" Button_QMLTYPE_9 bounds QRectF(80,92 111x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "filtersToggle" Button_QMLTYPE_9 bounds QRectF(80,92 111x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "filtersToggle" Button_QMLTYPE_9 bounds QRectF(80,92 111x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "clearFiltersButton" Button_QMLTYPE_9 bounds QRectF(242,92 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "clearFiltersButton" Button_QMLTYPE_9 bounds QRectF(242,92 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "cardTypeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "cardTypeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "subTypeCombo" FilterCombo bounds QRectF(192,188 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "subTypeCombo" FilterCombo bounds QRectF(192,188 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "attributeCombo" FilterCombo bounds QRectF(192,232 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "attributeCombo" FilterCombo bounds QRectF(192,232 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "raceCombo" FilterCombo bounds QRectF(192,276 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "raceCombo" FilterCombo bounds QRectF(192,276 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "attackField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "attackField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "defenseField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "defenseField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "levelField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "levelField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "scaleField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "scaleField" FilterField bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "limitationCombo" FilterCombo bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "limitationCombo" FilterCombo bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "nonOfficialCheck" FilterCheck bounds QRectF(80,320 252x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "nonOfficialCheck" FilterCheck bounds QRectF(80,320 252x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "resultsList" QQuickListView bounds QRectF(84,376 254x152) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG focus "resultsList" QQuickListView bounds QRectF(84,376 254x152) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "searchField" TextField_QMLTYPE_34 bounds QRectF(80,40 262x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "searchField" TextField_QMLTYPE_34 bounds QRectF(80,40 262x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "resultsList" QQuickListView bounds QRectF(84,376 254x152) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG focus "resultsList" QQuickListView bounds QRectF(84,376 254x152) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "nonOfficialCheck" FilterCheck bounds QRectF(80,276 252x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "nonOfficialCheck" FilterCheck bounds QRectF(80,276 252x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "limitationCombo" FilterCombo bounds QRectF(192,232 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "limitationCombo" FilterCombo bounds QRectF(192,232 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "scaleField" FilterField bounds QRectF(192,188 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "scaleField" FilterField bounds QRectF(192,188 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "levelField" FilterField bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "levelField" FilterField bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "defenseField" FilterField bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "defenseField" FilterField bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "attackField" FilterField bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "attackField" FilterField bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "raceCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "raceCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "attributeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "attributeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "subTypeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "subTypeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "cardTypeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "cardTypeCombo" FilterCombo bounds QRectF(192,144 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "clearFiltersButton" Button_QMLTYPE_9 bounds QRectF(242,92 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "clearFiltersButton" Button_QMLTYPE_9 bounds QRectF(242,92 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "filtersToggle" Button_QMLTYPE_9 bounds QRectF(80,92 111x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "filtersToggle" Button_QMLTYPE_9 bounds QRectF(80,92 111x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "searchField" TextField_QMLTYPE_34 bounds QRectF(80,40 262x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "searchField" TextField_QMLTYPE_34 bounds QRectF(80,40 262x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "resultsList" QQuickListView bounds QRectF(84,376 254x152) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "Popup" QQuickPopupItem bounds QRectF(80,40 420x360) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus null
+DIAG focus null
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::ActiveWindowFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck1" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck1" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck2" FilterCheck_QML_43 bounds QRectF(92,117 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck3" FilterCheck_QML_43 bounds QRectF(293,117 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck4" FilterCheck_QML_43 bounds QRectF(92,162 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck5" FilterCheck_QML_43 bounds QRectF(293,162 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck5" FilterCheck_QML_43 bounds QRectF(293,162 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck6" FilterCheck_QML_43 bounds QRectF(92,207 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck6" FilterCheck_QML_43 bounds QRectF(92,207 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck7" FilterCheck_QML_43 bounds QRectF(293,207 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck8" FilterCheck_QML_43 bounds QRectF(92,252 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck8" FilterCheck_QML_43 bounds QRectF(92,252 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck8" FilterCheck_QML_43 bounds QRectF(92,252 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck9" FilterCheck_QML_43 bounds QRectF(293,252 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck9" FilterCheck_QML_43 bounds QRectF(293,252 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck9" FilterCheck_QML_43 bounds QRectF(293,252 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck10" FilterCheck_QML_43 bounds QRectF(92,297 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck10" FilterCheck_QML_43 bounds QRectF(92,297 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck11" FilterCheck_QML_43 bounds QRectF(293,297 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck11" FilterCheck_QML_43 bounds QRectF(293,297 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck11" FilterCheck_QML_43 bounds QRectF(293,297 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck12" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck12" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck13" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck13" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck14" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck14" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck15" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck16" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck16" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck17" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck17" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck17" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck18" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck18" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck18" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck18" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck19" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck19" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck19" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck20" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck20" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck21" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck21" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck22" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck23" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck23" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck23" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck24" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck25" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck26" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck27" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck28" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck28" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck28" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck29" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck30" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck30" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck30" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck30" FilterCheck_QML_43 bounds QRectF(92,300 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck29" FilterCheck_QML_43 bounds QRectF(293,255 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck29" FilterCheck_QML_43 bounds QRectF(293,255 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck29" FilterCheck_QML_43 bounds QRectF(293,255 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck28" FilterCheck_QML_43 bounds QRectF(92,255 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck27" FilterCheck_QML_43 bounds QRectF(293,210 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck26" FilterCheck_QML_43 bounds QRectF(92,210 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck25" FilterCheck_QML_43 bounds QRectF(293,165 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck24" FilterCheck_QML_43 bounds QRectF(92,165 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck24" FilterCheck_QML_43 bounds QRectF(92,165 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck24" FilterCheck_QML_43 bounds QRectF(92,165 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck24" FilterCheck_QML_43 bounds QRectF(92,165 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck24" FilterCheck_QML_43 bounds QRectF(92,165 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck23" FilterCheck_QML_43 bounds QRectF(293,120 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck22" FilterCheck_QML_43 bounds QRectF(92,120 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck22" FilterCheck_QML_43 bounds QRectF(92,120 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck21" FilterCheck_QML_43 bounds QRectF(293,75 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck20" FilterCheck_QML_43 bounds QRectF(92,75 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck20" FilterCheck_QML_43 bounds QRectF(92,75 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck20" FilterCheck_QML_43 bounds QRectF(92,75 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck19" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck18" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck17" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck17" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck17" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck16" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck16" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck15" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck15" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck15" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck14" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck14" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck14" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck13" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck13" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck12" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck11" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck11" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck10" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck10" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck10" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck10" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck9" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck9" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck8" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck7" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck6" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck5" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck5" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck5" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck4" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck4" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck4" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck3" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck2" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck2" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck1" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck1" FilterCheck_QML_43 bounds QRectF(293,72 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "categoryCheck31" FilterCheck_QML_43 bounds QRectF(293,300 195x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "Main" QQuickRootItem bounds QRectF(0,0 960x600) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "categoriesDone" Button_QMLTYPE_9 bounds QRectF(388,348 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::PopupFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "categoryCheck0" FilterCheck_QML_43 bounds QRectF(92,72 196x40) viewport QRectF(92,72 396x268) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777216 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "Main" QQuickRootItem bounds QRectF(0,0 960x600) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "categoriesButton" Button_QMLTYPE_9 bounds QRectF(80,320 104x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "Popup" QQuickPopupItem bounds QRectF(80,40 256x222) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton1" Button_QMLTYPE_9_QML_45 bounds QRectF(188,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton2" Button_QMLTYPE_9_QML_45 bounds QRectF(233,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton3" Button_QMLTYPE_9_QML_45 bounds QRectF(143,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton4" Button_QMLTYPE_9_QML_45 bounds QRectF(233,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton4" Button_QMLTYPE_9_QML_45 bounds QRectF(233,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton5" Button_QMLTYPE_9_QML_45 bounds QRectF(143,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton5" Button_QMLTYPE_9_QML_45 bounds QRectF(143,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton6" Button_QMLTYPE_9_QML_45 bounds QRectF(188,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton6" Button_QMLTYPE_9_QML_45 bounds QRectF(188,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton7" Button_QMLTYPE_9_QML_45 bounds QRectF(233,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markersDone" Button_QMLTYPE_9 bounds QRectF(224,210 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markersDone" Button_QMLTYPE_9 bounds QRectF(224,210 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777217 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markersDone" Button_QMLTYPE_9 bounds QRectF(224,210 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton7" Button_QMLTYPE_9_QML_45 bounds QRectF(233,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton6" Button_QMLTYPE_9_QML_45 bounds QRectF(188,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton5" Button_QMLTYPE_9_QML_45 bounds QRectF(143,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton5" Button_QMLTYPE_9_QML_45 bounds QRectF(143,162 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton4" Button_QMLTYPE_9_QML_45 bounds QRectF(233,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton4" Button_QMLTYPE_9_QML_45 bounds QRectF(233,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton3" Button_QMLTYPE_9_QML_45 bounds QRectF(143,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton3" Button_QMLTYPE_9_QML_45 bounds QRectF(143,117 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton2" Button_QMLTYPE_9_QML_45 bounds QRectF(233,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton2" Button_QMLTYPE_9_QML_45 bounds QRectF(233,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton1" Button_QMLTYPE_9_QML_45 bounds QRectF(188,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton1" Button_QMLTYPE_9_QML_45 bounds QRectF(188,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777248 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG key-window active true
+DIAG delivered key 16777218 modifiers QFlags<Qt::KeyboardModifier>(ShiftModifier) spontaneous true
+DIAG focus "markersDone" Button_QMLTYPE_9 bounds QRectF(224,210 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::BacktabFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "Main" QQuickRootItem bounds QRectF(0,0 960x600) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG key-window active true
+DIAG delivered key 32 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "markersDone" Button_QMLTYPE_9 bounds QRectF(224,210 100x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::PopupFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG focus "markerButton0" Button_QMLTYPE_9_QML_45 bounds QRectF(143,72 40x40) viewport QRectF(0,0 960x600) visible true reason QVariant(Qt::FocusReason, Qt::TabFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777216 modifiers QFlags<Qt::KeyboardModifier>(NoModifier) spontaneous true
+DIAG focus "Main" QQuickRootItem bounds QRectF(0,0 960x600) viewport QRectF(0,0 960x600) visible true reason QVariant(Invalid)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG focus "linkMarkersButton" Button_QMLTYPE_9 bounds QRectF(192,320 140x40) viewport QRectF(80,144 262x216) visible true reason QVariant(Qt::FocusReason, Qt::OtherFocusReason)
+DIAG key-window active true
+DIAG delivered key 16777249 modifiers QFlags<Qt::KeyboardModifier>(ControlModifier) spontaneous true
+DIAG focus null

@@ -1,0 +1,187 @@
+Sequential repeat without concurrent desktop automation.
+diag-screen-all-categories-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-all-categories-default-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories reached 33 of 33
+diag-screen-all-categories-minimum-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories reached 33 of 33
+diag-screen-all-categories-minimum-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories reached 33 of 33
+diag-screen-all-main-default-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active false size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers reached 9 of 9
+diag-screen-all-main-default-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active false size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers reached 9 of 9
+diag-screen-all-main-minimum-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) markers reached 9 of 9
+diag-screen-all-main-minimum-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers reached 9 of 9
+diag-screen-all-markers-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers reached 9 of 9
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!popupObject->property("visible").toBool()' returned FALSE. ()
+diag-screen-all-markers-default-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers reached 9 of 9
+diag-screen-all-markers-minimum-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) markers reached 9 of 9
+diag-screen-all-markers-minimum-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers reached 9 of 9
+diag-screen-default-categories-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 785) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-categories-default-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 786) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-categories-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-categories-minimum-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-main-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-main-default-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'reached == expected' returned FALSE. (main missing: attributeCombo, cardTypeCombo, categoriesButton, clearFiltersButton, filtersToggle, limitationCombo, linkMarkersButton, nonOfficialCheck, raceCombo, subTypeCombo)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-main-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-main-minimum-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-markers-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'reached == expected' returned FALSE. (markers missing: markerButton0, markerButton1, markerButton2, markerButton3, markerButton4, markerButton5, markerButton6, markerButton7)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-markers-default-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1064, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'reached == expected' returned FALSE. (markers missing: markerButton0, markerButton1, markerButton2, markerButton3, markerButton4, markerButton5, markerButton6, markerButton7)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-markers-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-screen-default-markers-minimum-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(896, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-all-categories-default-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories reached 33 of 33
+diag-shell-all-categories-default-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active false size QSize(1280, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories reached 33 of 33
+diag-shell-all-categories-minimum-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) categories reached 33 of 33
+diag-shell-all-categories-minimum-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active false size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories reached 33 of 33
+diag-shell-all-main-default-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers reached 9 of 9
+diag-shell-all-main-default-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers reached 9 of 9
+diag-shell-all-main-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) main reached 15 of 15
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'active' returned FALSE. ()
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-all-main-minimum-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) main reached 15 of 15
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) categories reached 33 of 33
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers reached 9 of 9
+diag-shell-all-markers-default-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) markers reached 9 of 9
+diag-shell-all-markers-default-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) markers reached 9 of 9
+diag-shell-all-markers-minimum-forward.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) markers reached 9 of 9
+diag-shell-all-markers-minimum-reverse.txt exit 0
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusAllControls
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) markers reached 9 of 9
+diag-shell-default-categories-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-categories-default-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-categories-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-categories-minimum-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'reached == expected' returned FALSE. (categories missing: categoryCheck0, categoryCheck1, categoryCheck10, categoryCheck11, categoryCheck12, categoryCheck13, categoryCheck14, categoryCheck15, categoryCheck16, categoryCheck17, categoryCheck18, categoryCheck19, categoryCheck2, categoryCheck20, categoryCheck21, categoryCheck22, categoryCheck23, categoryCheck24, categoryCheck25, categoryCheck26, categoryCheck27, categoryCheck28, categoryCheck29, categoryCheck3, categoryCheck30, categoryCheck31, categoryCheck4, categoryCheck5, categoryCheck6, categoryCheck7, categoryCheck8, categoryCheck9)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-main-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'reached == expected' returned FALSE. (main missing: attributeCombo, cardTypeCombo, categoriesButton, clearFiltersButton, filtersToggle, limitationCombo, linkMarkersButton, nonOfficialCheck, raceCombo, subTypeCombo)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-main-default-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'reached == expected' returned FALSE. (main missing: attributeCombo, cardTypeCombo, categoriesButton, clearFiltersButton, filtersToggle, limitationCombo, linkMarkersButton, nonOfficialCheck, raceCombo, subTypeCombo)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-main-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'reached == expected' returned FALSE. (main missing: attributeCombo, cardTypeCombo, categoriesButton, clearFiltersButton, filtersToggle, limitationCombo, linkMarkersButton, nonOfficialCheck, raceCombo, subTypeCombo)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-main-minimum-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'reached == expected' returned FALSE. (main missing: attributeCombo, cardTypeCombo, categoriesButton, clearFiltersButton, filtersToggle, limitationCombo, linkMarkersButton, nonOfficialCheck, raceCombo, subTypeCombo)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-markers-default-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) 'reached == expected' returned FALSE. (markers missing: markerButton0, markerButton1, markerButton2, markerButton3, markerButton4, markerButton5, markerButton6, markerButton7)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-markers-default-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(1280, 800) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) 'reached == expected' returned FALSE. (markers missing: markerButton0, markerButton1, markerButton2, markerButton3, markerButton4, markerButton5, markerButton6, markerButton7)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(default-reverse) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-markers-minimum-forward.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) 'reached == expected' returned FALSE. (markers missing: markerButton0, markerButton1, markerButton2, markerButton3, markerButton4, markerButton5, markerButton6, markerButton7)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-forward) '!QTest::currentTestFailed()' returned FALSE. ()
+diag-shell-default-markers-minimum-reverse.txt exit 1
+QINFO  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) DIAG platform "cocoa" Qt 6.11.1 style "Basic" active true size QSize(960, 600) effective policy Qt::TabFocusBehavior(3)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) 'reached == expected' returned FALSE. (markers missing: markerButton0, markerButton1, markerButton2, markerButton3, markerButton4, markerButton5, markerButton6, markerButton7)
+FAIL!  : TestDeckBuilderScreen::filterTabTraversalStaysVisible(minimum-reverse) '!QTest::currentTestFailed()' returned FALSE. ()

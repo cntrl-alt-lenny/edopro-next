@@ -1,0 +1,4 @@
+COMMAND python3 tools/fw.py check
+0 error(s), 0 warning(s)
+
+EXIT 0

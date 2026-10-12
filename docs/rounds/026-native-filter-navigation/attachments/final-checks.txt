@@ -1,0 +1,11 @@
+$ python3.13 tools/fw.py check
+0 error(s), 0 warning(s)
+exit: 0
+
+$ git diff --check
+exit: 0
+
+$ git diff --check origin/master...HEAD
+exit: 0
+
+All three disposable Python source files compile: PASS

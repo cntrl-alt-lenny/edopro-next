@@ -1,0 +1,4 @@
+COMMAND python3.13 tools/generate_messages.py --check
+message table up to date (96 ids)
+
+EXIT 0

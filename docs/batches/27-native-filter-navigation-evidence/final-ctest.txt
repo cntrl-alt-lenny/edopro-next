@@ -1,0 +1,9 @@
+Test project <repository>/ui/build
+    Start 1: deckbuilder
+1/2 Test #1: deckbuilder ......................   Passed    0.66 sec
+    Start 2: deckbuilder_screen
+2/2 Test #2: deckbuilder_screen ...............   Passed    8.75 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   9.42 sec

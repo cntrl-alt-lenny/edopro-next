@@ -28,6 +28,31 @@ Item {
 
     readonly property bool hasCatalog: cardCatalog.loaded
 
+    // Explicit public QML links avoid Cocoa's text/list-only implicit chain.
+    // Accept both Backtab and Shift+Tab encodings; leave other keys to controls.
+    function navigateFilter(control, event) {
+        if (event.key !== Qt.Key_Tab && event.key !== Qt.Key_Backtab) {
+            event.accepted = false;
+            return;
+        }
+        const backward = event.key === Qt.Key_Backtab || (event.modifiers & Qt.ShiftModifier);
+        const direction = backward ? "backtab" : "tab";
+        let next = control.KeyNavigation[direction];
+        if (!next)
+            next = control.nextItemInFocusChain(!backward);
+        const visited = [];
+        while (next && visited.indexOf(next) < 0) {
+            if (next.visible && next.enabled) {
+                next.forceActiveFocus(backward ? Qt.BacktabFocusReason : Qt.TabFocusReason);
+                event.accepted = true;
+                return;
+            }
+            visited.push(next);
+            next = next.KeyNavigation[direction];
+        }
+        event.accepted = false;
+    }
+
     // The card currently shown in the preview pane - whichever of the two
     // lists below was most recently interacted with. Not persisted
     // anywhere else; purely this screen's own transient presentation
@@ -526,6 +551,9 @@ Item {
                     // can locate this real instance via findChild() - not
                     // read by any production code.
                     objectName: "searchField"
+                    KeyNavigation.priority: KeyNavigation.AfterItem
+                    KeyNavigation.tab: filtersToggle
+                    Keys.onPressed: function(event) { root.navigateFilter(searchField, event); }
                     Layout.fillWidth: true
                     placeholderText: "Search by name or text…"
                     font.family: Theme.fontFamily
@@ -544,6 +572,10 @@ Item {
                     Button {
                         id: filtersToggle
                         objectName: "filtersToggle"
+                        KeyNavigation.backtab: searchField
+                        KeyNavigation.priority: KeyNavigation.AfterItem
+                        KeyNavigation.tab: clearFiltersButton
+                        Keys.onPressed: function(event) { root.navigateFilter(filtersToggle, event); }
                         checkable: true
                         checked: true
                         text: (checked ? "Hide filters" : "Show filters")
@@ -553,7 +585,12 @@ Item {
                     }
                     Item { Layout.fillWidth: true }
                     Button {
+                        id: clearFiltersButton
                         objectName: "clearFiltersButton"
+                        KeyNavigation.backtab: filtersToggle
+                        KeyNavigation.priority: KeyNavigation.AfterItem
+                        KeyNavigation.tab: cardTypeCombo
+                        Keys.onPressed: function(event) { root.navigateFilter(clearFiltersButton, event); }
                         // Upstream's Clear (deck_con.cpp:1363-1397) empties the
                         // name box too.
                         text: "Clear"
@@ -611,14 +648,24 @@ Item {
 
                         FilterLabel { text: "Type" }
                         FilterCombo {
+                            id: cardTypeCombo
                             objectName: "cardTypeCombo"
+                            KeyNavigation.backtab: clearFiltersButton
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: subTypeCombo
+                            Keys.onPressed: function(event) { root.navigateFilter(cardTypeCombo, event); }
                             model: searchResults.cardTypeNames
                             boundIndex: searchResults.cardType
                             onPicked: function(index) { searchResults.cardType = index; }
                         }
                         FilterLabel { text: "Sub-type"; enabled: searchResults.subTypeEnabled }
                         FilterCombo {
+                            id: subTypeCombo
                             objectName: "subTypeCombo"
+                            KeyNavigation.backtab: cardTypeCombo
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: attributeCombo
+                            Keys.onPressed: function(event) { root.navigateFilter(subTypeCombo, event); }
                             enabled: searchResults.subTypeEnabled
                             model: searchResults.subTypeNames
                             boundIndex: searchResults.subType
@@ -627,7 +674,12 @@ Item {
 
                         FilterLabel { text: "Attribute"; enabled: searchResults.monsterFiltersEnabled }
                         FilterCombo {
+                            id: attributeCombo
                             objectName: "attributeCombo"
+                            KeyNavigation.backtab: subTypeCombo
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: raceCombo
+                            Keys.onPressed: function(event) { root.navigateFilter(attributeCombo, event); }
                             enabled: searchResults.monsterFiltersEnabled
                             model: searchResults.attributeNames
                             boundIndex: searchResults.attribute
@@ -635,7 +687,12 @@ Item {
                         }
                         FilterLabel { text: "Type/race"; enabled: searchResults.monsterFiltersEnabled }
                         FilterCombo {
+                            id: raceCombo
                             objectName: "raceCombo"
+                            KeyNavigation.backtab: attributeCombo
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: attackField
+                            Keys.onPressed: function(event) { root.navigateFilter(raceCombo, event); }
                             enabled: searchResults.monsterFiltersEnabled
                             model: searchResults.raceNames
                             boundIndex: searchResults.race
@@ -644,14 +701,24 @@ Item {
 
                         FilterLabel { text: "ATK"; enabled: searchResults.monsterFiltersEnabled }
                         FilterField {
+                            id: attackField
                             objectName: "attackField"
+                            KeyNavigation.backtab: raceCombo
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: defenseField
+                            Keys.onPressed: function(event) { root.navigateFilter(attackField, event); }
                             enabled: searchResults.monsterFiltersEnabled
                             boundText: searchResults.attackText
                             onEdited: function(value) { searchResults.attackText = value; }
                         }
                         FilterLabel { text: "DEF"; enabled: searchResults.defenseEnabled }
                         FilterField {
+                            id: defenseField
                             objectName: "defenseField"
+                            KeyNavigation.backtab: attackField
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: levelField
+                            Keys.onPressed: function(event) { root.navigateFilter(defenseField, event); }
                             enabled: searchResults.defenseEnabled
                             boundText: searchResults.defenseText
                             onEdited: function(value) { searchResults.defenseText = value; }
@@ -659,7 +726,12 @@ Item {
 
                         FilterLabel { text: "Level/Rank"; enabled: searchResults.monsterFiltersEnabled }
                         FilterField {
+                            id: levelField
                             objectName: "levelField"
+                            KeyNavigation.backtab: defenseField
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: scaleField
+                            Keys.onPressed: function(event) { root.navigateFilter(levelField, event); }
                             enabled: searchResults.monsterFiltersEnabled
                             placeholderText: "4, <=3"
                             boundText: searchResults.levelText
@@ -667,7 +739,12 @@ Item {
                         }
                         FilterLabel { text: "Scale"; enabled: searchResults.monsterFiltersEnabled }
                         FilterField {
+                            id: scaleField
                             objectName: "scaleField"
+                            KeyNavigation.backtab: levelField
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: limitationCombo
+                            Keys.onPressed: function(event) { root.navigateFilter(scaleField, event); }
                             enabled: searchResults.monsterFiltersEnabled
                             placeholderText: ">=5"
                             boundText: searchResults.scaleText
@@ -676,7 +753,12 @@ Item {
 
                         FilterLabel { text: "Limit" }
                         FilterCombo {
+                            id: limitationCombo
                             objectName: "limitationCombo"
+                            KeyNavigation.backtab: scaleField
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: nonOfficialCheck
+                            Keys.onPressed: function(event) { root.navigateFilter(limitationCombo, event); }
                             Layout.columnSpan: filterGrid.columns - 1
                             model: searchResults.limitationNames
                             boundIndex: searchResults.limitation
@@ -684,7 +766,12 @@ Item {
                         }
 
                         FilterCheck {
+                            id: nonOfficialCheck
                             objectName: "nonOfficialCheck"
+                            KeyNavigation.backtab: limitationCombo
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: categoriesButton
+                            Keys.onPressed: function(event) { root.navigateFilter(nonOfficialCheck, event); }
                             Layout.columnSpan: filterGrid.columns
                             // Given the grid's width rather than its own text's,
                             // so a narrow pane wraps the label instead of
@@ -702,7 +789,12 @@ Item {
                         }
 
                         Button {
+                            id: categoriesButton
                             objectName: "categoriesButton"
+                            KeyNavigation.backtab: nonOfficialCheck
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: markersButton
+                            Keys.onPressed: function(event) { root.navigateFilter(categoriesButton, event); }
                             Layout.columnSpan: filterGrid.columns / 2
                             Layout.fillWidth: true
                             text: searchResults.selectedCategoryCount > 0
@@ -714,6 +806,10 @@ Item {
                         Button {
                             id: markersButton
                             objectName: "linkMarkersButton"
+                            KeyNavigation.backtab: categoriesButton
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: resultsList
+                            Keys.onPressed: function(event) { root.navigateFilter(markersButton, event); }
                             Layout.columnSpan: filterGrid.columns / 2
                             Layout.fillWidth: true
                             text: "Link markers…"
@@ -727,6 +823,8 @@ Item {
                 Popup {
                     id: categoriesPopup
                     objectName: "categoriesPopup"
+                    onOpened: categoryRepeater.itemAt(0).forceActiveFocus(Qt.TabFocusReason)
+                    onClosed: categoriesButton.forceActiveFocus(Qt.TabFocusReason)
                     modal: true
                     focus: true
                     width: 420
@@ -764,6 +862,7 @@ Item {
                                 width: categoriesScroll.availableWidth
                                 columns: 2
                                 Repeater {
+                                    id: categoryRepeater
                                     model: searchResults.categoryNames
                                     FilterCheck {
                                         id: categoryCheck
@@ -773,6 +872,10 @@ Item {
                                         required property int index
                                         required property string modelData
                                         objectName: "categoryCheck" + index
+                                        KeyNavigation.priority: KeyNavigation.AfterItem
+                                        KeyNavigation.tab: index < 31 ? categoryRepeater.itemAt(index + 1) : categoriesDone
+                                        KeyNavigation.backtab: index > 0 ? categoryRepeater.itemAt(index - 1) : categoriesDone
+                                        Keys.onPressed: function(event) { root.navigateFilter(categoryCheck, event); }
                                         text: modelData
                                         checked: searchResults.categorySelected(index)
                                         onToggled: searchResults.setCategorySelected(index, checked)
@@ -790,7 +893,12 @@ Item {
                         }
                         Button {
                             Layout.alignment: Qt.AlignRight
+                            id: categoriesDone
                             objectName: "categoriesDone"
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: categoryRepeater.itemAt(0)
+                            KeyNavigation.backtab: categoryRepeater.itemAt(31)
+                            Keys.onPressed: function(event) { root.navigateFilter(categoriesDone, event); }
                             text: "Done"
                             onClicked: categoriesPopup.close()
                         }
@@ -800,6 +908,8 @@ Item {
                 Popup {
                     id: markersPopup
                     objectName: "markersPopup"
+                    onOpened: markerRepeater.itemAt(0).forceActiveFocus(Qt.TabFocusReason)
+                    onClosed: markersButton.forceActiveFocus(Qt.TabFocusReason)
                     modal: true
                     focus: true
                     padding: Theme.space3
@@ -822,10 +932,16 @@ Item {
                             Layout.alignment: Qt.AlignHCenter
                             columns: 3
                             Repeater {
+                                id: markerRepeater
                                 model: [0, 1, 2, 3, -1, 4, 5, 6, 7]
                                 Button {
                                     id: markerButton
                                     required property int modelData
+                                    required property int index
+                                    KeyNavigation.priority: KeyNavigation.AfterItem
+                                    KeyNavigation.tab: index < 8 ? markerRepeater.itemAt(index + 1) : markersDone
+                                    KeyNavigation.backtab: index > 0 ? markerRepeater.itemAt(index - 1) : markersDone
+                                    Keys.onPressed: function(event) { root.navigateFilter(markerButton, event); }
                                     Layout.preferredWidth: 40
                                     Layout.preferredHeight: 40
                                     // The centre cell keeps the grid's shape
@@ -849,7 +965,12 @@ Item {
                         }
                         Button {
                             Layout.alignment: Qt.AlignRight
+                            id: markersDone
                             objectName: "markersDone"
+                            KeyNavigation.priority: KeyNavigation.AfterItem
+                            KeyNavigation.tab: markerRepeater.itemAt(0)
+                            KeyNavigation.backtab: markerRepeater.itemAt(8)
+                            Keys.onPressed: function(event) { root.navigateFilter(markersDone, event); }
                             text: "Done"
                             onClicked: markersPopup.close()
                         }
@@ -874,11 +995,15 @@ Item {
                         // can locate this real instance via findChild() -
                         // not read or relied upon by any production code.
                         objectName: "resultsList"
+                        KeyNavigation.priority: KeyNavigation.AfterItem
+                        KeyNavigation.backtab: markersButton
+                        Keys.onPressed: function(event) { root.navigateFilter(resultsList, event); }
                         anchors.fill: parent
                         anchors.margins: Theme.space1
                         clip: true
                         model: searchResults
                         activeFocusOnTab: true
+                        Accessible.role: Accessible.List
                         // ListView's own default is 0, not -1, the instant
                         // a non-empty model is set - without this, typing a
                         // query (or even the initial, unfiltered "show

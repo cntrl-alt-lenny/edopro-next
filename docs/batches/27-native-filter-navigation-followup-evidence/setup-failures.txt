@@ -1,0 +1,6 @@
+Preserved setup failures (before source 4d1a7e2c):
+1. diagnose.py invoked before swiftc completed: FileNotFoundError [Errno 2] No such file or directory: ui/build/b27-followup/foreground. Exit 1; no row ran. Completed compilation before invoking diagnostic rows.
+2. capture-diagnose.py generation typo: AttributeError: module 'pathlib' has no attribute 'pathlib'. Exit 1; no row ran. Removed duplicated pathlib qualifier.
+3. tools/check_pr_evidence.py invoked without PR body input: exit 1, no rerunnable command found. check-11.txt retains exact output. Supplied --file with actual/proposed PR body; exits 0.
+4. Initial CUA app handle opened the old diagnostic Home shell (no catalog/size setup). No navigation verdict is assigned. Closed that owned process and launched the byte-matched follow-up probe with explicit catalog/size. First detached Popen launch did not survive its command session; no navigation verdict. Foreground-launch conflict with unavailable-controls was recorded in matrix-cocoa-unavailable.txt and matrix-foreground.txt, not discarded.
+5. Diagnostic shell cleanup uses SIGINT: command exits 130, not a navigation test pass. Desktop verdict is an observed route/operation result, separate from cleanup.
