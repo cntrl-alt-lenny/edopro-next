@@ -238,6 +238,12 @@ milestone.
 
 ## M6 — Platform and input  🔶 in progress
 
+- [x] **Installed-family font resolution.** Shell startup and Theme use available
+      Latin proportional/monospace families; strict real-shell offscreen smoke
+      is clean on macOS Qt 6.11.1 and Linux CI Qt 6.8.3. See
+      [platform fonts](architecture/platform-fonts.md) and
+      [batch 29](batches/29-platform-font-resolution.md). Windows runtime,
+      minimum-Qt execution and complete language-glyph coverage remain unverified.
 - [x] **Windows and macOS local builds**, for the platforms and modules evidenced. Windows 11 /
       MSVC: all four modules (`client/`, `data/`, `policy/`, `ui/`) configure, build under
       `-DEDOPRO_NEXT_WERROR=ON` and pass CTest ([brief 005](briefs/archive/005-2026-08-31-windows-msvc-build.md),

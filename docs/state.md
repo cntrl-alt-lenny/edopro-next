@@ -26,6 +26,11 @@ not started, M5 (duel field) deliberately last; **M6** (platform and input)
 has local Windows and macOS builds evidenced, with Windows and macOS CI,
 controller navigation, Steam Deck and accessibility still open.
 
+Shell startup and Theme resolve installed proportional/monospace families;
+strict real-shell offscreen smoke is clean on the recorded macOS and Linux
+configurations. See [platform fonts](architecture/platform-fonts.md). This
+does not establish Windows runtime or complete language-glyph coverage.
+
 ## Owner decisions
 
 - **Qt 6/QML, no Rust between the UI and the engine** (ADR 0001).
