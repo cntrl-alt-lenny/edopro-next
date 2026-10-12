@@ -10,6 +10,8 @@
 #include "edopro_next/policy/deck_search_filter.h"
 
 #include <algorithm>
+#include <limits>
+#include <optional>
 
 using edopro_next::policy::LimitationFilter;
 using edopro_next::ui::CardTypeChoice;
@@ -121,18 +123,51 @@ namespace {
 // the banlist-dependent part drops never takes a place in the 200.
 constexpr std::size_t kResultCap = 200;
 
+// ADR 0014: only a complete, nonzero ASCII decimal uint32 selects lookup.
+// Check before multiplying: neither unsigned wrap nor signed conversion is
+// part of the input contract. Leading zeroes do not consume numeric range.
+std::optional<edopro_next::data::CardCode> decimalCardCode(const QString& input) {
+    const auto text = input.trimmed();
+    if (text.isEmpty())
+        return std::nullopt;
+    std::uint32_t value = 0;
+    for (const auto character : text) {
+        const auto digit = character.unicode();
+        if (digit < '0' || digit > '9')
+            return std::nullopt;
+        const auto number = static_cast<std::uint32_t>(digit - '0');
+        if (value > (std::numeric_limits<std::uint32_t>::max() - number) / 10)
+            return std::nullopt;
+        value = value * 10 + number;
+    }
+    if (value == 0)
+        return std::nullopt;
+    return static_cast<edopro_next::data::CardCode>(value);
+}
+
 } // namespace
 
 void SearchResultsModel::refresh() {
     beginResetModel();
     results_.clear();
     if (catalog_) {
-        const auto query = edopro_next::ui::buildSearchQuery(filters_, queryText_);
+        auto query = edopro_next::ui::buildSearchQuery(filters_, queryText_);
+        const auto& database = catalog_->database();
+        auto lookup = decimalCardCode(queryText_);
+        if (lookup && !database.find(*lookup))
+            lookup.reset();
+        if (lookup) {
+            // Keep every structured filter. exact_code remains a ranking
+            // hint in data/: restriction belongs to this input adapter.
+            query.text.clear();
+            query.exact_code = lookup;
+        }
         const auto* list = selectedList();
         const auto choices = limitationChoices();
         const auto limit = choices[static_cast<std::size_t>(limitation())];
-        const auto& database = catalog_->database();
         for (const auto& result : catalog_->searchIndex().search(query)) {
+            if (lookup && result.code != *lookup)
+                continue;
             const auto* record = database.find(result.code);
             if (!record ||
                 !edopro_next::policy::deck_search_admits(*record, list, filters_.showNonOfficial, limit))
