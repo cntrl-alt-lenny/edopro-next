@@ -42,6 +42,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2 QuickDialogs2)
 
 add_executable(test_deckbuilder_screen
     test_deckbuilder_screen.cpp
+    ${EDOPRO_NEXT_FONT_SOURCES}
     ${EDOPRO_NEXT_SHELL_DECKBUILDER_SOURCES}
 )
 
@@ -158,3 +159,6 @@ add_test(NAME deckbuilder_screen COMMAND test_deckbuilder_screen)
 # engine at all) - offscreen matches the platform the shell's own smoke
 # test and visual-verification captures already use successfully in CI.
 set_tests_properties(deckbuilder_screen PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+# Separate CMake scope keeps this module registration independent of the screen harness.
+add_subdirectory(fonts)

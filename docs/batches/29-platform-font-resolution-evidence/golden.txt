@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "[worktree]/tests/test_replay_trace.py", line 241, in <module>
+    raise SystemExit(update_goldens())
+  File "[worktree]/tests/test_replay_trace.py", line 234, in update_goldens
+    target.write_text(trace_for(fixture), encoding="utf-8", newline="\n")
+TypeError: write_text() got an unexpected keyword argument 'newline'
