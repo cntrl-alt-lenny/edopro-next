@@ -173,6 +173,12 @@ CI requires those tests to actually run rather than skip.
 - **Shared pages are Brain's.** Builders leave `docs/ROADMAP.md`,
   `docs/capabilities.md`, `docs/state.md` and `README.md` alone and say under
   Done what should change; Brain updates them once, after merging.
+- **Two tries, then ask.** When two batches in a row miss the same goal,
+  Brain sends no third. It tells the owner in plain words what is stuck and
+  asks whether to continue, narrow the goal or park it.
+- **Raw output stays out of the repository.** Logs, traces and captures go
+  to CI artifacts or stay local. A batch summary quotes the few lines that
+  matter and names the command that reproduces them.
 - **Focused commits**, never one giant commit.
 - **Nothing personal in any tracked document**, archived ones included: no
   home-folder or drive paths, no email addresses.
